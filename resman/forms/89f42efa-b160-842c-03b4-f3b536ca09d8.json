@@ -1,0 +1,89 @@
+{
+  "$sys":{
+    "guid":"89f42efa-b160-842c-03b4-f3b536ca09d8",
+    "typeGuid":"7f93991a-4da9-4892-79c2-35fe44e69083"
+  },
+  "fields":{
+    "Id":2000,
+    "Name":"MainForm"
+  },
+  "collections": {
+    "Params": [
+      {
+        "$sys": {
+          "guid": "0d28d40a-dbea-b4e1-7b2e-b3872fe563ca",
+          "typeGuid": "4943ce3e-a6cb-65f7-8805-ec339555a981"
+        },
+        "fields": {
+          "Id": 2001,
+          "Name": "FormParam1",
+          "Type": "param",
+          "Kind": "out",
+          "Value": ""
+        },
+        "collections": {}
+      }
+    ],
+    "Children": [
+      {
+        "$sys": {
+          "guid": "29f93a72-5488-9284-23f9-b34d22fbdb2e",
+          "typeGuid": "1d95ab61-df00-aec8-eff5-0f90187891cf"
+        },
+        "fields": {
+          "Id": 2002,
+          "Name": "MainContainer"
+        },
+        "collections": {
+          "Children": [
+            {
+              "$sys": {
+                "guid": "cb63b2d6-93e8-2ee3-603b-884025f98c7a",
+                "typeGuid": "5e89f6c7-ccc2-a850-2f67-b5f5f20c3d47"
+              },
+              "fields": {
+                "Id": 2003,
+                "Name": "DataModel"
+              },
+              "collections": {
+                "Datasets": [
+                  {
+                    "$sys": {
+                      "guid": "c2de9609-237a-c3b3-12ac-43bf5b35c169",
+                      "typeGuid": "3f3341c7-2f06-8d9d-4099-1075c158aeee"
+                    },
+                    "fields": {
+                      "Id": 2004,
+                      "Name": "DatasetLead",
+                      "Root": "c170c217-e519-7c23-2811-ff75cd4bfe81",
+                      "Active": true
+                    },
+                    "collections": {
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "$sys": {
+                "guid": "ea3555fb-d449-4505-408d-5d9378ec9726",
+                "typeGuid": "ff7830e2-7add-e65e-7ddf-caba8992d6d8"
+              },
+              "fields": {
+                "Id": 2005,
+                "Name": "DataGridLead",
+                "Top": 10,
+                "Left": 10,
+                "Width": 900,
+                "Height": 200,
+                "Dataset": "c2de9609-237a-c3b3-12ac-43bf5b35c169"
+              },
+              "collections": {
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
