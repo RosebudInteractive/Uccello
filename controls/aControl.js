@@ -18,6 +18,15 @@ define(
 				this._super(cm,params);
 			},
 
+            /**
+             * Рендер контрола
+             * @param viewset
+             * @param options
+             */
+            irender: function(viewset, options) {
+                viewset.render.apply(this, [options]);
+            },
+
             top: function(value) {
                 return this._genericSetter("Top", value);
             },

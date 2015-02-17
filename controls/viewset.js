@@ -47,7 +47,7 @@ define(
                     var viewsets = this.cm.getContext().getComponent(component.className).viewsets;
                     if (viewsets && viewsets[this.ini.name]) {
 						console.log("Render component "+component.className+" "+component.id());
-                        viewsets[this.ini.name].render.apply(component, [options]);
+                        component.irender(viewsets[this.ini.name], options);
 					}
                 }
 
