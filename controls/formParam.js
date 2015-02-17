@@ -20,7 +20,7 @@ define(
             init: function(cm,params){
                 this._super(cm,params);
 
-                // onModify
+                // onModify абв
                 if (this.getObj()) {
                     if (this.getObj().get("OnModify")) {
                         this.onModify = new Function("newVal",this.getObj().get("OnModify"));
