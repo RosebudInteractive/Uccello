@@ -71,7 +71,7 @@
                       "Id": 123,
                       "Name": "DatasetContact",
                       "Root": "b49d39c9-b903-cccd-7d32-b84beb1b76dc",
-                      "Active": false,
+                      "Active": true,
                       "Master": "061b1347-18a2-a829-fcce-ba59058b4bdf"
                     },
                     "collections": {
@@ -373,7 +373,7 @@
                 "Left": "390",
                 "Width": 660,
                 "Height": 120,
-                "Dataset": "eefbcccf-743a-66a4-c3a2-4751d2a334f5"
+                "Dataset": ""
               },
               "collections": {
               }

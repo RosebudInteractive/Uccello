@@ -273,10 +273,13 @@ define(
 				
 				// TODO ничто не гарантирует, что транзакция закроется и что она будет выполняться в правильном порядке
 				// если мы хотим это контролировать нужно немного иначе организовать хранилище незавершенных транзакций (дельт)
-				
+
+				// TODOX временно убрали все проверки на версии
+/*				
 				var lval = db.getVersion("valid");
 				var ldraft = db.getVersion();
 				var dver = delta.dbVersion;
+				
 
 				if (db.isMaster()) {
 					if (lval == dver - 1) {
@@ -302,7 +305,7 @@ define(
 					// TODO подписчикам передать если  делать тему с N базами
 
 				}
-				
+	*/			
 				for (var i=0; i<cur[tr].length; i++) {
 					var cdelta = cur[tr][i];
 					if ("last" in cdelta) { // последняя дельта транзакции
@@ -359,6 +362,10 @@ define(
 			propagateDeltas: function(dbGuid, srcDbGuid, deltas) {
 
 				function cb(result) {
+					// TODOX ОТКЛЮЧИЛИ ВРЕМЕННО СТАРЫЕ ПРОВЕРКИ, НАДО НАПИСАТЬ НОВЫЕ
+					console.log("CALLBACK PROPAGATE DELTAS");
+					console.log(result);
+					/*
 					if (db.getVersion("valid")<result.data.dbVersion) 
 						db.setVersion("valid", result.data.dbVersion); 
 						
@@ -366,6 +373,7 @@ define(
 						// откатить до версии сервера
 						db.undo(result.data.dbVersion);
 					}
+					*/
 				}
 				//var db = this.getDB(dbGuid);
 				//var deltas = db.genDeltas();

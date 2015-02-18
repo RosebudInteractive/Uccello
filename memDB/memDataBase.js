@@ -47,9 +47,11 @@ define(
 				
 				pvt.controller = controller; //TODO  если контроллер не передан, то ДБ может быть неактивна				
 				pvt.controller.createLocalProxy(this);
-				pvt.version = 0; // по умолчанию версия = 0
+				// TODOX УБРАТЬ
+				pvt.version = 0; 
 				pvt.validVersion = 0;
 				pvt.sentVersion = 0;
+				// TODOX END
 				this.event = new Event();
 				
 				if (params.kind != "master") {
@@ -93,24 +95,15 @@ define(
 					root.type = opt.type;
 					root.subscribers = {};	// подписчики корневого объекта
 					root.master = null;		// мастер
+					root.dver = 0; 			// версии корневого объекта: draft / sent / valid
+					root.sver = 0; 
+					root.vver = 0; 
 					root.callbackNewObject = undefined;
 					root.event = new Event();
 					this.pvt.robjs.push(root);
 					this.pvt.rcoll[obj.getGuid()] = root;
 				}
-				
-				/*
-				var root = {};
-				root.obj = obj;
-				root.mode = opt.mode;
-				root.type = opt.type;
-				root.subscribers = {};	// подписчики корневого объекта
-				root.master = null;		// мастер
-				root.callbackNewObject = undefined;
-				root.event = new Event();
-				this.pvt.robjs.push(root);
-				this.pvt.rcoll[obj.getGuid()] = root;
-				*/
+
 				this.event.fire({
                     type: 'newRoot',
                     target: obj				
@@ -196,11 +189,8 @@ define(
 				root.event.fire({
                     type: 'delObj',
                     target: obj				
-				});
-				
-				
+				});				
 			},
-
 
             /**
              * подписаться у мастер-базы на корневой объект, идентифицированный гуидом rootGuid
@@ -323,6 +313,7 @@ define(
 				var newObj = {};
 				newObj.$sys = {};
 				newObj.$sys.guid = obj.getGuid();
+				newObj.ver = obj.getRootVersion();
 				/*if (obj.getObjType()) // obj
 					newObj.$sys.typeGuid = obj.getObjType().getGuid();
 				else // meta obj
@@ -395,6 +386,17 @@ define(
 				
 				if ("obj" in parent) parent.obj.getLog().setActive(false); // отключить лог на время десериализации
 				var res = ideser(this,sobj,parent);
+				var rholder = this.getRoot(res.getGuid());
+				if (!("ver" in sobj)) {
+					rholder.vver = 0; // Если в сериализованном представлении нет номера версии, полагаем =0
+					rholder.sver = 0;
+					rholder.dver = 0;
+					}
+				else {
+					rholder.vver = sobj.ver; // TODOХ не до конца ясно как поступать с версиями в случае частичной сериализации - продумать
+					rholder.sver = sobj.ver;
+					rholder.dver = sobj.ver;
+				}
 				res.getLog().setActive(true);
 				// TODO - запомнить "сериализованный" объект (или еще раз запустить сериализацию?)
 				return res; 
@@ -438,11 +440,7 @@ define(
 
 					}							
 				}
-						//console.log("----------");
-						//this.prtSub(this.pvt.rcoll[croot.getGuid()]);
-							
-				// 						
-				
+
 				if (!this.inTran()) { // автоматом "закрыть" транзакцию (VALID VERSION = DRAFT VERSION)				
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)				
 					this.getController().genDeltas(this.getGuid());		// рассылаем дельты
@@ -473,7 +471,7 @@ define(
 			},
 
             /**
-             * Вернуть версию БД
+             * Вернуть версию БД - УСТАРЕЛО
              */			
 			getVersion: function(verType) {
 				switch (verType) {
@@ -482,6 +480,8 @@ define(
 					default: return this.pvt.version;
 				}				
 			},
+
+
 
 			setVersion: function(verType,val) {
 				switch (verType) {
@@ -519,7 +519,7 @@ define(
 			
 				var sver = this.getVersion("sent");
 				var ver = this.getVersion();
-				if (ver==sver) this.setVersion("draft",this.getVersion()+1); //newVersion();
+				if (ver==sver) this.setVersion("draft",this.getVersion()+1);
 				return this.getVersion();			
 			},
 			
@@ -546,6 +546,8 @@ define(
 				else
 					return this.pvt.rcoll[id];
 			},
+			
+			
 			
             /**
              * Является ли мастер базой

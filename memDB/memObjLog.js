@@ -168,7 +168,7 @@ define(
 							for (var cf in c.fields) {
 								// TODO проверить наличие полей с таким именем в метаинфо
 								o2.set(cf,c.fields[cf]);
-								console.log("apply to obj "+o2.getGuid());
+								//console.log("apply to obj "+o2.getGuid());
 							}
 							
 						}

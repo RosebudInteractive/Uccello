@@ -208,10 +208,10 @@ define(
 			
 			// установить "курсор" на внутренний объект dataobj
 			_setDataObj: function(value) {
-				if (value == undefined) {
+				/*if (value == undefined) {
 					console.log("SET CURSOR TO UNDEF");
-				}
-				console.log("SET CuRSOR "+value);
+				}*/
+				//console.log("SET CuRSOR "+value);
 				this.pvt.dataObj =  this.getControlMgr().getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
 			},
 

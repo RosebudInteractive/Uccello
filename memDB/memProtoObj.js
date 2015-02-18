@@ -105,6 +105,21 @@ define(
 				return r;
 			},
 			
+            /**
+             * вернуть версию дерева объектов для данного объекта
+			 * @param verType - тип версии sent|valid|draft
+             * @returns {number} - версия
+             */			
+			getRootVersion: function(verType) {
+				var robj = this.getRoot();
+				var rholder = this.getDB().getRoot(robj.getGuid());
+				switch (verType) {
+					case "sent": return rholder.sver;
+					case "valid": return rholder.vver;
+					default: return rholder.dver;
+				}					
+			},		
+			
 			getLog: function() {
 				var p = this;
 				while (!p.pvt.log) p=p.getParent();
