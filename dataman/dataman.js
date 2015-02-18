@@ -203,6 +203,11 @@ define(
                     conn.query('SELECT * FROM contract WHERE parent=?', [expression], function(err, rows) {
                         if (err) throw err;
                         var result = that.createResult(guidRoot, "08a0fad1-d788-3604-9a16-3544a6f97721", rows);
+
+                        /*var fs = require('fs');
+                        fs.writeFile(__dirname + '/tables/contract-'+expression+'.json',JSON.stringify(result),  function (err, data) {
+                        });*/
+
                         done(result);
                     });
                 } else
