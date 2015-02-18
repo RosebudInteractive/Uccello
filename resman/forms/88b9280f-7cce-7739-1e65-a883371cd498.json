@@ -86,7 +86,7 @@
                       "Id": 125,
                       "Name": "DatasetContract",
                       "Root": "8583ee1d-6936-19da-5ef0-9025fb7d1d8d",
-                      "Active": false,
+                      "Active": true,
                       "Master": "061b1347-18a2-a829-fcce-ba59058b4bdf"
                     },
                     "collections": {
@@ -101,7 +101,7 @@
                       "Id": 226,
                       "Name": "DatasetAddress",
                       "Root": "edca46bc-3389-99a2-32c0-a59665fcb6a7",
-                      "Active": false,
+                      "Active": true,
                       "Master": "eefbcccf-743a-66a4-c3a2-4751d2a334f5"
                     },
                     "collections": {
