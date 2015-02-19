@@ -18,7 +18,7 @@ define(
              * @returns {obj}
              */
             loadRes: function (guidRoot) {
-                var json = require('./forms/'+guidRoot+'.json');
+                var json = require(UCCELLO_CONFIG.dataPath + 'forms/'+guidRoot+'.json');
                 return json;
             }
 

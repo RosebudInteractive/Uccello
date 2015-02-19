@@ -125,9 +125,9 @@ define(
             readTableFile: function(file, guidRoot, classGuid, expression, done) {
                 var fs = require('fs');
                 var that = this;
-                fs.exists(__dirname + '/tables/'+file, function(exists) {
+                fs.exists(UCCELLO_CONFIG.dataPath + 'tables/'+file, function(exists) {
                     if (exists) {
-                        fs.readFile(__dirname + '/tables/'+file, function (err, data) {
+                        fs.readFile(UCCELLO_CONFIG.dataPath + 'tables/'+file, function (err, data) {
                             if(err) throw err;
                             done(JSON.parse(data));
                         });
@@ -152,7 +152,7 @@ define(
                         var result = that.createResult(guidRoot, typeGuid, rows);
 
                         /*var fs = require('fs');
-                        fs.writeFile("./public/uccello/dataman/tables/incomeplan-1.json", JSON.stringify(result), function(err) {
+                        fs.writeFile(UCCELLO_CONFIG.dataPath + 'tables/incomeplan-1.json', JSON.stringify(result), function(err) {
                             if(err) {
                                 console.log(err);
                             } else {
@@ -203,11 +203,6 @@ define(
                     conn.query('SELECT * FROM contract WHERE parent=?', [expression], function(err, rows) {
                         if (err) throw err;
                         var result = that.createResult(guidRoot, "08a0fad1-d788-3604-9a16-3544a6f97721", rows);
-
-                        /*var fs = require('fs');
-                        fs.writeFile(__dirname + '/tables/contract-'+expression+'.json',JSON.stringify(result),  function (err, data) {
-                        });*/
-
                         done(result);
                     });
                 } else
