@@ -5,8 +5,8 @@ if (typeof define !== 'function') {
 
 define(
     ['../memDB/memDBController', '../controls/controlMgr', '../controls/aComponent', '../controls/aControl', './session', './connect', './user', '../system/event',
-        './visualContext'],
-    function(MemDBController, ControlMgr, AComponent, AControl, Session, Connect, User, Event, VisualContext) {
+        './visualContext', '../system/utils'],
+    function(MemDBController, ControlMgr, AComponent, AControl, Session, Connect, User, Event, VisualContext, Utils) {
         var UserSessionMgr = Class.extend({
 
             init: function(router, options){
@@ -15,6 +15,7 @@ define(
                 this.sessions = {};
                 this.connects = {};
                 this.users = {};
+                this.deviceNameId = 0;
                 this.sessionId = 0;
                 this.userId = 0;
 				this.event = new Event();
@@ -84,10 +85,7 @@ define(
              */
             routerAuthenticate: function(data, done) {
                 var session = this.getConnect(data.connectId).getSession();
-                session.deviceName(data.session.deviceName);
-                session.deviceType(data.session.deviceType);
-                session.deviceColor(data.session.deviceColor);
-                this.authenticate(data.connectId, session.getId(), data.name, data.pass, done);
+                this.authenticate(data.connectId, session.getId(), data, done);
             },
 
             /**
@@ -159,7 +157,7 @@ define(
              */
             _newSession: function(data) {
                 var user = this._newUser();
-                var sessionId = ++this.sessionId;
+                var sessionId = Utils.guid();
                 var session = new Session(this.cmsys, {parent:user, colName: "Sessions", ini: { fields: {Id:sessionId, Name: "S"+sessionId, deviceName:data.deviceName, deviceType:data.deviceType, deviceColor:data.deviceColor}}});
                 this.addSession(session);
                 this.addUser(user);
@@ -173,8 +171,7 @@ define(
              */
             _newUser: function() {
                 var userId = ++this.userId;
-                //var user = new User(this.cmsys, {name:'noname'+userId});
-				var user = new User(this.cmsys, { ini: { fields: { Id: userId, Name: 'noname'+userId } }}); //    name:'noname'+userId});
+				var user = new User(this.cmsys, { ini: { fields: { Id: userId, Name: 'noname'+userId } }});
 				
 				// генерируем событие на создание нового пользователя, чтобы привязать к нему контекст
 				this.event.fire({
@@ -194,25 +191,43 @@ define(
              * @param user
              * @param pass
              */
-            authenticate: function(connectId, sessionId, user, pass, done) {
+            authenticate: function(connectId, sessionId, data, done) {
                 var that = this;
-                this.options.authenticate(user, pass, function(err, result){
+                this.options.authenticate(data.name, data.pass, function(err, result){
                     if (result) {
-                        var userObj = that.getUser(user);
+                        var userObj = that.getUser(data.name);
                         var session = that.getSession(sessionId);
+
                         if (userObj) {
                             that.removeUser(session.getUser().name());
+                            session.getUser().name(data.name);
                         } else {
                             userObj = session.getUser();
-                            //userObj.setName(user);
-							userObj.name(user);
+                            that.removeUser(userObj.name());
+							userObj.name(data.name);
+                            that.addUser(userObj);
                         }
+
                         userObj.addSession(session);
                         userObj.authenticated(true);
                         userObj.loginTime(Date.now());
+
+                        // Если название дублируется (уже есть такие для данного юзера),
+                        // то сервер добавляет индекс  MyComputer1, MyComputer2 и т.д.
+                        var userSessions = userObj.getSessions();
+                        for(var i in userSessions) {
+                            if (userSessions[i].item.deviceName() == data.session.deviceName)
+                                data.session.deviceName = data.session.deviceName+(++that.deviceNameId);
+                        }
+                        // сохраняем данные девайса
+                        session.deviceName(data.session.deviceName);
+                        session.deviceType(data.session.deviceType);
+                        session.deviceColor(data.session.deviceColor);
+
 						// рассылка дельт 1/9/14
 						that.dbcsys.genDeltas(that.dbsys.getGuid());
-                        done({user:{user: userObj.name(), loginTime: userObj.loginTime()}});
+                        done({user:{user: userObj.name(), loginTime: userObj.loginTime(),
+                                session:{id:session.getId(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
                     } else {
                         done({user:null});
                     }
