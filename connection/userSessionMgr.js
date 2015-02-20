@@ -56,8 +56,12 @@ define(
              * @returns {object}
              */
             routerConnect: function(data, done) {
+
+                // данные сессии
+                data.session = JSON.parse(data.session);
+
                 // подключаемся к серверу с клиента
-                var result =  this.connect(data.socket, {client:data}, data.sid);
+                var result =  this.connect(data.socket, {client:data});
 
                 // обработка события закрытия коннекта
                 var connect = this.getConnect(data.connectId);
@@ -80,6 +84,9 @@ define(
              */
             routerAuthenticate: function(data, done) {
                 var session = this.getConnect(data.connectId).getSession();
+                session.deviceName(data.session.deviceName);
+                session.deviceType(data.session.deviceType);
+                session.deviceColor(data.session.deviceColor);
                 this.authenticate(data.connectId, session.getId(), data.name, data.pass, done);
             },
 
@@ -117,15 +124,15 @@ define(
              * Подключаемся к серверу с клиента
              * @param {object} socket
              * @param {object} data Данные в формате {client:{...}}
-             * @param {number=} sessionId
              */
-            connect: function(socket, data, sessionId) {
+            connect: function(socket, data) {
 
-                var session = this.getSession(sessionId);
+                var sessionId = data.client.session.id;
+                var session = this.getSession(data.client.session.id);
 
                 // если не указан номер сессии или не найдена создаем новую
                 if (!session) {
-                    sessionId = this._newSession();
+                    sessionId = this._newSession(data.client.session);
                     session = this.getSession(sessionId);
                 }
 
@@ -136,7 +143,7 @@ define(
                 session.addConnect(connect);
 
                 // Если возвращен user, то это означает, что сессия авторизована и соответствует пользователю с логином user.user
-                var result = {sessionId: sessionId};
+                var result = {sessionId: sessionId, session:{id:sessionId, deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}};
                 var user = session.getUser();
                 if (user.authenticated())
                     result.user = {user: user.name(), loginTime: user.loginTime()};
@@ -146,13 +153,14 @@ define(
 
             /**
              * Cоздает новую сессию с неавторизованным пользователем и возвращает идентификатор этой сессии
+             * @param data {object}
              * @returns {number}
              * @private
              */
-            _newSession: function() {
+            _newSession: function(data) {
                 var user = this._newUser();
                 var sessionId = ++this.sessionId;
-                var session = new Session(this.cmsys, {parent:user, colName: "Sessions", ini: { fields: {Id:sessionId, Name: "S"+sessionId}}});
+                var session = new Session(this.cmsys, {parent:user, colName: "Sessions", ini: { fields: {Id:sessionId, Name: "S"+sessionId, deviceName:data.deviceName, deviceType:data.deviceType, deviceColor:data.deviceColor}}});
                 this.addSession(session);
                 this.addUser(user);
                 user.addSession(session);
@@ -205,9 +213,9 @@ define(
 						// рассылка дельт 1/9/14
 						that.dbcsys.genDeltas(that.dbsys.getGuid());
                         done({user:{user: userObj.name(), loginTime: userObj.loginTime()}});
+                    } else {
+                        done({user:null});
                     }
-					//TODO почему без ELSE?
-                    done({user:null});
                 });
             },
 

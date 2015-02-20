@@ -25,6 +25,7 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                 this._super(cm, params);
             } else {
                 this.socket = null;
+                this.session = null;
                 this.sessionId = null;
                 this.connected = false;
             }
@@ -34,16 +35,17 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
          * подключить к серверной части, без логина, возвращает идентификатор сессии и имя пользователя если сессия авторизована
          * (см. описание userSessionMgr.connect, которая вызывается из данного метода)
          * @param url
-         * @param sessionId
+         * @param session
          */
-        connect: function(url, sessionId, callback) {
+        connect: function(url, session, callback) {
             var that = this;
-            this.sessionId = sessionId;
+            this.session = session;
+            this.sessionId = session.id;
             that.socket = new Socket(url, {
                 open: function(){ // при открытии соединения
                     that.connected = true;
                     // отправляем сообщение что подключились
-                    that.socket.send({action:'connect', type:'method', sid: sessionId, agent:navigator.userAgent}, callback);
+                    that.socket.send({action:'connect', type:'method', session: JSON.stringify(session), agent:navigator.userAgent}, callback);
                 },
                 close: function(){
                     that.connected = false;
@@ -65,34 +67,34 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
             });
         },
 
-        authenticate: function(user, pass, callback) {
+        authenticate: function(user, pass, session, callback) {
             if (!this.connected)
                 return false;
-            this.socket.send({action:'authenticate', type:'method', name:user, pass:pass, sid: this.sessionId}, callback);
+            this.socket.send({action:'authenticate', type:'method', name:user, pass:pass, sid: session.id, session:session}, callback);
         },
 
         deauthenticate: function(callback) {
-            this.socket.send({action:'deauthenticate', type:'method', sid: this.sessionId}, callback);
+            this.socket.send({action:'deauthenticate', type:'method', sid: this.session.id}, callback);
         },
 
         disconnect: function(callback) {
-            this.socket.send({action:'disconnect', type:'method', sid: this.sessionId}, callback);
+            this.socket.send({action:'disconnect', type:'method', sid: this.session.id}, callback);
         },
 
         getUser: function(callback) {
-            this.socket.send({action:'getUser', type:'method', sid: this.sessionId}, function(result){
+            this.socket.send({action:'getUser', type:'method', sid: this.session.id}, function(result){
                 callback(result.item);
             });
         },
 
         getSession: function(callback) {
-            this.socket.send({action:'getSession', type:'method', sid: this.sessionId}, function(result){
+            this.socket.send({action:'getSession', type:'method', sid: this.session.id}, function(result){
                 callback(result.item);
             });
         },
 
         getConnect: function(callback) {
-            this.socket.send({action:'getConnect', type:'method', sid: this.sessionId}, function(result){
+            this.socket.send({action:'getConnect', type:'method', sid: this.session.id}, function(result){
                 callback(result.item);
             });
         }

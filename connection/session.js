@@ -17,7 +17,10 @@ define(
         classGuid: "70c9ac53-6fe5-18d1-7d64-45cfff65dbbb",
         metaFields: [
             {fname:"CreationTime", ftype:"timestamp"},
-            {fname:"LastOpTime", ftype:"timestamp"}
+            {fname:"LastOpTime", ftype:"timestamp"},
+            {fname:"deviceName", ftype:"string"},
+            {fname:"deviceType", ftype:"string"},
+            {fname:"deviceColor", ftype:"string"}
         ],
         metaCols: [ {"cname": "Connects", "ctype": "control"} ],
 
@@ -156,6 +159,18 @@ define(
 
         lastOpTime: function(value) {
             return this._genericSetter("LastOpTime",value);
+        },
+
+        deviceName: function(value) {
+            return this._genericSetter("deviceName",value);
+        },
+
+        deviceType: function(value) {
+            return this._genericSetter("deviceType",value);
+        },
+
+        deviceColor: function(value) {
+            return this._genericSetter("deviceColor",value);
         }
     });
 

@@ -20,7 +20,7 @@ define(
             init: function(options){
                 var that = this;
 				this.pvt = {};
-                this.pvt.sessionId = options.sessionId;
+
                 this.pvt.user = null;
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
 
@@ -31,15 +31,16 @@ define(
 				this.pvt.vc = null; // VisualContext
                 this.pvt.renderRoot = options.renderRoot;
                 this.options = options;
+                this.pvt.session = options.session;
 
                 // создаем глобальную переменную
                 UCCELLO_CONFIG = new Config(options.config);
 
                 this.loadControls(function(){
-                    that.getClient().connect(options.host, options.sessionId,  function(result){
-                        that.pvt.sessionId = result.sessionId;
+                    that.getClient().connect(options.host, that.getSession(),  function(result){
+                        that.pvt.session = result.session;
                         that.pvt.user = result.user;
-                        document.location.hash = '#sid='+options.sessionId;
+                        document.location.hash = '#sid='+that.getSession().id;
                         that.pvt.typeGuids["dccac4fc-c50b-ed17-6da7-1f6230b5b055"] = User;
                         that.pvt.typeGuids["70c9ac53-6fe5-18d1-7d64-45cfff65dbbb"] = Session;
                         that.pvt.typeGuids["66105954-4149-1491-1425-eac17fbe5a72"] = Connect;
@@ -72,7 +73,9 @@ define(
                         type: 'endApplyDeltas',
                         subscriber: this,
                         callback: function(args){
-                            that.getContext().renderAll(true);
+                            var context = that.getContext();
+                            if (context)
+                                context.renderAll(true);
                         }
                     });
 
@@ -126,6 +129,10 @@ define(
 
             getLoggedUser: function(){
                 return this.pvt.user;
+            },
+
+            getSession: function(){
+                return this.pvt.session;
             },
 
             /**
