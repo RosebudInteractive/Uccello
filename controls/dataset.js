@@ -17,6 +17,7 @@ define(
                 {fname: "Master", ftype: "string"},
 				{fname: "OnMoveCursor", ftype: "event"}
             ],
+			metaCols: [ {"cname": "Fields", "ctype": "DataField"}],
 
             /**
              * Инициализация объекта
