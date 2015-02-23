@@ -20,7 +20,8 @@ define(
             {fname:"LastOpTime", ftype:"timestamp"},
             {fname:"deviceName", ftype:"string"},
             {fname:"deviceType", ftype:"string"},
-            {fname:"deviceColor", ftype:"string"}
+            {fname:"deviceColor", ftype:"string"},
+            {fname:"NumConnects", ftype:"int"}
         ],
         metaCols: [ {"cname": "Connects", "ctype": "control"} ],
 
@@ -81,6 +82,8 @@ define(
              conn.setSession(this);
 
             this.connects[conn.getId()] = conn;
+            this.numConnects(this.countConnect());
+
             return true;
         },
 
@@ -112,6 +115,7 @@ define(
             this.lastOpTime = Date.now();
             if (this.connects[id])
                 delete this.connects[id];
+            this.numConnects(this.countConnect());
         },
 
         /**
@@ -171,6 +175,10 @@ define(
 
         deviceColor: function(value) {
             return this._genericSetter("deviceColor",value);
+        },
+
+        numConnects: function(value) {
+            return this._genericSetter("NumConnects",value);
         }
     });
 
