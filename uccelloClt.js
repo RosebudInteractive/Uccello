@@ -50,9 +50,7 @@ define(
                         that.pvt.typeGuids["66105954-4149-1491-1425-eac17fbe5a72"] = Connect;
                         that.pvt.typeGuids["d5fbf382-8deb-36f0-8882-d69338c28b56"] = VisualContext;
                         that.pvt.typeGuids["5f27198a-0dd2-81b1-3eeb-2834b93fb514"] = ClientConnection;
-                        that.createController();
-                        if (options.callback)
-                            options.callback();
+                        that.createController(options.callback);
 
                         that.pvt.clientConnection.socket.send({action:"testIntf", type:'method'}, function(result){
                             var guidServer = "d3d7191b-3b4c-92cc-43d4-a84221eb35f5";
@@ -84,7 +82,7 @@ define(
                     });
 
                     // создаем системную бд
-                    that.pvt.dbsys = that.pvt.controller.newDataBase({name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}});
+                    that.pvt.dbsys = that.pvt.controller.newDataBase({name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}}, done);
                     that.pvt.cmsys = new ControlMgr(that.pvt.dbsys);
 
                     // создаем мастер базу для clientConnection

@@ -20,6 +20,7 @@ define([], function() {
             {className:'DataCompany', isUccello:true, component:'dataman/dataCompany', guid:'59583572-20fa-1f58-8d3f-5114af0f2c514'},
             {className:'DataAddress', isUccello:true, component:'dataman/dataAddress', guid:'16ec0891-1144-4577-f437-f98699464948'},
             {className:'ADataModel', isUccello:true, component:'controls/aDataModel', guid:'5e89f6c7-ccc2-a850-2f67-b5f5f20c3d47'},
+            {className:'DataField', isUccello:true, component:'controls/dataField', guid:'4bade3a6-4a25-3887-4868-9c3de4213729'},
             {className:'Dataset', isUccello:true, component:'controls/dataset', guid:'3f3341c7-2f06-8d9d-4099-1075c158aeee'},
             {className:'FormParam', isUccello:true, component:'controls/formParam', guid:'4943ce3e-a6cb-65f7-8805-ec339555a981'}
         ],
