@@ -84,7 +84,7 @@ define(
                     var result = {res:this.getUserMgr().loadRes(this.getUserMgr().getController().guid())};
                     done(result);
                 });
-				
+
 				//this.getRouter().add('createRootS', function() { return that.routerCreateRootS.apply(that, arguments); });
 
 

@@ -15,7 +15,7 @@ define(
 
         className: "Connect",
         classGuid: "66105954-4149-1491-1425-eac17fbe5a72",
-        metaFields: [], //[ {fname:"Id", ftype:"int"} ],
+        metaFields: [{fname:"Context", ftype:"string"}], //[ {fname:"Id", ftype:"int"} ],
         metaCols: [],
 
         /**
@@ -129,7 +129,14 @@ define(
 
         isConnected: function() {
             return this.params.stateReady == 1;
+        },
+
+        // Properties
+
+        context: function(value) {
+            return this._genericSetter("Context",value);
         }
+
     });
 
     return Connect;
