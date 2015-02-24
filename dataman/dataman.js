@@ -4,8 +4,8 @@
 }
 
 define(
-    ['../controls/controlMgr',  './dataRoot', './dataContact', './dataCompany'],
-    function(ControlMgr, DataRoot, DataContact, DataCompany)  {
+    ['./dataRoot'],
+    function(DataRoot)  {
 		var Dataman = Class.extend({
 
 			init: function(router, controller){
