@@ -387,15 +387,17 @@ define(
 				if ("obj" in parent) parent.obj.getLog().setActive(false); // отключить лог на время десериализации
 				var res = ideser(this,sobj,parent);
 				var rholder = this.getRoot(res.getGuid());
-				if (!("ver" in sobj)) {
-					rholder.vver = 0; // Если в сериализованном представлении нет номера версии, полагаем =0
-					rholder.sver = 0;
-					rholder.dver = 0;
+				if (rholder) { // TODO Сергей: поставил проверку иначе при создании контекста ошибки
+					if (!("ver" in sobj)) {
+						rholder.vver = 0; // Если в сериализованном представлении нет номера версии, полагаем =0
+						rholder.sver = 0;
+						rholder.dver = 0;
+						}
+					else {
+						rholder.vver = sobj.ver; // TODOХ не до конца ясно как поступать с версиями в случае частичной сериализации - продумать
+						rholder.sver = sobj.ver;
+						rholder.dver = sobj.ver;
 					}
-				else {
-					rholder.vver = sobj.ver; // TODOХ не до конца ясно как поступать с версиями в случае частичной сериализации - продумать
-					rholder.sver = sobj.ver;
-					rholder.dver = sobj.ver;
 				}
 				res.getLog().setActive(true);
 				// TODO - запомнить "сериализованный" объект (или еще раз запустить сериализацию?)
