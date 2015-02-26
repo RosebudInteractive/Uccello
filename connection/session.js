@@ -18,9 +18,9 @@ define(
         metaFields: [
             {fname:"CreationTime", ftype:"timestamp"},
             {fname:"LastOpTime", ftype:"timestamp"},
-            {fname:"deviceName", ftype:"string"},
-            {fname:"deviceType", ftype:"string"},
-            {fname:"deviceColor", ftype:"string"},
+            {fname:"DeviceName", ftype:"string"},
+            {fname:"DeviceType", ftype:"string"},
+            {fname:"DeviceColor", ftype:"string"},
             {fname:"ConnectCount", ftype:"int"}
         ],
         metaCols: [ {"cname": "Connects", "ctype": "control"} ],
@@ -166,15 +166,15 @@ define(
         },
 
         deviceName: function(value) {
-            return this._genericSetter("deviceName",value);
+            return this._genericSetter("DeviceName",value);
         },
 
         deviceType: function(value) {
-            return this._genericSetter("deviceType",value);
+            return this._genericSetter("DeviceType",value);
         },
 
         deviceColor: function(value) {
-            return this._genericSetter("deviceColor",value);
+            return this._genericSetter("DeviceColor",value);
         },
 
         connectCount: function(value) {
