@@ -112,25 +112,25 @@ define(
 						// добавление объекта в иерархию
 						case "add":
 							curd.add = c.adObj;
-							var par = c.obj.getParent();
-							if (par) {
-								curd.parentGuid = par.getGuid();
-								curd.parentColName = c.obj.getColName();
-							}
-							else
-								curd.parentGuid = "";
-							break;
+							//var par = c.obj.getParent();
+							//if (par) {
+							curd.parentGuid = c.guid; //par.getGuid();
+							curd.parentColName = c.obj.getColName();
+							//}
+							//else
+							//	curd.parentGuid = "";
+							//break;
 						// добавление самого корневого элемента
 						case "newRoot":
 							curd.newRoot = c.adObj;
 							break;
 						// удаление объекта из иерархии
 						case "del":
-							var par = c.obj.getParent();
-							if (par) {
-								curd.parentGuid = par.getGuid();
-								curd.parentColName = c.obj.getColName();
-							}
+							//var par = c.obj.getParent();
+							//if (par) {
+							curd.parentGuid = c.guid; //par.getGuid();
+							curd.parentColName = c.obj.getColName();
+							//}
 							curd.deleted = 1;
 							break;
 					}

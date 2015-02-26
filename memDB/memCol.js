@@ -32,8 +32,9 @@ define(
 					this._elemsByName[fname]=this._elems.length-1;				
 				// ВРЕМЕННО КОНЕЦ
 				if (this._obj.getLog().getActive()) { 
+						var mg = (obj.getParent() ? obj.getParent().getGuid() : ""); 
 						var newObj=this._obj.getDB().serialize(obj);
-						var o = { adObj: newObj, obj:obj, colName: this._name, type:"add"};
+						var o = { adObj: newObj, obj:obj, colName: this._name, guid: mg, type:"add"};
 						this._obj.getLog().add(o);
 					}
 				var p = this.getParent();
@@ -47,7 +48,7 @@ define(
 						this._elems.splice(i,1);
 						
 						if (this._obj.getLog().getActive()) { // записать в лог если активен
-							var o = { obj:obj, colName: this._name, type:"del"};
+							var o = { obj:obj, colName: this._name, guid: obj.getParent().getGuid(), type:"del"};
 							this._obj.getLog().add(o);					
 						}
 						this.getDB().onDeleteObject(obj);  // уведомить свою базу данных
