@@ -4,9 +4,9 @@
 }
 
 define(
-	['./viewset'],
-	function(ViewSet) {
-		var ControlMgr = Class.extend({
+	['../system/uobjectMgr', './viewset'],
+	function(UObjectMgr, ViewSet) {
+		var ControlMgr = UObjectMgr.extend({
 
             /**
              * @constructs
@@ -15,6 +15,7 @@ define(
 			 * @param vc - контекст менеджера
              */
 			init: function(db, rootGuid, vc){
+				this._super(db, rootGuid, vc);
 				this.pvt = {};
 				this.pvt.compByLid = {};
 				this.pvt.compByGuid = {};
