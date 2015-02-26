@@ -21,7 +21,7 @@ define(
             {fname:"deviceName", ftype:"string"},
             {fname:"deviceType", ftype:"string"},
             {fname:"deviceColor", ftype:"string"},
-            {fname:"NumConnects", ftype:"int"}
+            {fname:"ConnectCount", ftype:"int"}
         ],
         metaCols: [ {"cname": "Connects", "ctype": "control"} ],
 
@@ -66,11 +66,11 @@ define(
             var that = this;
 
             // обработка события закрытия коннекта
-			// TODO ПЕРЕНЕСТИ В КОНСТРУКТОР КОННЕКТА?
             conn.event.on({
                 type: 'socket.close',
                 subscriber: this,
                 callback: function(args){
+                    that.getDB().getController().onDisconnect(args.connId);
                     that.removeConn(args.connId);
                     that.getObj().getCol("Connects")._del(conn.getObj());
                     var db = that.getObj().getDB();
@@ -82,7 +82,7 @@ define(
              conn.setSession(this);
 
             this.connects[conn.getId()] = conn;
-            this.numConnects(this.countConnect());
+            this.connectCount(this.countConnect());
 
             return true;
         },
@@ -115,7 +115,7 @@ define(
             this.lastOpTime = Date.now();
             if (this.connects[id])
                 delete this.connects[id];
-            this.numConnects(this.countConnect());
+            this.connectCount(this.countConnect());
         },
 
         /**
@@ -177,8 +177,8 @@ define(
             return this._genericSetter("deviceColor",value);
         },
 
-        numConnects: function(value) {
-            return this._genericSetter("NumConnects",value);
+        connectCount: function(value) {
+            return this._genericSetter("ConnectCount",value);
         }
     });
 

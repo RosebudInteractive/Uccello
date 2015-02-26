@@ -71,7 +71,6 @@ define(
                     type: 'socket.close',
                     subscriber: this,
                     callback: function(args){
-                        that.getController().onDisconnect(args.connId);
                         that.removeConnect(args.connId);
                     }
                 });

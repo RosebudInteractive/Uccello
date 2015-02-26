@@ -115,7 +115,7 @@ define(
             this.event.fire({
                 type: 'socket.close',
                 target: this,
-                connId: this.id
+                connId: this.getId()
             });
         },
 
