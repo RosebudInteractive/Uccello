@@ -246,14 +246,17 @@ define(
 
                 // удаляем у именованного
                 session.getUser().removeSession(sessionId);
+                session.getUser().getObj().getCol("Sessions")._del(session.getObj());
 
                 // создаем noname
                 var user = this._newUser();
-
-                // сессию привязываем к юзеру
                 user.addSession(session);
-                //session.setUser(user);
-                done({});
+                session.getObj().pvt.parent = user.getObj();
+                user.getObj().getCol("Sessions")._add(session.getObj());
+
+                // рассылка дельт
+                this.dbcsys.genDeltas(this.dbsys.getGuid());
+                done({user:{user: user.name(), guid:user.getObj().getGuid(), session:{id:session.getId(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
             },
 
             /**
