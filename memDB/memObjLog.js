@@ -115,11 +115,11 @@ define(
 							//var par = c.obj.getParent();
 							//if (par) {
 							curd.parentGuid = c.guid; //par.getGuid();
-							curd.parentColName = c.obj.getColName();
+							curd.parentColName = c.colName; //obj.getColName();
 							//}
 							//else
 							//	curd.parentGuid = "";
-							//break;
+							break;
 						// добавление самого корневого элемента
 						case "newRoot":
 							curd.newRoot = c.adObj;
@@ -129,7 +129,7 @@ define(
 							//var par = c.obj.getParent();
 							//if (par) {
 							curd.parentGuid = c.guid; //par.getGuid();
-							curd.parentColName = c.obj.getColName();
+							curd.parentColName = c.colName; //obj.getColName();
 							//}
 							curd.deleted = 1;
 							break;
