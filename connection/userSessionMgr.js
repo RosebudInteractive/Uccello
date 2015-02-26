@@ -199,9 +199,9 @@ define(
 
                         if (userObj) {
                             that.removeUser(session.getUser().name());
-                            userObj.getObj().getCol("Sessions")._add(session.getObj());
                             session.getUser().getObj().getCol("Sessions")._del(session.getObj());
-                            session.pvt.parent = userObj;
+                            session.getObj().pvt.parent = userObj.getObj();
+                            userObj.getObj().getCol("Sessions")._add(session.getObj());
                         } else {
                             userObj = session.getUser();
                             that.removeUser(userObj.name());
