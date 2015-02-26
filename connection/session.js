@@ -21,7 +21,7 @@ define(
             {fname:"DeviceName", ftype:"string"},
             {fname:"DeviceType", ftype:"string"},
             {fname:"DeviceColor", ftype:"string"},
-            {fname:"ConnectCount", ftype:"int"}
+            {fname:"CountConnect", ftype:"int"}
         ],
         metaCols: [ {"cname": "Connects", "ctype": "control"} ],
 
@@ -82,7 +82,7 @@ define(
              conn.setSession(this);
 
             this.connects[conn.getId()] = conn;
-            this.connectCount(this.countConnect());
+            this.countConnect(true);
 
             return true;
         },
@@ -115,15 +115,15 @@ define(
             this.lastOpTime = Date.now();
             if (this.connects[id])
                 delete this.connects[id];
-            this.connectCount(this.countConnect());
+            this.countConnect(true);
         },
 
         /**
          * Количество коннектов
          * @returns {number}
          */
-        countConnect: function () {
-            return Object.keys(this.connects).length
+        countConnect: function (value) {
+            return this._genericSetter("CountConnect", value?Object.keys(this.connects).length:undefined);
         },
 
         /**
@@ -175,10 +175,6 @@ define(
 
         deviceColor: function(value) {
             return this._genericSetter("DeviceColor",value);
-        },
-
-        connectCount: function(value) {
-            return this._genericSetter("ConnectCount",value);
         }
     });
 
