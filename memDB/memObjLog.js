@@ -112,13 +112,8 @@ define(
 						// добавление объекта в иерархию
 						case "add":
 							curd.add = c.adObj;
-							//var par = c.obj.getParent();
-							//if (par) {
-							curd.parentGuid = c.guid; //par.getGuid();
-							curd.parentColName = c.colName; //obj.getColName();
-							//}
-							//else
-							//	curd.parentGuid = "";
+							curd.parentGuid = c.guid;
+							curd.parentColName = c.colName; 
 							break;
 						// добавление самого корневого элемента
 						case "newRoot":
@@ -126,11 +121,8 @@ define(
 							break;
 						// удаление объекта из иерархии
 						case "del":
-							//var par = c.obj.getParent();
-							//if (par) {
-							curd.parentGuid = c.guid; //par.getGuid();
-							curd.parentColName = c.colName; //obj.getColName();
-							//}
+							curd.parentGuid = c.guid;
+							curd.parentColName = c.colName;
 							curd.deleted = 1;
 							break;
 					}
