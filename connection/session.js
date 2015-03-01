@@ -8,22 +8,13 @@ if (typeof define !== 'function') {
  * @module Session
  */
 define(
-    ['../controls/aComponent', '../system/event'],
-    function(AComponent, Event) {
+    ['./sessioninfo', '../system/event'],
+    function(SessionInfo, Event) {
 
-    var Session = AComponent.extend(/** @lends module:Session.Session.prototype */{
+    var Session = SessionInfo.extend(/** @lends module:Session.Session.prototype */{
 
         className: "Session",
         classGuid: "70c9ac53-6fe5-18d1-7d64-45cfff65dbbb",
-        metaFields: [
-            {fname:"CreationTime", ftype:"timestamp"},
-            {fname:"LastOpTime", ftype:"timestamp"},
-            {fname:"DeviceName", ftype:"string"},
-            {fname:"DeviceType", ftype:"string"},
-            {fname:"DeviceColor", ftype:"string"},
-            {fname:"CountConnect", ftype:"int"}
-        ],
-        metaCols: [ {"cname": "Connects", "ctype": "control"} ],
 
         /**
          * Инициализация объекта
@@ -155,27 +146,7 @@ define(
             this.user = user;
         },*/
 
-		// Properties
-		
-        creationTime: function(value) {
-            return this._genericSetter("CreationTime",value);
-        },
 
-        lastOpTime: function(value) {
-            return this._genericSetter("LastOpTime",value);
-        },
-
-        deviceName: function(value) {
-            return this._genericSetter("DeviceName",value);
-        },
-
-        deviceType: function(value) {
-            return this._genericSetter("DeviceType",value);
-        },
-
-        deviceColor: function(value) {
-            return this._genericSetter("DeviceColor",value);
-        }
     });
 
     return Session;

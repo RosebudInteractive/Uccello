@@ -67,10 +67,15 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
             });
         },
 
-        authenticate: function(user, pass, session, callback) {
+        /**
+         * Аутентификация
+         * @param params {user, pass, session, subscribeUserInfo}
+         * @param callback
+         */
+        authenticate: function(params, callback) {
             if (!this.connected)
                 return false;
-            this.socket.send({action:'authenticate', type:'method', name:user, pass:pass, sid: session.id, session:session}, callback);
+            this.socket.send({action:'authenticate', type:'method', name:params.user, pass:params.pass, sid: params.session.id, session:params.session, subscribeUserInfo:params.subscribeUserInfo}, callback);
         },
 
         deauthenticate: function(callback) {
@@ -97,9 +102,16 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
             this.socket.send({action:'getConnect', type:'method', sid: this.session.id}, function(result){
                 callback(result.item);
             });
+        },
+
+        /**
+         * Возвращает userInfo если подписка осуществлена
+         */
+        getUserInfo: function() {
+            
         }
-		
-		
+
+
     });
 
     return ClientConnection;

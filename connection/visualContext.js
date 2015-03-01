@@ -8,8 +8,8 @@ if (typeof define !== 'function') {
  * @module VisualContext
  */
 define(
-    ['../controls/aComponent', '../controls/aControl', '../controls/controlMgr'],
-    function(AComponent, AControl, ControlMgr) {
+    ['./visualContextinfo', '../controls/aComponent', '../controls/aControl', '../controls/controlMgr'],
+    function(VisualContextInfo, AComponent, AControl, ControlMgr) {
 
         var Interfvc = {	
 			className: "Interfvc",
@@ -19,17 +19,10 @@ define(
 			//loadRoot: "function"
 		}
 					 
-        var VisualContext = AComponent.extend(/** @lends module:VisualContext.VisualContext.prototype */{
+        var VisualContext = VisualContextInfo.extend(/** @lends module:VisualContext.VisualContext.prototype */{
 
             className: "VisualContext",
             classGuid: "d5fbf382-8deb-36f0-8882-d69338c28b56",
-            metaFields: [
-                {fname: "DataBase", ftype: "string"}, // runtime
-				{fname: "Kind", ftype: "string"}, // , fdefault: "master" enum (master,slave
-				{fname: "MasterGuid", ftype: "string"},
-				{fname: "ContextGuid", ftype: "string"}
-            ],
-            metaCols: [],
 
              /**
              * Инициализация объекта
@@ -285,22 +278,6 @@ define(
 			getProxy: function() {
 				return this.pvt.vcproxy;
 			},
-			
-            dataBase: function (value) {
-                return this._genericSetter("DataBase", value);
-            },
-			
-			kind: function (value) {
-                return this._genericSetter("Kind", value);
-            },
-			
-			masterGuid: function (value) {
-                return this._genericSetter("MasterGuid", value);
-            },
-
-			contextGuid: function (value) {
-                return this._genericSetter("ContextGuid", value);
-            },
 
 			getInterface: function() {
 				return Interfvc;

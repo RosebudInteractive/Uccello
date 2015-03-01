@@ -4,9 +4,9 @@ if (typeof define !== 'function') {
 }
 
 define(
-    ['../memDB/memDBController', '../controls/controlMgr', '../controls/aComponent', '../controls/aControl', './session', './connect', './user', '../system/event',
-        './visualContext', '../system/utils'],
-    function(MemDBController, ControlMgr, AComponent, AControl, Session, Connect, User, Event, VisualContext, Utils) {
+    ['../memDB/memDBController', '../controls/controlMgr', '../controls/aComponent', '../controls/aControl', './sessioninfo', './session', './connectinfo', './connect', './userinfo', './user', '../system/event',
+        './visualContextinfo', './visualContext', '../system/utils'],
+    function(MemDBController, ControlMgr, AComponent, AControl, SessionInfo, Session, ConnectInfo, Connect, UserInfo, User, Event, VisualContextInfo, VisualContext, Utils) {
         var UserSessionMgr = Class.extend({
 
             init: function(router, options){
@@ -30,9 +30,13 @@ define(
 
                 // создаем метаинфо
                 new AComponent(this.cmsys);
+                new UserInfo(this.cmsys);
                 new User(this.cmsys);
+                new SessionInfo(this.cmsys);
                 new Session(this.cmsys);
+                new ConnectInfo(this.cmsys);
                 new Connect(this.cmsys);
+                new VisualContextInfo(this.cmsys);
                 new VisualContext(this.cmsys);
 
                 // функции роутера
@@ -187,8 +191,8 @@ define(
              *  Возвращает объект {user: string, loginTime: dateTime}
              * @param connectId
              * @param sessionId
-             * @param user
-             * @param pass
+             * @param data
+             * @param done
              */
             authenticate: function(connectId, sessionId, data, done) {
                 var that = this;

@@ -6,12 +6,12 @@ if (typeof define !== 'function') {
 define(
     ['./connection/clientConnection' ,
         './memDB/memDBController','./memDB/memDataBase','./controls/controlMgr', './controls/aComponent',
-        './connection/user', './connection/session', './connection/connect', './connection/visualContext',
+        './connection/user', './connection/session', './connection/connect', './connection/visualContextinfo', './connection/visualContext',
         './system/rpc',
         './config/config'
     ],
     function(ClientConnection, MemDBController, MemDataBase, ControlMgr, AComponent,
-        User, Session, Connect, VisualContext,
+        User, Session, Connect, VisualContextInfo, VisualContext,
         Rpc,
         Config
         ) {
@@ -89,6 +89,7 @@ define(
                     that.pvt.dbclient = that.pvt.controller.newDataBase({name:"MasterClient", kind: "master"});
                     that.pvt.cmclient = new ControlMgr(that.pvt.dbclient);
                     new AComponent(that.pvt.cmclient);
+                    new VisualContextInfo(that.pvt.cmclient);
                     new VisualContext(that.pvt.cmclient);
                     new ClientConnection(that.pvt.cmclient);
                     that.pvt.clientConnection.init(that.pvt.cmclient, {});

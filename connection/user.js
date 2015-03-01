@@ -8,18 +8,13 @@ if (typeof define !== 'function') {
  * @module User
  */
 define(
-    ['../controls/aComponent'],
-    function(AComponent) {
+    ['./userinfo'],
+    function(UserInfo) {
 
-    var User = AComponent.extend(/** @lends module:User.User.prototype */{
+    var User = UserInfo.extend(/** @lends module:User.User.prototype */{
 
         className: "User",
         classGuid: "dccac4fc-c50b-ed17-6da7-1f6230b5b055",
-        metaFields: [
-            {fname:"Authenticated", ftype:"boolean"},
-            {fname:"LoginTime", ftype:"time"}
-        ],
-        metaCols: [ {cname: "Sessions", ctype: "control"},  {cname: "VisualContext", ctype: "control"} ],
 
         /**
          * Инициализация
@@ -67,23 +62,8 @@ define(
         removeSession: function(id){
             if (this.pvt.sessions[id])
                 delete this.pvt.sessions[id];
-        },
+        }
 
-
-		// Properties				
-		loginTime: function(value) {
-			return this._genericSetter("LoginTime",value);
-		},
-		
-		// TODO сделать ReadOnly property
-		authenticated: function(value) {
-			return this._genericSetter("LoginTime",value);
-		}
-		
-		
-
-		
-		
     });
     return User;
 });
