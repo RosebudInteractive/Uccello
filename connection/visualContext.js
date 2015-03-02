@@ -23,6 +23,7 @@ define(
 
             className: "VisualContext",
             classGuid: "d5fbf382-8deb-36f0-8882-d69338c28b56",
+			metaFields: [],
 
              /**
              * Инициализация объекта

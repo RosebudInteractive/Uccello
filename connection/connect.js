@@ -15,6 +15,7 @@ define(
 
         className: "Connect",
         classGuid: "66105954-4149-1491-1425-eac17fbe5a72",
+        metaFields: [],
 
         /**
          * Инициализация объекта
