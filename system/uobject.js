@@ -152,7 +152,7 @@ define(
 				if (colName == undefined) colName = "Children";
 				var col = this.getObj().getCol(colName);
 				if (col == undefined) return undefined;
-				else return col.get(i);				
+				else return this.getControlMgr().get(col.get(i).getGuid());				
 			},
 
             getControlMgr: function() {
