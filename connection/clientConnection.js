@@ -28,6 +28,7 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                 this.session = null;
                 this.sessionId = null;
                 this.connected = false;
+                this.authenticated = false;
             }
         },
 
@@ -75,10 +76,15 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
         authenticate: function(params, callback) {
             if (!this.connected)
                 return false;
-            this.socket.send({action:'authenticate', type:'method', name:params.user, pass:params.pass, sid: params.session.id, session:params.session, subscribeUserInfo:params.subscribeUserInfo}, callback);
+            var that = this;
+            this.socket.send({action:'authenticate', type:'method', name:params.user, pass:params.pass, sid: params.session.id, session:params.session}, function(result){
+                that.authenticated = result.user? result.user: false;
+                callback(result);
+            });
         },
 
         deauthenticate: function(callback) {
+            this.authenticated = false;
             this.socket.send({action:'deauthenticate', type:'method', sid: this.session.id}, callback);
         },
 

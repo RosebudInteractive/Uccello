@@ -6,12 +6,12 @@ if (typeof define !== 'function') {
 define(
     ['./connection/clientConnection' ,
         './memDB/memDBController','./memDB/memDataBase','./controls/controlMgr', './controls/aComponent',
-        './connection/user', './connection/session', './connection/connect', './connection/visualContextinfo', './connection/visualContext',
+        './connection/userinfo', './connection/user', './connection/sessioninfo', './connection/session', './connection/connectinfo', './connection/connect', './connection/visualContextinfo', './connection/visualContext',
         './system/rpc',
         './config/config'
     ],
     function(ClientConnection, MemDBController, MemDataBase, ControlMgr, AComponent,
-        User, Session, Connect, VisualContextInfo, VisualContext,
+        UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContextInfo, VisualContext,
         Rpc,
         Config
         ) {
@@ -45,6 +45,10 @@ define(
                         $.cookie('sid', result.session.id);
                         that.setSession(result.session);
                         that.pvt.user = result.user;
+                        that.pvt.typeGuids["e14cad9b-3895-3dc9-91ef-1fb12c343f10"] = UserInfo;
+                        that.pvt.typeGuids["479c72e9-29d1-3d6b-b17b-f5bf02e52002"] = SessionInfo;
+                        that.pvt.typeGuids["42dbc6c0-f8e4-80a5-a95f-e43601cccc71"] = ConnectInfo;
+                        that.pvt.typeGuids["a900a7c3-9648-7117-0b3a-ce0900f45987"] = VisualContextInfo;
                         that.pvt.typeGuids["dccac4fc-c50b-ed17-6da7-1f6230b5b055"] = User;
                         that.pvt.typeGuids["70c9ac53-6fe5-18d1-7d64-45cfff65dbbb"] = Session;
                         that.pvt.typeGuids["66105954-4149-1491-1425-eac17fbe5a72"] = Connect;
@@ -262,6 +266,33 @@ define(
                     }
                     callback();
                 });
+            },
+
+            subscribeUser: function(callback) {
+                var user = this.getClient().authenticated;
+                if (!user) {
+                    callback(false);
+                    return;
+                }
+
+                this.setSession(user.session);
+                this.pvt.guids.sysRootGuid = user.guid;
+
+                var that = this;
+                var compCallBack = function (obj) {
+                    var classGuid = obj.getTypeGuid();
+                    var transArr = {
+                        "dccac4fc-c50b-ed17-6da7-1f6230b5b055":"e14cad9b-3895-3dc9-91ef-1fb12c343f10", // User -> UserInfo
+                        "70c9ac53-6fe5-18d1-7d64-45cfff65dbbb":"479c72e9-29d1-3d6b-b17b-f5bf02e52002", // Session -> SessionInfo
+                        "66105954-4149-1491-1425-eac17fbe5a72":"42dbc6c0-f8e4-80a5-a95f-e43601cccc71", // Connect -> ConnectInfo
+                        "d5fbf382-8deb-36f0-8882-d69338c28b56":"a900a7c3-9648-7117-0b3a-ce0900f45987" // VisualContext -> VisualContextInfo
+                    };
+                    classGuid = transArr[classGuid]? transArr[classGuid]: classGuid;
+                    var params = {objGuid: obj.getGuid()};
+                    new (that.getConstr(classGuid))(that.pvt.cmsys, params);
+                };
+                this.getSysDB().setDefaultCompCallback(compCallBack);
+                this.getSysDB().subscribeRoots(this.pvt.guids.sysRootGuid, callback, compCallBack);
             }
 
 
