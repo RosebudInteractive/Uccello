@@ -44,7 +44,6 @@ define(
                     that.getClient().connect(options.host, that.getSession(),  function(result){
                         $.cookie('sid', result.session.id);
                         that.setSession(result.session);
-                        that.pvt.user = result.user;
                         that.pvt.typeGuids["e14cad9b-3895-3dc9-91ef-1fb12c343f10"] = UserInfo;
                         that.pvt.typeGuids["479c72e9-29d1-3d6b-b17b-f5bf02e52002"] = SessionInfo;
                         that.pvt.typeGuids["42dbc6c0-f8e4-80a5-a95f-e43601cccc71"] = ConnectInfo;
@@ -134,7 +133,7 @@ define(
 				this.pvt.typeGuids[obj.classGuid] = obj;
 			},
 
-            getLoggedUser: function(){
+            getUser: function(){
                 return this.pvt.user;
             },
 
@@ -289,7 +288,10 @@ define(
                     };
                     classGuid = transArr[classGuid]? transArr[classGuid]: classGuid;
                     var params = {objGuid: obj.getGuid()};
-                    new (that.getConstr(classGuid))(that.pvt.cmsys, params);
+                    var component = new (that.getConstr(classGuid))(that.pvt.cmsys, params);
+                    if (classGuid == "e14cad9b-3895-3dc9-91ef-1fb12c343f10") { // UserInfo
+                        that.pvt.user = component;
+                    }
                 };
                 this.getSysDB().setDefaultCompCallback(compCallBack);
                 this.getSysDB().subscribeRoots(this.pvt.guids.sysRootGuid, callback, compCallBack);
