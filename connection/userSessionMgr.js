@@ -146,7 +146,7 @@ define(
                 var result = {sessionId: sessionId, session:{id:sessionId, guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}};
                 var user = session.getUser();
                 if (user.authenticated())
-                    result.user = {user: user.name(), loginTime: user.loginTime()};
+                    result.user = {user: user.name(), guid:user.getGuid(), loginTime: user.loginTime(), session:{id:sessionId, guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}};
 
                 return result;
             },

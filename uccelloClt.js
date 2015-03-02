@@ -55,13 +55,23 @@ define(
                         that.pvt.typeGuids["66105954-4149-1491-1425-eac17fbe5a72"] = Connect;
                         that.pvt.typeGuids["d5fbf382-8deb-36f0-8882-d69338c28b56"] = VisualContext;
                         that.pvt.typeGuids["5f27198a-0dd2-81b1-3eeb-2834b93fb514"] = ClientConnection;
-                        that.createController(options.callback);
+
+                        that.createController(function(){
+                            if (result.user) {
+                                that.getClient().authenticated = result.user;
+                                that.subscribeUser(options.callback);
+                            } else {
+                                options.callback();
+                            }
+                        });
 
                         that.pvt.clientConnection.socket.send({action:"testIntf", type:'method'}, function(result){
                             var guidServer = "d3d7191b-3b4c-92cc-43d4-a84221eb35f5";
                             that.pvt.servInterface = result.intf;
                             that.pvt.proxyServer = rpc._publProxy(guidServer, clt.socket, result.intf); // публикуем прокси серверного интерфейса
                         });
+
+
                     });
                 });
 
