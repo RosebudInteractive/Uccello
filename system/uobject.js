@@ -117,6 +117,7 @@ define(
             /**
              * Возвращает компонент того же контролМенеджера по его гуиду
              */
+			 
             getComp: function(guid) {
                 return this.pvt.controlMgr.get(guid);
             },
@@ -139,6 +140,20 @@ define(
                 else
                     return this.pvt.controlMgr.getByGuid(this.getObj().getParent().getGuid());
             },
+			
+			countChild: function(colName) {
+				if (colName == undefined) colName = "Children";
+				var col = this.getObj().getCol(colName);
+				if (col == undefined) return undefined;
+				else return col.count();
+			},
+			
+			getChild: function(i,colName) {
+				if (colName == undefined) colName = "Children";
+				var col = this.getObj().getCol(colName);
+				if (col == undefined) return undefined;
+				else return col.get(i);				
+			},
 
             getControlMgr: function() {
                 return this.pvt.controlMgr;
