@@ -22,6 +22,7 @@ define(
 				this.pvt = {};
 
                 this.pvt.user = null;
+                this.pvt.sessionGuid = null;
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
 
                 var clt = this.pvt.clientConnection = new ClientConnection();
@@ -33,17 +34,18 @@ define(
                 this.options = options;
 
                 if ($.cookie('sid'))
-                    this.setSession({id:$.cookie('sid')});
+                    that.pvt.sessionGuid = $.cookie('sid');
                 else
-                    this.setSession({id:null});
+                    that.pvt.sessionGuid = null;
 
                 // создаем глобальную переменную
                 UCCELLO_CONFIG = new Config(options.config);
 
                 this.loadControls(function(){
-                    that.getClient().connect(options.host, that.getSession(),  function(result){
-                        $.cookie('sid', result.session.id);
-                        that.setSession(result.session);
+                    that.getClient().connect(options.host, {guid:that.getSessionGuid()},  function(result){
+                        $.cookie('sid', result.session.guid);
+                        that.pvt.sessionId = result.session.id;
+                        that.pvt.sessionGuid = result.session.guid;
                         that.pvt.typeGuids["e14cad9b-3895-3dc9-91ef-1fb12c343f10"] = UserInfo;
                         that.pvt.typeGuids["479c72e9-29d1-3d6b-b17b-f5bf02e52002"] = SessionInfo;
                         that.pvt.typeGuids["42dbc6c0-f8e4-80a5-a95f-e43601cccc71"] = ConnectInfo;
@@ -137,12 +139,12 @@ define(
                 return this.pvt.user;
             },
 
-            getSession: function(){
-                return this.pvt.session;
-            },
-
-            setSession: function(session){
-                this.pvt.session = session;
+            /**
+             * Гуид текущей сессии
+             * @returns {string}
+             */
+            getSessionGuid: function(){
+                return this.pvt.sessionGuid;
             },
 
             /**
@@ -274,7 +276,8 @@ define(
                     return;
                 }
 
-                this.setSession(user.session);
+                this.pvt.sessionGuid = user.session.guid;
+                this.pvt.sessionId = user.session.id;
                 this.pvt.guids.sysRootGuid = user.guid;
 
                 var that = this;
@@ -295,6 +298,16 @@ define(
                 };
                 this.getSysDB().setDefaultCompCallback(compCallBack);
                 this.getSysDB().subscribeRoots(this.pvt.guids.sysRootGuid, callback, compCallBack);
+            },
+
+            deauthenticate: function(callback){
+                var that = this;
+                that.getClient().deauthenticate(function(result){
+                    that.pvt.sessionGuid = result.user.session.guid;
+                    that.pvt.sessionId = result.user.session.id;
+                    that.pvt.guids.sysRootGuid = result.user.guid;
+                    that.getSysDB().subscribeRoots(that.pvt.guids.sysRootGuid, callback);
+                });
             }
 
 

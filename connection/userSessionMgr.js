@@ -127,9 +127,8 @@ define(
              * @param {object} data Данные в формате {client:{...}}
              */
             connect: function(socket, data) {
-
-                var sessionId = data.client.session.id;
-                var session = this.getSession(data.client.session.id);
+                var session = this.getSessionByGuid(data.client.session.guid);
+                var sessionId = session? session.getId(): null;
 
                 // если не указан номер сессии или не найдена создаем новую
                 if (!session) {
@@ -144,7 +143,7 @@ define(
                 session.addConnect(connect);
 
                 // Если возвращен user, то это означает, что сессия авторизована и соответствует пользователю с логином user.user
-                var result = {sessionId: sessionId, session:{id:sessionId, deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}};
+                var result = {sessionId: sessionId, session:{id:sessionId, guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}};
                 var user = session.getUser();
                 if (user.authenticated())
                     result.user = {user: user.name(), loginTime: user.loginTime()};
@@ -160,8 +159,8 @@ define(
              */
             _newSession: function(data) {
                 var user = this._newUser();
-                var sessionId = Utils.guid();
-                var session = new Session(this.cmsys, {parent:user, colName: "Sessions", ini: { fields: {Id:sessionId, Name: "S"+sessionId, deviceName:data.deviceName, deviceType:data.deviceType, deviceColor:data.deviceColor}}});
+                var sessionId = ++this.sessionId;
+                var session = new Session(this.cmsys, {parent:user, colName: "Sessions", ini: { fields: {Id:sessionId, SessionGuid:Utils.guid(), Name: "S"+sessionId, deviceName:data.deviceName, deviceType:data.deviceType, deviceColor:data.deviceColor}}});
                 this.addSession(session);
                 this.addUser(user);
                 user.addSession(session);
@@ -232,7 +231,7 @@ define(
 						// рассылка дельт 1/9/14
 						that.dbcsys.genDeltas(that.dbsys.getGuid());
                         done({user:{user: userObj.name(), guid:userObj.getObj().getGuid(), loginTime: userObj.loginTime(),
-                                session:{id:session.getId(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
+                                session:{id:session.getId(), guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
                     } else {
                         done({user:null});
                     }
@@ -260,7 +259,7 @@ define(
 
                 // рассылка дельт
                 this.dbcsys.genDeltas(this.dbsys.getGuid());
-                done({user:{user: user.name(), guid:user.getObj().getGuid(), session:{id:session.getId(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
+                done({user:{user: user.name(), guid:user.getObj().getGuid(), session:{id:session.getId(), guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
             },
 
             /**
@@ -287,6 +286,13 @@ define(
             },
             getSession: function(id){
                 return this.sessions[id] ? this.sessions[id].item : null;
+            },
+            getSessionByGuid: function(guid){
+                for(var g in this.sessions) {
+                    if (this.sessions[g].item.sessionGuid() == guid)
+                        return this.sessions[g].item;
+                }
+                return null;
             },
             removeSession: function(id){
                 if (this.sessions[id])

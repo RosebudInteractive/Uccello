@@ -21,7 +21,8 @@ define(
             {fname:"DeviceName", ftype:"string"},
             {fname:"DeviceType", ftype:"string"},
             {fname:"DeviceColor", ftype:"string"},
-            {fname:"CountConnect", ftype:"int"}
+            {fname:"CountConnect", ftype:"int"},
+            {fname:"SessionGuid", ftype:"string"}
         ],
         metaCols: [ {"cname": "Connects", "ctype": "control"} ],
 
@@ -55,6 +56,10 @@ define(
 
         deviceColor: function(value) {
             return this._genericSetter("DeviceColor",value);
+        },
+
+        sessionGuid: function(value) {
+            return this._genericSetter("SessionGuid",value);
         }
     });
 
