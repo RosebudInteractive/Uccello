@@ -81,7 +81,7 @@ define(
 							callback: that._setFormParams
 						});					
 					}
-				controller.setDefaultCompCallback(createCompCallback);
+				//controller.setDefaultCompCallback(createCompCallback);
 					
 				if (this.kind()=="master") { // главная (master)
 				
@@ -114,6 +114,7 @@ define(
 							that.dataBase(that.getDB().getGuid());
 						});
 				}
+				this.pvt.db.setDefaultCompCallback(createCompCallback);
 
 				this.contextGuid(this.getGuid());
             },

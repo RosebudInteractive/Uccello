@@ -47,6 +47,7 @@ define(
 				
 				pvt.controller = controller; //TODO  если контроллер не передан, то ДБ может быть неактивна				
 				pvt.controller.createLocalProxy(this);
+				pvt.defaultCompCallback = null; // коллбэк по умолчанию для создания компонентов
 				// TODOX УБРАТЬ
 				pvt.version = 0; 
 				pvt.validVersion = 0;
@@ -403,6 +404,14 @@ define(
 				// TODO - запомнить "сериализованный" объект (или еще раз запустить сериализацию?)
 				return res; 
 			},
+			
+			setDefaultCompCallback: function(cb) {
+				this.pvt.defaultCompCallback = cb;
+			},
+			
+			getDefaultCompCallback: function() {
+				return this.pvt.defaultCompCallback;
+			},
 
             /**
              * добавить корневые объекты путем десериализации
@@ -417,10 +426,10 @@ define(
 				//console.log("ADD ROOTS " + this.getGuid());
 				
 				this.getCurrentVersion();
-				
-				if (!cb) {
-					cb = this.getController().getDefaultCompCallback();
-				}
+
+				if (!cb)
+					cb = this.getDefaultCompCallback();
+					//cb = this.getController().getDefaultCompCallback();
 
 				for (var i = 0; i<sobjs.length; i++) {
 					var croot = this.deserialize(sobjs[i], { }, cb);

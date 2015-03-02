@@ -13,7 +13,7 @@ define(
 				this.pvt.dbCollection = {};
 				this.pvt.bufdeltas = {};		// буферизация входящих дельт
                 this.event = new Event();
-				this.pvt.defaultCompCallback = null; // коллбэк по умолчанию для создания компонентов
+				//this.pvt.defaultCompCallback = null; // коллбэк по умолчанию для создания компонентов
 
                 if (router) {
                     var that = this;
@@ -159,6 +159,7 @@ define(
 				return { dbVersion: db.getVersion() };
             },
 			
+			/* перенесено в memDB
 			setDefaultCompCallback: function(cb) {
 				this.pvt.defaultCompCallback = cb;
 			},
@@ -166,6 +167,7 @@ define(
 			getDefaultCompCallback: function() {
 				return this.pvt.defaultCompCallback;
 			},
+			*/
 
             /**
              * подписать базу db на рутовые элементы с гуидами rootGuids
