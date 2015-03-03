@@ -200,9 +200,9 @@ define(
 					}
 					else {
 						p.ini = {fields:{Kind: "master"}};
-                        p.formGuids = params.formGuids;
 					}
 					//p.rpc = null;
+                    p.formGuids = params.formGuids;
                     p.components = that.pvt.components; //  ссылка на хранилище конструкторов
                     p.renderRoot = that.pvt.renderRoot;
                     var vc = new VisualContext(that.pvt.cmclient, p, cbfinal2);
