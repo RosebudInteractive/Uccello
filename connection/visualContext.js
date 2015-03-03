@@ -110,8 +110,11 @@ define(
 					var guid = this.masterGuid();
 
 					this.pvt.db = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
-                            // подписываемся на все руты
-                            that.getDB().subscribeRoots("all", cb, createCompCallback);
+                            // подписываемся либо на все руты либо выборочно formGuids
+							if (params.formGuids)
+								var forms = params.formGuids;
+							else forms = "all";
+                            that.getDB().subscribeRoots(forms, cb, createCompCallback);
 							that.dataBase(that.getDB().getGuid());
 						});
 				}
