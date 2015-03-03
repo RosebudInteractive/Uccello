@@ -115,6 +115,7 @@ define(
 						if (master) { // если детейл, то экспрешн
 							params.expr = this.getControlMgr().get(master).getField("Id");
 						}
+						//this.cursor(undefined);
 						this.getControlMgr().getContext().loadNewRoots([rg],params, icb);
 					}
 					else this._initCursor();
@@ -125,10 +126,12 @@ define(
 				//console.log("initCursor "+this.getGuid());
 				var rg = this.root();
 				if (rg) {
-					var dataRoot = this.getControlMgr().getDB().getObj(rg);
+					var dataRoot = this.getDB().getObj(rg);
 					if (dataRoot) {
 						var col = dataRoot.getCol("DataElements");
-						if (col.count()>0) this.cursor(col.get(0).get("Id")); 
+						if (!dataRoot.getCol("DataElements").getObjById(this.cursor()))
+							if (col.count()>0) this.cursor(col.get(0).get("Id")); // установить курсор в новую позицию (наверх)
+						else this._setDataObj(this.cursor()); // 
 					}
 				}
 			},
@@ -213,7 +216,7 @@ define(
 					console.log("SET CURSOR TO UNDEF");
 				}*/
 				//console.log("SET CuRSOR "+value);
-				this.pvt.dataObj =  this.getControlMgr().getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
+				this.pvt.dataObj =  this.getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
 			},
 
             active: function (value) {

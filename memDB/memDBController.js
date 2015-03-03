@@ -326,7 +326,7 @@ define(
 					var root = db.getRoot(cdelta.rootGuid);
 					//if (!root) - 19/1 (это условие уже не актуально, так как могут прийти новые данные для замены старых
 					if (cdelta.items[0].newRoot)
-						var rootObj=db.deserialize(cdelta.items[0].newRoot, {}, this.pvt.defaultCompCallback); //TODO добавить коллбэк!!!
+						var rootObj=db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback()); //TODO добавить коллбэк!!!
 					else
 						rootObj = root.obj;
 					
