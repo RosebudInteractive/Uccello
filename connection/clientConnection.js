@@ -60,6 +60,9 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                             console.timeEnd('applyDeltas');
                             that.getObj().getDB().getController().applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
                             break;
+                        case 'newTab':
+                            window.newTab(data.contextGuid, data.dbGuid, data.resGuids);
+                            break;
                     }
                     return result;
                 }
@@ -113,6 +116,21 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
          */
         getUserInfo: function() {
             
+        },
+
+        /**
+         * Открыть формы на другой закладке
+         * @param contextGuid
+         * @param dbGuid
+         * @param resGuids
+         * @param sessionGuid
+         * @param callback
+         */
+        newTab: function(contextGuid, dbGuid, resGuids, sessionGuid, callback) {
+            this.socket.send({action:'newTab', type:'method', sid: this.session.guid, contextGuid:contextGuid, dbGuid:dbGuid, resGuids:resGuids, sessionGuid:sessionGuid}, function(result){
+                if (callback)
+                    callback(result);
+            });
         }
 
 

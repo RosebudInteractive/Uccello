@@ -46,6 +46,7 @@ define(
                 router.add('authenticate', function(){ return that.routerAuthenticate.apply(that, arguments); });
                 router.add('deauthenticate', function(){ return that.routerDeauthenticate.apply(that, arguments); });
                 router.add('createContext', function(){ return that.routerCreateContext.apply(that, arguments); });
+                router.add('newTab', function(){ return that.routerNewTab.apply(that, arguments); });
             },
 			
 			getController: function() {
@@ -119,6 +120,29 @@ define(
                     ini: {fields: {Id: data.contextId, Name: 'context'+contextId, Kind: "master"}}, config:this.options.config, formGuids:data.formGuids});
                 var result = {masterGuid: context.dataBase(), roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};
                 controller.genDeltas(this.dbsys.getGuid());
+                done(result);
+            },
+
+            /**
+             * Создать серверный контекст
+             * @param data
+             * @param done
+             */
+            routerNewTab: function(data, done) {
+                // найти сессию с гуидом
+                var session = this.getSessionByGuid(data.sessionGuid);
+                var result = {action:"error", error:'Connect not found'};
+                if (session){
+                    // взять 1-й активный коннект сессии
+                    var connects = session.getConnects();
+                    for(var i in connects) {
+                        if(connects[i].isConnected()) {
+                            connects[i].send({action:"newTab", contextGuid:data.contextGuid, dbGuid:data.dbGuid, resGuids:data.resGuids});
+                            result = {contextGuid:data.contextGuid, dbGuid:data.dbGuid, resGuids:data.resGuids};
+                            break;
+                        }
+                    }
+                }
                 done(result);
             },
 
