@@ -129,8 +129,10 @@ define(
              * @param done
              */
             routerNewTab: function(data, done) {
+                // сессии пользователя
+                var sessions = this.getConnect(data.connectId).getSession().getUser().getSessions();
                 // найти сессию с гуидом
-                var session = this.getSessionByGuid(data.sessionGuid);
+                var session = this.getSessionByGuid(data.sessionGuid, sessions);
                 var result = {action:"error", error:'Connect not found'};
                 if (session){
                     // взять 1-й активный коннект сессии
@@ -320,10 +322,11 @@ define(
             getSession: function(id){
                 return this.sessions[id] ? this.sessions[id].item : null;
             },
-            getSessionByGuid: function(guid){
-                for(var g in this.sessions) {
-                    if (this.sessions[g].item.sessionGuid() == guid)
-                        return this.sessions[g].item;
+            getSessionByGuid: function(guid, sessions){
+                sessions = sessions? sessions: this.sessions;
+                for(var g in sessions) {
+                    if (sessions[g].item.sessionGuid() == guid)
+                        return sessions[g].item;
                 }
                 return null;
             },

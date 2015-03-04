@@ -25,7 +25,7 @@ define(
                 this.pvt.sessionGuid = null;
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
 
-                var clt = this.pvt.clientConnection = new ClientConnection();
+                var clt = this.pvt.clientConnection = new ClientConnection(null, {newTabCallback:options.newTabCallback});
                 this.pvt.typeGuids = {};
 				this.pvt.dbcontext = null;
                 this.pvt.controlMgr = {};

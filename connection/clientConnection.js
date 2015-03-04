@@ -28,6 +28,7 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                 this.session = null;
                 this.connected = false;
                 this.authenticated = false;
+                this.newTabCallback = params.newTabCallback;
             }
         },
 
@@ -61,7 +62,8 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                             that.getObj().getDB().getController().applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
                             break;
                         case 'newTab':
-                            window.newTab(data.contextGuid, data.dbGuid, data.resGuids);
+                            if (that.newTabCallback)
+                                that.newTabCallback(data);
                             break;
                     }
                     return result;
