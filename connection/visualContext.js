@@ -85,11 +85,11 @@ define(
 				//controller.setDefaultCompCallback(createCompCallback);
 					
 				if (this.kind()=="master") { // главная (master)
-				
+				/*
 					if (params.rpc) {
 						params.rpc._publ(this, Interfvc);
 						this.pvt.proxyContext = params.rpc.getProxy(this.getGuid()).proxy;
-					}
+					}*/
 					this.pvt.vcproxy = params.rpc._publ(this, this.getInterface());
 					var params2 = {name: "VisualContextDB", kind: "master", cbfinal:cb};
 					if (createCompCallback)
@@ -101,11 +101,11 @@ define(
 				else { // подписка (slave)
 				
 					this.pvt.vcproxy = params.rpc._publProxy(params.vc, params.socket,this.getInterface());
-					
+					/*
 					if (params.rpc) {
 						params.rpc._publProxy(params.vc, params.socket, Interfvc); // публикуем как прокси - гуид уникален?
 						this.pvt.proxyContext = params.rpc.getProxy(params.vc).proxy;
-					}
+					}*/
 
 					var guid = this.masterGuid();
 
