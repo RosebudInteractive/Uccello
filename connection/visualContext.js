@@ -22,7 +22,7 @@ define(
         var VisualContext = VisualContextInfo.extend(/** @lends module:VisualContext.VisualContext.prototype */{
 
             className: "VisualContext",
-            classGuid: "d5fbf382-8deb-36f0-8882-d69338c28b56",
+            classGuid: UCCELLO_CONFIG.classGuids.VisualContext,
 			metaFields: [],
 
              /**
@@ -63,7 +63,7 @@ define(
 					}
 				else // пока что считаем, что если нет финального колбэка - мы на сервере
 					createCompCallback = function (obj) { 
-						if (obj.getTypeGuid() == "4943ce3e-a6cb-65f7-8805-ec339555a981") { // Form Param
+						if (obj.getTypeGuid() == UCCELLO_CONFIG.classGuids.FormParam) { // Form Param
 							obj.event.on({ 
 								type: "mod", // TODO не забыть про отписку
 								subscriber: that,

@@ -9,7 +9,7 @@ define(
         var AComponent = UObject.extend({
 		
 			className: "AComponent",
-			classGuid: "5b8c93e7-350d-de2a-e2b4-1025a03b17db",
+			classGuid: UCCELLO_CONFIG.classGuids.AComponent,
 			metaFields: [ {fname:"Id",ftype:"int"}, {fname:"Name",ftype:"string"} ], // TODO? гуиды для полей?
 			metaCols: [],
 

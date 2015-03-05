@@ -9,7 +9,7 @@ define(
         var Dataset = AComponent.extend({
 
             className: "Dataset",
-            classGuid: "3f3341c7-2f06-8d9d-4099-1075c158aeee",
+            classGuid: UCCELLO_CONFIG.classGuids.Dataset,
             metaFields: [
                 {fname: "Root", ftype: "string"},
                 {fname: "Cursor", ftype: "string"},

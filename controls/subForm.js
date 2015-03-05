@@ -9,7 +9,7 @@ define(
         var SubForm = AComponent.extend({
 
             className: "SubForm",
-            classGuid: "d7785c24-0b96-76ee-46a7-b0103cda4aa0",
+            classGuid: UCCELLO_CONFIG.classGuids.SubForm,
             metaFields: [
                 {fname: "FormGuid", ftype: "string"}
             ],

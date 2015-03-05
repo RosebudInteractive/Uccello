@@ -14,7 +14,7 @@ define(
         var VisualContextInfo = AComponent.extend(/** @lends module:VisualContext.VisualContext.prototype */{
 
             className: "VisualContextInfo",
-            classGuid: "a900a7c3-9648-7117-0b3a-ce0900f45987",
+            classGuid: UCCELLO_CONFIG.classGuids.VisualContextInfo,
             metaFields: [
                 {fname: "DataBase", ftype: "string"}, // runtime
 				{fname: "Kind", ftype: "string"}, // , fdefault: "master" enum (master,slave

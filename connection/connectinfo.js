@@ -14,7 +14,7 @@ define(
     var ConnectInfo = AComponent.extend(/** @lends module:ConnectInfo.ConnectInfo.prototype */{
 
         className: "ConnectInfo",
-        classGuid: "42dbc6c0-f8e4-80a5-a95f-e43601cccc71",
+        classGuid: UCCELLO_CONFIG.classGuids.ConnectInfo,
         metaFields: [{fname:"Context", ftype:"string"}],
         metaCols: [],
 

@@ -5,9 +5,8 @@ if (typeof define !== 'function') {
 
 define(
     ['./connection/socket', './system/logger', './dataman/dataman', 'ws', './connection/router', './connection/userSessionMgr',
-	'./system/rpc','./controls/controlMgr', './resman/resman',
-    './config/config'],
-    function(Socket, Logger, Dataman, WebSocketServer, Router, UserSessionMgr, Rpc, ControlMgr, Resman, Config) {
+	'./system/rpc','./controls/controlMgr', './resman/resman'],
+    function(Socket, Logger, Dataman, WebSocketServer, Router, UserSessionMgr, Rpc, ControlMgr, Resman) {
 	
 		var guidServer = "d3d7191b-3b4c-92cc-43d4-a84221eb35f5";
 	
@@ -33,13 +32,9 @@ define(
 				this.pvt.proxyServer = rpc._publ(this, interface1); //
 
 
-                this.pvt.userSessionMgr = new UserSessionMgr(this.getRouter(), {authenticate:options.authenticate, rpc:this.pvt.rpc, proxyServer: this.pvt.proxyServer, config:options.config});
+                this.pvt.userSessionMgr = new UserSessionMgr(this.getRouter(), {authenticate:options.authenticate, rpc:this.pvt.rpc, proxyServer: this.pvt.proxyServer});
                 this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController());
                 this.pvt.resman = new Resman(that.getUserMgr().getController());
-                this.pvt.config = options.config;
-
-                // создаем глобальную переменную
-                UCCELLO_CONFIG = new Config(options.config);
 
                 this.getRouter().add('getGuids', function(data, done) {
                     var user = that.getUserMgr().getConnect(data.connectId).getSession().getUser();
@@ -130,10 +125,6 @@ define(
 				return guidServer;
 			},
 
-            getConfig: function() {
-				return this.pvt.config;
-			},		
-			
             /**
              * Загрузить ресурсы по их гуидам - выдает сериализованные представления, которые затему нужно десериализовать в memDataBase
 			 * @param rootGuids - массив гуидов ресурсов

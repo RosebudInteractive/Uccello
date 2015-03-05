@@ -9,7 +9,7 @@ define(
         var DataField = AComponent.extend({
 
             className: "DataField",
-            classGuid: "4bade3a6-4a25-3887-4868-9c3de4213729",
+            classGuid: UCCELLO_CONFIG.classGuids.DataField,
             metaCols: [],
             metaFields: [],
 

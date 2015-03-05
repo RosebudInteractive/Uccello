@@ -9,7 +9,7 @@ define(
         var ADataFieldControl = ADataControl.extend({
 
             className: "ADataFieldControl",
-            classGuid: "00a12976-6fe3-6592-1984-635684b30885",
+            classGuid: UCCELLO_CONFIG.classGuids.ADataFieldControl,
             metaFields: [{fname: "DataField", ftype: "string"}],
 
             init: function(cm,params){

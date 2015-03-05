@@ -14,7 +14,7 @@ define(
         var UserInfo = AComponent.extend(/** @lends module:UserInfo.UserInfo.prototype */{
 
             className: "UserInfo",
-            classGuid: "e14cad9b-3895-3dc9-91ef-1fb12c343f10",
+            classGuid: UCCELLO_CONFIG.classGuids.UserInfo,
             metaFields: [
                 {fname:"Authenticated", ftype:"boolean"},
                 {fname:"LoginTime", ftype:"time"}

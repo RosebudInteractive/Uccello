@@ -14,7 +14,7 @@ define(
     var SessionInfo = AComponent.extend(/** @lends module:SessionInfo.SessionInfo.prototype */{
 
         className: "SessionInfo",
-        classGuid: "479c72e9-29d1-3d6b-b17b-f5bf02e52002",
+        classGuid: UCCELLO_CONFIG.classGuids.SessionInfo,
         metaFields: [
             {fname:"CreationTime", ftype:"timestamp"},
             {fname:"LastOpTime", ftype:"timestamp"},

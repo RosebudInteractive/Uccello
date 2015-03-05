@@ -12,7 +12,7 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
     var ClientConnection = AComponent.extend(/** @lends module:ClientConnection.ClientConnection.prototype */{
 
         className: "ClientConnection",
-        classGuid: "5f27198a-0dd2-81b1-3eeb-2834b93fb514",
+        classGuid: UCCELLO_CONFIG.classGuids.ClientConnection,
         metaFields: [],
         metaCols: [ {cname: "VisualContext", ctype: "control"} ],
 

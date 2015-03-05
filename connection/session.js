@@ -14,7 +14,7 @@ define(
     var Session = SessionInfo.extend(/** @lends module:Session.Session.prototype */{
 
         className: "Session",
-        classGuid: "70c9ac53-6fe5-18d1-7d64-45cfff65dbbb",
+        classGuid: UCCELLO_CONFIG.classGuids.Session,
         metaFields: [],
 
         /**

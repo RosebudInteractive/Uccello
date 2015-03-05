@@ -14,7 +14,7 @@ define(
     var User = UserInfo.extend(/** @lends module:User.User.prototype */{
 
         className: "User",
-        classGuid: "dccac4fc-c50b-ed17-6da7-1f6230b5b055",
+        classGuid: UCCELLO_CONFIG.classGuids.User,
         metaFields: [],
 
         /**

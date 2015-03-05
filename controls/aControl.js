@@ -11,7 +11,7 @@ define(
 		var AControl = AComponent.extend({
 		
 			className: "AControl",
-			classGuid: "c576cb6e-cdbc-50f4-91d1-4dc3b48b0b59",
+			classGuid: UCCELLO_CONFIG.classGuids.AControl,
             metaFields: [ {fname:"Top",ftype:"int"}, {fname:"Left",ftype:"int"}, {fname:"Width",ftype:"int"}, {fname:"Height",ftype:"int"} ],
 				
 			init: function(cm,params){

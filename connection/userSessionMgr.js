@@ -117,7 +117,7 @@ define(
                 var controller = this.getController();
 				var contextId = this.getNewContextId();
                 var context = new VisualContext(this.cmsys, {parent: user, colName: "VisualContext", socket: this.getConnect(data.connectId).getConnection(), rpc: this.rpc, proxyServer: this.proxyServer,
-                    ini: {fields: {Id: data.contextId, Name: 'context'+contextId, Kind: "master"}}, config:this.options.config, formGuids:data.formGuids});
+                    ini: {fields: {Id: data.contextId, Name: 'context'+contextId, Kind: "master"}}, formGuids:data.formGuids});
                 var result = {masterGuid: context.dataBase(), roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};
                 controller.genDeltas(this.dbsys.getGuid());
                 done(result);

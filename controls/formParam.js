@@ -9,7 +9,7 @@ define(
         var FormParam = AComponent.extend({
 
             className: "FormParam",
-            classGuid: "4943ce3e-a6cb-65f7-8805-ec339555a981",
+            classGuid: UCCELLO_CONFIG.classGuids.FormParam,
             metaFields: [
                 {fname: "Type", ftype: "string"},
                 {fname: "Kind", ftype: "string"},

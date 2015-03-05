@@ -9,7 +9,7 @@ define(
         var ADataModel = AComponent.extend({
 
             className: "ADataModel",
-            classGuid: "5e89f6c7-ccc2-a850-2f67-b5f5f20c3d47",
+            classGuid: UCCELLO_CONFIG.classGuids.ADataModel,
             metaCols: [ {"cname": "Datasets", "ctype": "data"} ],
             metaFields: [],
 

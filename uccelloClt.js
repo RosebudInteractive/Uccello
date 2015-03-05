@@ -7,13 +7,11 @@ define(
     ['./connection/clientConnection' ,
         './memDB/memDBController','./memDB/memDataBase','./controls/controlMgr', './controls/aComponent',
         './connection/userinfo', './connection/user', './connection/sessioninfo', './connection/session', './connection/connectinfo', './connection/connect', './connection/visualContextinfo', './connection/visualContext',
-        './system/rpc',
-        './config/config'
+        './system/rpc'
     ],
     function(ClientConnection, MemDBController, MemDataBase, ControlMgr, AComponent,
         UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContextInfo, VisualContext,
-        Rpc,
-        Config
+        Rpc
         ) {
         var UccelloClt = Class.extend({
 
@@ -38,23 +36,20 @@ define(
                 else
                     that.pvt.sessionGuid = null;
 
-                // создаем глобальную переменную
-                UCCELLO_CONFIG = new Config(options.config);
-
                 this.loadControls(function(){
                     that.getClient().connect(options.host, {guid:that.getSessionGuid()},  function(result){
                         $.cookie('sid', result.session.guid);
                         that.pvt.sessionId = result.session.id;
                         that.pvt.sessionGuid = result.session.guid;
-                        that.pvt.typeGuids["e14cad9b-3895-3dc9-91ef-1fb12c343f10"] = UserInfo;
-                        that.pvt.typeGuids["479c72e9-29d1-3d6b-b17b-f5bf02e52002"] = SessionInfo;
-                        that.pvt.typeGuids["42dbc6c0-f8e4-80a5-a95f-e43601cccc71"] = ConnectInfo;
-                        that.pvt.typeGuids["a900a7c3-9648-7117-0b3a-ce0900f45987"] = VisualContextInfo;
-                        that.pvt.typeGuids["dccac4fc-c50b-ed17-6da7-1f6230b5b055"] = User;
-                        that.pvt.typeGuids["70c9ac53-6fe5-18d1-7d64-45cfff65dbbb"] = Session;
-                        that.pvt.typeGuids["66105954-4149-1491-1425-eac17fbe5a72"] = Connect;
-                        that.pvt.typeGuids["d5fbf382-8deb-36f0-8882-d69338c28b56"] = VisualContext;
-                        that.pvt.typeGuids["5f27198a-0dd2-81b1-3eeb-2834b93fb514"] = ClientConnection;
+                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.UserInfo] = UserInfo;
+                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.SessionInfo] = SessionInfo;
+                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.ConnectInfo] = ConnectInfo;
+                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.VisualContextInfo] = VisualContextInfo;
+                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.User] = User;
+                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Session] = Session;
+                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Connect] = Connect;
+                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.VisualContext] = VisualContext;
+                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.ClientConnection] = ClientConnection;
 
                         that.createController(function(){
                             if (result.user) {
@@ -293,12 +288,11 @@ define(
                 var that = this;
                 var compCallBack = function (obj) {
                     var classGuid = obj.getTypeGuid();
-                    var transArr = {
-                        "dccac4fc-c50b-ed17-6da7-1f6230b5b055":"e14cad9b-3895-3dc9-91ef-1fb12c343f10", // User -> UserInfo
-                        "70c9ac53-6fe5-18d1-7d64-45cfff65dbbb":"479c72e9-29d1-3d6b-b17b-f5bf02e52002", // Session -> SessionInfo
-                        "66105954-4149-1491-1425-eac17fbe5a72":"42dbc6c0-f8e4-80a5-a95f-e43601cccc71", // Connect -> ConnectInfo
-                        "d5fbf382-8deb-36f0-8882-d69338c28b56":"a900a7c3-9648-7117-0b3a-ce0900f45987" // VisualContext -> VisualContextInfo
-                    };
+                    var transArr = {};
+                    transArr[UCCELLO_CONFIG.classGuids.User] = UCCELLO_CONFIG.classGuids.UserInfo; // User -> UserInfo
+                    transArr[UCCELLO_CONFIG.classGuids.Connect] = UCCELLO_CONFIG.classGuids.ConnectInfo; // Connect -> ConnectInfo
+                    transArr[UCCELLO_CONFIG.classGuids.Session] = UCCELLO_CONFIG.classGuids.SessionInfo; // Session -> SessionInfo
+                    transArr[UCCELLO_CONFIG.classGuids.VisualContext] = UCCELLO_CONFIG.classGuids.VisualContextInfo; // VisualContext -> VisualContextInfo
                     classGuid = transArr[classGuid]? transArr[classGuid]: classGuid;
                     var params = {objGuid: obj.getGuid()};
                     var component = new (that.getConstr(classGuid))(that.pvt.cmsys, params);
