@@ -231,6 +231,7 @@ define(
                 var that = this;
                 this.getContext().loadNewRoots(formGuids, {rtype:rtype}, function(result){
                     that.getContext().renderForms(result.guids, true);
+                    if (callback) callback(result);
                 });
             },
 

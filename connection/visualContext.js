@@ -113,6 +113,7 @@ define(
                             // подписываемся либо на все руты либо выборочно formGuids
 							var forms = params.formGuids;
 							if (forms == null) forms = "all";
+							else if (forms == "") forms = [];
                             that.getDB().subscribeRoots(forms, cb, createCompCallback);
 							that.dataBase(that.getDB().getGuid());
 						});
