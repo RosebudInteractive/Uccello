@@ -207,7 +207,8 @@ define(
 				if (this.kind()=="master") {
 				
 					function icb(r) {
-							var res = that.getDB().addRoots(r.datas, params.compcb);
+							
+							var res = that.getDB().addRoots(r.datas, params.compcb, params.subDbGuid);
 							if (cb) cb({guids:rootGuids});
 					}
 								

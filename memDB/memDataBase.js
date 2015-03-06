@@ -414,20 +414,17 @@ define(
             /**
              * добавить корневые объекты путем десериализации
              * @param {array} sobjs - массив объектов которые нужно десериализовать
-			 * @param rtype - res | data
 			 * @callback cb - вызов функции, которая выполняет доп.действия после создания каждого объекта
+			 * @param subDbGuid - гуид базы данных подписчика (для идентификации)
              * @returns {*}
              */
 			// ДОЛЖНА РАБОТАТЬ ТОЛЬКО ДЛЯ МАСТЕР БАЗЫ - СЛЕЙВ НЕ МОЖЕТ ДОБАВИТЬ В СЕБЯ РУТ, МОЖЕТ ТОЛЬКО ПОДПИСАТЬСЯ НА РУТ МАСТЕРА!
-			addRoots: function(sobjs, cb) {
+			addRoots: function(sobjs, cb, subDbGuid) {
 				var res = [];
-				//console.log("ADD ROOTS " + this.getGuid());
 				
 				this.getCurrentVersion();
 
-				if (!cb)
-					cb = this.getDefaultCompCallback();
-					//cb = this.getController().getDefaultCompCallback();
+				if (!cb) cb = this.getDefaultCompCallback();
 
 				for (var i = 0; i<sobjs.length; i++) {
 					var croot = this.deserialize(sobjs[i], { }, cb);
@@ -436,19 +433,26 @@ define(
 					var serializedObj=this.serialize(croot); // TODO по идее можно взять sobjs[i], но при десериализации могут добавляться гуиды
 					var o = { adObj: serializedObj, obj:croot, type:"newRoot"};
 					croot.getLog().add(o);
+
+					// форсированная подписка для данных (не для ресурсов) - в будущем скорее всего понадобится управлять этим
+					
+					var allSubs = this.getSubscribers();
+					for (var guid in allSubs) {
+						var subscriber = allSubs[guid];
+						if (subscriber.kind == 'remote') {
+							/*UCCELLO_CONFIG.classGuids.DataRoot*/
+							// Подписываем либо данные (тогда всех) либо подписчика
+							if ((croot.getTypeGuid() == "87510077-53d2-00b3-0032-f1245ab1b74d" ) || (subDbGuid==subscriber.guid)) 
+							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber; //subProxy;
+
+						}							
+					}
+					
 					
 					res.push(croot); 
 				}
 				
-				// форсированная подписка
-				var allSubs = this.getSubscribers();
-				for (var guid in allSubs) {
-					var subscriber = allSubs[guid];
-					if (subscriber.kind == 'remote') {
-						this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber; //subProxy;
 
-					}							
-				}
 
 				if (!this.inTran()) { // автоматом "закрыть" транзакцию (VALID VERSION = DRAFT VERSION)				
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)				

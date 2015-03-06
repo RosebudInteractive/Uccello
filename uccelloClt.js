@@ -229,7 +229,7 @@ define(
              */
             createRoot: function(formGuids, rtype, callback) {
                 var that = this;
-                this.getContext().loadNewRoots(formGuids, {rtype:rtype}, function(result){
+                this.getContext().loadNewRoots(formGuids, {rtype:rtype, subDbGuid: this.getContext().getDB().getGuid() }, function(result){
                     that.getContext().renderForms(result.guids, true);
                     if (callback) callback(result);
                 });
