@@ -46,7 +46,7 @@ define(
 					if ((parent.mode == "RW") && (!parent.nolog) && (!pvt.db.isMaster())) // не мастер, то активируем, для мастера - на 1й подписке
 						pvt.log.setActive(true); // лог активен только для корневого объекта, который создан в режиме ReadWrite
 					// ## перенес на 3 строки ниже, чтобы лог уже существовал
-					if (!objType || objType.getGuid()=="87510077-53d2-00b3-0032-f1245ab1b74d")
+					if (!objType || objType.getGuid()==UCCELLO_CONFIG.classGuids.DataRoot)
 						pvt.db._addRoot(this,{ type: "data", mode: parent.mode});
 					else 
 						pvt.db._addRoot(this,{ type: "res", mode: parent.mode});

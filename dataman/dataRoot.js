@@ -8,7 +8,7 @@ define(
         var DataRoot = AComponent.extend({
 
             className: "DataRoot",
-            classGuid: "87510077-53d2-00b3-0032-f1245ab1b74d",
+            classGuid: UCCELLO_CONFIG.classGuids.DataRoot,
             metaCols: [ {"cname": "DataElements", "ctype": "data"} ],
             metaFields: [],
 

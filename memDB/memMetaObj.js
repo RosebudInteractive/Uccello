@@ -35,7 +35,7 @@ define(
 					this.pvt.rtype = "res";
 				*/
 				// TODO ПЕРЕДЕЛАТЬ!!!
-				if ((flds.$sys.guid == "87510077-53d2-00b3-0032-f1245ab1b74d") ||
+				if ((flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataRoot) ||
 					(flds.$sys.guid == "73596fd8-6901-2f90-12d7-d1ba12bae8f4") ||
 					(flds.$sys.guid == "59583572-20fa-1f58-8d3f-5114af0f2c51") ||
 					(flds.$sys.guid == "16ec0891-1144-4577-f437-f98699464948") ||

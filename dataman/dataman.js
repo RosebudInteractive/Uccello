@@ -84,7 +84,7 @@ define(
                 var result = {
                     "$sys": {
                         "guid": guidRoot,
-                        "typeGuid": "87510077-53d2-00b3-0032-f1245ab1b74d"
+                        "typeGuid": UCCELLO_CONFIG.classGuids.DataRoot
                     },
                     "fields": {
                         "Id": 1000,

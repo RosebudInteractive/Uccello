@@ -40,7 +40,8 @@ define([], function() {
             'DataField':"4bade3a6-4a25-3887-4868-9c3de4213729",
             'Dataset':"3f3341c7-2f06-8d9d-4099-1075c158aeee",
             'FormParam':"4943ce3e-a6cb-65f7-8805-ec339555a981",
-            'SubForm':"d7785c24-0b96-76ee-46a7-b0103cda4aa0"
+            'SubForm':"d7785c24-0b96-76ee-46a7-b0103cda4aa0",
+            'DataRoot':"87510077-53d2-00b3-0032-f1245ab1b74d"
         },
 
         controlsPath: '',
