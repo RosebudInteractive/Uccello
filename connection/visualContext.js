@@ -111,9 +111,8 @@ define(
 
 					this.pvt.db = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
                             // подписываемся либо на все руты либо выборочно formGuids
-							if (params.formGuids)
-								var forms = params.formGuids;
-							else forms = "all";
+							var forms = params.formGuids;
+							if (forms == null) forms = "all";
                             that.getDB().subscribeRoots(forms, cb, createCompCallback);
 							that.dataBase(that.getDB().getGuid());
 						});
