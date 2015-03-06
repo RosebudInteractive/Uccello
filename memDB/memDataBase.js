@@ -266,28 +266,26 @@ define(
 					else 
 						rg.push(rootGuids);					
 				}	
-				var obj = null;
-				
-				
+				//var obj = null;
+						
 				for (var i=0; i<rg.length; i++) {
-					if (this.pvt.robjs.length > 0) 
-						obj = this.pvt.rcoll[rg[i]].obj; // ВРЕМЕННО
-
-				//if (!obj) return null;
-				
-				// добавляем подписчика
-				var subProxy = this.pvt.subscribers[dbGuid];
-				if (subProxy) {
-					var clog = obj.getLog();
-					if (!clog.getActive()) clog.setActive(true); // если лог неактивен, то активировать, чтобы записывать в него все изменения
-
-					this.pvt.rcoll[rg[i]].subscribers[dbGuid] = subProxy;  // TODO из списка общих подписчиков
-					res.push(this.serialize(obj));
-					//this.prtSub(this.pvt.rcoll[rg[i]]);
-					//this.prtSub(this.pvt);
+					if (this.pvt.robjs.length > 0) {
+						var ro = this.pvt.rcoll[rg[i]];
+						if (ro) {
+							//obj = ro.obj; // ВРЕМЕННО
+							//if (!obj) return null;
+						
+							// добавляем подписчика
+							var subProxy = this.pvt.subscribers[dbGuid];
+							if (subProxy) {
+								var clog = ro.obj.getLog();
+								if (!clog.getActive()) clog.setActive(true); // если лог неактивен, то активировать, чтобы записывать в него все изменения
+								//this.pvt.rcoll[rg[i]]
+								ro.subscribers[dbGuid] = subProxy; 
+								res.push(this.serialize(ro.obj));
+							}
+						}
 					}
-					//else 
-					//	return null;
 				}
 				// TODO ВАЖНО! нужно сделать рассылку только для данного корневого объекта - оптимизировать потом!!!!
 				this.pvt.controller.genDeltas(this.getGuid());	
