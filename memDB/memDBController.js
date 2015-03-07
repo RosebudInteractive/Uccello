@@ -62,7 +62,7 @@ define(
             routerSubscribeRoot: function(data, done) {
                 var masterdb = this.getDB(data.masterGuid);
                 if (!masterdb.isSubscribed(data.slaveGuid)) // если клиентская база еще не подписчик
-                    dbc.onSubscribe({connect:data.connectId, guid:data.slaveGuid}, data.masterGuid );
+                    this.onSubscribe({connect:data.connectId, guid:data.slaveGuid}, data.masterGuid );
                 var result = {data:masterdb.onSubscribeRoots(data.slaveGuid, data.objGuids)};
                 done(result);
             },
@@ -70,7 +70,7 @@ define(
             routerSubscribeManyRoots: function(data, done) {
                 var masterdb = this.getDB(data.masterGuid);
                 if (!masterdb.isSubscribed(data.slaveGuid)) // если клиентская база еще не подписчик
-                    dbc.onSubscribe({connect:data.connectId, guid:data.slaveGuid}, data.masterGuid );
+					this.onSubscribe({connect:data.connectId, guid:data.slaveGuid}, data.masterGuid );
                 var result = {data:masterdb.onSubscribeRoots(data.slaveGuid, data.objGuids)};
                 done(result);
             },
