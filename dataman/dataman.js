@@ -151,14 +151,16 @@ define(
                         if (err) throw err;
                         var result = that.createResult(guidRoot, typeGuid, rows);
 
-                        /*var fs = require('fs');
-                        fs.writeFile(UCCELLO_CONFIG.dataPath + 'tables/incomeplan-1.json', JSON.stringify(result), function(err) {
-                            if(err) {
-                                console.log(err);
-                            } else {
-                                console.log("The file was saved!");
-                            }
-                        });*/
+                        /*if (table == 'incomeplan') {
+                            var fs = require('fs');
+                            fs.writeFile(UCCELLO_CONFIG.dataPath + 'tables/incomeplan-'+whereParams[0]+'.json', JSON.stringify(result), function(err) {
+                                if(err) {
+                                    console.log(err);
+                                } else {
+                                    console.log("The file was saved!");
+                                }
+                            });
+                        }*/
                         done(result);
                     });
                 } else
