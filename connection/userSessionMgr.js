@@ -245,17 +245,21 @@ define(
 
                         // Если название дублируется (уже есть такие для данного юзера),
                         // то сервер добавляет индекс  MyComputer1, MyComputer2 и т.д.
-                        // Если цвета дублируются берем следующий
+
                         var userSessions = userObj.getSessions();
                         var deviceColors = [ '#6ca9f0', '#48ada3', '#54ab43', '#a6b741', '#ecb40e', '#ea8e39', '#e96e5f', '#ffc0cb'];
+                        var countColor = 0;
                         for(var i in userSessions) {
                             if (userSessions[i].item.deviceName() == data.session.deviceName)
                                 data.session.deviceName = data.session.deviceName+(++that.deviceNameId);
-                            if (userSessions[i].item.deviceColor() == data.session.deviceColor) {
-                                ++that.deviceColorId;
-                                data.session.deviceColor = deviceColors[that.deviceColorId % deviceColors.length];
-                            }
+                            if (userSessions[i].item.deviceColor() == data.session.deviceColor && sessionId!=i)
+                                countColor++;
+                        }
 
+                        // Если цвета дублируются берем следующий
+                        if (countColor>0) {
+                            ++that.deviceColorId;
+                            data.session.deviceColor = deviceColors[that.deviceColorId % deviceColors.length];
                         }
 
                         // сохраняем данные девайса
