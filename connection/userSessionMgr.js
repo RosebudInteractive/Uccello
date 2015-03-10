@@ -250,8 +250,8 @@ define(
                         var deviceColors = [ '#6ca9f0', '#48ada3', '#54ab43', '#a6b741', '#ecb40e', '#ea8e39', '#e96e5f', '#ffc0cb'];
                         var countColor = 0;
                         for(var i in userSessions) {
-                            if (userSessions[i].item.deviceName() == data.session.deviceName)
-                                data.session.deviceName = data.session.deviceName+(++that.deviceNameId);
+                            if (userSessions[i].item.deviceName() == data.session.deviceName && sessionId!=i)
+                                data.session.deviceName = 'MyComputer'+(++that.deviceNameId);
                             if (userSessions[i].item.deviceColor() == data.session.deviceColor && sessionId!=i)
                                 countColor++;
                         }
