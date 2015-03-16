@@ -248,12 +248,10 @@ define(
                 for (var i = 0; i < ctrls.length; i++) {
                     var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath
                     scripts.push(path+ctrls[i].component);
-                    if (ctrls[i].viewsets)
-                        for (var j = 0; j < ctrls[i].viewsets.length; j++) {
-                            var c = ctrls[i].className;
-                            var vPath = ctrls[i].isUccello ? 'controls/' :'';
-                            scripts.push(path+vPath+ctrls[i].viewsets[j]+'/v'+c.charAt(0).toLowerCase() + c.slice(1));
-                        }
+                    if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
+                        var c = ctrls[i].className;
+                        scripts.push(UCCELLO_CONFIG.viewSet.path+'v'+c.charAt(0).toLowerCase() + c.slice(1));
+                    }
                 }
 
                 // загружаем скрипты и выполняем колбэк
@@ -263,13 +261,9 @@ define(
                     for(var i=0; i<ctrls.length; i++) {
                         var className = ctrls[i].className;
                         that.pvt.components[className] = {module:arguments[argIndex], viewsets:{}};
-                        var viewsets = ctrls[i].viewsets;
-                        argIndex++;
-                        if (viewsets) {
-                            for (j=0; j < viewsets.length; j++) {
-                                that.pvt.components[ctrls[i].className].viewsets[ctrls[i].viewsets[j]] = arguments[argIndex];
-                                argIndex++;
-                            }
+                        if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
+                            that.pvt.components[className].viewsets[UCCELLO_CONFIG.viewSet.name] = arguments[argIndex];
+                            argIndex++;
                         }
                     }
                     callback();

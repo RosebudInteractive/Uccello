@@ -20,14 +20,14 @@ define([], function() {
             {className:'Dataset', isUccello:true, component:'controls/dataset'},
             {className:'FormParam', isUccello:true, component:'controls/formParam'},
             {className:'SubForm', isUccello:true, component:'controls/subForm'},
-            {className:'Container', isUccello:true, component:'controls/container', viewsets:['simpleview']},
-            {className:'Form', isUccello:true, component:'controls/form', viewsets:['simpleview']},
-            {className:'Button', isUccello:true, component:'controls/button', viewsets:['simpleview']},
+            {className:'Container', isUccello:true, component:'controls/container', viewset:true},
+            {className:'Form', isUccello:true, component:'controls/form', viewset:true},
+            {className:'Button', isUccello:true, component:'controls/button', viewset:true},
             {className:'DataColumn', isUccello:true, component:'controls/dataColumn'},
-            {className:'DataGrid', isUccello:true, component:'controls/dataGrid', viewsets:['simpleview']},
-            {className:'DataEdit', isUccello:true, component:'controls/dataEdit', viewsets:['simpleview']},
-            {className:'Edit', isUccello:true, component:'controls/edit', viewsets:['simpleview']},
-            {className:'Label', isUccello:true, component:'controls/label', viewsets:['simpleview']}
+            {className:'DataGrid', isUccello:true, component:'controls/dataGrid', viewset:true},
+            {className:'DataEdit', isUccello:true, component:'controls/dataEdit', viewset:true},
+            {className:'Edit', isUccello:true, component:'controls/edit', viewset:true},
+            {className:'Label', isUccello:true, component:'controls/label', viewset:true}
         ],
 
         classGuids: {
@@ -54,6 +54,7 @@ define([], function() {
 
         controlsPath: '',
         uccelloPath: '',
+        viewSet: null,
 
         init: function(config) {
             for(var index in config) {
