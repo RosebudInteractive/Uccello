@@ -251,7 +251,8 @@ define(
                     if (ctrls[i].viewsets)
                         for (var j = 0; j < ctrls[i].viewsets.length; j++) {
                             var c = ctrls[i].className;
-                            scripts.push(path+ctrls[i].viewsets[j]+'/v'+c.charAt(0).toLowerCase() + c.slice(1));
+                            var vPath = ctrls[i].isUccello ? 'controls/' :'';
+                            scripts.push(path+vPath+ctrls[i].viewsets[j]+'/v'+c.charAt(0).toLowerCase() + c.slice(1));
                         }
                 }
 
