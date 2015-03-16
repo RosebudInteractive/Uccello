@@ -261,6 +261,7 @@ define(
                     for(var i=0; i<ctrls.length; i++) {
                         var className = ctrls[i].className;
                         that.pvt.components[className] = {module:arguments[argIndex], viewsets:{}};
+                        argIndex++;
                         if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
                             that.pvt.components[className].viewsets[UCCELLO_CONFIG.viewSet.name] = arguments[argIndex];
                             argIndex++;
