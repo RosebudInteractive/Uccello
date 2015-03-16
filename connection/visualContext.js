@@ -85,12 +85,7 @@ define(
 				//controller.setDefaultCompCallback(createCompCallback);
 					
 				if (this.kind()=="master") { // главная (master)
-				/*
-					if (params.rpc) {
-						params.rpc._publ(this, Interfvc);
-						this.pvt.proxyContext = params.rpc.getProxy(this.getGuid()).proxy;
-					}*/
-					this.pvt.vcproxy = params.rpc._publ(this, this.getInterface());
+					this.pvt.vcproxy = params.rpc._publ(this, Interfvc);
 					var params2 = {name: "VisualContextDB", kind: "master", cbfinal:cb};
 					if (createCompCallback)
 						params2.compcb = createCompCallback;
@@ -100,13 +95,7 @@ define(
 				}
 				else { // подписка (slave)
 				
-					this.pvt.vcproxy = params.rpc._publProxy(params.vc, params.socket,this.getInterface());
-					/*
-					if (params.rpc) {
-						params.rpc._publProxy(params.vc, params.socket, Interfvc); // публикуем как прокси - гуид уникален?
-						this.pvt.proxyContext = params.rpc.getProxy(params.vc).proxy;
-					}*/
-
+					this.pvt.vcproxy = params.rpc._publProxy(params.vc, params.socket,Interfvc);
 					var guid = this.masterGuid();
 
 					this.pvt.db = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
@@ -283,12 +272,7 @@ define(
 			
 			getProxy: function() {
 				return this.pvt.vcproxy;
-			},
-
-			getInterface: function() {
-				return Interfvc;
 			}
-			
 
         });
 
