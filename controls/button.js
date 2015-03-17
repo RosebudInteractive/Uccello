@@ -9,7 +9,7 @@ define(
         var Button = AControl.extend({
 
 			className: "Button",
-			classGuid: "af419748-7b25-1633-b0a9-d539cada8e0d",
+			classGuid: UCCELLO_CONFIG.classGuids.Button,
             metaFields: [ {fname:"Caption",ftype:"string"} ],
 
             /**

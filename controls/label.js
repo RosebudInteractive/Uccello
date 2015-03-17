@@ -9,7 +9,7 @@ define(
         var Label = AControl.extend({
 
             className: "Label",
-            classGuid: "32932036-3c90-eb8b-dd8d-4f19253fabed",
+            classGuid: UCCELLO_CONFIG.classGuids.Label,
             metaFields: [ {fname:"Label",ftype:"string"} ],
 
             /**

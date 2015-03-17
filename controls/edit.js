@@ -9,7 +9,7 @@ define(
         var Edit = AControl.extend({
 
             className: "Edit",
-            classGuid: "f79d78eb-4315-5fac-06e0-d58d07572482",
+            classGuid: UCCELLO_CONFIG.classGuids.Edit,
             metaFields: [ {fname:"Value",ftype:"string"} ],
 
             /**

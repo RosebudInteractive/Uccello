@@ -9,7 +9,7 @@ define(
         var Container = AControl.extend({
 
             className: "Container",
-            classGuid: "1d95ab61-df00-aec8-eff5-0f90187891cf",
+            classGuid: UCCELLO_CONFIG.classGuids.Container,
             metaCols: [ {"cname": "Children", "ctype": "control"} ],
             metaFields: [],
 

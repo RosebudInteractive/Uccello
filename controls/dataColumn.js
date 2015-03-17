@@ -9,7 +9,7 @@ define(
         var DataColumn = AComponent.extend({
 
             className: "DataColumn",
-            classGuid: "100f774a-bd84-8c46-c55d-ba5981c09db5",
+            classGuid: UCCELLO_CONFIG.classGuids.DataColumn,
             metaCols: [],
             metaFields: [{fname:"Label", ftype:"string"}, {fname:"Width", ftype:"int"}, {fname:"Field", ftype:"string"}],
 

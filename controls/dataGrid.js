@@ -9,7 +9,7 @@ define(
         var DataGrid = ADataControl.extend({
 
             className: "DataGrid",
-            classGuid: "ff7830e2-7add-e65e-7ddf-caba8992d6d8",
+            classGuid: UCCELLO_CONFIG.classGuids.DataGrid,
             metaFields: [ ],
             metaCols: [ {"cname": "Columns", "ctype": "DataColumn"}],
 

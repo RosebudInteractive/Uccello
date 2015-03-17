@@ -9,7 +9,7 @@ define(
         var DataEdit = ADataFieldControl.extend({
 
             className: "DataEdit",
-            classGuid: "affff8b1-10b0-20a6-5bb5-a9d88334b48e",
+            classGuid: UCCELLO_CONFIG.classGuids.DataEdit,
             metaFields: [],
 
             /**

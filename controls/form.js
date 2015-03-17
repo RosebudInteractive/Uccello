@@ -9,7 +9,7 @@ define(
         var Form = Container.extend({
 
             className: "Form",
-            classGuid: "7f93991a-4da9-4892-79c2-35fe44e69083",
+            classGuid: UCCELLO_CONFIG.classGuids.Form,
             metaFields: [],
             metaCols: [ {"cname": "Params", "ctype": "control"},{"cname": "Children", "ctype": "control"},{"cname": "SubForms", "ctype": "control"} ],
 

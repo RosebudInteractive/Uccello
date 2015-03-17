@@ -20,14 +20,14 @@ define([], function() {
             {className:'Dataset', isUccello:true, component:'controls/dataset'},
             {className:'FormParam', isUccello:true, component:'controls/formParam'},
             {className:'SubForm', isUccello:true, component:'controls/subForm'},
-            {className:'Container', isUccello:true, component:'controls/container', viewset:true},
-            {className:'Form', isUccello:true, component:'controls/form', viewset:true},
-            {className:'Button', isUccello:true, component:'controls/button', viewset:true},
+            {className:'Container', isUccello:true, component:'controls/container', viewset:false},
+            {className:'Form', isUccello:true, component:'controls/form', viewset:false},
+            {className:'Button', isUccello:true, component:'controls/button', viewset:false},
             {className:'DataColumn', isUccello:true, component:'controls/dataColumn'},
-            {className:'DataGrid', isUccello:true, component:'controls/dataGrid', viewset:true},
-            {className:'DataEdit', isUccello:true, component:'controls/dataEdit', viewset:true},
-            {className:'Edit', isUccello:true, component:'controls/edit', viewset:true},
-            {className:'Label', isUccello:true, component:'controls/label', viewset:true}
+            {className:'DataGrid', isUccello:true, component:'controls/dataGrid', viewset:false},
+            {className:'DataEdit', isUccello:true, component:'controls/dataEdit', viewset:false},
+            {className:'Edit', isUccello:true, component:'controls/edit', viewset:false},
+            {className:'Label', isUccello:true, component:'controls/label', viewset:false}
         ],
 
         classGuids: {
@@ -49,7 +49,15 @@ define([], function() {
             'Dataset':"3f3341c7-2f06-8d9d-4099-1075c158aeee",
             'FormParam':"4943ce3e-a6cb-65f7-8805-ec339555a981",
             'SubForm':"d7785c24-0b96-76ee-46a7-b0103cda4aa0",
-            'DataRoot':"87510077-53d2-00b3-0032-f1245ab1b74d"
+            'DataRoot':"87510077-53d2-00b3-0032-f1245ab1b74d",
+            'Label':"32932036-3c90-eb8b-dd8d-4f19253fabed",
+            'Form':"7f93991a-4da9-4892-79c2-35fe44e69083",
+            'Edit':"f79d78eb-4315-5fac-06e0-d58d07572482",
+            'DataEdit':"affff8b1-10b0-20a6-5bb5-a9d88334b48e",
+            'DataColumn':"100f774a-bd84-8c46-c55d-ba5981c09db5",
+            'Container':"1d95ab61-df00-aec8-eff5-0f90187891cf",
+            'Button':"af419748-7b25-1633-b0a9-d539cada8e0d",
+            'DataGrid':"ff7830e2-7add-e65e-7ddf-caba8992d6d8"
         },
 
         controlsPath: '',
@@ -60,8 +68,18 @@ define([], function() {
             for(var index in config) {
                 switch (index) {
                     case 'controls':
+                        var controlNames = {};
+                        for(var i=0; i<this.controls.length; i++) {
+                            controlNames[this.controls[i].className] = i;
+                        }
                         for(var i=0; i<config[index].length; i++) {
-                            this.controls.push(config[index][i]);
+                            if (controlNames[config[index][i].className]) {
+                                if (config[index][i].viewset)
+                                    this.controls[controlNames[config[index][i].className]].viewset = config[index][i].viewset;
+                            } else {
+                                this.controls.push(config[index][i]);
+                                this.classGuids[config[index][i].className] = config[index][i].guid;
+                            }
                         }
                         break;
                     default:
