@@ -82,7 +82,6 @@ define(
 							callback: that._setFormParams
 						});					
 					}
-				//controller.setDefaultCompCallback(createCompCallback);
 					
 				if (this.kind()=="master") { // главная (master)
 					this.pvt.vcproxy = params.rpc._publ(this, Interfvc);
