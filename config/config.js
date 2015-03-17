@@ -58,7 +58,8 @@ define([], function() {
             'Container':"1d95ab61-df00-aec8-eff5-0f90187891cf",
             'Button':"af419748-7b25-1633-b0a9-d539cada8e0d",
             'DataGrid':"ff7830e2-7add-e65e-7ddf-caba8992d6d8",
-            'UModule':"8fead303-a4e1-98bb-efb6-ee38ee021265"
+            'UModule':"8fead303-a4e1-98bb-efb6-ee38ee021265",
+            'VisualContext2':"64827c89-e73e-215f-f71a-7f90627ae61d"
         },
 
         controlsPath: '',
