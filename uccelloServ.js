@@ -48,10 +48,10 @@ define(
                 });
 				
 				
-				this.getRouter().add('testIntf', function(data, done) { console.log("interface get"); done({ intf: interface1 }); }); 
+				this.getRouter().add('testIntf', function(data, done) { done({ intf: interface1 }); }); 
 
                 this.getRouter().add('getRootGuids', function(data, done) {
-                    console.log(that.getUserMgr().getController().getDB(data.db))
+                    //console.log(that.getUserMgr().getController().getDB(data.db))
                     var result = {
                         roots: that.getUserMgr().getController().getDB(data.db).getRootGuids(data.rootKind)
                     };
