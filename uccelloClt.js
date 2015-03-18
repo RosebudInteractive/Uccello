@@ -218,7 +218,46 @@ define(
 				else
 					done();			
 			},
-			
+
+			setContextVc2: function(params, cbfinal) {
+                var that = this;
+
+                function cbfinal2(result2){
+                    result2 = result2.guids ? result2.guids : result2;
+                    that.getContext().renderForms(result2, true);
+                    if (cbfinal)
+                        cbfinal(result2);
+                }
+
+				function done() {
+					var s = that.pvt.clientConnection.socket;
+					var p = {socket: s, rpc: that.pvt.rpc, proxyServer: that.pvt.proxyServer}
+					p.side = params.side;
+					p.config = that.options.config;
+					if (p.side == "server") {
+						that.pvt.serverContext = params.vc;
+						p.vc = params.vc;
+						p.ini = {fields:{Kind: "slave", MasterGuid: params.masterGuid}};
+					}
+					else {
+						p.ini = {fields:{Kind: "master"}};
+					}
+					//p.rpc = null;
+                    p.formGuids = params.formGuids;
+                    p.components = that.pvt.components; //  ссылка на хранилище конструкторов
+                    p.renderRoot = that.pvt.renderRoot;
+                    that.getContext2().on(that.pvt.cmclient, p, cbfinal2);
+					that.pvt.vc = vc;
+					that.pvt.vcproxy = vc.getProxy();
+				}
+
+				var controller = this.getController();
+				if (this.pvt.vc)
+					this.pvt.vc.dispose(done); //delDataBase(this.pvt.dbcontext.getGuid(), done);
+				else
+					done();
+			},
+
             /**
              * Создать серверный контекст
 			 * @param formGuids

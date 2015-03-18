@@ -10,6 +10,14 @@ if (typeof define !== 'function') {
 define(
     ['./visualContextinfo'],
     function(VisualContextInfo) {
+
+        var Interfvc = {
+            className: "Interfvc",
+            classGuid: "ed318f95-fc97-be3f-d54c-1ad707f0996c",
+
+            loadNewRoots: "function"
+            //loadRoot: "function"
+        }
 					 
         var VisualContext2 = VisualContextInfo.extend(/** @lends module:VisualContext2.VisualContext2.prototype */{
 
