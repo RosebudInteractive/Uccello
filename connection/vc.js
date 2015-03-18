@@ -132,7 +132,12 @@ define(
 
 			contextGuid: function (value) {
                 return this._genericSetter("ContextGuid", value);
-            }
+            },
+			
+			getProxy: function() {
+				return this.pvt.vcproxy;
+			}
+			
         });
 
         return VisualContext2;
