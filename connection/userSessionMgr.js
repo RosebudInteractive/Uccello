@@ -113,7 +113,6 @@ define(
             routerCreateContext: function(data, done) {
                 var that = this;
                 var user = this.getConnect(data.connectId).getSession().getUser();
-				//console.log("connectID "+data.connectId);
                 var controller = this.getController();
 				var contextId = this.getNewContextId();
                 var context = new VisualContext(this.cmsys, {parent: user, colName: "VisualContext", socket: this.getConnect(data.connectId).getConnection(), rpc: this.rpc, proxyServer: this.proxyServer,

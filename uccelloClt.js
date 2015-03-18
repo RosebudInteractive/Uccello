@@ -343,9 +343,9 @@ define(
                     if (classGuid == UCCELLO_CONFIG.classGuids.UserInfo) { // UserInfo
                         that.pvt.user = component;
                     }
-                    if (classGuid == UCCELLO_CONFIG.classGuids.VisualContext2) {
+                    /*if (classGuid == UCCELLO_CONFIG.classGuids.VisualContext2) {
                         that.pvt.vc2 = component;
-                    }
+                    }*/
                 };
                 this.getSysDB().setDefaultCompCallback(compCallBack);
                 this.getSysDB().subscribeRoots(this.pvt.guids.sysRootGuid, callback, compCallBack);

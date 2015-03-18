@@ -43,6 +43,7 @@ define(
 				else
 					pvt.guid = controller.guid();
 				pvt.counter = 0;
+				console.log("DATA BASE GUID "+pvt.guid);
 
 				
 				pvt.controller = controller; //TODO  если контроллер не передан, то ДБ может быть неактивна				

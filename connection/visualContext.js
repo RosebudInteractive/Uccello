@@ -46,7 +46,7 @@ define(
 				this.pvt.rpc = params.rpc;
 				this.pvt.proxyServer = params.proxyServer;
 				this.pvt.components = params.components;
-				this.pvt.config = params.config;
+				//this.pvt.config = params.config;
 				this.pvt.renderRoot = params.renderRoot;
 				this.pvt.formParams = {};
 				this.pvt.memParams = [];
@@ -159,7 +159,6 @@ define(
 			// "транзакции" для буферизации вызовов методов
 			tranStart: function() {
 				if (this.pvt.inTran) return;
-				//console.log("START TRAN");
 				this.pvt.inTran = true;
 				this.pvt.tranQueue = [];
 			},

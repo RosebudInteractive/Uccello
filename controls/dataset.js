@@ -123,7 +123,6 @@ define(
 			},	
 
 			_initCursor: function() {
-				//console.log("initCursor "+this.getGuid());
 				var rg = this.root();
 				if (rg) {
 					var dataRoot = this.getDB().getObj(rg);
