@@ -85,7 +85,7 @@ define(
 						});					
 					}
 					
-				if (this.kind()=="master") { // главная (master)
+				if (false) { // главная (master) TODO разобраться с KIND
 					this.pvt.vcproxy = params.rpc._publ(this, Interfvc);
 					var params2 = {name: "VisualContextDB", kind: "master", cbfinal:cb};
 					if (createCompCallback)
