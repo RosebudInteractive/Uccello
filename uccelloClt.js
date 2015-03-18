@@ -246,7 +246,8 @@ define(
                     p.formGuids = params.formGuids;
                     p.components = that.pvt.components; //  ссылка на хранилище конструкторов
                     p.renderRoot = that.pvt.renderRoot;
-                    that.getContext2().on(that.pvt.cmclient, p, cbfinal2);
+                    var vc = that.getContext2();
+                    vc.on(that.pvt.cmclient, p, cbfinal2);
 					that.pvt.vc = vc;
 					that.pvt.vcproxy = vc.getProxy();
 				}
