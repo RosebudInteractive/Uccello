@@ -93,7 +93,7 @@ define(
 						params2.compcb = createCompCallback;
 					this.pvt.db = this.createDb(controller,params2);
 					this.loadNewRoots(params.formGuids, { rtype: "res", compcb: params2.compcb},params2.cbfinal);
-					this.dataBase(this.pvt.db.getGuid());
+					//this.dataBase(this.pvt.db.getGuid());
 				}
 				else { // подписка (slave)
 				
@@ -107,12 +107,12 @@ define(
 							if (forms == null) forms = "all";
 							else if (forms == "") forms = [];
                             that.getDB().subscribeRoots(forms, cb, createCompCallback);
-							that.dataBase(that.getDB().getGuid());
+							//that.dataBase(that.getDB().getGuid());
 						});
 				}
 				this.pvt.db.setDefaultCompCallback(createCompCallback);
 
-				this.contextGuid(this.getGuid());			
+				//this.contextGuid(this.getGuid());			
 			},
 			
 			// выключить контекст
@@ -120,6 +120,68 @@ define(
 			
 			},
 
+			// "транзакции" для буферизации вызовов методов
+			tranStart: function() {
+				if (this.pvt.inTran) return;
+				this.pvt.inTran = true;
+				this.pvt.tranQueue = [];
+			},
+			
+			tranCommit: function() {
+				if (this.pvt.inTran) {
+					for (var i=0; i<this.pvt.tranQueue.length; i++) {
+						var mc = this.pvt.tranQueue[i];
+						mc.method.apply(mc.context,mc.args);
+					}
+					this.pvt.tranQueue = null;
+					this.pvt.inTran = false;
+				}
+			},
+			
+			inTran:function() {
+				return this.pvt.inTran;
+			},
+			
+			//
+			execMethod: function(context, method,args) {
+				if (this.inTran()) 
+					this.pvt.tranQueue.push({context:context, method:method, args: args});
+				else method.apply(context,args);
+			},
+			
+			// добавляем новый набор данных - мастер-слейв варианты
+			// params.rtype = "res" | "data"
+			// params.compcb - только в случае ресурсов (может использоваться дефолтный)
+			// params.expr - выражение для данных
+			loadNewRoots: function(rootGuids,params, cb) {
+				var that = this;
+				if (this.kind()=="master") {
+				
+					function icb(r) {
+							
+							var res = that.getDB().addRoots(r.datas, params.compcb, params.subDbGuid);
+							if (cb) cb({guids:rootGuids});
+					}
+								
+					if (params.rtype == "res") {
+						this.pvt.proxyServer.loadResources(rootGuids, icb);	
+						return "XXX";
+					}
+					if (params.rtype == "data") {
+						this.pvt.proxyServer.queryDatas(rootGuids, params.expr, icb);
+						//this.execMethod(this.pvt.proxyServer,this.pvt.proxyServer.queryDatas,[rootGuids, params.expr, icb]);
+						return "XXX";
+					}
+				}
+				else { // slave
+					// вызываем загрузку нового рута у мастера
+					// TODO compb на сервере не отрабатывает..
+					//this.pvt.vcproxy.loadNewRoots(rootGuids, params, function(r) { if (cb) cb(r); });
+					this.execMethod(this.pvt.vcproxy,this.pvt.vcproxy.loadNewRoots, [rootGuids,params,function(r) { if (cb) cb(r); }]);
+				}
+			},
+			
+			
             createComponent: function(obj, cm) {
                 var g = obj.getTypeGuid();
 				var className = cm.getDB().getObj(g).get("typeName");
@@ -153,6 +215,10 @@ define(
 			
 			getProxy: function() {
 				return this.pvt.vcproxy;
+			},
+			
+			getDB: function() {
+				return this.pvt.db;
 			}
 			
         });
