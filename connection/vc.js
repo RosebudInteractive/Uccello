@@ -8,8 +8,8 @@ if (typeof define !== 'function') {
  * @module VisualContext2
  */
 define(
-    ['./visualContextinfo'],
-    function(VisualContextInfo) {
+    ['./visualContextinfo', '../controls/aComponent', '../controls/aControl', '../controls/controlMgr'],
+    function(VisualContextInfo, AComponent, AControl, ControlMgr) {
 
         var Interfvc = {
             className: "Interfvc",
@@ -40,6 +40,7 @@ define(
 				this.pvt.db = null;
 				this.pvt.tranQueue = null; // очередь выполнения методов если в транзакции
 				this.pvt.inTran = false; // признак транзакции
+				
 
                 if (params == undefined) return;
 				
@@ -97,7 +98,8 @@ define(
 				else { // подписка (slave)
 				
 					this.pvt.vcproxy = params.rpc._publProxy(params.vc, params.socket,Interfvc);
-					var guid = this.masterGuid();
+					//var guid = this.masterGuid();
+					var guid = params.ini.fields.MasterGuid; // TODO временно!
 
 					this.pvt.db = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
                             // подписываемся либо на все руты либо выборочно formGuids
@@ -118,21 +120,36 @@ define(
 			
 			},
 
-            dataBase: function (value) {
-                return this._genericSetter("DataBase", value);
-            },
-			
-			kind: function (value) {
-                return this._genericSetter("Kind", value);
-            },
-			
-			masterGuid: function (value) {
-                return this._genericSetter("MasterGuid", value);
-            },
+            createComponent: function(obj, cm) {
+                var g = obj.getTypeGuid();
+				var className = cm.getDB().getObj(g).get("typeName");
+                var params = {objGuid: obj.getGuid()};
 
-			contextGuid: function (value) {
-                return this._genericSetter("ContextGuid", value);
+                // DbNavigator выбор базы
+                if (g == "38aec981-30ae-ec1d-8f8f-5004958b4cfa") {
+                    params.dbSelector = [{'guid':this.getDB().getGuid(), 'name':'Пользовательская БД'}, {'guid':uccelloClt.getSysDB().getGuid(), 'name':'Системная БД'}];
+                }
+
+				new (this.getComponent(className).module)(cm, params);
             },
+			
+			getComponent: function(className){
+				return this.pvt.components[className];
+			},
+			
+			renderAll: function(pd) {
+				for (var g in this.pvt.cmgs)
+					this.pvt.cmgs[g].render(undefined, this.pvt.renderRoot(g), pd);
+				this.getDB().resetModifLog();
+			},
+			
+			renderForms: function(roots, pd) {
+				for (var i=0; i<roots.length; i++)
+					if (this.pvt.cmgs[roots[i]])
+						this.pvt.cmgs[roots[i]].render(undefined, this.pvt.renderRoot(roots[i]),pd);
+				this.getDB().resetModifLog();
+			},
+			
 			
 			getProxy: function() {
 				return this.pvt.vcproxy;
