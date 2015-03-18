@@ -13,7 +13,7 @@ define(
 
         var Interfvc = {
             className: "Interfvc",
-            classGuid: "ed318f95-fc97-be3f-d54c-1ad707f0996c",
+            classGuid: "2a164568-4e44-4c50-bfe8-faae7f8f2e69",
 
             loadNewRoots: "function"
             //loadRoot: "function"
