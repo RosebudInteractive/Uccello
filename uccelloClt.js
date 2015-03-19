@@ -95,11 +95,11 @@ define(
 
                     // создаем системную бд
                     that.pvt.dbsys = that.pvt.controller.newDataBase({name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}}, done);
-                    that.pvt.cmsys = new ControlMgr(that.pvt.dbsys);
+                    that.pvt.cmsys = new ControlMgr(that.pvt.dbsys,null,null,that.pvt.clientConnection.socket);
 
                     // создаем мастер базу для clientConnection
                     that.pvt.dbclient = that.pvt.controller.newDataBase({name:"MasterClient", kind: "master"});
-                    that.pvt.cmclient = new ControlMgr(that.pvt.dbclient);
+                    that.pvt.cmclient = new ControlMgr(that.pvt.dbclient,that.pvt.clientConnection.socket);
                     new UObject(that.pvt.cmclient);
                     new UModule(that.pvt.cmclient);
                     new AComponent(that.pvt.cmclient);

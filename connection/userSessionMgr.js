@@ -49,6 +49,7 @@ define(
                 router.add('deauthenticate', function(){ return that.routerDeauthenticate.apply(that, arguments); });
                 router.add('createContext', function(){ return that.routerCreateContext.apply(that, arguments); });
                 router.add('newTab', function(){ return that.routerNewTab.apply(that, arguments); });
+				router.add('remoteCall2', function(){ return that.routerRemoteCall.apply(that, arguments); });
             },
 			
 			getController: function() {
@@ -148,6 +149,18 @@ define(
                 }
                 done(result);
             },
+			
+			routerRemoteCall: function(data,done) {
+				//var conn = this.getConnect(data.connectId);
+				var vc = this.cmsys.get(data.args.contextGuid);
+				var db = vc.getContentDB();
+				var obj = db.getObj(data.args.objGuid);
+				var rootObj = obj.getRoot();
+				var cm = vc.getContextCM(rootObj.getGuid());
+				var uobj = cm.get(data.args.objGuid);
+				data.args.aparams.push(done);
+				uobj[data.args.func].apply(uobj,data.args.aparams);
+			},
 
             /**
              * Подключаемся к серверу с клиента

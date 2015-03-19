@@ -14,7 +14,7 @@ define(
 			 * @param rootGuid - гуид рутового элемента
 			 * @param vc - контекст менеджера
              */
-			init: function(db, rootGuid, vc){
+			init: function(db, rootGuid, vc, socket){
 				this._super(db, rootGuid, vc);
 				this.pvt = {};
 				this.pvt.compByLid = {};
@@ -25,6 +25,11 @@ define(
 				this.pvt.db = db;
 				this.pvt.rootGuid = rootGuid;
 				this.pvt.vc = vc;
+				if (socket)
+					this.pvt.socket = socket;
+				else
+					if (vc)
+						this.pvt.socket = vc.getSocket();
 				this.pvt.viewSets = [this.createViewSet(UCCELLO_CONFIG.viewSet)];
                 this.pvt.asd = true;
 				if (rootGuid) {
@@ -117,6 +122,10 @@ define(
 				return this.pvt.vc;
 			},
 
+			getSocket: function() {
+				return this.pvt.socket;
+			},
+			
             /**
 			 * Вернуть корневой объект бд, с которым связан менеджер контролов
              */				

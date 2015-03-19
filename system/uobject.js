@@ -193,7 +193,25 @@ define(
 			isModule: function() { 
 				return false;
 			},
-
+			
+            /**
+             * Удаленный вызов метода
+             ////* @param guid - гуид объекта (уникален в рамках БД)
+			 * @param func - имя удаленной функции
+             * @param aparams - массив параметров удаленной функции
+			 * @callback cb - коллбэк
+             */			
+			remoteCall: function(func, aparams, cb) {
+				if (this.getModule().isMaster()) {
+					// TODO кинуть исключение
+					return;
+				}
+				var socket = this.getControlMgr().getSocket();
+				var myargs = { contextGuid: this.getModule().getGuid(), objGuid: this.getGuid(), aparams:aparams };
+				var args={action:"remoteCall2",type:"method",args: myargs};
+				socket.send(args,cb);
+			},
+			
             _isProcessed: function(value) {
                 if (value === undefined)
                     return this.pvt.isProcessed;

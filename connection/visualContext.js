@@ -49,6 +49,8 @@ define(
 				this.pvt.renderRoot = params.renderRoot;
 				this.pvt.formParams = {};
 				this.pvt.memParams = [];
+				
+				this.pvt.socket = params.socket;
 
 				var that = this;
 				var createCompCallback = null;
@@ -265,12 +267,20 @@ define(
 				return this.pvt.db;
 			},
 			
+			getContentDB: function() {
+				return this.pvt.db;
+			},
+			
 			getContextCM: function(guid) {
 				return this.pvt.cmgs[guid];
 			},
 			
 			getProxy: function() {
 				return this.pvt.vcproxy;
+			},
+			
+			getSocket: function() {
+				return this.pvt.socket;
 			}
 
         });

@@ -52,6 +52,8 @@ define(
 				this.pvt.renderRoot = params.renderRoot;
 				this.pvt.formParams = {};
 				this.pvt.memParams = [];
+				
+				this.pvt.socket = params.socket;
 
 				var that = this;	
 				var createCompCallback = null;
@@ -154,7 +156,7 @@ define(
 			// params.expr - выражение для данных
 			loadNewRoots: function(rootGuids,params, cb) {
 				var that = this;
-				if (this.kind()=="master") {
+				if (this.getModule().isMaster()) {
 				
 					function icb(r) {
 							
@@ -176,6 +178,7 @@ define(
 					// вызываем загрузку нового рута у мастера
 					// TODO compb на сервере не отрабатывает..
 					this.execMethod(this.pvt.vcproxy,this.pvt.vcproxy.loadNewRoots, [rootGuids,params,function(r) { if (cb) cb(r); }]);
+					//this.remoteCall('loadNewRoots', [rootGuids, params]);
 				}
 			},
 			
@@ -217,6 +220,18 @@ define(
 			
 			getDB: function() {
 				return this.pvt.db;
+			},
+
+			getContentDB: function() {
+				return this.pvt.db;
+			},
+			
+			getContextCM: function(guid) {
+				return this.pvt.cmgs[guid];
+			},
+			
+			getSocket: function() {
+				return this.pvt.socket;
 			}
 			
         });

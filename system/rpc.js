@@ -98,12 +98,16 @@ define (
 				
 				if (params.router) {
 					var that = this, onCall = that.onRemoteCall;
+					
 					params.router.add('remoteCall', function(){ return onCall.apply(that, arguments); });
+					
+					//var onCall2 = that.onRemoteCall2;
+					//params.router.add('rc2', function(){ return onCall2.apply(that, arguments); });
 				}
 
 
             },
-			
+
 			
 			onRemoteCall: function(data,done) {
 				var gi = data.guidIntf,
