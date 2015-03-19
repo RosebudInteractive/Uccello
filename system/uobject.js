@@ -73,7 +73,7 @@ define(
             _buildMetaInfo: function(db){
                 if (!db.getObj(this.classGuid)) {
                     var obj = Object.getPrototypeOf(this), gobj="";
-                    if (obj.className != "AComponent")
+                    if (obj.className != "UModule")
                         gobj = db.getObj(Object.getPrototypeOf(obj).classGuid).getGuid();
                     //var obj2 = Object.getPrototypeOf(obj);
                     // TODO parentClass передавать гуидом либо именем.

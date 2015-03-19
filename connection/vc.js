@@ -49,7 +49,6 @@ define(
 				this.pvt.rpc = params.rpc;
 				this.pvt.proxyServer = params.proxyServer;
 				this.pvt.components = params.components;
-				//this.pvt.config = params.config;
 				this.pvt.renderRoot = params.renderRoot;
 				this.pvt.formParams = {};
 				this.pvt.memParams = [];

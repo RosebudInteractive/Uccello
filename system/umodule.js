@@ -24,6 +24,7 @@ define(
                 this._super(cm,params);
 				
 				// запомнить базу данных
+				/*
 				if ("db" in params) 
 					this.pvt.db = params.db
 				else
@@ -40,7 +41,7 @@ define(
 				}
 				else { // SLAVE
 					
-				}
+				}*/
 				
 				
             },
