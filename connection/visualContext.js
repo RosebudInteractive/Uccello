@@ -8,17 +8,17 @@ if (typeof define !== 'function') {
  * @module VisualContext
  */
 define(
-    ['./visualContextinfo', '../system/uobject', '../system/umodule', '../controls/aComponent', '../controls/aControl', '../controls/controlMgr'],
-    function(VisualContextInfo, UObject, UModule, AComponent, AControl, ControlMgr) {
+    ['./visualContextinfo', '../controls/aComponent', '../controls/aControl', '../controls/controlMgr','../system/uobject','../system/umodule'],
+    function(VisualContextInfo, AComponent, AControl, ControlMgr,UObject,UModule) {
 
-        var Interfvc = {	
+        var Interfvc = {
 			className: "Interfvc",
 			classGuid: "ed318f95-fc97-be3f-d54c-1ad707f0996c",
 
 			loadNewRoots: "function"
 			//loadRoot: "function"
 		}
-					 
+
         var VisualContext = VisualContextInfo.extend(/** @lends module:VisualContext.VisualContext.prototype */{
 
             className: "VisualContext",
@@ -28,19 +28,19 @@ define(
              /**
              * Инициализация объекта
              * @constructs
-             * @param params {object} 
+             * @param params {object}
 			 * @callback cb - коллбэк, который вызывается после отработки конструктора (асинхронный в случае slave)
              */
             init: function(cm, params,cb) {
                 this._super(cm, params);
-				
+
 				this.pvt.cmgs = {};
 				this.pvt.db = null;
 				this.pvt.tranQueue = null; // очередь выполнения методов если в транзакции
 				this.pvt.inTran = false; // признак транзакции
 
                 if (params == undefined) return;
-				
+
 				this.pvt.typeGuids = params.typeGuids;
 				var controller = cm.getDB().getController();
 				this.pvt.rpc = params.rpc;
@@ -50,38 +50,38 @@ define(
 				this.pvt.formParams = {};
 				this.pvt.memParams = [];
 
-				var that = this;	
+				var that = this;
 				var createCompCallback = null;
 				if (cb)
 					createCompCallback = function (obj) {
 						var rootGuid = obj.getRoot().getGuid();
 						if (!(that.pvt.cmgs[rootGuid]))
 							that.pvt.cmgs[rootGuid] = new ControlMgr(that.getDB(),rootGuid,that);
-						that.createComponent.apply(that, [obj, that.pvt.cmgs[rootGuid]]);						
-						 
+						that.createComponent.apply(that, [obj, that.pvt.cmgs[rootGuid]]);
+
 					}
 				else // пока что считаем, что если нет финального колбэка - мы на сервере
-					createCompCallback = function (obj) { 
+					createCompCallback = function (obj) {
 						if (obj.getTypeGuid() == UCCELLO_CONFIG.classGuids.FormParam) { // Form Param
-							obj.event.on({ 
+							obj.event.on({
 								type: "mod", // TODO не забыть про отписку
 								subscriber: that,
 								callback: that._onModifParam
 							});
-							
+
 							if (!that.pvt.formParams[obj.get("Name")])  // добавить в список параметров
 								that.pvt.formParams[obj.get("Name")] = [];
 							that.pvt.formParams[obj.get("Name")].push(obj);
-						
+
 						}
-						// подписаться на событие завершения applyDelta в контроллере, чтобы переприсвоить параметры 
+						// подписаться на событие завершения applyDelta в контроллере, чтобы переприсвоить параметры
 						controller.event.on({
 							type: 'end2ApplyDeltas',
 							subscriber: that,
 							callback: that._setFormParams
-						});					
+						});
 					}
-					
+
 				if (this.kind()=="master") { // главная (master)
 					this.pvt.vcproxy = params.rpc._publ(this, Interfvc);
 					var params2 = {name: "VisualContextDB", kind: "master", cbfinal:cb};
@@ -92,7 +92,7 @@ define(
 					this.dataBase(this.pvt.db.getGuid());
 				}
 				else { // подписка (slave)
-				
+
 					this.pvt.vcproxy = params.rpc._publProxy(params.vc, params.socket,Interfvc);
 					var guid = this.masterGuid();
 
@@ -109,14 +109,14 @@ define(
 
 				this.contextGuid(this.getGuid());
             },
-			
+
             /**
              * Обработчик изменения параметра
-             */			
+             */
 			_onModifParam: function(ev) {
 				this.pvt.memParams.push(ev.target);
 			},
-			
+
 			// отрабатывает только на сервере
 			_setFormParams: function(ev) {
 				for (var i=0; i<this.pvt.memParams.length; i++) {
@@ -124,7 +124,7 @@ define(
 					var pn = obj.get("Name");
 					for (var j=0; j<this.pvt.formParams[pn].length; j++) {
 						var obj2 = this.pvt.formParams[pn][j];
-						if (obj2.get("Kind")=="in") obj2.set("Value",obj.get("Value"));						
+						if (obj2.get("Kind")=="in") obj2.set("Value",obj.get("Value"));
 					}
 				}
 				this.pvt.memParams = [];
@@ -142,10 +142,9 @@ define(
 
 				// meta
 				var cm = new ControlMgr(db, null /*roots[0]*/);
-				new UObject(cm);
-				new UModule(cm);
-				new AComponent(cm);
-				new AControl(cm);
+                new UObject(cm);
+                new UModule(cm);
+				new AComponent(cm); new AControl(cm);
 
 				// другие компоненты
 				var ctrls = UCCELLO_CONFIG.controls;

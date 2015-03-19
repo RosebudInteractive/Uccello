@@ -10,7 +10,7 @@ define(
 
             className: "UModule",
             classGuid: UCCELLO_CONFIG.classGuids.UModule,
-            metaFields: [{fname:"Mode",ftype:"string"}], // Srv, CltSrv, Clt, CltRep
+            metaFields: [ {fname:"Id",ftype:"int"}, {fname:"Name",ftype:"string"}, {fname:"Mode",ftype:"string"}], // Srv, CltSrv, Clt, CltRep
             metaCols: [{"cname": "Resources", "ctype": "control"}],
 
             /**
@@ -45,6 +45,14 @@ define(
 				
 				
             },
+			
+			id: function(value) {
+				return this._genericSetter("Id",value);
+			},
+
+			name: function(value) {
+				return this._genericSetter("Name",value);
+			},
 
             mode: function(value) {
                 return this._genericSetter("Mode",value);
