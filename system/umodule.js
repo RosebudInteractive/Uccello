@@ -4,7 +4,7 @@ if (typeof define !== 'function') {
 }
 
 define(
-    ['uobject'],
+    ['./uobject'],
     function(UObject) {
         var UModule = UObject.extend({
 
@@ -35,13 +35,13 @@ define(
 						return; // TODO exception
 					}
 				
-				
 				if ( ) { // TODO УСЛОВИЕ НА МАСТЕР
 					
 				}
 				else { // SLAVE
 					
-				}*/
+				}
+				*/
 				
 				
             },
