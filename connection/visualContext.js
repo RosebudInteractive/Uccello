@@ -8,8 +8,8 @@ if (typeof define !== 'function') {
  * @module VisualContext
  */
 define(
-    ['./visualContextinfo', '../controls/aComponent', '../controls/aControl', '../controls/controlMgr'],
-    function(VisualContextInfo, AComponent, AControl, ControlMgr) {
+    ['./visualContextinfo', '../system/uobject', '../system/umodule', '../controls/aComponent', '../controls/aControl', '../controls/controlMgr'],
+    function(VisualContextInfo, UObject, UModule, AComponent, AControl, ControlMgr) {
 
         var Interfvc = {	
 			className: "Interfvc",
@@ -142,7 +142,10 @@ define(
 
 				// meta
 				var cm = new ControlMgr(db, null /*roots[0]*/);
-				new AComponent(cm); new AControl(cm);
+				new UObject(cm);
+				new UModule(cm);
+				new AComponent(cm);
+				new AControl(cm);
 
 				// другие компоненты
 				var ctrls = UCCELLO_CONFIG.controls;
