@@ -30,6 +30,10 @@ define([], function() {
             {className:'Label', isUccello:true, component:'controls/label', viewset:false}
         ],
 
+        guids: {
+            'sysDB': 'fb41702c-faba-b5c0-63a8-8d553bfe54a6'
+        },
+
         classGuids: {
             'ClientConnection':"5f27198a-0dd2-81b1-3eeb-2834b93fb514",
             'Connect':'66105954-4149-1491-1425-eac17fbe5a72',
