@@ -5,11 +5,11 @@ if (typeof define !== 'function') {
 
 define(
     ['./connection/clientConnection' ,
-        './memDB/memDBController','./memDB/memDataBase','./controls/controlMgr', './controls/aComponent',
+        './memDB/memDBController','./memDB/memDataBase','./controls/controlMgr', './system/uobject', './system/umodule', './controls/aComponent',
         './connection/userinfo', './connection/user', './connection/sessioninfo', './connection/session', './connection/connectinfo', './connection/connect', './connection/visualContextinfo', './connection/visualContext', './connection/vc',
         './system/rpc'
     ],
-    function(ClientConnection, MemDBController, MemDataBase, ControlMgr, AComponent,
+    function(ClientConnection, MemDBController, MemDataBase, ControlMgr, UObject, UModule, AComponent,
         UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContextInfo, VisualContext, VisualContext2,
         Rpc
         ) {
@@ -100,6 +100,8 @@ define(
                     // создаем мастер базу для clientConnection
                     that.pvt.dbclient = that.pvt.controller.newDataBase({name:"MasterClient", kind: "master"});
                     that.pvt.cmclient = new ControlMgr(that.pvt.dbclient);
+                    new UObject(that.pvt.cmclient);
+                    new UModule(that.pvt.cmclient);
                     new AComponent(that.pvt.cmclient);
                     new VisualContextInfo(that.pvt.cmclient);
                     new VisualContext(that.pvt.cmclient);

@@ -4,9 +4,9 @@ if (typeof define !== 'function') {
 }
 
 define(
-    ['../memDB/memDBController', '../controls/controlMgr', '../controls/aComponent', '../controls/aControl', './sessioninfo', './session', './connectinfo', './connect', './userinfo', './user', '../system/event',
+    ['../memDB/memDBController', '../controls/controlMgr', '../system/uobject', '../system/umodule', '../controls/aComponent', '../controls/aControl', './sessioninfo', './session', './connectinfo', './connect', './userinfo', './user', '../system/event',
         './visualContextinfo', './visualContext', '../system/utils'],
-    function(MemDBController, ControlMgr, AComponent, AControl, SessionInfo, Session, ConnectInfo, Connect, UserInfo, User, Event, VisualContextInfo, VisualContext, Utils) {
+    function(MemDBController, ControlMgr, UObject, UModule, AComponent, AControl, SessionInfo, Session, ConnectInfo, Connect, UserInfo, User, Event, VisualContextInfo, VisualContext, Utils) {
         var UserSessionMgr = Class.extend({
 
             init: function(router, options){
@@ -30,6 +30,8 @@ define(
                 this.cmsys = new ControlMgr(this.dbsys);
 
                 // создаем метаинфо
+                new UObject(this.cmsys);
+                new UModule(this.cmsys);
                 new AComponent(this.cmsys);
                 new UserInfo(this.cmsys);
                 new User(this.cmsys);
