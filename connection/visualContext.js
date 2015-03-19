@@ -8,8 +8,8 @@ if (typeof define !== 'function') {
  * @module VisualContext
  */
 define(
-    ['./visualContextinfo', '../controls/aComponent', '../controls/aControl', '../controls/controlMgr'],
-    function(VisualContextInfo, AComponent, AControl, ControlMgr) {
+    ['./visualContextinfo', '../controls/aComponent', '../controls/aControl', '../controls/controlMgr','../system/uobject','../system/umodule'],
+    function(VisualContextInfo, AComponent, AControl, ControlMgr,UObject,UModule) {
 
         var Interfvc = {	
 			className: "Interfvc",
@@ -142,6 +142,8 @@ define(
 
 				// meta
 				var cm = new ControlMgr(db, null /*roots[0]*/);
+                new UObject(cm);
+                new UModule(cm);
 				new AComponent(cm); new AControl(cm);
 
 				// другие компоненты
