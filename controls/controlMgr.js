@@ -133,11 +133,17 @@ define(
 			getByGuid: function(guid) {
 				return this.pvt.compByGuid[guid];
 			},
-			
+
+            /**
+			 * то же самое, но лаконичнее
+             */				
 			get: function(guid) {
 				return this.pvt.compByGuid[guid];
 			},
-			
+
+            /**
+			 * вернуть по имени
+             */				
 			getByName: function(name) {
 				return this.pvt.compByName[name];
 			},

@@ -129,6 +129,17 @@ define(
                 return this.pvt.controlMgr.get(this.pvt.obj.getRoot().getGuid());
             },
 
+            /**
+             * Возвращает объект-модуль текущего объекта или undefined если модуля нет 
+             */			
+			getModule: function() {
+				var obj = this.getRoot();
+				if (obj.isModule())
+					return obj;
+				else
+					return undefined;
+			},
+
 
             /**
              * Возвращает родительский элемент или нулл
@@ -178,7 +189,10 @@ define(
                 if (i>=0 && i<this.pvt.obj.countFields())
                     return this.pvt.obj.getFieldType(i);
             },
-
+			
+			isModule: function() { 
+				return false;
+			},
 
             _isProcessed: function(value) {
                 if (value === undefined)

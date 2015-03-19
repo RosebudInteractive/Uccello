@@ -11,7 +11,7 @@ define(
             className: "UModule",
             classGuid: UCCELLO_CONFIG.classGuids.UModule,
             metaFields: [ {fname:"Id",ftype:"int"}, {fname:"Name",ftype:"string"}, {fname:"Mode",ftype:"string"}], // Srv, CltSrv, Clt, CltRep
-            metaCols: [{"cname": "Resources", "ctype": "control"}],
+            //metaCols: [{"cname": "Resources", "ctype": "control"}],
 
             /**
              * @constructs
@@ -22,19 +22,23 @@ define(
              */
             init: function(cm, params, cb){
                 this._super(cm,params);
+				if (!(cm && params)) return;
 				
 				// запомнить базу данных
-				/*
-				if ("db" in params) 
-					this.pvt.db = params.db
+				// TODO в будущем модуль должен сам создавать свою базу данных
+				
+				if (params && ("db" in params)) 
+					this.pvt.mydb = params.db
 				else
 					if (cm != null)
-						this.pvt.db = cm.getDB();
+						this.pvt.mydb = cm.getDB();
 					else {
-						this.pvt.db = null;
+						this.pvt.mydb = null;
 						return; // TODO exception
 					}
 				
+				this.pvt.rootGuid = cm.getRoot().getGuid(); // запомнить гуид корневого объекта бд, ассоциированного с модулем
+				/*
 				if ( ) { // TODO УСЛОВИЕ НА МАСТЕР
 					
 				}
@@ -45,6 +49,21 @@ define(
 				
 				
             },
+			
+            /**
+             * Возвращает true если модуль в режиме MASTER и false если в режиме SLAVE
+             */			
+			isMaster: function() {
+				// Пользуемся ассоциировнной БД, чтобы понять в каком режиме модуль
+				// Можно, теоретически, запоминять состояние - когда будем создавать БД внутри модуля
+				// то этим гарантируется когерентность состояния MASTER/SLAVE у модуля и у его базы
+				return this.pvt.mydb.isMaster();
+				
+			},
+			
+			isModule: function() { // перекрывает аналогичную ф-ци в предке, которая возвращает false
+				return true;
+			},
 			
 			id: function(value) {
 				return this._genericSetter("Id",value);
