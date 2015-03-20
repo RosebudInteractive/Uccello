@@ -42,7 +42,6 @@ define([], function() {
             'SessionInfo':"479c72e9-29d1-3d6b-b17b-f5bf02e52002",
             'User':"dccac4fc-c50b-ed17-6da7-1f6230b5b055",
             'UserInfo':"e14cad9b-3895-3dc9-91ef-1fb12c343f10",
-            'VisualContext':"d5fbf382-8deb-36f0-8882-d69338c28b56",
             'AComponent':"5b8c93e7-350d-de2a-e2b4-1025a03b17db",
             'AControl':"c576cb6e-cdbc-50f4-91d1-4dc3b48b0b59",
             'ADataControl':"b2c132fd-c6bc-b3c7-d149-27a926916216",
