@@ -43,6 +43,9 @@ define(
 			// включить контекст
 			on: function(cm, params,cb) {
 				if ("db" in this.pvt) {
+					for (g in this.pvt.cmgs)  // 
+						this.pvt.cmgs[g].setToRendered(false);
+						
 					cb(this.pvt.db.getRootGuids("res"));
 					return;
 				}
