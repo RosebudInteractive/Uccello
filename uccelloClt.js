@@ -194,7 +194,7 @@ define(
 
 				function done() {
 					var s = that.pvt.clientConnection.socket;
-					var p = {socket: s, rpc: that.pvt.rpc, proxyServer: that.pvt.proxyServer}
+					var p = {socket: s, /*rpc: that.pvt.rpc, */ proxyServer: that.pvt.proxyServer}
 					p.side = params.side;
 					if (p.side == "server") {
 						that.pvt.serverContext = params.vc;
@@ -210,7 +210,7 @@ define(
                     p.renderRoot = that.pvt.renderRoot;
                     var vc = new VisualContext(that.pvt.cmclient, p, cbfinal2);
 					that.pvt.vc = vc;
-					that.pvt.vcproxy = vc.getProxy();
+					//that.pvt.vcproxy = vc.getProxy();
 				}
 				
 				var controller = this.getController();
@@ -232,16 +232,17 @@ define(
 
 				function done() {
 					var s = that.pvt.clientConnection.socket;
-					var p = {socket: s, rpc: that.pvt.rpc, proxyServer: that.pvt.proxyServer}
-					p.side = params.side;
-					if (p.side == "server") {
+					var p = {socket: s, /*rpc: that.pvt.rpc, */proxyServer: that.pvt.proxyServer}
+						
+					//p.side = params.side;
+					/*if (p.side == "server") {
 						that.pvt.serverContext = params.vc;
-						p.vc = params.vc;
-						p.ini = {fields:{Kind: "slave", MasterGuid: params.masterGuid}};
+						//p.vc = params.vc;
+						//p.ini = {fields:{Kind: "slave", MasterGuid: params.masterGuid}};
 					}
 					else {
-						p.ini = {fields:{Kind: "master"}};
-					}
+						//p.ini = {fields:{Kind: "master"}};
+					}*/
 					//p.rpc = null;
                     p.formGuids = params.formGuids;
                     p.components = that.pvt.components; //  ссылка на хранилище конструкторов
@@ -249,7 +250,7 @@ define(
                     var vc = that.getContext2();
                     vc.on(that.pvt.cmclient, p, cbfinal2);
 					that.pvt.vc = vc;
-					that.pvt.vcproxy = vc.getProxy();
+					//that.pvt.vcproxy = vc.getProxy();
 				}
 
 				var controller = this.getController();

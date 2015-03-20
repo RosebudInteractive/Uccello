@@ -46,7 +46,7 @@ define(
 				
 				this.pvt.typeGuids = params.typeGuids;
 				var controller = cm.getDB().getController();
-				this.pvt.rpc = params.rpc;
+				//this.pvt.rpc = params.rpc;
 				this.pvt.proxyServer = params.proxyServer;
 				this.pvt.components = params.components;
 				this.pvt.renderRoot = params.renderRoot;
@@ -78,16 +78,16 @@ define(
 							callback: that._setFormParams
 						});					
 					}
-					else
-						createCompCallback = function (obj) {
-							var rootGuid = obj.getRoot().getGuid();
-							if (!(that.pvt.cmgs[rootGuid]))
-								that.pvt.cmgs[rootGuid] = new ControlMgr(that.getDB(),rootGuid,that);
-							that.createComponent.apply(that, [obj, that.pvt.cmgs[rootGuid]]);													 
-						}				
+				else
+					createCompCallback = function (obj) {
+						var rootGuid = obj.getRoot().getGuid();
+						if (!(that.pvt.cmgs[rootGuid]))
+							that.pvt.cmgs[rootGuid] = new ControlMgr(that.getDB(),rootGuid,that);
+						that.createComponent.apply(that, [obj, that.pvt.cmgs[rootGuid]]);													 
+					}				
 					
 				if (this.getModule().isMaster()) { // главная (master) TODO разобраться с KIND				
-					this.pvt.vcproxy = params.rpc._publ(this, Interfvc);
+					//this.pvt.vcproxy = params.rpc._publ(this, Interfvc);
 					var params2 = {name: "VisualContextDB", kind: "master", cbfinal:cb};
 					if (createCompCallback)
 						params2.compcb = createCompCallback;
@@ -97,9 +97,9 @@ define(
 					this.contextGuid(this.getGuid());
 				}
 				else { // подписка (slave)			
-					this.pvt.vcproxy = params.rpc._publProxy(params.vc, params.socket,Interfvc);
+					//this.pvt.vcproxy = params.rpc._publProxy(params.vc, params.socket,Interfvc);
 					//var guid = this.masterGuid();
-					var guid = params.ini.fields.MasterGuid; // TODO временно!
+					guid = this.dataBase();
 
 					this.pvt.db = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
                             // подписываемся либо на все руты либо выборочно formGuids
@@ -107,12 +107,9 @@ define(
 							if (forms == null) forms = "all";
 							else if (forms == "") forms = [];
                             that.getDB().subscribeRoots(forms, cb, createCompCallback);
-							//that.dataBase(that.getDB().getGuid());
 						});
 				}
-				this.pvt.db.setDefaultCompCallback(createCompCallback);
-
-				//this.contextGuid(this.getGuid());			
+				this.pvt.db.setDefaultCompCallback(createCompCallback);	
 			},
 			
 			// выключить контекст
@@ -153,7 +150,6 @@ define(
 				// meta
 				var cm = new ControlMgr(db, null /*roots[0]*/);
                 new UObject(cm);
-                //new UModule(cm);
 				new AComponent(cm); new AControl(cm);
 
 				// другие компоненты
@@ -268,9 +264,9 @@ define(
 				else cb();
 			},			
 			
-			getProxy: function() {
+			/*getProxy: function() {
 				return this.pvt.vcproxy;
-			},
+			},*/
 			
 			getDB: function() {
 				return this.pvt.db;
