@@ -6,11 +6,11 @@ if (typeof define !== 'function') {
 define(
     ['./connection/clientConnection' ,
         './memDB/memDBController','./memDB/memDataBase','./controls/controlMgr', './system/uobject', './system/umodule', './controls/aComponent',
-        './connection/userinfo', './connection/user', './connection/sessioninfo', './connection/session', './connection/connectinfo', './connection/connect', './connection/visualContextinfo', './connection/visualContext', './connection/vc',
+        './connection/userinfo', './connection/user', './connection/sessioninfo', './connection/session', './connection/connectinfo', './connection/connect', './connection/visualContext', './connection/vc',
         './system/rpc'
     ],
     function(ClientConnection, MemDBController, MemDataBase, ControlMgr, UObject, UModule, AComponent,
-        UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContextInfo, VisualContext, VisualContext2,
+        UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContext, VisualContext2,
         Rpc
         ) {
         var UccelloClt = Class.extend({
@@ -45,7 +45,6 @@ define(
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.UserInfo] = UserInfo;
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.SessionInfo] = SessionInfo;
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.ConnectInfo] = ConnectInfo;
-                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.VisualContextInfo] = VisualContextInfo;
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.User] = User;
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Session] = Session;
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Connect] = Connect;
@@ -103,7 +102,6 @@ define(
                     new UObject(that.pvt.cmclient);
                     new UModule(that.pvt.cmclient);
                     new AComponent(that.pvt.cmclient);
-                    new VisualContextInfo(that.pvt.cmclient);
                     new VisualContext(that.pvt.cmclient);
                     new VisualContext2(that.pvt.cmclient);
                     new ClientConnection(that.pvt.cmclient);
@@ -337,7 +335,7 @@ define(
                     transArr[UCCELLO_CONFIG.classGuids.User] = UCCELLO_CONFIG.classGuids.UserInfo; // User -> UserInfo
                     transArr[UCCELLO_CONFIG.classGuids.Connect] = UCCELLO_CONFIG.classGuids.ConnectInfo; // Connect -> ConnectInfo
                     transArr[UCCELLO_CONFIG.classGuids.Session] = UCCELLO_CONFIG.classGuids.SessionInfo; // Session -> SessionInfo
-                    transArr[UCCELLO_CONFIG.classGuids.VisualContext] = UCCELLO_CONFIG.classGuids.VisualContext2; // VisualContext -> VisualContextInfo
+                    transArr[UCCELLO_CONFIG.classGuids.VisualContext] = UCCELLO_CONFIG.classGuids.VisualContext2; // VisualContext -> VisualContext2
                     classGuid = transArr[classGuid]? transArr[classGuid]: classGuid;
                     var params = {objGuid: obj.getGuid()};
                     var component = new (that.getConstr(classGuid))(that.pvt.cmsys, params);

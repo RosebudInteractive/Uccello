@@ -5,8 +5,8 @@ if (typeof define !== 'function') {
 
 define(
     ['../memDB/memDBController', '../controls/controlMgr', '../system/uobject', '../system/umodule', '../controls/aComponent', '../controls/aControl', './sessioninfo', './session', './connectinfo', './connect', './userinfo', './user', '../system/event',
-        './visualContextinfo', './vc', '../system/utils'],
-    function(MemDBController, ControlMgr, UObject, UModule, AComponent, AControl, SessionInfo, Session, ConnectInfo, Connect, UserInfo, User, Event, VisualContextInfo, VisualContext, Utils) {
+        './vc', '../system/utils'],
+    function(MemDBController, ControlMgr, UObject, UModule, AComponent, AControl, SessionInfo, Session, ConnectInfo, Connect, UserInfo, User, Event, VisualContext, Utils) {
             var UserSessionMgr = Class.extend({
 
             init: function(router, options){
@@ -39,7 +39,6 @@ define(
                 new Session(this.cmsys);
                 new ConnectInfo(this.cmsys);
                 new Connect(this.cmsys);
-                new VisualContextInfo(this.cmsys);
                 new VisualContext(this.cmsys);
 
                 // функции роутера

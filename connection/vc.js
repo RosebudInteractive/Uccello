@@ -8,8 +8,8 @@ if (typeof define !== 'function') {
  * @module VisualContext2
  */
 define(
-    ['./visualContextinfo', '../controls/aComponent', '../controls/aControl', '../controls/controlMgr', '../system/uobject',],
-    function(VisualContextInfo, AComponent, AControl, ControlMgr, UObject) {
+    ['../controls/aComponent', '../controls/aControl', '../controls/controlMgr', '../system/uobject',],
+    function(AComponent, AControl, ControlMgr, UObject) {
 
         var Interfvc = {
             className: "Interfvc",
@@ -19,11 +19,17 @@ define(
             //loadRoot: "function"
         }
 					 
-        var VisualContext2 = VisualContextInfo.extend(/** @lends module:VisualContext2.VisualContext2.prototype */{
+        var VisualContext2 = AComponent.extend(/** @lends module:VisualContext2.VisualContext2.prototype */{
 
             className: "VisualContext2",
             classGuid: UCCELLO_CONFIG.classGuids.VisualContext2,
-            metaFields: [],
+			metaFields: [
+				{fname: "DataBase", ftype: "string"}, // runtime - гуид БД данных на сервере
+				{fname: "Kind", ftype: "string"}, // , fdefault: "master" enum (master,slave
+				{fname: "MasterGuid", ftype: "string"}, // УБРАТЬ? GUID MASTER DATABASE данных контекста (на севере) - READONLY для SLAVE
+				{fname: "ContextGuid", ftype: "string"} // GUID контекста - можно будет удалить
+			],
+			metaCols: [],
 
              /**
              * Инициализация объекта
@@ -282,6 +288,22 @@ define(
 			
 			getSocket: function() {
 				return this.pvt.socket;
+			},
+
+			dataBase: function (value) {
+				return this._genericSetter("DataBase", value);
+			},
+
+			kind: function (value) {
+				return this._genericSetter("Kind", value);
+			},
+
+			masterGuid: function (value) {
+				return this._genericSetter("MasterGuid", value, "MASTER");
+			},
+
+			contextGuid: function (value) {
+				return this._genericSetter("ContextGuid", value, "MASTER");
 			}
 			
         });
