@@ -8,10 +8,10 @@ if (typeof define !== 'function') {
  * @module UserInfo
  */
 define(
-    ['../system/umodule'],
-    function(UModule) {
+    ['../controls/aComponent'],
+    function(AComponent) {
 
-        var UserInfo = UModule.extend(/** @lends module:UserInfo.UserInfo.prototype */{
+        var UserInfo = AComponent.extend(/** @lends module:UserInfo.UserInfo.prototype */{
 
             className: "UserInfo",
             classGuid: UCCELLO_CONFIG.classGuids.UserInfo,

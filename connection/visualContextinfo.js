@@ -18,7 +18,7 @@ define(
             metaFields: [
                 {fname: "DataBase", ftype: "string"}, // runtime
 				{fname: "Kind", ftype: "string"}, // , fdefault: "master" enum (master,slave
-				{fname: "MasterGuid", ftype: "string"},
+				{fname: "MasterGuid", ftype: "string"}, // GUID MASTER DATABASE - READONLY для SLAVE
 				{fname: "ContextGuid", ftype: "string"}
             ],
             metaCols: [],
@@ -42,7 +42,7 @@ define(
             },
 			
 			masterGuid: function (value) {
-                return this._genericSetter("MasterGuid", value);
+                return this._genericSetter("MasterGuid", value, "MASTER");
             },
 
 			contextGuid: function (value) {

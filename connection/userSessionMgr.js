@@ -5,7 +5,7 @@ if (typeof define !== 'function') {
 
 define(
     ['../memDB/memDBController', '../controls/controlMgr', '../system/uobject', '../system/umodule', '../controls/aComponent', '../controls/aControl', './sessioninfo', './session', './connectinfo', './connect', './userinfo', './user', '../system/event',
-        './visualContextinfo', './visualContext', '../system/utils'],
+        './visualContextinfo', './vc', '../system/utils'],
     function(MemDBController, ControlMgr, UObject, UModule, AComponent, AControl, SessionInfo, Session, ConnectInfo, Connect, UserInfo, User, Event, VisualContextInfo, VisualContext, Utils) {
             var UserSessionMgr = Class.extend({
 
@@ -118,8 +118,10 @@ define(
                 var user = this.getConnect(data.connectId).getSession().getUser();
                 var controller = this.getController();
 				var contextId = this.getNewContextId();
-                var context = new VisualContext(this.cmsys, {parent: user, colName: "VisualContext", socket: this.getConnect(data.connectId).getConnection(), rpc: this.rpc, proxyServer: this.proxyServer,
-                    ini: {fields: {Id: data.contextId, Name: 'context'+contextId, Kind: "master"}}, formGuids:data.formGuids});
+				var params = {parent: user, colName: "VisualContext", socket: this.getConnect(data.connectId).getConnection(), rpc: this.rpc, proxyServer: this.proxyServer,
+                    ini: {fields: {Id: data.contextId, Name: 'context'+contextId, Kind: "master"}}, formGuids:data.formGuids};
+                var context = new VisualContext(this.cmsys, params);
+				context.on(this.cmsys, params);
                 var result = {masterGuid: context.dataBase(), roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};
                 controller.genDeltas(this.dbsys.getGuid());
                 done(result);

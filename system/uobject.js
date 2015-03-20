@@ -244,16 +244,18 @@ define(
 
             /**
              * сеттер-геттер свойств по умолчанию (дженерик) - используется если нет дополнительной логики в свойствах
+			 * @params kind "MASTER" - только на мастере
              */
 
-            _genericSetter: function(fldName,fldVal) {
+            _genericSetter: function(fldName,fldVal, kind) {
                 //console.log(fldName, fldVal, this.getObj())
                 if (fldVal!==undefined) {
                     var val=this.getObj().get(fldName);
-                    if (val!=fldVal) {
-                        this.pvt.obj.set(fldName,fldVal);
+                   if (val!=fldVal) {
+						if (this.isMaster() || !(kind=="MASTER"))
+							this.pvt.obj.set(fldName,fldVal);
+						else console.log("ERROR SET PROP"); // TODO заменить на exception						
                     }
-
                 }
 
                 return this.pvt.obj.get(fldName);

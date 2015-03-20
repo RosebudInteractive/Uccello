@@ -8,8 +8,8 @@ if (typeof define !== 'function') {
  * @module VisualContext2
  */
 define(
-    ['./visualContextinfo', '../controls/aComponent', '../controls/aControl', '../controls/controlMgr'],
-    function(VisualContextInfo, AComponent, AControl, ControlMgr) {
+    ['./visualContextinfo', '../controls/aComponent', '../controls/aControl', '../controls/controlMgr', '../system/uobject',],
+    function(VisualContextInfo, AComponent, AControl, ControlMgr, UObject) {
 
         var Interfvc = {
             className: "Interfvc",
@@ -57,15 +57,7 @@ define(
 
 				var that = this;	
 				var createCompCallback = null;
-				if (cb)
-					createCompCallback = function (obj) {
-						var rootGuid = obj.getRoot().getGuid();
-						if (!(that.pvt.cmgs[rootGuid]))
-							that.pvt.cmgs[rootGuid] = new ControlMgr(that.getDB(),rootGuid,that);
-						that.createComponent.apply(that, [obj, that.pvt.cmgs[rootGuid]]);						
-						 
-					}
-				else // пока что считаем, что если нет финального колбэка - мы на сервере
+				if (!cb) // если нет колбэка значит на сервере - но это надо поменять TODO
 					createCompCallback = function (obj) { 
 						if (obj.getTypeGuid() == UCCELLO_CONFIG.classGuids.FormParam) { // Form Param
 							obj.event.on({ 
@@ -86,18 +78,25 @@ define(
 							callback: that._setFormParams
 						});					
 					}
+					else
+						createCompCallback = function (obj) {
+							var rootGuid = obj.getRoot().getGuid();
+							if (!(that.pvt.cmgs[rootGuid]))
+								that.pvt.cmgs[rootGuid] = new ControlMgr(that.getDB(),rootGuid,that);
+							that.createComponent.apply(that, [obj, that.pvt.cmgs[rootGuid]]);													 
+						}				
 					
-				if (false) { // главная (master) TODO разобраться с KIND
+				if (this.getModule().isMaster()) { // главная (master) TODO разобраться с KIND				
 					this.pvt.vcproxy = params.rpc._publ(this, Interfvc);
 					var params2 = {name: "VisualContextDB", kind: "master", cbfinal:cb};
 					if (createCompCallback)
 						params2.compcb = createCompCallback;
 					this.pvt.db = this.createDb(controller,params2);
 					this.loadNewRoots(params.formGuids, { rtype: "res", compcb: params2.compcb},params2.cbfinal);
-					//this.dataBase(this.pvt.db.getGuid());
+					this.dataBase(this.pvt.db.getGuid());
+					this.contextGuid(this.getGuid());
 				}
-				else { // подписка (slave)
-				
+				else { // подписка (slave)			
 					this.pvt.vcproxy = params.rpc._publProxy(params.vc, params.socket,Interfvc);
 					//var guid = this.masterGuid();
 					var guid = params.ini.fields.MasterGuid; // TODO временно!
@@ -121,6 +120,54 @@ define(
 			
 			},
 
+           /**
+             * Обработчик изменения параметра
+             */
+			_onModifParam: function(ev) {
+				this.pvt.memParams.push(ev.target);
+			},
+
+			// отрабатывает только на сервере
+			_setFormParams: function(ev) {
+				for (var i=0; i<this.pvt.memParams.length; i++) {
+					var obj = this.pvt.memParams[i];
+					var pn = obj.get("Name");
+					for (var j=0; j<this.pvt.formParams[pn].length; j++) {
+						var obj2 = this.pvt.formParams[pn][j];
+						if (obj2.get("Kind")=="in") obj2.set("Value",obj.get("Value"));
+					}
+				}
+				this.pvt.memParams = [];
+				this.getDB().getController().genDeltas(this.getDB().getGuid());
+			},
+
+			/**
+			 * Создать базу данных - ВРЕМЕННАЯ ЗАГЛУШКА!
+			 * @param dbc
+			 * @param options
+			 * @returns {object}
+			 */
+			createDb: function(dbc, options){
+				var db = dbc.newDataBase(options);
+
+				// meta
+				var cm = new ControlMgr(db, null /*roots[0]*/);
+                new UObject(cm);
+                //new UModule(cm);
+				new AComponent(cm); new AControl(cm);
+
+				// другие компоненты
+				var ctrls = UCCELLO_CONFIG.controls;
+				for (var i in ctrls) {
+					var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath;
+					var comp = require(path + ctrls[i].component);
+					new comp(cm);
+				}
+
+				return db;
+			},
+	
+			
 			// "транзакции" для буферизации вызовов методов
 			tranStart: function() {
 				if (this.pvt.inTran) return;
@@ -213,6 +260,13 @@ define(
 				this.getDB().resetModifLog();
 			},
 			
+			dispose: function(cb) {			
+				if (this.kind()=="slave") {
+					var controller = this.getControlMgr().getDB().getController();
+					controller.delDataBase(this.pvt.db.getGuid(), cb);
+				}
+				else cb();
+			},			
 			
 			getProxy: function() {
 				return this.pvt.vcproxy;
