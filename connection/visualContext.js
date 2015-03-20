@@ -59,6 +59,9 @@ define(
 						var rootGuid = obj.getRoot().getGuid();
 						if (!(that.pvt.cmgs[rootGuid]))
 							that.pvt.cmgs[rootGuid] = new ControlMgr(that.getDB(),rootGuid,that);
+							
+							
+							
 						that.createComponent.apply(that, [obj, that.pvt.cmgs[rootGuid]]);
 
 					}

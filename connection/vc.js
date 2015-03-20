@@ -177,8 +177,8 @@ define(
 				else { // slave
 					// вызываем загрузку нового рута у мастера
 					// TODO compb на сервере не отрабатывает..
-					this.execMethod(this.pvt.vcproxy,this.pvt.vcproxy.loadNewRoots, [rootGuids,params,function(r) { if (cb) cb(r); }]);
-					//this.remoteCall('loadNewRoots', [rootGuids, params]);
+					//this.execMethod(this.pvt.vcproxy,this.pvt.vcproxy.loadNewRoots, [rootGuids,params,function(r) { if (cb) cb(r); }]);
+					this.remoteCall('loadNewRoots', [rootGuids, params]);
 				}
 			},
 			

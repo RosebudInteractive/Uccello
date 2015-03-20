@@ -116,7 +116,9 @@ define(
 							params.expr = this.getControlMgr().get(master).getField("Id");
 						}
 						//this.cursor(undefined);
+						
 						this.getControlMgr().getContext().loadNewRoots([rg],params, icb);
+						//this.getModule().load([rg],params, icb);
 					}
 					else this._initCursor();
 				}

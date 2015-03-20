@@ -17,6 +17,7 @@ define(
 			init: function(db, rootGuid, vc, socket){
 				this._super(db, rootGuid, vc);
 				this.pvt = {};
+				this.pvt.guid = db.getController().guid();
 				this.pvt.compByLid = {};
 				this.pvt.compByGuid = {};
 				this.pvt.compByName = {};				
@@ -25,6 +26,7 @@ define(
 				this.pvt.db = db;
 				this.pvt.rootGuid = rootGuid;
 				this.pvt.vc = vc;
+				
 				if (socket)
 					this.pvt.socket = socket;
 				else
@@ -135,6 +137,10 @@ define(
 				else
 					return this.get(this.pvt.rootGuid); //this.getDB().getObj(this.pvt.rootGuid);
 			},
+			
+			getGuid: function() {
+				return this.pvt.guid;
+			},
 
             /**
 			 * Вернуть компонент по его гуид
@@ -191,7 +197,8 @@ define(
 				//this.getDB().resetModifLog();
 				for (var g in this.pvt.compByGuid) { //TODO нужно это делать не для всех компонентов или рендерить всегда с рута
 					//this.pvt.compByGuid[g].getObj().resetModifFldLog();	// обнуляем "измененные" поля в объектах 
-					this.pvt.compByGuid[g]._isRendered(true);			// выставляем флаг рендеринга
+					if ("_isRendered" in this.pvt.compByGuid[g])
+						this.pvt.compByGuid[g]._isRendered(true);			// выставляем флаг рендеринга
 				}
 			},
 

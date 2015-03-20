@@ -151,12 +151,15 @@ define(
             },
 			
 			routerRemoteCall: function(data,done) {
-				//var conn = this.getConnect(data.connectId);
-				var vc = this.cmsys.get(data.args.contextGuid);
-				var db = vc.getContentDB();
-				var obj = db.getObj(data.args.objGuid);
+				
+				var controller = this.getController();
+				var masterdb = controller.getDB(data.args.masterGuid);
+				var obj = masterdb.getObj(data.args.objGuid);
 				var rootObj = obj.getRoot();
-				var cm = vc.getContextCM(rootObj.getGuid());
+				
+				//var vc = this.cmsys.get(data.args.contextGuid);
+				
+				var cm = this.cmsys; //vc.getContextCM(rootObj.getGuid());				
 				var uobj = cm.get(data.args.objGuid);
 				data.args.aparams.push(done);
 				uobj[data.args.func].apply(uobj,data.args.aparams);

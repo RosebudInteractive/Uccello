@@ -4,8 +4,8 @@ if (typeof define !== 'function') {
 }
 
 define(
-    [UCCELLO_CONFIG.uccelloPath+'controls/container'],
-    function(Container) {
+    [UCCELLO_CONFIG.uccelloPath+'controls/container', UCCELLO_CONFIG.uccelloPath+'system/umodule'],
+    function(Container, Container) {
         var Form = Container.extend({
 
             className: "Form",
@@ -16,6 +16,16 @@ define(
             init: function(cm,params){
                 this._super(cm,params);
             }
+			/*
+			load: function(rootGuids,params, cb) {
+				if (this.getModule().isMaster()) {
+					console.log("MASTER LOAD!!");
+				}
+				else {
+					this.remoteCall('load', [rootGuids, params]);
+				}
+			},*/
+			
         });
         return Form;
     }

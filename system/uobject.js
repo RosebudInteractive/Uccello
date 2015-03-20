@@ -191,7 +191,22 @@ define(
             },
 			
 			isModule: function() { 
-				return false;
+				if (this.pvt.parent)
+					return false;
+				else 
+					return true;
+				//return false;
+			},
+			
+            /**
+             * Возвращает true если модуль в режиме MASTER и false если в режиме SLAVE
+             */			
+			isMaster: function() {
+				// Пользуемся ассоциировнной БД, чтобы понять в каком режиме модуль
+				// Можно, теоретически, запоминять состояние - когда будем создавать БД внутри модуля
+				// то этим гарантируется когерентность состояния MASTER/SLAVE у модуля и у его базы
+				return this.getObj().getDB().isMaster();
+				
 			},
 			
             /**
@@ -207,7 +222,12 @@ define(
 					return;
 				}
 				var socket = this.getControlMgr().getSocket();
-				var myargs = { contextGuid: this.getModule().getGuid(), objGuid: this.getGuid(), aparams:aparams };
+				//var cg = this.getControlMgr().getContext().contextGuid();
+				
+				var pg = this.getObj().getDB().getProxyMaster().guid;
+				//var mg = this.getModule().getGuid();
+							
+				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func };
 				var args={action:"remoteCall2",type:"method",args: myargs};
 				socket.send(args,cb);
 			},

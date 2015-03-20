@@ -37,9 +37,7 @@ define(
 			_isRendered: function(value) {
 				if (value === undefined)
 					return this.pvt.isRendered;
-				if (/*(this.getGuid()=="eefbcccf-743a-66a4-c3a2-4751d2a334f5") &&*/(this.name()=="DataGridDetail") && (value==false)) {
-					console.log("FALSE RENDER");
-				}
+
 				if (value)
 				  this.pvt.isRendered = true;
 				else
