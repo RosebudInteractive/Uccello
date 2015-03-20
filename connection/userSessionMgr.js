@@ -156,10 +156,8 @@ define(
 				var controller = this.getController();
 				var masterdb = controller.getDB(data.args.masterGuid);
 				var obj = masterdb.getObj(data.args.objGuid);
-				var rootObj = obj.getRoot();
-				
+				var rootObj = obj.getRoot();				
 				//var vc = this.cmsys.get(data.args.contextGuid);
-				
 				var cm = this.cmsys; //vc.getContextCM(rootObj.getGuid());				
 				var uobj = cm.get(data.args.objGuid);
 				data.args.aparams.push(done);
