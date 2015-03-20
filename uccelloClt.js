@@ -220,7 +220,7 @@ define(
                 var that = this;
 
                 function cbfinal2(result2){
-                    result2 = result2.guids ? result2.guids : result2;
+                    result2 = result2 && result2.guids ? result2.guids : result2;
                     that.getContext().renderForms(result2, true);
                     if (cbfinal)
                         cbfinal(result2);
@@ -243,9 +243,8 @@ define(
                     p.formGuids = params.formGuids;
                     p.components = that.pvt.components; //  ссылка на хранилище конструкторов
                     p.renderRoot = that.pvt.renderRoot;
-                    var vc = that.pvt.cmsys.getByGuid(params.vc);
-                    vc.on(that.pvt.cmclient, p, cbfinal2);
-					that.pvt.vc = vc;
+                    that.pvt.vc = that.pvt.cmsys.getByGuid(params.vc);
+                    that.pvt.vc.on(that.pvt.cmclient, p, cbfinal2);
 					//that.pvt.vcproxy = vc.getProxy();
 				}
 
