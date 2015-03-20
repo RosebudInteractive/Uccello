@@ -170,15 +170,15 @@ define(
 					var that=this;
 					this.createSrvContext(formGuids, function(result){
                         result.side = 'server';
-						that.setContext(result, cbfinal);
+						//that.setContextVc2(result, cbfinal);
 					});
 				}
 				else { // side == "client"
-                    this.setContext({side: "client", formGuids: formGuids}, cbfinal);
+                    //this.setContextVc2({side: "client", formGuids: formGuids}, cbfinal);
 				}
 			},
 
-			setContext: function(params, cbfinal) {
+			/*setContext: function(params, cbfinal) {
                 var that = this;
 
                 function cbfinal2(result2){
@@ -190,7 +190,7 @@ define(
 
 				function done() {
 					var s = that.pvt.clientConnection.socket;
-					var p = {socket: s, /*rpc: that.pvt.rpc, */ proxyServer: that.pvt.proxyServer}
+					var p = {socket: s, *//*rpc: that.pvt.rpc, *//* proxyServer: that.pvt.proxyServer}
 					p.side = params.side;
 					if (p.side == "server") {
 						that.pvt.serverContext = params.vc;
@@ -214,7 +214,7 @@ define(
 					this.pvt.vc.dispose(done); //delDataBase(this.pvt.dbcontext.getGuid(), done);
 				else
 					done();			
-			},
+			},*/
 
 			setContextVc2: function(params, cbfinal) {
                 var that = this;
@@ -243,7 +243,7 @@ define(
                     p.formGuids = params.formGuids;
                     p.components = that.pvt.components; //  ссылка на хранилище конструкторов
                     p.renderRoot = that.pvt.renderRoot;
-                    var vc = that.getContext2();
+                    var vc = that.pvt.cmsys.getByGuid(params.vc);
                     vc.on(that.pvt.cmclient, p, cbfinal2);
 					that.pvt.vc = vc;
 					//that.pvt.vcproxy = vc.getProxy();
