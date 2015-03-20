@@ -42,6 +42,7 @@ define(
 			
 			// включить контекст
 			on: function(cm, params,cb) {
+				if ("db" in this.pvt) return;
 				this.pvt.cmgs = {};
 				this.pvt.db = null;
 				this.pvt.tranQueue = null; // очередь выполнения методов если в транзакции
