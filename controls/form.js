@@ -4,8 +4,8 @@ if (typeof define !== 'function') {
 }
 
 define(
-    [UCCELLO_CONFIG.uccelloPath+'controls/container', UCCELLO_CONFIG.uccelloPath+'system/umodule'],
-    function(Container, Container) {
+    [UCCELLO_CONFIG.uccelloPath+'controls/container'],
+    function(Container ) {
         var Form = Container.extend({
 
             className: "Form",
