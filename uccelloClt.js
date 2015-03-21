@@ -97,7 +97,7 @@ define(
 
                     // создаем мастер базу для clientConnection
                     that.pvt.dbclient = that.pvt.controller.newDataBase({name:"MasterClient", kind: "master"});
-                    that.pvt.cmclient = new ControlMgr(that.pvt.dbclient,that.pvt.clientConnection.socket);
+                    that.pvt.cmclient = new ControlMgr(that.pvt.dbclient,null,null,that.pvt.clientConnection.socket);
                     new UObject(that.pvt.cmclient);
                     new UModule(that.pvt.cmclient);
                     new AComponent(that.pvt.cmclient);
@@ -129,7 +129,8 @@ define(
 			},
 
 			getContextCM: function(rootGuid) {
-				return this.pvt.vc.getContextCM(rootGuid);
+				//return this.pvt.vc.getContextCM(rootGuid);
+				return this.pvt.vc.getContextCM();
 			},
 			
 			// получить конструктор по его guid

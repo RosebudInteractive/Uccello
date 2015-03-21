@@ -43,13 +43,14 @@ define(
 			// включить контекст
 			on: function(cm, params,cb) {
 				if ("db" in this.pvt) {
-					for (g in this.pvt.cmgs)  // 
-						this.pvt.cmgs[g].setToRendered(false);
+					this.pvt.cm.setToRendered(false);
+					//for (g in this.pvt.cmgs)  // 
+					//	this.pvt.cmgs[g].setToRendered(false);
 						
 					cb(this.pvt.db.getRootGuids("res"));
 					return;
 				}
-				this.pvt.cmgs = {};
+				//this.pvt.cmgs = {};
 				this.pvt.db = null;
 				this.pvt.tranQueue = null; // очередь выполнения методов если в транзакции
 				this.pvt.inTran = false; // признак транзакции
@@ -67,6 +68,7 @@ define(
 				this.pvt.memParams = [];
 				
 				this.pvt.socket = params.socket;
+				
 
 				var that = this;	
 				var createCompCallback = null;
@@ -94,9 +96,9 @@ define(
 				else
 					createCompCallback = function (obj) {
 						var rootGuid = obj.getRoot().getGuid();
-						if (!(that.pvt.cmgs[rootGuid]))
-							that.pvt.cmgs[rootGuid] = new ControlMgr(that.getDB(),rootGuid,that);
-						that.createComponent.apply(that, [obj, that.pvt.cmgs[rootGuid]]);													 
+						//if (!(that.pvt.cmgs[rootGuid]))
+						//	that.pvt.cmgs[rootGuid] = new ControlMgr(that.getDB(),rootGuid,that);
+						that.createComponent.apply(that, [obj, that.pvt.cm]);													 
 					}				
 					
 				if (this.getModule().isMaster()) { // главная (master) TODO разобраться с KIND				
@@ -105,6 +107,7 @@ define(
 					if (createCompCallback)
 						params2.compcb = createCompCallback;
 					this.pvt.db = this.createDb(controller,params2);
+					this.pvt.cm = new ControlMgr(this.getDB(),null,this,this.pvt.socket);
 					this.loadNewRoots(params.formGuids, { rtype: "res", compcb: params2.compcb},params2.cbfinal);
 					this.dataBase(this.pvt.db.getGuid());
 					this.contextGuid(this.getGuid());
@@ -116,6 +119,7 @@ define(
 
 					this.pvt.db = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
                             // подписываемся либо на все руты либо выборочно formGuids
+							that.pvt.cm = new ControlMgr(that.getDB(),null,that,that.pvt.socket);
 							var forms = params.formGuids;
 							if (forms == null) forms = "all";
 							else if (forms == "") forms = [];
@@ -257,15 +261,17 @@ define(
 			},
 			
 			renderAll: function(pd) {
-				for (var g in this.pvt.cmgs)
-					this.pvt.cmgs[g].render(undefined, this.pvt.renderRoot(g), pd);
+				var ga = this.pvt.cm.getRootGuids()
+				for (var i=0; i<ga.length; i++)
+					this.pvt.cm.render(this.getContentDB().getObj(ga[i]), this.pvt.renderRoot(ga[i]), pd);
 				this.getDB().resetModifLog();
 			},
 			
 			renderForms: function(roots, pd) {
 				for (var i=0; i<roots.length; i++)
-					if (this.pvt.cmgs[roots[i]])
-						this.pvt.cmgs[roots[i]].render(undefined, this.pvt.renderRoot(roots[i]),pd);
+					//if (this.pvt.cmgs[roots[i]])
+						//this.pvt.cmgs[roots[i]].
+						this.pvt.cm.render(this.getContentDB().getObj(roots[i]), this.pvt.renderRoot(roots[i]),pd);
 				this.getDB().resetModifLog();
 			},
 			
@@ -289,8 +295,8 @@ define(
 				return this.pvt.db;
 			},
 			
-			getContextCM: function(guid) {
-				return this.pvt.cmgs[guid];
+			getContextCM: function() {
+				return this.pvt.cm; //gs[guid];
 			},
 			
 			getSocket: function() {

@@ -37,8 +37,8 @@ define(
 						return; // TODO exception
 					}
 				
-				if (cm.getRoot())
-					this.pvt.rootGuid = cm.getRoot().getGuid(); // запомнить гуид корневого объекта бд, ассоциированного с модулем
+				//if (cm.getRoot())
+				//	this.pvt.rootGuid = cm.getRoot().getGuid(); // запомнить гуид корневого объекта бд, ассоциированного с модулем
 				/*
 				if ( ) { // TODO УСЛОВИЕ НА МАСТЕР
 					

@@ -24,7 +24,9 @@ define(
 				this.pvt.subsInitFlag = false;
 				this.pvt.dataInitFlag = false;
 				this.pvt.db = db;
-				this.pvt.rootGuid = rootGuid;
+				// REFACT213
+				// this.pvt.rootGuid = rootGuid;
+				this.pvt.rootGuids = {};
 				this.pvt.vc = vc;
 				
 				if (socket)
@@ -34,15 +36,16 @@ define(
 						this.pvt.socket = vc.getSocket();
 				this.pvt.viewSets = [this.createViewSet(UCCELLO_CONFIG.viewSet)];
                 this.pvt.asd = true;
-				if (rootGuid) {
-					if (db.getObj(rootGuid)==undefined) {
+				// REFACT213
+				//if (rootGuid) {
+				//	if (db.getObj(rootGuid)==undefined) {
 						db.event.on( {
 							type: "newRoot",
 							subscriber: this,
 							callback: this.onNewRoot
 						});
-					}
-				}
+				//	}
+				//}
                     
 /*                } else { // MemObj
                     this.pvt.root = dbOrRoot;
@@ -56,7 +59,7 @@ define(
 			},
 			
 			subsInit: function() {
-				var c = this.getRoot();
+				//var c = this.getRoot();
 
 				for (var g in this.pvt.compByGuid)
 					this.pvt.compByGuid[g].subsInit();
@@ -66,7 +69,7 @@ define(
 
 			
 			dataInit: function() {
-				var c = this.getRoot();
+				//var c = this.getRoot();
 
 				for (var g in this.pvt.compByGuid)
 					this.pvt.compByGuid[g].dataInit();
@@ -83,6 +86,9 @@ define(
 				this.pvt.compByGuid[component.getGuid()] = component;
 				if (component.name())
 					this.pvt.compByName[component.name()] = component;
+				if (!component.getParent()) {// корневой элемент
+					this.pvt.rootGuids[component.getGuid()] = component;
+				}
 			},
 
 
@@ -94,7 +100,10 @@ define(
 				var c = this.get(guid);
 				delete this.pvt.compByLid[c.getLid()];
 				delete this.pvt.compByGuid[c.getGuid()];
-				c.getParent()._delChild(c.getObj().getColName(),c.getObj());
+				if (c.getParent())
+					c.getParent()._delChild(c.getObj().getColName(),c.getObj());
+				else
+					delete this.pvt.rootGuids[c.getGuid()];
 			},
 
             /**
@@ -136,6 +145,17 @@ define(
 					return undefined;
 				else
 					return this.get(this.pvt.rootGuid); //this.getDB().getObj(this.pvt.rootGuid);
+			},
+			
+            /**
+			 * Вернуть массив рутовых гуидов
+             */		
+			getRootGuids: function() {
+				var guids = [];
+				for (var g in this.pvt.rootGuids)
+					guids.push(g);
+				return guids;
+				
 			},
 			
 			getGuid: function() {
@@ -211,6 +231,8 @@ define(
 			},
 			
 			onNewRoot: function(result) {
+				// REFACT213
+				/*
 				if (result.target.getGuid() == this.pvt.rootGuid) {
 	                    this.getDB().getRoot(this.pvt.rootGuid).event.on({
 							type: "delObj",
@@ -218,6 +240,13 @@ define(
 							callback: this.onDeleteComponent
                     });				
 					
+				}*/
+				if (this.pvt.rootGuids[result.target.getGuid()] ) {
+	                    this.getDB().getRoot(result.target.getGuid()).event.on({
+							type: "delObj",
+							subscriber: this,
+							callback: this.onDeleteComponent
+                    });	
 				}
 				
 			},

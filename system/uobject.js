@@ -144,7 +144,6 @@ define(
             /**
              * Возвращает родительский элемент или нулл
              */
-            // TODO брать парент непосредственно из контрола
             getParent: function() {
                 if (this.getObj().getParent() == null)
                     return null
