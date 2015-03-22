@@ -263,7 +263,7 @@ define(
 			renderAll: function(pd) {
 				var ga = this.pvt.cm.getRootGuids()
 				for (var i=0; i<ga.length; i++)
-					this.pvt.cm.render(this.getContentDB().getObj(ga[i]), this.pvt.renderRoot(ga[i]), pd);
+					this.pvt.cm.render(this.pvt.cm.get(ga[i]) /*this.getContentDB().getObj(ga[i])*/, this.pvt.renderRoot(ga[i]), pd);
 				this.getDB().resetModifLog();
 			},
 			
@@ -271,7 +271,7 @@ define(
 				for (var i=0; i<roots.length; i++)
 					//if (this.pvt.cmgs[roots[i]])
 						//this.pvt.cmgs[roots[i]].
-						this.pvt.cm.render(this.getContentDB().getObj(roots[i]), this.pvt.renderRoot(roots[i]),pd);
+						this.pvt.cm.render(this.pvt.cm.get(roots[i]), this.pvt.renderRoot(roots[i]),pd);
 				this.getDB().resetModifLog();
 			},
 			

@@ -40,8 +40,8 @@ define(
             render: function(component, options) {
 
                 var that = this;
-                if (!component)
-                    component = this.cm.getRoot();
+                //if (!component)
+                //    component = this.cm.getRoot();
 
 				if ("_isRendered" in component) {
 					if (!component._isRendered()) {

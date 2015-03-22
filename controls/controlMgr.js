@@ -140,12 +140,12 @@ define(
             /**
 			 * Вернуть корневой объект бд, с которым связан менеджер контролов
              */				
-			getRoot: function() {
+			/*getRoot: function() {
 				if (this.pvt.rootGuid==undefined)
 					return undefined;
 				else
 					return this.get(this.pvt.rootGuid); //this.getDB().getObj(this.pvt.rootGuid);
-			},
+			},*/
 			
             /**
 			 * Вернуть массив рутовых гуидов
@@ -208,7 +208,6 @@ define(
 				if (pd) this.processDelta();
 			
 				var c = (component === undefined) ? this.getRoot()  : component;
-				if (c.getRoot() != this.getRoot()) return;
 
                 for(var i in this.pvt.viewSets)
                 if (this.pvt.viewSets[i].enable())
