@@ -138,11 +138,29 @@ define(
 			},
 			
 			// выключить контекст
-			off: function() {
-				this.pvt.isOn = false;
-				this.pvt.isVisible = false;
-			},
+			// TODO пока работает только для SLAVE
+			off: function(cb) {
+				function cb2() {
+					this.pvt.isOn = false;
+					this.pvt.isVisible = false;
+					if ((cb !== undefined) && (typeof cb == "function")) cb();
+				}
 
+				this._dispose(cb2);
+			},
+			
+            /**
+             * отписать контекст от мастера
+             * @callback cb - коллбэк для вызова после отработки отписки
+             */			
+			_dispose: function(cb) {			
+				if (!this.getModule().isMaster()) { 
+					var controller = this.getControlMgr().getDB().getController();
+					controller.delDataBase(this.getContentDB().getGuid(), cb);
+				}
+				else cb();
+			},	
+			
             /**
              * Возвращает true если контекст активен
              */
@@ -293,17 +311,7 @@ define(
 				this.getDB().resetModifLog();
 			},
 
-            /**
-             * отписать контекст от мастера
-             * @callback cb - коллбэк для вызова после отработки отписки
-             */			
-			dispose: function(cb) {			
-				if (!this.getModule().isMaster()) { //this.kind()=="slave") {
-					var controller = this.getControlMgr().getDB().getController();
-					controller.delDataBase(this.pvt.db.getGuid(), cb);
-				}
-				else cb();
-			},	
+
 
 
 			getDB: function() {
