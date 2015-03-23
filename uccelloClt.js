@@ -230,24 +230,12 @@ define(
 
 				function done() {
 					var s = that.pvt.clientConnection.socket;
-					var p = {socket: s, /*rpc: that.pvt.rpc, */proxyServer: that.pvt.proxyServer}
-						
-					//p.side = params.side;
-					/*if (p.side == "server") {
-						that.pvt.serverContext = params.vc;
-						//p.vc = params.vc;
-						//p.ini = {fields:{Kind: "slave", MasterGuid: params.masterGuid}};
-					}
-					else {
-						//p.ini = {fields:{Kind: "master"}};
-					}*/
-					//p.rpc = null;
+					var p = {socket: s, proxyServer: that.pvt.proxyServer}
                     p.formGuids = params.formGuids;
                     p.components = that.pvt.components; //  ссылка на хранилище конструкторов
                     p.renderRoot = that.pvt.renderRoot;
                     that.pvt.vc = that.pvt.cmsys.getByGuid(params.vc);
                     that.pvt.vc.on(that.pvt.cmclient, p, cbfinal2);
-					//that.pvt.vcproxy = vc.getProxy();
 				}
 
 				var controller = this.getController();
