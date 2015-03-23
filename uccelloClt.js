@@ -28,7 +28,6 @@ define(
 				this.pvt.dbcontext = null;
                 this.pvt.controlMgr = {};
 				this.pvt.vc = null; // VisualContext
-				this.pvt.vc2 = null; // VisualContext2
                 this.pvt.renderRoot = options.renderRoot;
                 this.options = options;
 
@@ -124,10 +123,6 @@ define(
 				return this.pvt.vc;
 			},
 			
-			getContext2: function() {
-				return this.pvt.vc2;
-			},
-
 			getContextCM: function(rootGuid) {
 				//return this.pvt.vc.getContextCM(rootGuid);
 				return this.pvt.vc.getContextCM();
@@ -171,12 +166,14 @@ define(
 					var that=this;
 					this.createSrvContext(formGuids, function(result){
                         result.side = 'server';
-						//that.setContextVc2(result, cbfinal);
+						//that.setContext(result, cbfinal);
+                        cbfinal(result);
 					});
 				}
 				else { // side == "client"
-                    //this.setContextVc2({side: "client", formGuids: formGuids}, cbfinal);
+                    //this.setContext({side: "client", formGuids: formGuids}, cbfinal);
 					// TODO написать импл.
+                    cbfinal();
 				}
 			},
 
@@ -218,7 +215,7 @@ define(
 					done();			
 			},*/
 
-			setContextVc2: function(params, cbfinal) {
+			setContext: function(params, cbfinal) {
                 var that = this;
 
                 function cbfinal2(result2){
@@ -327,9 +324,6 @@ define(
                     var component = new (that.getConstr(classGuid))(that.pvt.cmsys, params);
                     if (classGuid == UCCELLO_CONFIG.classGuids.UserInfo) { // UserInfo
                         that.pvt.user = component;
-                    }
-                    if (classGuid == UCCELLO_CONFIG.classGuids.VisualContext2) {
-                        that.pvt.vc2 = component;
                     }
                 };
                 this.getSysDB().setDefaultCompCallback(compCallBack);
