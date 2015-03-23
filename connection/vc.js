@@ -11,13 +11,12 @@ define(
     ['../controls/aComponent', '../controls/aControl', '../controls/controlMgr', '../system/uobject',],
     function(AComponent, AControl, ControlMgr, UObject) {
 
-        var Interfvc = {
+        /*var Interfvc = {
             className: "Interfvc",
             classGuid: "2a164568-4e44-4c50-bfe8-faae7f8f2e69",
 
             loadNewRoots: "function"
-            //loadRoot: "function"
-        }
+        }*/
 					 
         var VisualContext2 = AComponent.extend(/** @lends module:VisualContext2.VisualContext2.prototype */{
 
@@ -51,7 +50,6 @@ define(
              */
 			on: function(cm, params,cb, renderRoot) {
 				if (this.isOn()) {
-					//this.pvt.cm.setToRendered(false);
 					this.pvt.cm.initRender();
 					cb(this.pvt.db.getRootGuids("res"));
 					return;
@@ -64,7 +62,6 @@ define(
 				
 				this.pvt.typeGuids = params.typeGuids;
 				var controller = cm.getDB().getController();
-				//this.pvt.rpc = params.rpc;
 				this.pvt.proxyServer = params.proxyServer;
 				this.pvt.components = params.components;
 				this.pvt.renderRoot = renderRoot;
@@ -98,12 +95,10 @@ define(
 					}
 				else
 					createCompCallback = function (obj) {
-						//var rootGuid = obj.getRoot().getGuid();
 						that.createComponent.apply(that, [obj, that.pvt.cm]);													 
 					}				
 					
 				if (this.getModule().isMaster()) { // главная (master) TODO разобраться с KIND				
-					//this.pvt.vcproxy = params.rpc._publ(this, Interfvc);
 					var params2 = {name: "VisualContextDB", kind: "master", cbfinal:cb};
 					if (createCompCallback)
 						params2.compcb = createCompCallback;
@@ -116,8 +111,6 @@ define(
 					if (this.pvt.renderRoot) this.pvt.isVisible = true;
 				}
 				else { // подписка (slave)			
-					//this.pvt.vcproxy = params.rpc._publProxy(params.vc, params.socket,Interfvc);
-					//var guid = this.masterGuid();
 					guid = this.dataBase();
 					function cb2(res) {
 						that.pvt.isOn = true;
