@@ -26,7 +26,7 @@ define(
 			metaFields: [
 				{fname: "DataBase", ftype: "string"}, // runtime - гуид БД данных на сервере
 				{fname: "Kind", ftype: "string"}, // , fdefault: "master" enum (master,slave
-				{fname: "MasterGuid", ftype: "string"}, // УБРАТЬ? GUID MASTER DATABASE данных контекста (на севере) - READONLY для SLAVE
+				//{fname: "MasterGuid", ftype: "string"}, // УБРАТЬ? GUID MASTER DATABASE данных контекста (на севере) - READONLY для SLAVE
 				{fname: "ContextGuid", ftype: "string"} // GUID контекста - можно будет удалить
 			],
 			metaCols: [],
@@ -338,9 +338,9 @@ define(
 				return this._genericSetter("Kind", value);
 			},
 
-			masterGuid: function (value) {
+			/*masterGuid: function (value) {
 				return this._genericSetter("MasterGuid", value, "MASTER");
-			},
+			},*/
 
 			contextGuid: function (value) {
 				return this._genericSetter("ContextGuid", value, "MASTER");

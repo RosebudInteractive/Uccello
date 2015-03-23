@@ -28,7 +28,6 @@ define(
 				this.pvt.dbcontext = null;
                 this.pvt.controlMgr = {};
 				this.pvt.vc = null; // VisualContext
-                //this.pvt.renderRoot = options.renderRoot;
                 this.options = options;
 
                 if ($.cookie('sid'))
@@ -154,17 +153,17 @@ define(
             },
 
             /**
-             * Добавить контекст
+             * Создать контекст
 			 * если side = server, то создается новый серверный контекст, на который подписывается клиент
 			 * если side = client, то создается клиентский контекст
              * @param side - master|slave
 			 * @param formGuids - массив гуидов ресурса формы, который загружается в контекст
-			 * @param cbfinal - конечный коллбэк
+			 * @param cbfinal - финальный коллбэк
              */			
 			createContext: function(side, formGuids, cbfinal) {
 				if (side == "server") {
 					var that=this;
-					this.createSrvContext(formGuids, function(result){
+					this._createSrvContext(formGuids, function(result){
                         result.side = 'server';
 						//that.setContext(result, cbfinal);
                         cbfinal(result);
@@ -177,6 +176,18 @@ define(
 				}
 			},
 
+			_createSrvContext: function(formGuids, callback) {
+				this.getClient().socket.send({action:"createContext", type:'method', formGuids: formGuids}, callback);
+			},
+			
+            /**
+             * Установить текущий (серверный) контекст
+             * @param params - параметры
+			 *        params.formGuids - массив гуидов ресурсов, которые должны быть загружены
+			 *        params.vc - гуид контекста
+			 * @param cbfinal - финальный коллбэк
+			 * @param renderRoot - коллбэк на рендеринг, если не передается, то контекст активируется, но остается скрытым
+             */	
 			setContext: function(params, cbfinal, renderRoot) {
                 var that = this;
 
@@ -196,14 +207,6 @@ define(
 				that.pvt.vc.on(that.pvt.cmclient, p, cbfinal2, renderRoot);
 			},
 
-            /**
-             * Создать серверный контекст
-			 * @param formGuids
-			 * @param callback
-             */
-			createSrvContext: function(formGuids, callback) {
-				this.getClient().socket.send({action:"createContext", type:'method', formGuids: formGuids}, callback);
-			},
 
             /**
              * Создать рут
