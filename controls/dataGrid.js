@@ -21,6 +21,8 @@ define(
             init: function(cm, params) {
                 this._super(cm,params);
                 this.params = params;
+				
+				this.initRender();
             },
 
             /**
@@ -75,7 +77,11 @@ define(
                         return false;
                 }
                 else return false;
-            }
+            },
+
+			initRender: function() {
+				this.pvt.renderDataVer = undefined;
+			}
 
     });
         return DataGrid;

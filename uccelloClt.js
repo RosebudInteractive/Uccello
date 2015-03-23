@@ -187,7 +187,6 @@ define(
                         cbfinal(result2);
                 }
 
-				//function done() {
 				var s = that.pvt.clientConnection.socket;
 				var p = {socket: s, proxyServer: that.pvt.proxyServer}
 				p.formGuids = params.formGuids;
@@ -195,13 +194,6 @@ define(
 				p.renderRoot = that.pvt.renderRoot;
 				that.pvt.vc = that.pvt.cmsys.getByGuid(params.vc);
 				that.pvt.vc.on(that.pvt.cmclient, p, cbfinal2);
-				/*}
-
-				var controller = this.getController();
-				if (this.pvt.vc)
-					this.pvt.vc.dispose(done); //delDataBase(this.pvt.dbcontext.getGuid(), done);
-				else
-					done();*/
 			},
 
             /**

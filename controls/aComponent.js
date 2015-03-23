@@ -44,6 +44,11 @@ define(
 				  this.pvt.isRendered = false;
 				return this.pvt.isRendered;
 			},
+			
+			// no op - сброс состояния рендеринга, вызывается если активный в памяти контекст хочет заново отрисовать себя
+			// имплементируется по мере необходимости в наследниках
+			initRender: function() {
+			},
 
 			id: function(value) {
 				return this._genericSetter("Id",value);

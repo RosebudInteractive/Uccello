@@ -175,6 +175,10 @@ define(
 				else return true; // TODO можно оптимизировать - если хотим не перерисовывать пустой грид
 			},
 
+			initRender: function() {
+				this.pvt.dataVer = 0;
+			},
+
 			// Properties
 
             root: function (value) {

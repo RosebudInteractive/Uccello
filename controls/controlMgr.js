@@ -224,6 +224,16 @@ define(
 						this.pvt.compByGuid[g]._isRendered(val);			// выставляем флаг рендеринга
 				}			
 			},
+			
+			// переинициализация рендера
+			initRender: function() {
+				this.setToRendered(false);
+				for (var g in this.pvt.compByGuid) { 
+					if ("initRender" in this.pvt.compByGuid[g])
+						this.pvt.compByGuid[g].initRender();			// выставляем флаг рендеринга
+				}					
+			
+			},
 
 			onDeleteComponent: function(result) {
 				delete this.pvt.compByGuid[result.target.getGuid()];

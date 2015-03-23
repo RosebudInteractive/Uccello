@@ -43,7 +43,8 @@ define(
 			// включить контекст
 			on: function(cm, params,cb) {
 				if ("db" in this.pvt) {
-					this.pvt.cm.setToRendered(false);
+					//this.pvt.cm.setToRendered(false);
+					this.pvt.cm.initRender();
 					cb(this.pvt.db.getRootGuids("res"));
 					return;
 				}
