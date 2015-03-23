@@ -47,9 +47,9 @@ define(
              * Активировать контекст
              * @param params {object}
              * @callback cb
-             * @renderTo - содержит элемент DOM для рендеринга	 
+             * @renderRoot - содержит колбэк для рендеринга	 
              */
-			on: function(cm, params,cb, renderTo) {
+			on: function(cm, params,cb, renderRoot) {
 				if (this.isOn()) {
 					//this.pvt.cm.setToRendered(false);
 					this.pvt.cm.initRender();
@@ -67,14 +67,12 @@ define(
 				//this.pvt.rpc = params.rpc;
 				this.pvt.proxyServer = params.proxyServer;
 				this.pvt.components = params.components;
-				this.pvt.renderRoot = params.renderRoot;
+				this.pvt.renderRoot = renderRoot;
 				this.pvt.formParams = {};
 				this.pvt.memParams = [];
 				
 				this.pvt.socket = params.socket;
-				this.pvt.renderTo = renderTo;
 				
-
 				var that = this;	
 				var createCompCallback = null;
 				if (!cb) // если нет колбэка значит на сервере - но это надо поменять TODO
@@ -115,7 +113,7 @@ define(
 					this.dataBase(this.pvt.db.getGuid());
 					this.contextGuid(this.getGuid());
 					this.pvt.isOn = true;  
-					if (this.pvt.renderTo) this.pvt.isVisible = true;
+					if (this.pvt.renderRoot) this.pvt.isVisible = true;
 				}
 				else { // подписка (slave)			
 					//this.pvt.vcproxy = params.rpc._publProxy(params.vc, params.socket,Interfvc);
@@ -123,7 +121,7 @@ define(
 					guid = this.dataBase();
 					function cb2(res) {
 						that.pvt.isOn = true;
-						if (that.pvt.renderTo) that.pvt.isVisible = true;
+						if (that.pvt.renderRoot) that.pvt.isVisible = true;
 						cb(res);
 					}
 
@@ -145,15 +143,21 @@ define(
 				this.pvt.isVisible = false;
 			},
 
+            /**
+             * Возвращает true если контекст активен
+             */
 			isOn: function() {
 				return this.pvt.isOn;
 			},
-			
+
+            /**
+             * Возвращает true если контекст активен и рендерится в DOM
+             */
 			isVisible: function() {
 				return this.pvt.isVisible;
 			},
 
-           /**
+            /**
              * Обработчик изменения параметра
              */
 			_onModifParam: function(ev) {

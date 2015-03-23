@@ -28,7 +28,7 @@ define(
 				this.pvt.dbcontext = null;
                 this.pvt.controlMgr = {};
 				this.pvt.vc = null; // VisualContext
-                this.pvt.renderRoot = options.renderRoot;
+                //this.pvt.renderRoot = options.renderRoot;
                 this.options = options;
 
                 if ($.cookie('sid'))
@@ -177,7 +177,7 @@ define(
 				}
 			},
 
-			setContext: function(params, cbfinal) {
+			setContext: function(params, cbfinal, renderRoot) {
                 var that = this;
 
                 function cbfinal2(result2){
@@ -191,9 +191,9 @@ define(
 				var p = {socket: s, proxyServer: that.pvt.proxyServer}
 				p.formGuids = params.formGuids;
 				p.components = that.pvt.components; //  ссылка на хранилище конструкторов
-				p.renderRoot = that.pvt.renderRoot;
+				//p.renderRoot = that.pvt.renderRoot;
 				that.pvt.vc = that.pvt.cmsys.getByGuid(params.vc);
-				that.pvt.vc.on(that.pvt.cmclient, p, cbfinal2);
+				that.pvt.vc.on(that.pvt.cmclient, p, cbfinal2, renderRoot);
 			},
 
             /**
