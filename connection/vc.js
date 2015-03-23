@@ -38,11 +38,19 @@ define(
              */
             init: function(cm, params,cb) {
                 this._super(cm, params, cb);
+				this.pvt.isOn = false;
+				this.pvt.isVisible = false
             },
 			
 			// включить контекст
-			on: function(cm, params,cb) {
-				if ("db" in this.pvt) {
+             /**
+             * Активировать контекст
+             * @param params {object}
+             * @callback cb
+             * @renderTo - содержит элемент DOM для рендеринга	 
+             */
+			on: function(cm, params,cb, renderTo) {
+				if (this.isOn()) {
 					//this.pvt.cm.setToRendered(false);
 					this.pvt.cm.initRender();
 					cb(this.pvt.db.getRootGuids("res"));
@@ -64,6 +72,7 @@ define(
 				this.pvt.memParams = [];
 				
 				this.pvt.socket = params.socket;
+				this.pvt.renderTo = renderTo;
 				
 
 				var that = this;	
@@ -105,11 +114,18 @@ define(
 					this.loadNewRoots(params.formGuids, { rtype: "res", compcb: params2.compcb},params2.cbfinal);
 					this.dataBase(this.pvt.db.getGuid());
 					this.contextGuid(this.getGuid());
+					this.pvt.isOn = true;  
+					if (this.pvt.renderTo) this.pvt.isVisible = true;
 				}
 				else { // подписка (slave)			
 					//this.pvt.vcproxy = params.rpc._publProxy(params.vc, params.socket,Interfvc);
 					//var guid = this.masterGuid();
 					guid = this.dataBase();
+					function cb2(res) {
+						that.pvt.isOn = true;
+						if (that.pvt.renderTo) that.pvt.isVisible = true;
+						cb(res);
+					}
 
 					this.pvt.db = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
                             // подписываемся либо на все руты либо выборочно formGuids
@@ -117,7 +133,7 @@ define(
 							var forms = params.formGuids;
 							if (forms == null) forms = "all";
 							else if (forms == "") forms = [];
-                            that.getDB().subscribeRoots(forms, cb, createCompCallback);
+                            that.getDB().subscribeRoots(forms, cb2, createCompCallback);
 						});
 				}
 				this.pvt.db.setDefaultCompCallback(createCompCallback);	
@@ -125,7 +141,16 @@ define(
 			
 			// выключить контекст
 			off: function() {
+				this.pvt.isOn = false;
+				this.pvt.isVisible = false;
+			},
+
+			isOn: function() {
+				return this.pvt.isOn;
+			},
 			
+			isVisible: function() {
+				return this.pvt.isVisible;
 			},
 
            /**
@@ -274,7 +299,8 @@ define(
 					controller.delDataBase(this.pvt.db.getGuid(), cb);
 				}
 				else cb();
-			},			
+			},	
+
 
 			getDB: function() {
 				return this.pvt.db;
