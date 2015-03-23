@@ -44,18 +44,13 @@ define(
 			on: function(cm, params,cb) {
 				if ("db" in this.pvt) {
 					this.pvt.cm.setToRendered(false);
-					//for (g in this.pvt.cmgs)  // 
-					//	this.pvt.cmgs[g].setToRendered(false);
-						
 					cb(this.pvt.db.getRootGuids("res"));
 					return;
 				}
-				//this.pvt.cmgs = {};
 				this.pvt.db = null;
 				this.pvt.tranQueue = null; // очередь выполнения методов если в транзакции
 				this.pvt.inTran = false; // признак транзакции
 				
-
                 if (params == undefined) return;
 				
 				this.pvt.typeGuids = params.typeGuids;
@@ -95,9 +90,7 @@ define(
 					}
 				else
 					createCompCallback = function (obj) {
-						var rootGuid = obj.getRoot().getGuid();
-						//if (!(that.pvt.cmgs[rootGuid]))
-						//	that.pvt.cmgs[rootGuid] = new ControlMgr(that.getDB(),rootGuid,that);
+						//var rootGuid = obj.getRoot().getGuid();
 						that.createComponent.apply(that, [obj, that.pvt.cm]);													 
 					}				
 					
@@ -230,14 +223,11 @@ define(
 					}
 					if (params.rtype == "data") {
 						this.pvt.proxyServer.queryDatas(rootGuids, params.expr, icb);
-						//this.execMethod(this.pvt.proxyServer,this.pvt.proxyServer.queryDatas,[rootGuids, params.expr, icb]);
 						return "XXX";
 					}
 				}
 				else { // slave
 					// вызываем загрузку нового рута у мастера
-					// TODO compb на сервере не отрабатывает..
-					//this.execMethod(this.pvt.vcproxy,this.pvt.vcproxy.loadNewRoots, [rootGuids,params,function(r) { if (cb) cb(r); }]);
 					this.remoteCall('loadNewRoots', [rootGuids, params],cb);
 				}
 			},
@@ -263,14 +253,12 @@ define(
 			renderAll: function(pd) {
 				var ga = this.pvt.cm.getRootGuids()
 				for (var i=0; i<ga.length; i++)
-					this.pvt.cm.render(this.pvt.cm.get(ga[i]) /*this.getContentDB().getObj(ga[i])*/, this.pvt.renderRoot(ga[i]), pd);
+					this.pvt.cm.render(this.pvt.cm.get(ga[i]), this.pvt.renderRoot(ga[i]), pd);
 				this.getDB().resetModifLog();
 			},
 			
 			renderForms: function(roots, pd) {
 				for (var i=0; i<roots.length; i++)
-					//if (this.pvt.cmgs[roots[i]])
-						//this.pvt.cmgs[roots[i]].
 						this.pvt.cm.render(this.pvt.cm.get(roots[i]), this.pvt.renderRoot(roots[i]),pd);
 				this.getDB().resetModifLog();
 			},
@@ -286,11 +274,7 @@ define(
 				}
 				else cb();
 			},			
-			
-			/*getProxy: function() {
-				return this.pvt.vcproxy;
-			},*/
-			
+
 			getDB: function() {
 				return this.pvt.db;
 			},
@@ -300,7 +284,7 @@ define(
 			},
 			
 			getContextCM: function() {
-				return this.pvt.cm; //gs[guid];
+				return this.pvt.cm;
 			},
 			
 			getSocket: function() {
