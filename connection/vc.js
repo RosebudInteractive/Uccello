@@ -274,9 +274,13 @@ define(
 						this.pvt.cm.render(this.pvt.cm.get(roots[i]), this.pvt.renderRoot(roots[i]),pd);
 				this.getDB().resetModifLog();
 			},
-			
+
+            /**
+             * отписать контекст от мастера
+             * @callback cb - коллбэк для вызова после отработки отписки
+             */			
 			dispose: function(cb) {			
-				if (this.kind()=="slave") {
+				if (!this.getModule().isMaster()) { //this.kind()=="slave") {
 					var controller = this.getControlMgr().getDB().getController();
 					controller.delDataBase(this.pvt.db.getGuid(), cb);
 				}

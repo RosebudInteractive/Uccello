@@ -158,16 +158,6 @@ define(
 				db.onSubscribe(p);
 				return { dbVersion: db.getVersion() };
             },
-			
-			/* перенесено в memDB
-			setDefaultCompCallback: function(cb) {
-				this.pvt.defaultCompCallback = cb;
-			},
-			
-			getDefaultCompCallback: function() {
-				return this.pvt.defaultCompCallback;
-			},
-			*/
 
             /**
              * подписать базу db на рутовые элементы с гуидами rootGuids
