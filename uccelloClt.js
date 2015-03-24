@@ -117,6 +117,10 @@ define(
 			getSysDB: function() {
 				return this.pvt.dbsys; 
 			},
+
+			getSysCM: function() {
+				return this.pvt.cmsys;
+			},
 			
 			getContext: function() {
 				return this.pvt.vc;
