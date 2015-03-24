@@ -167,6 +167,15 @@ define(
 			isVisible: function() {
 				return this.pvt.isVisible;
 			},
+			
+			// меняет "видимость" у активного контекста, если 
+			setVisible: function(renderRoot) {
+				if (!this.isOn()) return false;
+				this.pvt.renderRoot = renderRoot;
+				if (renderRoot === undefined) this.pvt.isVisible = true;
+				else this.pvt.isVisible = false;
+				return true;
+			},
 
             /**
              * Обработчик изменения параметра
