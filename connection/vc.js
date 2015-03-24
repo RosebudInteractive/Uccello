@@ -168,7 +168,7 @@ define(
 				return this.pvt.isVisible;
 			},
 			
-			// меняет "видимость" у активного контекста, если 
+			// меняет "видимость" у активного контекста, если он включен, если выключен ничего не делает
 			setVisible: function(renderRoot) {
 				if (!this.isOn()) return false;
 				this.pvt.renderRoot = renderRoot;
