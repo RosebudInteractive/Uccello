@@ -133,9 +133,10 @@ define(
 			// выключить контекст
 			// TODO пока работает только для SLAVE
 			off: function(cb) {
+				var that = this;
 				function cb2() {
-					this.pvt.isOn = false;
-					this.pvt.isVisible = false;
+					that.pvt.isOn = false;
+					that.pvt.isVisible = false;
 					if ((cb !== undefined) && (typeof cb == "function")) cb();
 				}
 
