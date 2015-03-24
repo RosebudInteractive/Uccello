@@ -10,7 +10,7 @@ define(
         './system/rpc'
     ],
     function(ClientConnection, MemDBController, MemDataBase, ControlMgr, UObject, UModule, AComponent,
-        UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContext2,
+        UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContext,
         Rpc
         ) {
         var UccelloClt = Class.extend({
@@ -46,7 +46,7 @@ define(
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.User] = User;
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Session] = Session;
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Connect] = Connect;
-                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.VisualContext2] = VisualContext2;
+                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.VisualContext] = VisualContext;
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.ClientConnection] = ClientConnection;
 
                         that.createController(function(){
@@ -99,7 +99,7 @@ define(
                     new UObject(that.pvt.cmclient);
                     new UModule(that.pvt.cmclient);
                     new AComponent(that.pvt.cmclient);
-                    new VisualContext2(that.pvt.cmclient);
+                    new VisualContext(that.pvt.cmclient);
                     new ClientConnection(that.pvt.cmclient);
                     that.pvt.clientConnection.init(that.pvt.cmclient, {});
 

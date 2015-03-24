@@ -6,7 +6,7 @@ if (typeof define !== 'function') {
 define(
     ['../memDB/memDBController', '../controls/controlMgr', '../system/uobject', '../system/umodule', '../controls/aComponent', '../controls/aControl', './sessioninfo', './session', './connectinfo', './connect', './userinfo', './user', '../system/event',
         './vc', '../system/utils'],
-    function(MemDBController, ControlMgr, UObject, UModule, AComponent, AControl, SessionInfo, Session, ConnectInfo, Connect, UserInfo, User, Event, VisualContext2, Utils) {
+    function(MemDBController, ControlMgr, UObject, UModule, AComponent, AControl, SessionInfo, Session, ConnectInfo, Connect, UserInfo, User, Event, VisualContext, Utils) {
             var UserSessionMgr = Class.extend({
 
             init: function(router, options){
@@ -39,7 +39,7 @@ define(
                 new Session(this.cmsys);
                 new ConnectInfo(this.cmsys);
                 new Connect(this.cmsys);
-                new VisualContext2(this.cmsys);
+                new VisualContext(this.cmsys);
 
                 // функции роутера
                 var that = this;
@@ -119,7 +119,7 @@ define(
 				var contextId = this.getNewContextId();
 				var params = {parent: user, colName: "VisualContext", socket: this.getConnect(data.connectId).getConnection(), rpc: this.rpc, proxyServer: this.proxyServer,
                     ini: {fields: {Id: data.contextId, Name: 'context'+contextId, Kind: "master"}}, formGuids:data.formGuids};
-                var context = new VisualContext2(this.cmsys, params);
+                var context = new VisualContext(this.cmsys, params);
 				context.on(this.cmsys, params);
                 var result = {masterGuid: context.dataBase(), roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};
                 controller.genDeltas(this.dbsys.getGuid());

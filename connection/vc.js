@@ -18,10 +18,10 @@ define(
             loadNewRoots: "function"
         }*/
 					 
-        var VisualContext2 = AComponent.extend(/** @lends module:VisualContext2.VisualContext2.prototype */{
+        var VisualContext = AComponent.extend(/** @lends module:VisualContext.VisualContext.prototype */{
 
-            className: "VisualContext2",
-            classGuid: UCCELLO_CONFIG.classGuids.VisualContext2,
+            className: "VisualContext",
+            classGuid: UCCELLO_CONFIG.classGuids.VisualContext,
 			metaFields: [
 				{fname: "DataBase", ftype: "string"}, // runtime - гуид БД данных на сервере
 				{fname: "Kind", ftype: "string"}, // , fdefault: "master" enum (master,slave
@@ -350,5 +350,5 @@ define(
 			
         });
 
-        return VisualContext2;
+        return VisualContext;
     });
