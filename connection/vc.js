@@ -309,8 +309,12 @@ define(
 			},
 			
 			renderForms: function(roots, pd) {
-				for (var i=0; i<roots.length; i++)
-						this.pvt.cm.render(this.pvt.cm.get(roots[i]), this.pvt.renderRoot(roots[i]),pd);
+				for (var i=0; i<roots.length; i++) {
+					// TODO отсеять лишние руты, сделать проверку на данные
+					var root = this.pvt.cm.get(roots[i]);
+					if (root !== undefined)
+						this.pvt.cm.render(root, this.pvt.renderRoot(roots[i]), pd);
+				}
 				this.getDB().resetModifLog();
 			},
 
