@@ -28,6 +28,7 @@ define(
 				this.pvt.dbcontext = null;
                 this.pvt.controlMgr = {};
 				this.pvt.vc = null; // VisualContext
+				this.pvt.clientContextId = 0;
                 this.options = options;
 
                 if ($.cookie('sid'))
@@ -118,6 +119,14 @@ define(
 				return this.pvt.dbsys; 
 			},
 
+            getClientDB: function() {
+				return this.pvt.dbclient;
+			},
+
+            getClientCM: function() {
+				return this.pvt.cmclient;
+			},
+
 			getSysCM: function() {
 				return this.pvt.cmsys;
 			},
@@ -169,14 +178,24 @@ define(
 					var that=this;
 					this._createSrvContext(formGuids, function(result){
                         result.side = 'server';
-						//that.setContext(result, cbfinal);
                         cbfinal(result);
 					});
 				}
 				else { // side == "client"
-                    //this.setContext({side: "client", formGuids: formGuids}, cbfinal);
 					// TODO написать импл.
-                    cbfinal();
+                    var contextId = ++this.pvt.clientContextId;
+                    var params = {
+                        parent: this.getClient(),
+                        colName: "VisualContext",
+                        ini: {fields: {Id: contextId, Name: 'context'+contextId, Kind: "master"}},
+                        formGuids:formGuids,
+                        rpc: this.pvt.rpc,
+                        proxyServer: this.pvt.proxyServer,
+                        components: this.pvt.components
+                    };
+                    var context = new VisualContext(this.pvt.cmclient, params);
+                    var result = {masterGuid:this.getClientDB().getGuid(), vc:context.getGuid(), side:'client', formGuids:formGuids};
+                    cbfinal(result);
 				}
 			},
 
@@ -202,13 +221,18 @@ define(
                         cbfinal(result2);
                 }
 
-				var s = that.pvt.clientConnection.socket;
-				var p = {socket: s, proxyServer: that.pvt.proxyServer}
-				p.formGuids = params.formGuids;
-				p.components = that.pvt.components; //  ссылка на хранилище конструкторов
-				//p.renderRoot = that.pvt.renderRoot;
-				that.pvt.vc = that.pvt.cmsys.getByGuid(params.vc);
-				that.pvt.vc.on(that.pvt.cmclient, p, cbfinal2, renderRoot);
+                var s = that.pvt.clientConnection.socket;
+                var p = {socket: s, proxyServer: that.pvt.proxyServer}
+                p.formGuids = params.formGuids;
+                p.components = that.pvt.components; //  ссылка на хранилище конструкторов
+
+                if (params.side == 'client') {
+                    that.pvt.vc = this.pvt.cmclient.getByGuid(params.vc);
+                    that.pvt.vc.on(this.pvt.cmclient, p, cbfinal2, renderRoot);
+                } else {
+                    that.pvt.vc = that.pvt.cmsys.getByGuid(params.vc);
+                    that.pvt.vc.on(that.pvt.cmsys, p, cbfinal2, renderRoot);
+                }
 			},
 
 

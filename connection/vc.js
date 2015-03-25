@@ -98,7 +98,7 @@ define(
 						that.createComponent.apply(that, [obj, that.pvt.cm]);													 
 					}				
 					
-				if (this.getModule().isMaster()) { // главная (master) TODO разобраться с KIND				
+				if (this.getModule().isMaster()) { // главная (master) TODO разобраться с KIND
 					var params2 = {name: "VisualContextDB", kind: "master", cbfinal:cb};
 					if (createCompCallback)
 						params2.compcb = createCompCallback;
