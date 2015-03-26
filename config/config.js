@@ -67,6 +67,7 @@ define([], function() {
         controlsPath: '',
         uccelloPath: '',
         viewSet: null,
+        webSocketServer: {port:8081},
 
         init: function(config) {
             for(var index in config) {

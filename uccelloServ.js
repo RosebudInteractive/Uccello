@@ -84,7 +84,7 @@ define(
 
 
                 // запускаем вебсокетсервер
-                this.wss = new WebSocketServer.Server({port: options.port});
+                this.wss = new WebSocketServer.Server(UCCELLO_CONFIG.webSocketServer);
                 this.wss.on('connection', function(ws) {
                     // id подключения
                     that._connectId++;
