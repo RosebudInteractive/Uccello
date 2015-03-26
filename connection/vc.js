@@ -10,14 +10,7 @@ if (typeof define !== 'function') {
 define(
     ['../controls/aComponent', '../controls/aControl', '../controls/controlMgr', '../system/uobject',],
     function(AComponent, AControl, ControlMgr, UObject) {
-
-        /*var Interfvc = {
-            className: "Interfvc",
-            classGuid: "2a164568-4e44-4c50-bfe8-faae7f8f2e69",
-
-            loadNewRoots: "function"
-        }*/
-					 
+		 
         var VisualContext = AComponent.extend(/** @lends module:VisualContext.VisualContext.prototype */{
 
             className: "VisualContext",
@@ -25,7 +18,6 @@ define(
 			metaFields: [
 				{fname: "DataBase", ftype: "string"}, // runtime - гуид БД данных на сервере
 				{fname: "Kind", ftype: "string"}, // , fdefault: "master" enum (master,slave
-				//{fname: "MasterGuid", ftype: "string"}, // УБРАТЬ? GUID MASTER DATABASE данных контекста (на севере) - READONLY для SLAVE
 				{fname: "ContextGuid", ftype: "string"} // GUID контекста - можно будет удалить
 			],
 			metaCols: [],
@@ -345,9 +337,6 @@ define(
 				return this._genericSetter("Kind", value);
 			},
 
-			/*masterGuid: function (value) {
-				return this._genericSetter("MasterGuid", value, "MASTER");
-			},*/
 
 			contextGuid: function (value) {
 				return this._genericSetter("ContextGuid", value, "MASTER");
