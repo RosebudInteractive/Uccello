@@ -8,8 +8,8 @@ if (typeof define !== 'function') {
  * @module VisualContext2
  */
 define(
-    ['../controls/aComponent', '../controls/aControl', '../controls/controlMgr', '../system/uobject',],
-    function(AComponent, AControl, ControlMgr, UObject) {
+    ['../controls/aComponent', '../controls/aControl', '../controls/controlMgr', '../system/uobject', './vcresource'],
+    function(AComponent, AControl, ControlMgr, UObject, Vcresource) {
 
         /*var Interfvc = {
             className: "Interfvc",
@@ -28,7 +28,7 @@ define(
 				//{fname: "MasterGuid", ftype: "string"}, // УБРАТЬ? GUID MASTER DATABASE данных контекста (на севере) - READONLY для SLAVE
 				{fname: "ContextGuid", ftype: "string"} // GUID контекста - можно будет удалить
 			],
-			metaCols: [],
+			metaCols: [{cname: "Resources", ctype: "control"}],
 
              /**
              * Инициализация объекта
@@ -38,7 +38,8 @@ define(
             init: function(cm, params,cb) {
                 this._super(cm, params, cb);
 				this.pvt.isOn = false;
-				this.pvt.isVisible = false
+				this.pvt.isVisible = false;
+				this.pvt.vcrCounter = 0;
             },
 			
 			// включить контекст
@@ -104,6 +105,14 @@ define(
 						params2.compcb = createCompCallback;
 					this.pvt.db = this.createDb(controller,params2);
 					this.pvt.cm = new ControlMgr(this.getDB(),null,this,this.pvt.socket);
+
+					// подписываемся на добавление нового рута
+					this.pvt.db.event.on( {
+						type: "newRoot2",
+						subscriber: this,
+						callback: this.onNewRoot
+					});
+
 					this.loadNewRoots(params.formGuids, { rtype: "res", compcb: params2.compcb},params2.cbfinal);
 					this.dataBase(this.pvt.db.getGuid());
 					this.contextGuid(this.getGuid());
@@ -351,6 +360,25 @@ define(
 
 			contextGuid: function (value) {
 				return this._genericSetter("ContextGuid", value, "MASTER");
+			},
+
+			onNewRoot: function(result){
+				console.log('onNewRoot', result);
+				/*if (result.options.type == 'res') {}*/
+
+				// ищем по Title
+				var found = false, title = result.target.get('Title');
+				var col = this.getObj().getCol('Resources')
+				for(var i= 0, len=col.count(); i<len; i++) {
+					if (title == col.get(i).get('Title'))
+						found = true;
+				}
+
+				if (!found && title) {
+					var id = ++this.pvt.vcrCounter;
+					var vcResource = new Vcresource(this.pvt.cm, {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
+				}
+
 			}
 			
         });

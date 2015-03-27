@@ -61,7 +61,8 @@ define([], function() {
             'Button':"af419748-7b25-1633-b0a9-d539cada8e0d",
             'DataGrid':"ff7830e2-7add-e65e-7ddf-caba8992d6d8",
             'UModule':"8fead303-a4e1-98bb-efb6-ee38ee021265",
-            'VisualContext':"64827c89-e73e-215f-f71a-7f90627ae61d"
+            'VisualContext':"64827c89-e73e-215f-f71a-7f90627ae61d",
+            'Vcresource':"870c63b5-7aed-bb44-3109-bb63a407988f"
         },
 
         controlsPath: '',

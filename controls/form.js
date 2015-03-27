@@ -10,11 +10,15 @@ define(
 
             className: "Form",
             classGuid: UCCELLO_CONFIG.classGuids.Form,
-            metaFields: [],
+            metaFields: [{fname:"Title", ftype:"string"}],
             metaCols: [ {"cname": "Params", "ctype": "control"},{"cname": "Children", "ctype": "control"},{"cname": "SubForms", "ctype": "control"} ],
 
             init: function(cm,params){
                 this._super(cm,params);
+            },
+
+            title: function (value) {
+                return this._genericSetter("Title", value);
             }
 			/*
 			load: function(rootGuids,params, cb) {

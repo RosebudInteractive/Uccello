@@ -6,11 +6,11 @@ if (typeof define !== 'function') {
 define(
     ['./connection/clientConnection' ,
         './memDB/memDBController','./memDB/memDataBase','./controls/controlMgr', './system/uobject', './system/umodule', './controls/aComponent',
-        './connection/userinfo', './connection/user', './connection/sessioninfo', './connection/session', './connection/connectinfo', './connection/connect', './connection/vc',
+        './connection/userinfo', './connection/user', './connection/sessioninfo', './connection/session', './connection/connectinfo', './connection/connect', './connection/vc', './connection/vcresource',
         './system/rpc'
     ],
     function(ClientConnection, MemDBController, MemDataBase, ControlMgr, UObject, UModule, AComponent,
-        UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContext,
+        UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContext, Vcresource,
         Rpc
         ) {
         var UccelloClt = Class.extend({
@@ -48,6 +48,7 @@ define(
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Session] = Session;
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Connect] = Connect;
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.VisualContext] = VisualContext;
+                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Vcresource] = Vcresource;
                         that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.ClientConnection] = ClientConnection;
 
                         that.createController(function(){
@@ -101,6 +102,7 @@ define(
                     new UModule(that.pvt.cmclient);
                     new AComponent(that.pvt.cmclient);
                     new VisualContext(that.pvt.cmclient);
+                    new Vcresource(that.pvt.cmclient);
                     new ClientConnection(that.pvt.cmclient);
                     that.pvt.clientConnection.init(that.pvt.cmclient, {});
 

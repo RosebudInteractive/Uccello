@@ -108,7 +108,8 @@ define(
 
 				this.event.fire({
                     type: 'newRoot',
-                    target: obj
+                    target: obj,
+					options:opt
 				});
 
 			},

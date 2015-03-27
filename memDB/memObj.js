@@ -30,6 +30,11 @@ define(
 				}
 				
 				this.finit();
+
+				this.getDB().event.fire({
+					type: 'newRoot2',
+					target: this
+				});
 			},
 			
 			// получить коллекцию по имени или по индексу
