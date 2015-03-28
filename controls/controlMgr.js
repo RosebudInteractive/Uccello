@@ -213,21 +213,21 @@ define(
                 if (this.pvt.viewSets[i].enable())
                     this.pvt.viewSets[i].render(c, options);
 
-				this.setToRendered(true);
+				this.setToRendered(component,true);
 			},
 			
-			setToRendered: function(val) {
+			setToRendered: function(component, val) {
 				//this.getDB().resetModifLog();
 				for (var g in this.pvt.compByGuid) { //TODO нужно это делать не для всех компонентов или рендерить всегда с рута
 					//this.pvt.compByGuid[g].getObj().resetModifFldLog();	// обнуляем "измененные" поля в объектах 
-					if ("_isRendered" in this.pvt.compByGuid[g])
+					if (("_isRendered" in this.pvt.compByGuid[g]) && component && component.getGuid()== this.pvt.compByGuid[g].getRoot().getGuid())
 						this.pvt.compByGuid[g]._isRendered(val);			// выставляем флаг рендеринга
 				}			
 			},
 			
 			// переинициализация рендера
 			initRender: function() {
-				this.setToRendered(false);
+				this.setToRendered(undefined, false);
 				for (var g in this.pvt.compByGuid) { 
 					if ("initRender" in this.pvt.compByGuid[g])
 						this.pvt.compByGuid[g].initRender();			// выставляем флаг рендеринга
