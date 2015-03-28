@@ -138,24 +138,13 @@ define(
 			},
 			
             /**
-			 * Вернуть корневой объект бд, с которым связан менеджер контролов
-             */				
-			/*getRoot: function() {
-				if (this.pvt.rootGuid==undefined)
-					return undefined;
-				else
-					return this.get(this.pvt.rootGuid); //this.getDB().getObj(this.pvt.rootGuid);
-			},*/
-			
-            /**
 			 * Вернуть массив рутовых гуидов
              */		
 			getRootGuids: function() {
 				var guids = [];
 				for (var g in this.pvt.rootGuids)
 					guids.push(g);
-				return guids;
-				
+				return guids;	
 			},
 			
 			getGuid: function() {
@@ -207,11 +196,11 @@ define(
 				
 				if (pd) this.processDelta();
 			
-				var c = (component === undefined) ? this.getRoot()  : component;
+				//var c = (component === undefined) ? this.getRoot()  : component;
 
                 for(var i in this.pvt.viewSets)
-                if (this.pvt.viewSets[i].enable())
-                    this.pvt.viewSets[i].render(c, options);
+					if (this.pvt.viewSets[i].enable())
+						this.pvt.viewSets[i].render(component, options);
 
 				this.setToRendered(component,true);
 			},
@@ -220,7 +209,8 @@ define(
 				//this.getDB().resetModifLog();
 				for (var g in this.pvt.compByGuid) { //TODO нужно это делать не для всех компонентов или рендерить всегда с рута
 					//this.pvt.compByGuid[g].getObj().resetModifFldLog();	// обнуляем "измененные" поля в объектах 
-					if (("_isRendered" in this.pvt.compByGuid[g]) && component && component.getGuid()== this.pvt.compByGuid[g].getRoot().getGuid())
+					var rg = this.pvt.compByGuid[g].getRoot().getGuid();
+					if (("_isRendered" in this.pvt.compByGuid[g]) && ((component && component.getGuid() == rg) || (component === undefined)))
 						this.pvt.compByGuid[g]._isRendered(val);			// выставляем флаг рендеринга
 				}			
 			},
