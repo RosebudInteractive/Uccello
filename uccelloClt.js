@@ -244,10 +244,12 @@ define(
              * @param rtype тип данных "res", "data"
              * @param callback
              */
-            createRoot: function(formGuids, rtype, callback) {
+            createRoot: function(formGuids, rtype, callback, context) {
                 var that = this;
-                this.getContext().loadNewRoots(formGuids, {rtype:rtype, subDbGuid: this.getContext().getDB().getGuid() }, function(result){
-                    that.getContext().renderForms(result.guids, true);
+                var subDbGuid = context? context.dataBase(): this.getContext().getDB().getGuid();
+                context = context? context: this.getContext();
+                context.loadNewRoots(formGuids, {rtype:rtype, subDbGuid: subDbGuid }, function(result){
+                    context.renderForms(result.guids, true);
                     if (callback) callback(result);
                 });
             },
