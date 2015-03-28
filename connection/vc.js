@@ -362,6 +362,8 @@ define(
 				if (!found && title) {
 					var id = ++this.pvt.vcrCounter;
 					var vcResource = new Vcresource(this.pvt.cm, {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
+					var db = this.getObj().getDB();
+					db.getController().genDeltas(db.getGuid());
 				}
 			}
 			
