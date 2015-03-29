@@ -31,10 +31,12 @@ define(
 				
 				this.finit();
 
-				this.getDB().event.fire({
-					type: 'newRoot2',
-					target: this
-				});
+				if (!parent.obj && objType.getGuid() == UCCELLO_CONFIG.classGuids.Form) {
+					this.getDB().event.fire({
+						type: 'newRoot2',
+						target: this
+					});
+				}
 			},
 			
 			// получить коллекцию по имени или по индексу
