@@ -100,7 +100,7 @@ define(
 
 					// подписываемся на добавление нового рута
 					this.pvt.db.event.on( {
-						type: "newRoot2",
+						type: "newRoot",
 						subscriber: this,
 						callback: this.onNewRoot
 					});
@@ -352,7 +352,9 @@ define(
 			},
 
 			onNewRoot: function(result){
+				
 				// ищем по Title
+				// && objType.getGuid() == UCCELLO_CONFIG.classGuids.Form
 				var found = false, title = result.target.get('Title');
 				var col = this.getObj().getCol('Resources')
 				for(var i= 0, len=col.count(); i<len; i++) {

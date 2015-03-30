@@ -105,12 +105,12 @@ define(
 					this.pvt.robjs.push(root);
 					this.pvt.rcoll[obj.getGuid()] = root;
 				}
-
+				/*  --- Перенесено в memObj
 				this.event.fire({
                     type: 'newRoot',
                     target: obj,
 					options:opt
-				});
+				});*/
 
 			},
 

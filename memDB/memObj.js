@@ -31,9 +31,9 @@ define(
 				
 				this.finit();
 
-				if (!parent.obj && objType.getGuid() == UCCELLO_CONFIG.classGuids.Form) {
+				if (!parent.obj) { // TODO возможно потребуется сделать подобное собыие для метаинформации
 					this.getDB().event.fire({
-						type: 'newRoot2',
+						type: 'newRoot',
 						target: this
 					});
 				}
