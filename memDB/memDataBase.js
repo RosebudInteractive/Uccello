@@ -213,7 +213,7 @@ define(
 			onSubscribe: function(proxy) {
 				//var g = (proxy.db) ? proxy.dataBase.getGuid() : proxy.guid;
 				this.pvt.subscribers[proxy.guid] = proxy;
-				console.log(this.getGuid());
+				if (DEBUG) console.log(this.getGuid());
 				this.prtSub(this.pvt);
 			},
 
@@ -295,9 +295,11 @@ define(
 			},
 
 			prtSub: function(root) {
-				console.log("***");
-				for (var guid  in root.subscribers) {
-					console.log(guid+"  "+root.subscribers[guid].connect.name());
+				if (DEBUG) {
+					console.log("***");
+					for (var guid  in root.subscribers) {
+						console.log(guid+"  "+root.subscribers[guid].connect.name());
+					}
 				}
 			},
 
@@ -460,7 +462,7 @@ define(
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
 					this.getController().genDeltas(this.getGuid());		// рассылаем дельты
 				}
-				console.log("SERVER VERSION " + this.getVersion());
+				if (DEBUG) console.log("SERVER VERSION " + this.getVersion());
 
 				return res;
 			},
@@ -503,14 +505,14 @@ define(
 					case "sent":
 						if (/*(val>=this.pvt.validVersion) && */(val<=this.pvt.version)) this.pvt.sentVersion=val;
 						else {
-							console.log("*** sent setversion error");
-							console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
+							if (DEBUG) console.log("*** sent setversion error");
+							if (DEBUG) console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
 						}
 
 						break;
 					case "valid":
 						this.pvt.validVersion=val;
-						console.log("*** valid setversion "+val);
+						if (DEBUG) console.log("*** valid setversion "+val);
 						/*if ((val<=this.pvt.sentVersion) && (val<=this.pvt.version)) this.pvt.validVersion=val;
 						else {
 							console.log("*** valid setversion error");
@@ -522,8 +524,8 @@ define(
 					default:
 						if ((val>=this.pvt.validVersion) && (val>=this.pvt.sentVersion)) this.pvt.version=val;
 						else {
-							console.log("*** draft setversion error");
-							console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
+							if (DEBUG) console.log("*** draft setversion error");
+							if (DEBUG) console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
 						}
 						break;
 				}
@@ -645,7 +647,7 @@ define(
 			 * @param {number} version - номер версии, до которого нужно откатить
              */
 			undo: function(version) {
-				console.log("****************************************  UNDO MODIFICATIONS!!!!!!!!!!");
+				if (DEBUG) console.log("****************************************  UNDO MODIFICATIONS!!!!!!!!!!");
 				if (version<this.getVersion("valid"))
 					return false;
 				for (var i=0; i<this.countRoot(); i++)

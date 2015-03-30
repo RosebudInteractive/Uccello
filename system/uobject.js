@@ -253,7 +253,7 @@ define(
                    if (val!=fldVal) {
 						if (this.isMaster() || !(kind=="MASTER"))
 							this.pvt.obj.set(fldName,fldVal);
-						else console.log("ERROR SET PROP"); // TODO заменить на exception						
+						else if (DEBUG) console.log("ERROR SET PROP"); // TODO заменить на exception
                     }
                 }
 

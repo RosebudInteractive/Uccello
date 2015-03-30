@@ -34,7 +34,7 @@ define(
 					pvt.colName = parent.colName;
 				}
 
-				if (this.getDB()==undefined) console.log(parent.obj);
+				if (this.getDB()==undefined) if (DEBUG) console.log(parent.obj);
 				pvt.$id = this.getDB().getNewLid();		// локальный идентификатор
 				if ((flds) && (flds.$sys) && (flds.$sys.guid))	// если гуид пришел в системных полях, то используем его
 					pvt.guid = flds.$sys.guid;
@@ -161,11 +161,13 @@ define(
 				if (buf === undefined) buf=""
 				else buf+="  ";
 				//console.log(buf+" [" + this.+ "]");
-				for (var i=0; i<this.count(); i++) 
+				if (DEBUG) {
+					for (var i=0; i<this.count(); i++)
 					console.log(buf+this.getFieldName(i)+" = "+this.get(i));
+				}
 
 				for (i=0; i<this.countCol(); i++) {
-					console.log(buf+this.getCol(i).getName());
+					if (DEBUG) console.log(buf+this.getCol(i).getName());
 					for (var j=0; j<this.getCol(i).count(); j++) {
 					
 						this.getCol(i).get(j).consoleLog(buf);

@@ -68,7 +68,8 @@ define(
 				
 				var obj = this.getObj();
 				if (obj.isFldModified("Cursor")) {
-					console.log("processDelta "+this.id());
+					if (DEBUG)
+						console.log("processDelta "+this.id());
 					this._setDataObj(this.cursor());
 				}
 				

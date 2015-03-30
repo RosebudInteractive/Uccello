@@ -55,10 +55,11 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                     var result = {};
                     switch (data.action) {
                         case 'error': // ошибки
-                            console.log(data.error);
+                            if (DEBUG)
+                                console.log(data.error);
                             break;
                         case 'sendDelta':
-                            console.timeEnd('applyDeltas');
+                            if (DEBUG) console.timeEnd('applyDeltas');
                             that.getObj().getDB().getController().applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
                             break;
                         case 'newTab':

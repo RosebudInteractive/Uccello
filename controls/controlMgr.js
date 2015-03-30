@@ -111,7 +111,8 @@ define(
              * @param guid
              */
             move: function(guid, parentGuid) {
-                console.log('заглушка перемещения контрола: '+guid+' в '+parentGuid)
+				if (DEBUG)
+					console.log('заглушка перемещения контрола: '+guid+' в '+parentGuid)
             },
 
 			// временно

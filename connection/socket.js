@@ -99,7 +99,7 @@ define(function() {
                 this.options.router(data, this.options.connectId, this, function(result){
                     // если требуется возврат результата
                     if (data.type == 'method') {
-                        console.log('result:',result)
+                        if (DEBUG) console.log('result:',result);
                         if (!result) result = {};
                         result.msgId = data.msgId;
                         that.send(result);

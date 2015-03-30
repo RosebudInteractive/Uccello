@@ -60,7 +60,7 @@ define(function() {
             var log = js2xmlparser("log", {row:this.logs});
             var that = this;
             fs.appendFile(this.options.file, log, function (err) {
-                console.log('err', err);
+                if (DEBUG) console.log('err', err);
                 if (err) throw err;
                 that.logs = [];
             });

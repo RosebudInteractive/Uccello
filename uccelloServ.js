@@ -95,10 +95,12 @@ define(
                             var connect = that.getUserMgr().getConnect(connectId);
                             if (connect)
                                 connect.closeConnect();
-                            console.log("отключился клиент: " + connectId);
+                            if (DEBUG)
+                                console.log("отключился клиент: " + connectId);
                         },
                         router: function(data, connectId, socket, done) {
-                            console.log('сообщение с клиента '+connectId+':', data);
+                            if (DEBUG)
+                                console.log('сообщение с клиента '+connectId+':', data);
 
                             // логирование входящих запросов
                             that.pvt.logger.addLog(data);
@@ -134,7 +136,8 @@ define(
 				var result = [];
 				for (var i=0; i<rootGuids.length; i++) 
 					result.push(this.pvt.resman.loadRes(rootGuids[i]));
-				console.log("load resources");
+                if (DEBUG)
+				    console.log("load resources");
 				if (done !== undefined && (typeof done == "function")) done({ datas: result });
 				return { datas: result };// временная заглушка
 			},
@@ -145,7 +148,8 @@ define(
              * @returns {obj} - массив ресурсов в result.datas
              */			
 			queryDatas: function(rootGuids, expr, done) {
-				console.log("queryDatas");
+                if (DEBUG)
+				    console.log("queryDatas");
 				if (done !== undefined && (typeof done == "function"))
                     this.pvt.dataman.loadQuery(rootGuids[0],expr, function(result){
                         done({ datas: [result] });

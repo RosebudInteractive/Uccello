@@ -77,10 +77,10 @@ define(
 
 
             routerSendDelta: function(data, done) {
-                console.time('applyDeltas');
+				if (DEBUG) console.time('applyDeltas');
                 this.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
-                console.timeEnd('applyDeltas');
-				console.log("VALID:"+this.getDB(data.dbGuid).getVersion("valid")+"draft:"+this.getDB(data.dbGuid).getVersion()+"sent:"+this.getDB(data.dbGuid).getVersion("sent"));
+				if (DEBUG) console.timeEnd('applyDeltas');
+				if (DEBUG) console.log("VALID:"+this.getDB(data.dbGuid).getVersion("valid")+"draft:"+this.getDB(data.dbGuid).getVersion()+"sent:"+this.getDB(data.dbGuid).getVersion("sent"));
                 done({data: {dbVersion: this.getDB(data.dbGuid).getVersion() }});
 				
 				this.event.fire({
@@ -244,9 +244,9 @@ define(
 
 			// пока только 1 дельта!!!! НО с буферизацией
             applyDeltas: function(dbGuid, srcDbGuid, delta) {
-			
-				console.log("incoming delta: ");
-				console.log(delta);
+
+				if (DEBUG) console.log("incoming delta: ");
+				if (DEBUG) console.log(delta);
                 // находим рутовый объект к которому должна быть применена дельта
                 var db  = this.getDB(dbGuid);
                 //var root = db.getRoot(delta.rootGuid);
@@ -321,7 +321,7 @@ define(
 						rootObj = root.obj;
 					
 					rootObj.getLog().applyDelta(cdelta);
-					console.log("VALID:"+db.getVersion("valid")+"draft:"+db.getVersion()+"sent:"+db.getVersion("sent"));
+					if (DEBUG) console.log("VALID:"+db.getVersion("valid")+"draft:"+db.getVersion()+"sent:"+db.getVersion("sent"));
 				}
 				this.propagateDeltas(dbGuid,srcDbGuid,cur[tr]);
 				delete cur[tr];
@@ -355,8 +355,8 @@ define(
 
 				function cb(result) {
 					// TODOX ОТКЛЮЧИЛИ ВРЕМЕННО СТАРЫЕ ПРОВЕРКИ, НАДО НАПИСАТЬ НОВЫЕ
-					console.log("CALLBACK PROPAGATE DELTAS");
-					console.log(result);
+					if (DEBUG) console.log("CALLBACK PROPAGATE DELTAS");
+					if (DEBUG) console.log(result);
 					/*
 					if (db.getVersion("valid")<result.data.dbVersion) 
 						db.setVersion("valid", result.data.dbVersion); 
@@ -384,8 +384,8 @@ define(
 								}
 							else {
 								//var cb = this._receiveResponse; //function(result) { if (db.getVersion("valid")<result.data.dbVersion) db.newVersion("valid", result.data.dbVersion - db.getVersion("valid")); };
-								console.log("sending delta db: "+db.getGuid());
-								console.log(delta);
+								if (DEBUG) console.log("sending delta db: "+db.getGuid());
+								if (DEBUG) console.log(delta);
 								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid()},cb);
 								}
 						}
@@ -398,7 +398,7 @@ define(
 							var subscriber = allSubs[guid];
 							if (subscriber.kind == 'remote' && srcDbGuid != guid) {
 								subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid()});
-								console.log("sent last to DB : "+subscriber.guid);
+								if (DEBUG) console.log("sent last to DB : "+subscriber.guid);
 								}							
 						}
 					}
@@ -411,7 +411,7 @@ define(
 							// удаленные
 							if (subscriber.kind == 'remote' && srcDbGuid != guid) {
 								subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid()});
-								console.log("sent to DB : "+subscriber.guid);
+								if (DEBUG) console.log("sent to DB : "+subscriber.guid);
 								}
 						}
 					}
