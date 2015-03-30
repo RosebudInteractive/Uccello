@@ -354,18 +354,19 @@ define(
 			onNewRoot: function(result){
 				
 				// ищем по Title
-				// && objType.getGuid() == UCCELLO_CONFIG.classGuids.Form
-				var found = false, title = result.target.get('Title');
-				var col = this.getObj().getCol('Resources')
-				for(var i= 0, len=col.count(); i<len; i++) {
-					if (title == col.get(i).get('Title'))
-						found = true;
-				}
-				if (!found && title) {
-					var id = ++this.pvt.vcrCounter;
-					var vcResource = new Vcresource(this.pvt.cm, {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
-					var db = this.getObj().getDB();
-					db.getController().genDeltas(db.getGuid());
+				if (result.target.getObjType().getGuid() == UCCELLO_CONFIG.classGuids.Form) {
+					var found = false, title = result.target.get('Title');
+					var col = this.getObj().getCol('Resources')
+					for(var i= 0, len=col.count(); i<len; i++) {
+						if (title == col.get(i).get('Title'))
+							found = true;
+					}
+					if (!found && title) {
+						var id = ++this.pvt.vcrCounter;
+						var vcResource = new Vcresource(this.pvt.cm, {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
+						var db = this.getObj().getDB();
+						db.getController().genDeltas(db.getGuid());
+					}
 				}
 			}
 			
