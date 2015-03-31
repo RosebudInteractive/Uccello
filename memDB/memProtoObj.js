@@ -22,6 +22,8 @@ define(
 				pvt.fldLog = {};
 				pvt.colLog = {};				// лог изменений в дочерних коллекциях
 				pvt.isModified = false;
+				pvt.cntFldModif=0;
+				pvt.cntColModif=0;
 				
 				if (!parent.obj) {	// корневой объект
 					pvt.col = null;
@@ -189,8 +191,14 @@ define(
 			},
 			
 			_setModified: function(field,oldValue) {
+				if (!(field in this.pvt.fldLog) this.pvt.cntFldModif++;
 				this.pvt.fldLog[field] = oldValue;
 				this.pvt.isModified = true;
+				
+			},
+			
+			countModifiedFields: function() {
+				return this.pvt.cntFldModif;
 			},
 			
 			getOldFldVal: function(fldName) {
@@ -210,6 +218,8 @@ define(
 				}
 				
 				this.pvt.isModified = false;
+				this.pvt.cntColModif = 0;
+				this.pvt.cntFldModif = 0;
 				
 			},
 			
@@ -219,9 +229,14 @@ define(
 					this.pvt.colLog[colName].del = {};
 					this.pvt.colLog[colName].add = {};
 					this.pvt.colLog[colName].mod = {};
+					this.pvt.cntColModif++;
 				}
 				this.pvt.colLog[colName][op][obj.getGuid()] = obj;
 				this.pvt.isModified = true;
+			},
+
+			countModifiedCols: function() {
+				return this.pvt.cntColModif;
 			},
 			
 			getLogCol: function(colName) {
