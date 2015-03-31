@@ -140,7 +140,7 @@ define(
 				if (!this.isOn()) return false;
 				if (this.getModule().isMaster())
 					this.loadNewRoots(resGuids, { rtype: "res", compcb: this.pvt.compCallback},cb);
-				else this.getDB().subscribeRoots(forms, cb, this.pvt.compCallback);
+				else this.getDB().subscribeRoots(resGuids, cb, this.pvt.compCallback);
 				return true;
 			},
 
