@@ -38,7 +38,7 @@ define(
                     var modified = false;
                     for (var i = 0, len = columns.count(); i < len; i++) {
                         var column = columns.get(i);
-                        if (column.isFldModified("width")) {
+                        if (column.isFldModified("Width")) {
                             modified = true;
                             viewset.renderWidth.apply(this, [i, column.get('Width')]);
                         }
