@@ -25,9 +25,13 @@ define(
              * @constructs
              * @param controller
              * @param params
+			 *		params.name - имя базы
+			 *		params.guid - гуид базы данных (если не передается, то генерируем в конструкторе)
+			 *		params. kind - master | slave
+			 *		params.proxyMaster - прокси мастер-базы (для kind = "slave")
              * @param cb
              */
-			init: function(controller, params, cb){
+			init: function(controller, params, cb) {
 				var pvt = this.pvt = {};
 				pvt.name = params.name;
 				pvt.robjs = [];				// корневые объекты базы данных
@@ -43,9 +47,6 @@ define(
 				else
 					pvt.guid = controller.guid();
 				pvt.counter = 0;
-				//console.log("DATA BASE GUID "+pvt.guid);
-
-
 				pvt.controller = controller; //TODO  если контроллер не передан, то ДБ может быть неактивна
 				pvt.controller.createLocalProxy(this);
 				pvt.defaultCompCallback = null; // коллбэк по умолчанию для создания компонентов
@@ -65,7 +66,6 @@ define(
 						pvt.sentVersion = pvt.version;
 						controller.subscribeRoots(db,"fc13e2b8-3600-b537-f9e5-654b7418c156", function(){
 								db._buildMetaTables();
-								//console.log('callback result:', result);
 								if (cb !== undefined && (typeof cb == "function")) cb();
 							});
 						});

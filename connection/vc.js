@@ -34,7 +34,6 @@ define(
 				this.pvt.vcrCounter = 0;
 			},
 
-			// включить контекст
 			/**
 			 * Активировать контекст
 			 * @param params {object}
@@ -64,9 +63,8 @@ define(
 				this.pvt.socket = params.socket;
 
 				var that = this;
-				var createCompCallback = null;
 				if (!cb) // если нет колбэка значит на сервере - но это надо поменять TODO
-					createCompCallback = function (obj) {
+					var createCompCallback = function (obj) {
 						if (obj.getTypeGuid() == UCCELLO_CONFIG.classGuids.FormParam) { // Form Param
 							obj.event.on({
 								type: "mod", // TODO не забыть про отписку
@@ -90,12 +88,14 @@ define(
 					createCompCallback = function (obj) {
 						that.createComponent.apply(that, [obj, that.pvt.cm]);
 					}
+				this.pvt.compCallback = createCompCallback;
 
 				if (this.getModule().isMaster()) { // главная (master) TODO разобраться с KIND
-					var params2 = {name: "VisualContextDB", kind: "master", cbfinal:cb};
-					if (createCompCallback)
-						params2.compcb = createCompCallback;
-					this.pvt.db = this.createDb(controller,params2);
+					//var params2 = {name: "VisualContextDB", kind: "master", cbfinal:cb};
+					//var params2 = {name: "VisualContextDB", kind: "master"};
+					//if (createCompCallback)
+					//	params2.compcb = createCompCallback;
+					this.pvt.db = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
 					this.pvt.cm = new ControlMgr(this.getDB(),null,this,this.pvt.socket);
 
 					// подписываемся на добавление нового рута
@@ -105,7 +105,7 @@ define(
 						callback: this.onNewRoot
 					});
 
-					this.loadNewRoots(params.formGuids, { rtype: "res", compcb: params2.compcb},params2.cbfinal);
+					this.loadNewRoots(params.formGuids, { rtype: "res", compcb: createCompCallback},cb);
 					this.dataBase(this.pvt.db.getGuid());
 					this.contextGuid(this.getGuid());
 					this.pvt.isOn = true;
@@ -129,6 +129,19 @@ define(
 					});
 				}
 				this.pvt.db.setDefaultCompCallback(createCompCallback);
+			},
+
+			/**
+			 * Добавить ресурсы в контекст
+			 * @params resGuids - массив гуидов ресурсов (явный)
+			 * @callback cb
+			 */
+			addNewResRoots: function(resGuids, cb) {
+				if (!this.isOn()) return false;
+				if (this.getModule().isMaster())
+					this.loadNewRoots(resGuids, { rtype: "res", compcb: this.pvt.compCallback},cb);
+				else this.getDB().subscribeRoots(forms, cb, this.pvt.compCallback);
+				return true;
 			},
 
 			// выключить контекст
@@ -203,14 +216,14 @@ define(
 			/**
 			 * Создать базу данных - ВРЕМЕННАЯ ЗАГЛУШКА!
 			 * @param dbc
-			 * @param options
+			 * @param params
 			 * @returns {object}
 			 */
-			createDb: function(dbc, options){
-				var db = dbc.newDataBase(options);
+			createDb: function(dbc, params){
+				var db = dbc.newDataBase(params);
 
 				// meta
-				var cm = new ControlMgr(db, null /*roots[0]*/);
+				var cm = new ControlMgr(db, null);
 				new UObject(cm);
 				new AComponent(cm); new AControl(cm);
 
