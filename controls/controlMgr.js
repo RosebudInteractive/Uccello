@@ -180,10 +180,8 @@ define(
 					var c = this.pvt.compByGuid[g];
 					if (!c._isProcessed()) c.processDelta(); 
 				}
-				
 				// сбросить признак isProcessed
 				for (var g in this.pvt.compByGuid) this.pvt.compByGuid[g]._isProcessed(false);
-				
 			},
 
             /**

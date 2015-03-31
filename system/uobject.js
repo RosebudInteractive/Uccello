@@ -210,7 +210,6 @@ define(
 			
             /**
              * Удаленный вызов метода
-             ////* @param guid - гуид объекта (уникален в рамках БД)
 			 * @param func - имя удаленной функции
              * @param aparams - массив параметров удаленной функции
 			 * @callback cb - коллбэк
@@ -221,15 +220,18 @@ define(
 					return;
 				}
 				var socket = this.getControlMgr().getSocket();
-				//var cg = this.getControlMgr().getContext().contextGuid();
-				
 				var pg = this.getObj().getDB().getProxyMaster().guid;
-				//var mg = this.getModule().getGuid();
 							
 				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func };
 				var args={action:"remoteCall2",type:"method",args: myargs};
 				socket.send(args,cb);
 			},
+
+
+            /**
+             * Выставления признака isProcess для ProcessDelta
+			 * @param value - true | false установить призна isProcessed
+             */			
 			
             _isProcessed: function(value) {
                 if (value === undefined)

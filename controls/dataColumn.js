@@ -18,6 +18,12 @@ define(
                 this.params = params;
             },
 
+			_onDirtyRender: function(result) {
+				this.getParent()._isRendered(false);
+				this.pvt.isRendered = false;
+			},
+			
+			
             // Properties
             label: function(value) {
                 return this._genericSetter("Label", value);
