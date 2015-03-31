@@ -105,6 +105,11 @@ define(
 				else
 					delete this.pvt.rootGuids[c.getGuid()];
 			},
+			
+			delRootObjects: function(rootGuid) {
+				
+			},
+			
 
             /**
              * Переместить контрол
