@@ -32,35 +32,71 @@ define(
              */
             irender: function(viewset, options) {
 
-                // проверяем ширины столбцов
-                var columns = this.getObj().getCol('Columns');
-                if (columns) {
-                    var modified = false;
-                    for (var i = 0, len = columns.count(); i < len; i++) {
-                        var column = columns.get(i);
-                        if (column.isFldModified("Width")) {
-                            modified = true;
-                            viewset.renderWidth.apply(this, [i, column.get('Width')]);
+                var dsModif = this.isDatasetModified();
+                var objModif = this.isObjModified();
+                var ds = this.getControlMgr().getByGuid(this.dataset());
+
+                // Модифицированы и данные и объект
+                if (dsModif && objModif) {
+                    // рендерим полностью
+                    viewset.render.apply(this, [options]);
+                }
+
+                // Изменены данные объекта
+                if (!dsModif && objModif) {
+                    // проверяем ширины столбцов
+                    var columns = this.getObj().getCol('Columns');
+                    if (columns) {
+                        for (var i = 0, len = columns.count(); i < len; i++) {
+                            var column = columns.get(i);
+                            if (column.isFldModified("Width"))
+                                viewset.renderWidth.apply(this, [i, column.get('Width')]);
                         }
                     }
-                    if (modified)
-                        return;
                 }
 
-                // если надо лишь передвинуть курсор
-                if (this.isOnlyCursor()) {
-                    viewset.renderCursor.apply(this, [this.getControlMgr().getByGuid(this.dataset()).cursor()]);
-                    return;
+                // Данные датасета и объекта не изменились
+                if (!dsModif && !objModif){
+                    // если изменен курсор
+                    if (ds.getObj().isFldModified("Cursor"))
+                        viewset.renderCursor.apply(this, [ds.cursor()]);
                 }
-
-
-                // рендерим DOM
-                viewset.render.apply(this, [options]);
 
                 // доп. действия
                 if (this.dataset()) {
                     this.pvt.renderDataVer = this.getControlMgr().getByGuid(this.dataset()).getDataVer();
                 }
+            },
+
+            /**
+             * Проверяем на модификацию датасета
+             * @returns {boolean}
+             */
+            isDatasetModified: function() {
+                if (this.dataset()) {
+                    var dataset = this.getControlMgr().getByGuid(this.dataset());
+                    if (this.pvt.renderDataVer != dataset.getDataVer() || dataset.isDataModified())
+                        return true;
+                    else
+                        return false;
+                }
+                else return false;
+            },
+
+            /**
+             * Проверяем на модификацию объекта
+             * @returns {boolean}
+             */
+            isObjModified: function() {
+                if (this.dataset()) {
+                    var dataset = this.getControlMgr().getByGuid(this.dataset());
+					var mo = this.getObj();
+                    if (this.pvt.renderDataVer != dataset.getDataVer() || mo.isDataModified())
+                        return true;
+                    else
+                        return false;
+                }
+                else return false;
             },
 
             /**
