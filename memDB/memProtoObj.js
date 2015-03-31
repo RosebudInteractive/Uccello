@@ -191,7 +191,7 @@ define(
 			},
 			
 			_setModified: function(field,oldValue) {
-				if (!(field in this.pvt.fldLog) this.pvt.cntFldModif++;
+				if (!(field in this.pvt.fldLog)) this.pvt.cntFldModif++;
 				this.pvt.fldLog[field] = oldValue;
 				this.pvt.isModified = true;
 				

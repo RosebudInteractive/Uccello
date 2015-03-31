@@ -71,8 +71,8 @@ define(
                 if (this.dataset()) {
                     var dataset = this.getControlMgr().getByGuid(this.dataset());
 					var mo = this.getObj();
-					var f = ((mo.countModifiedFields()==1) && (mo.countModifiedCols()==0) && (mo.isFldModified("Cursor")));
-                    if ((this.pvt.renderDataVer == dataset.getDataVer()) && (!dataset.isDataModified()) && f)
+					//var f = ((mo.countModifiedFields()==1) && (mo.countModifiedCols()==0) && (mo.isFldModified("Cursor")));
+                    if ((this.pvt.renderDataVer == dataset.getDataVer()) && (!dataset.isDataModified()) && (dataset.getObj().isFldModified("Cursor")) && (!mo.isDataModified()))
                         return true;
                     else
                         return false;
