@@ -31,7 +31,16 @@ define(
 				this.pvt.dataVer = 0; // версия данных (локально)		
 				
 				this.event = new Event();
-				
+				if (params) { 
+					this.event.name = "DATASETEVENT "+this.name()+Math.round(Math.random()*1000) ;
+					console.log("++++++++++++++++++++++++++++++" + this.event.name);
+					/*try { throw "exception";
+					} catch(e) {
+					}*/
+					//console.trace();
+					//console.assert(false);
+					debugger;
+				}
 				// 
 				if (this.getObj()) {
 					if (this.getObj().get("OnMoveCursor")) {

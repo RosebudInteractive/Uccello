@@ -14,6 +14,7 @@ define(
 
 			init: function(cm,params){
 				this._super(cm,params);
+				//console.log("create "+this.name());
 
 			},
 			
@@ -43,6 +44,7 @@ define(
 					//var ds = this.getControlMgr().get(dsg);
 					var ds = this.getComp(dsg);
 					console.log("subs "+this.name()+" to "+ds.name());
+					console.log(ds.event);
 					ds.event.on({
 						type: 'refreshData',
 						subscriber: this,
