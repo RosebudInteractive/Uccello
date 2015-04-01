@@ -205,7 +205,7 @@ define(
 					this._setDataObj(value);
 					//
 					if ("onMoveCursor" in this) this.onMoveCursor(newVal);
-					
+					console.log("move cursor "+this.name());
 					this.event.fire({
 						type: 'moveCursor',
 						target: this				

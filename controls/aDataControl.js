@@ -39,8 +39,10 @@ define(
 
 			_subsDataSet: function() {
 				var dsg = this.dataset();
-				if (dsg) {
-					var ds = this.getControlMgr().get(dsg);
+				if (dsg) {					
+					//var ds = this.getControlMgr().get(dsg);
+					var ds = this.getComp(dsg);
+					console.log("subs "+this.name()+" to "+ds.name());
 					ds.event.on({
 						type: 'refreshData',
 						subscriber: this,
@@ -49,7 +51,7 @@ define(
 					ds.event.on({
 						type: 'moveCursor',
 						subscriber: this,
-						callback: function(){ this._isRendered(false); }
+						callback: function(){ this._isRendered(false); console.log("isrendered subs "+this.name()); }
 					});
 					ds.event.on({
 						type: 'modFld',
