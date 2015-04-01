@@ -148,15 +148,14 @@ define(
 
 			setField: function(name, value) {
 				if (this.pvt.dataObj) {
-					r = this.pvt.dataObj.set(name, value);
-					this.event.fire({
-						type: 'modFld',
-						target: this				
-					});						
-					return r;
+					var vold = this.pvt.dataObj.get(name);
+					this.pvt.dataObj.set(name, value);
+					if (value!=vold) // если значение действительно изменено, то возбуждаем событие
+						this.event.fire({
+							type: 'modFld',
+							target: this				
+						});						;
 				}
-				else
-					return undefined;
 			},
 			
 			getDataVer: function() {

@@ -49,7 +49,7 @@ define(
 
                 // если надо лишь передвинуть курсор
                 if (this.isOnlyCursor()) {
-                    viewset.renderCursor.apply(this, [this.getControlMgr().getByGuid(this.dataset()).cursor()]);
+                    viewset.renderCursor.apply(this, [this.getComp(this.dataset()).cursor()]);
                     return;
                 }
 
@@ -58,7 +58,7 @@ define(
 
                 // доп. действия
                 if (this.dataset()) {
-                    this.pvt.renderDataVer = this.getControlMgr().getByGuid(this.dataset()).getDataVer();
+                    this.pvt.renderDataVer = this.getComp(this.dataset()).getDataVer();
                 }
             },
 
