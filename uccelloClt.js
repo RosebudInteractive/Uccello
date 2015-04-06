@@ -196,7 +196,7 @@ define(
                         components: this.pvt.components
                     };
                     var context = new VisualContext(this.pvt.cmclient, params);
-                    var result = {masterGuid:this.getClientDB().getGuid(), vc:context.getGuid(), side:'client', formGuids:formGuids};
+                    var result = {vc:context.getGuid(), side:'client', formGuids:formGuids};
                     cbfinal(result);
 				}
 			},
