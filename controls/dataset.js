@@ -39,7 +39,7 @@ define(
 					}*/
 					//console.trace();
 					//console.assert(false);
-					debugger;
+					//debugger;
 				}
 				// 
 				if (this.getObj()) {

@@ -11,6 +11,7 @@ define([], function() {
 
     var config = Class.extend({
 
+        // расширяемый список контролов
         controls: [
             {className:'DataControl', isUccello:true, component:'controls/aDataControl'},
             {className:'DataFieldControl', isUccello:true, component:'controls/aDataFieldControl'},
@@ -30,10 +31,12 @@ define([], function() {
             {className:'Label', isUccello:true, component:'controls/label', viewset:false}
         ],
 
+        // остальные гуиды
         guids: {
             'sysDB': 'fb41702c-faba-b5c0-63a8-8d553bfe54a6'
         },
 
+        // гуиды классов учелло
         classGuids: {
             'ClientConnection':"5f27198a-0dd2-81b1-3eeb-2834b93fb514",
             'Connect':'66105954-4149-1491-1425-eac17fbe5a72',
@@ -65,6 +68,7 @@ define([], function() {
             'Vcresource':"870c63b5-7aed-bb44-3109-bb63a407988f"
         },
 
+        // изменяемые свойства
         controlsPath: '',
         uccelloPath: '',
         viewSet: null,
@@ -87,6 +91,9 @@ define([], function() {
                                 this.classGuids[config[index][i].className] = config[index][i].guid;
                             }
                         }
+                        break;
+                    case 'guids': // запретить перезатирать
+                    case 'classGuids':
                         break;
                     default:
                         this[index] = config[index];

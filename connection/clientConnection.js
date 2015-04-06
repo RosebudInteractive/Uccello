@@ -129,8 +129,8 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
          * @param sessionGuid
          * @param callback
          */
-        newTab: function(contextGuid, dbGuid, resGuids, sessionGuid, callback) {
-            this.socket.send({action:'newTab', type:'method', sid: this.session.guid, contextGuid:contextGuid, dbGuid:dbGuid, resGuids:resGuids, sessionGuid:sessionGuid}, function(result){
+        newTab: function(contextGuid, resGuids, sessionGuid, callback) {
+            this.socket.send({action:'newTab', type:'method', sid: this.session.guid, contextGuid:contextGuid, resGuids:resGuids, sessionGuid:sessionGuid}, function(result){
                 if (callback)
                     callback(result);
             });
