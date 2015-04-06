@@ -420,23 +420,26 @@ define(
              * @param {array} sobjs - массив объектов которые нужно десериализовать
 			 * @callback cb - вызов функции, которая выполняет доп.действия после создания каждого объекта
 			 * @param subDbGuid - гуид базы данных подписчика (для идентификации)
+			 * @param override - true - перезагрузить рут, false - только подписать
              * @returns {*}
              */
 			// ДОЛЖНА РАБОТАТЬ ТОЛЬКО ДЛЯ МАСТЕР БАЗЫ - СЛЕЙВ НЕ МОЖЕТ ДОБАВИТЬ В СЕБЯ РУТ, МОЖЕТ ТОЛЬКО ПОДПИСАТЬСЯ НА РУТ МАСТЕРА!
-			addRoots: function(sobjs, cb, subDbGuid) {
+			addRoots: function(sobjs, cb, subDbGuid, override) {
 				var res = [];
 
 				this.getCurrentVersion();
 
 				if (!cb) cb = this.getDefaultCompCallback();
 
-				for (var i = 0; i<sobjs.length; i++) {
-					var croot = this.deserialize(sobjs[i], { }, cb);
-
-					// добавить в лог новый корневой объект, который можно вернуть в виде дельты
-					var serializedObj=this.serialize(croot); // TODO по идее можно взять sobjs[i], но при десериализации могут добавляться гуиды
-					var o = { adObj: serializedObj, obj:croot, type:"newRoot"};
-					croot.getLog().add(o);
+				for (var i=0; i<sobjs.length; i++) {
+					if (!(this.getRoot(sobjs[i].$sys.guid)) || override) {
+						var croot = this.deserialize(sobjs[i], { }, cb);
+						// добавить в лог новый корневой объект, который можно вернуть в виде дельты
+						var serializedObj=this.serialize(croot); // TODO по идее можно взять sobjs[i], но при десериализации могут добавляться гуиды
+						var o = { adObj: serializedObj, obj:croot, type:"newRoot"};
+						croot.getLog().add(o);
+					}
+					else croot = this.getRoot(sobjs[i].$sys.guid).obj;
 
 					// форсированная подписка для данных (не для ресурсов) - в будущем скорее всего понадобится управлять этим
 
@@ -444,16 +447,16 @@ define(
 					for (var guid in allSubs) {
 						var subscriber = allSubs[guid];
 						if (subscriber.kind == 'remote') {
-							/*UCCELLO_CONFIG.classGuids.DataRoot*/
+							/*UCCELLO_CONFIG.classGuids.DataRoot "87510077-53d2-00b3-0032-f1245ab1b74d"*/
 							// Подписываем либо данные (тогда всех) либо подписчика
-							if ((croot.getTypeGuid() == "87510077-53d2-00b3-0032-f1245ab1b74d" ) || (subDbGuid==subscriber.guid))
+							if ((croot.getTypeGuid() == UCCELLO_CONFIG.classGuids.DataRoot ) || (subDbGuid==subscriber.guid))
 							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber; //subProxy;
 
 						}
 					}
 
-
 					res.push(croot);
+					
 				}
 
 

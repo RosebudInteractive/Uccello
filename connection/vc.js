@@ -275,14 +275,16 @@ define(
 			loadNewRoots: function(rootGuids,params, cb) {
 				var that = this;
 				if (this.getModule().isMaster()) {
+					var override = true;
 
 					function icb(r) {
 
-						var res = that.getDB().addRoots(r.datas, params.compcb, params.subDbGuid);
+						var res = that.getDB().addRoots(r.datas, params.compcb, params.subDbGuid, override);
 						if (cb) cb({guids:rootGuids});
 					}
 
 					if (params.rtype == "res") {
+						override = false;
 						this.pvt.proxyServer.loadResources(rootGuids, icb);
 						return "XXX";
 					}
