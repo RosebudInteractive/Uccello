@@ -122,7 +122,7 @@ define(
                     ini: {fields: {Id: data.contextId, Name: 'context'+contextId, Kind: "master"}}, formGuids:data.formGuids};
                 var context = new VisualContext(this.cmsys, params);
 				context.on(this.cmsys, params);
-                var result = {masterGuid: context.dataBase(), roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};
+                var result = {roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};
                 controller.genDeltas(this.dbsys.getGuid());
                 done(result);
             },
