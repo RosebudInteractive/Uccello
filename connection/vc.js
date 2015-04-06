@@ -379,7 +379,7 @@ define(
 					var id = ++this.pvt.vcrCounter;
 					if (found || !title) title += id;
 
-					var vcResource = new Vcresource(this.pvt.cm, {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
+					var vcResource = new Vcresource(this.getControlMgr(), {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
 					var db = this.getObj().getDB();
 					db.getController().genDeltas(db.getGuid());
 				}
