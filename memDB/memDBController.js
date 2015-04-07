@@ -55,14 +55,14 @@ define(
             },
 
             routerUnsubscribe: function(data, done) {
-                this.getDB(data.masterGuid).onUnsubscribe(data.$sys.connectId, data.slaveGuid);
+                this.getDB(data.masterGuid).onUnsubscribe(data.$sys.socket.getConnectId(), data.slaveGuid);
                 done({});
             },
 
             routerSubscribeRoot: function(data, done) {
                 var masterdb = this.getDB(data.masterGuid);
                 if (!masterdb.isSubscribed(data.slaveGuid)) // если клиентская база еще не подписчик
-                    this.onSubscribe({connect:data.$sys.connectId, guid:data.slaveGuid}, data.masterGuid );
+                    this.onSubscribe({connect:data.$sys.socket.getConnectId(), guid:data.slaveGuid}, data.masterGuid );
                 var result = {data:masterdb.onSubscribeRoots(data.slaveGuid, data.objGuids)};
                 done(result);
             },
@@ -70,7 +70,7 @@ define(
             routerSubscribeManyRoots: function(data, done) {
                 var masterdb = this.getDB(data.masterGuid);
                 if (!masterdb.isSubscribed(data.slaveGuid)) // если клиентская база еще не подписчик
-					this.onSubscribe({connect:data.$sys.connectId, guid:data.slaveGuid}, data.masterGuid );
+					this.onSubscribe({connect:data.$sys.socket.getConnectId(), guid:data.slaveGuid}, data.masterGuid );
                 var result = {data:masterdb.onSubscribeRoots(data.slaveGuid, data.objGuids)};
                 done(result);
             },
