@@ -50,19 +50,19 @@ define(
 
 
             routerSubscribe: function(data, done) {
-                var result = {data: this.onSubscribe({connect:data.connect, guid:data.slaveGuid}, data.masterGuid)};
+                var result = {data: this.onSubscribe({connect:data.$sys.connect, guid:data.slaveGuid}, data.masterGuid)};
                 done(result);
             },
 
             routerUnsubscribe: function(data, done) {
-                this.getDB(data.masterGuid).onUnsubscribe(data.connectId, data.slaveGuid);
+                this.getDB(data.masterGuid).onUnsubscribe(data.$sys.connectId, data.slaveGuid);
                 done({});
             },
 
             routerSubscribeRoot: function(data, done) {
                 var masterdb = this.getDB(data.masterGuid);
                 if (!masterdb.isSubscribed(data.slaveGuid)) // если клиентская база еще не подписчик
-                    this.onSubscribe({connect:data.connectId, guid:data.slaveGuid}, data.masterGuid );
+                    this.onSubscribe({connect:data.$sys.connectId, guid:data.slaveGuid}, data.masterGuid );
                 var result = {data:masterdb.onSubscribeRoots(data.slaveGuid, data.objGuids)};
                 done(result);
             },
@@ -70,7 +70,7 @@ define(
             routerSubscribeManyRoots: function(data, done) {
                 var masterdb = this.getDB(data.masterGuid);
                 if (!masterdb.isSubscribed(data.slaveGuid)) // если клиентская база еще не подписчик
-					this.onSubscribe({connect:data.connectId, guid:data.slaveGuid}, data.masterGuid );
+					this.onSubscribe({connect:data.$sys.connectId, guid:data.slaveGuid}, data.masterGuid );
                 var result = {data:masterdb.onSubscribeRoots(data.slaveGuid, data.objGuids)};
                 done(result);
             },

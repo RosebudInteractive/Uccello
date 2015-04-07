@@ -70,11 +70,14 @@ define(function() {
          */
         send:  function (obj, callback) {
             var msgId = this.options.side == 'client' ? ++this.msgId : --this.msgId;
-            if (!obj.msgId)// добавляем в объект отправки серверу msgId
-                obj.msgId = msgId;
-            this.messages[msgId] = {callback:callback, time:Date.now()}; // сохраняем колбек
+            var data = obj;
+            if (!obj.msgId)
+                data = {args:obj, msgId:msgId, type:obj.type};
+
+            if (callback)
+                this.messages[msgId] = {callback:callback, time:Date.now()}; // сохраняем колбек
             if (this.isConnected())
-                this.socket.send(JSON.stringify(obj));
+                this.socket.send(JSON.stringify(data));
         },
 
         /**

@@ -66,15 +66,13 @@ define(
              * @returns {object}
              */
             routerConnect: function(data, done) {
-
                 // данные сессии
                 data.session = JSON.parse(data.session);
-
                 // подключаемся к серверу с клиента
-                var result =  this.connect(data.socket, {client:data});
-
+                var result =  this.connect(data.$sys.socket, {client:data});
+                // коннект
+                var connect = this.getConnect(data.$sys.connectId);
                 // обработка события закрытия коннекта
-                var connect = this.getConnect(data.connectId);
                 var that = this;
                 connect.event.on({
                     type: 'socket.close',
@@ -92,8 +90,8 @@ define(
              * @returns {object}
              */
             routerAuthenticate: function(data, done) {
-                var session = this.getConnect(data.connectId).getSession();
-                this.authenticate(data.connectId, session.getId(), data, done);
+                var session = this.getConnect(data.$sys.connectId).getSession();
+                this.authenticate(data.$sys.connectId, session.getId(), data, done);
             },
 
             /**
@@ -102,7 +100,7 @@ define(
              * @returns {object}
              */
             routerDeauthenticate: function(data, done) {
-                var session = this.getConnect(data.connectId).getSession();
+                var session = this.getConnect(data.$sys.connectId).getSession();
                 this.deauthenticate(session.getId(), done);
             },
 
@@ -115,11 +113,11 @@ define(
              */
             routerCreateContext: function(data, done) {
                 var that = this;
-                var user = this.getConnect(data.connectId).getSession().getUser();
+                var user = this.getConnect(data.$sys.connectId).getSession().getUser();
                 var controller = this.getController();
 				var contextId = this.getNewContextId();
-				var params = {parent: user, colName: "VisualContext", socket: this.getConnect(data.connectId).getConnection(), rpc: this.rpc, proxyServer: this.proxyServer,
-                    ini: {fields: {Id: data.contextId, Name: 'context'+contextId, Kind: "master"}}, formGuids:data.formGuids};
+				var params = {parent: user, colName: "VisualContext", socket: this.getConnect(data.$sys.connectId).getConnection(), rpc: this.rpc, proxyServer: this.proxyServer,
+                    ini: {fields: {Id: contextId, Name: 'context'+contextId, Kind: "master"}}, formGuids:data.formGuids};
                 var context = new VisualContext(this.cmsys, params);
 				context.on(this.cmsys, params);
                 var result = {roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};
@@ -134,7 +132,7 @@ define(
              */
             routerNewTab: function(data, done) {
                 // сессии пользователя
-                var sessions = this.getConnect(data.connectId).getSession().getUser().getSessions();
+                var sessions = this.getConnect(data.$sys.connectId).getSession().getUser().getSessions();
                 // найти сессию с гуидом
                 var session = this.getSessionByGuid(data.sessionGuid, sessions);
                 var result = {action:"error", error:'Connect not found'};

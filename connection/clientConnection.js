@@ -53,19 +53,21 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                 router: function(data){
                     //console.log('сообщение с сервера:', data);
                     var result = {};
-                    switch (data.action) {
-                        case 'error': // ошибки
-                            if (DEBUG)
-                                console.log(data.error);
-                            break;
-                        case 'sendDelta':
-                            if (DEBUG) console.timeEnd('applyDeltas');
-                            that.getObj().getDB().getController().applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
-                            break;
-                        case 'newTab':
-                            if (that.newTabCallback)
-                                that.newTabCallback(data);
-                            break;
+                    if (data.args) {
+                        switch (data.args.action) {
+                            case 'error': // ошибки
+                                if (DEBUG)
+                                    console.log(data.args.error);
+                                break;
+                            case 'sendDelta':
+                                if (DEBUG) console.timeEnd('applyDeltas');
+                                that.getObj().getDB().getController().applyDeltas(data.args.dbGuid, data.args.srcDbGuid, data.args.delta);
+                                break;
+                            case 'newTab':
+                                if (that.newTabCallback)
+                                    that.newTabCallback(data.args);
+                                break;
+                        }
                     }
                     return result;
                 }

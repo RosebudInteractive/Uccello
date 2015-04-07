@@ -37,7 +37,7 @@ define(
                 this.pvt.resman = new Resman(that.getUserMgr().getController());
 
                 this.getRouter().add('getGuids', function(data, done) {
-                    var user = that.getUserMgr().getConnect(data.connectId).getSession().getUser();
+                    var user = that.getUserMgr().getConnect(data.$sys.connectId).getSession().getUser();
                     var userData = user.getData();
                     var result = {
                         masterSysGuid:that.getUserMgr().dbsys.getGuid(),
@@ -106,10 +106,11 @@ define(
                             that.pvt.logger.addLog(data);
 
                             // обработчик
-                            data.connect = that.getUserMgr().getConnect(connectId);
-                            data.connectId = connectId; //that._connectId;
-                            data.socket = socket;
-                            that.getRouter().exec(data, done);
+                            data.args.$sys = {};
+                            data.args.$sys.connect = that.getUserMgr().getConnect(connectId);
+                            data.args.$sys.connectId = connectId;
+                            data.args.$sys.socket = socket;
+                            that.getRouter().exec(data.args, done);
                         }
                     });
                 });
