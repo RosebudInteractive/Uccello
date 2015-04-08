@@ -432,30 +432,36 @@ define(
 				if (!cb) cb = this.getDefaultCompCallback();
 
 				for (var i=0; i<sobjs.length; i++) {
-					if (!(this.getRoot(sobjs[i].$sys.guid)) || override) {
+					var root = this.getRoot(sobjs[i].$sys.guid); 
+					if (!root || override) {
 						var croot = this.deserialize(sobjs[i], { }, cb);
 						// добавить в лог новый корневой объект, который можно вернуть в виде дельты
 						var serializedObj=this.serialize(croot); // TODO по идее можно взять sobjs[i], но при десериализации могут добавляться гуиды
 						var o = { adObj: serializedObj, obj:croot, type:"newRoot"};
 						croot.getLog().add(o);
+						
 					}
-					else croot = this.getRoot(sobjs[i].$sys.guid).obj;
+					else croot = root.obj;
+					var allSubs = this.getSubscribers();
+
+					// возвращаем гуид если рута не было, или был, но не были подписаны, или в режиме оверрайд
+					if (!root || (root && !root.subscribers[subDbGuid]) || override) res.push(croot);		
 
 					// форсированная подписка для данных (не для ресурсов) - в будущем скорее всего понадобится управлять этим
 
-					var allSubs = this.getSubscribers();
 					for (var guid in allSubs) {
 						var subscriber = allSubs[guid];
 						if (subscriber.kind == 'remote') {
 							/*UCCELLO_CONFIG.classGuids.DataRoot "87510077-53d2-00b3-0032-f1245ab1b74d"*/
 							// Подписываем либо данные (тогда всех) либо подписчика
 							if ((croot.getTypeGuid() == UCCELLO_CONFIG.classGuids.DataRoot ) || (subDbGuid==subscriber.guid))
+								//root.subscribers[subscriber.guid] = subscriber;
 							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber; //subProxy;
 
 						}
 					}
 
-					res.push(croot);
+					
 					
 				}
 
