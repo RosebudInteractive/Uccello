@@ -41,10 +41,7 @@ define(
 			_subsDataSet: function() {
 				var dsg = this.dataset();
 				if (dsg) {					
-					//var ds = this.getControlMgr().get(dsg);
 					var ds = this.getComp(dsg);
-					console.log("subs "+this.name()+" to "+ds.name());
-					console.log(ds.event);
 					ds.event.on({
 						type: 'refreshData',
 						subscriber: this,

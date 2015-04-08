@@ -445,7 +445,7 @@ define(
 					var allSubs = this.getSubscribers();
 
 					// возвращаем гуид если рута не было, или был, но не были подписаны, или в режиме оверрайд
-					if (!root || (root && !root.subscribers[subDbGuid]) || override) res.push(croot);		
+					if (!root || (root && !(root.subscribers[subDbGuid])) || override) res.push(croot.getGuid());		
 
 					// форсированная подписка для данных (не для ресурсов) - в будущем скорее всего понадобится управлять этим
 

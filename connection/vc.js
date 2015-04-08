@@ -105,7 +105,7 @@ define(
 						callback: this.onNewRoot
 					});
 
-					this.loadNewRoots(params.formGuids, { rtype: "res", compcb: createCompCallback},cb);
+					this.loadNewRoots(params.formGuids, { rtype: "res", compcb: createCompCallback },cb);
 					this.dataBase(this.pvt.db.getGuid());
 					this.contextGuid(this.getGuid());
 					this.pvt.isOn = true;
@@ -137,10 +137,11 @@ define(
 			 * @callback cb
 			 */
 			addNewResRoots: function(resGuids, cb) {
+				function cbtest(res) { console.log(res); cb(res); }
 				if (!this.isOn()) return false;
 				if (this.getModule().isMaster())
-					this.loadNewRoots(resGuids, { rtype: "res", compcb: this.pvt.compCallback},cb);
-				else this.getDB().subscribeRoots(resGuids, cb, this.pvt.compCallback);
+					this.loadNewRoots(resGuids, { rtype: "res", compcb: this.pvt.compCallback}, cb); //function (res) { console.log(res); cb(res); } );
+				else this.getDB().subscribeRoots(resGuids, cbtest, this.pvt.compCallback);
 				return true;
 			},
 
@@ -278,9 +279,8 @@ define(
 					var override = true;
 
 					function icb(r) {
-
 						var res = that.getDB().addRoots(r.datas, params.compcb, params.subDbGuid, override);
-						if (cb) cb({guids:rootGuids});
+						if (cb) cb({guids:res});
 					}
 
 					if (params.rtype == "res") {
@@ -295,6 +295,7 @@ define(
 				}
 				else { // slave
 					// вызываем загрузку нового рута у мастера
+					params.subDbGuid = this.getContentDB().getGuid();
 					this.remoteCall('loadNewRoots', [rootGuids, params],cb);
 				}
 			},
