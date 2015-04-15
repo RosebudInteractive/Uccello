@@ -26,14 +26,8 @@ define(
 				while (par) {
 					this.pvt.ancestors.push(par);
 					par = (par.get("parentClass")==undefined) ? null : this.getDB().getObj(par.get("parentClass"));
-					//par = par.getParent(); //par.getParentClass();
 				}
 				
-				/*if (parent.rtype == "data")
-					this.pvt.rtype = "data"
-				else
-					this.pvt.rtype = "res";
-				*/
 				// TODO ПЕРЕДЕЛАТЬ!!!
 				if ((flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataRoot) ||
 					(flds.$sys.guid == "73596fd8-6901-2f90-12d7-d1ba12bae8f4") ||
@@ -46,14 +40,13 @@ define(
 					this.pvt.rtype = "data";
 				else
 					this.pvt.rtype = "res";
-				//if (classGuid
+
 				// инициализируем коллекции для метаинфо - описание полей и описание коллекций
 				new MemCol("fields",this);
 				new MemCol("cols",this);
 				
 				this.finit();
-				
-				//this._bldElemTable();
+
 			},
 			
 			// сделать таблицу элементов с учетом наследования

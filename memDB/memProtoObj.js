@@ -18,7 +18,7 @@ define(
 				pvt.fields = [];				// значения полей объекта
 				pvt.collections = [];			// массив дочерних коллекций
 				pvt.log = null; 
-				pvt.state = 0;
+				//pvt.state = 0;
 				pvt.fldLog = {};
 				pvt.colLog = {};				// лог изменений в дочерних коллекциях
 				pvt.isModified = false;
@@ -53,8 +53,7 @@ define(
 					else 
 						pvt.db._addRoot(this,{ type: "res", mode: parent.mode});
 				}
-				//else 
-				//	pvt.col._add(this);
+
 				this.getDB()._addObj(this);
 										
 			},
@@ -63,7 +62,7 @@ define(
 			finit: function() {
 				if (this.pvt.col)
 					this.pvt.col._add(this);
-				this.pvt.state = 1;
+				//this.pvt.state = 1;
 				
 			},
 			
