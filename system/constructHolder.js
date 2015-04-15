@@ -37,7 +37,7 @@ define(
                     var argIndex = 0;
                     for(var i=0; i<ctrls.length; i++) {
                         var className = ctrls[i].className;
-                        that.pvt.components[UCCELLO_CONFIG.classGuids[className]] = {module:arguments[argIndex], viewsets:{}};
+                        that.pvt.components[UCCELLO_CONFIG.classGuids[className]] = {constr:arguments[argIndex], viewsets:{}};
                         argIndex++;
                         if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
                             that.pvt.components[UCCELLO_CONFIG.classGuids[className]].viewsets[UCCELLO_CONFIG.viewSet.name] = arguments[argIndex];
@@ -61,10 +61,8 @@ define(
              * @param obj
              */
             addComponent: function(obj, viewsets) {
-                this.pvt.components[obj.prototype.classGuid] = {module:obj, viewsets:viewsets?viewsets:{}};
+                this.pvt.components[obj.prototype.classGuid] = {constr:obj, viewsets:viewsets?viewsets:{}};
             }
-
-
         });
         return ConstructHolder;
     }

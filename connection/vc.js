@@ -312,7 +312,7 @@ define(
 					}, {'guid': uccelloClt.getSysDB().getGuid(), 'name': 'Системная БД'}];
 				}
 
-				new (this.pvt.constructHolder.getComponent(g).module)(cm, params);
+				new (this.pvt.constructHolder.getComponent(g).constr)(cm, params);
 			},
 
 			renderAll: function(pd) {

@@ -261,7 +261,7 @@ define(
                     transArr[UCCELLO_CONFIG.classGuids.Session] = UCCELLO_CONFIG.classGuids.SessionInfo; // Session -> SessionInfo
                     classGuid = transArr[classGuid]? transArr[classGuid]: classGuid;
                     var params = {objGuid: obj.getGuid()};
-                    var component = new (that.pvt.constructHolder.getComponent(classGuid).module)(that.pvt.cmsys, params);
+                    var component = new (that.pvt.constructHolder.getComponent(classGuid).constr)(that.pvt.cmsys, params);
                     if (classGuid == UCCELLO_CONFIG.classGuids.UserInfo) { // UserInfo
                         that.pvt.user = component;
                     }
