@@ -7,11 +7,11 @@ define(
     ['./connection/clientConnection' ,
         './memDB/memDBController','./memDB/memDataBase','./controls/controlMgr', './system/uobject', './system/umodule', './controls/aComponent',
         './connection/userinfo', './connection/user', './connection/sessioninfo', './connection/session', './connection/connectinfo', './connection/connect', './connection/vc', './connection/vcresource',
-        './system/rpc'
+        './system/rpc', './system/constructHolder'
     ],
     function(ClientConnection, MemDBController, MemDataBase, ControlMgr, UObject, UModule, AComponent,
         UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContext, Vcresource,
-        Rpc
+        Rpc, ConstructHolder
         ) {
         var UccelloClt = Class.extend({
 
@@ -24,7 +24,6 @@ define(
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
 
                 var clt = this.pvt.clientConnection = new ClientConnection(null, {newTabCallback:options.newTabCallback});
-                this.pvt.typeGuids = {};
 				this.pvt.dbcontext = null;
                 this.pvt.controlMgr = {};
 				this.pvt.vc = null; // VisualContext
@@ -36,20 +35,22 @@ define(
                 else
                     that.pvt.sessionGuid = null;
 
-                this.loadControls(function(){
+                this.pvt.constructHolder = new ConstructHolder();
+                this.pvt.constructHolder.loadControls(function(){
                     that.getClient().connect("ws://"+url('hostname')+":"+UCCELLO_CONFIG.webSocketServer.port, {guid:that.getSessionGuid()},  function(result){
                         $.cookie('sid', result.session.guid);
                         that.pvt.sessionId = result.session.id;
                         that.pvt.sessionGuid = result.session.guid;
-                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.UserInfo] = UserInfo;
-                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.SessionInfo] = SessionInfo;
-                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.ConnectInfo] = ConnectInfo;
-                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.User] = User;
-                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Session] = Session;
-                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Connect] = Connect;
-                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.VisualContext] = VisualContext;
-                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.Vcresource] = Vcresource;
-                        that.pvt.typeGuids[UCCELLO_CONFIG.classGuids.ClientConnection] = ClientConnection;
+
+                        that.pvt.constructHolder.addComponent(UserInfo);
+                        that.pvt.constructHolder.addComponent(SessionInfo);
+                        that.pvt.constructHolder.addComponent(ConnectInfo);
+                        that.pvt.constructHolder.addComponent(User);
+                        that.pvt.constructHolder.addComponent(Session);
+                        that.pvt.constructHolder.addComponent(Connect);
+                        that.pvt.constructHolder.addComponent(VisualContext);
+                        that.pvt.constructHolder.addComponent(Vcresource);
+                        that.pvt.constructHolder.addComponent(ClientConnection);
 
                         that.createController(function(){
                             if (result.user) {
@@ -65,8 +66,6 @@ define(
                             that.pvt.servInterface = result.intf;
                             that.pvt.proxyServer = rpc._publProxy(guidServer, clt.socket, result.intf); // публикуем прокси серверного интерфейса
                         });
-
-
                     });
                 });
 
@@ -142,18 +141,6 @@ define(
 				return this.pvt.vc.getContextCM();
 			},
 			
-			// получить конструктор по его guid
-			getConstr: function(guid) {
-				return this.pvt.typeGuids[guid];
-			},
-
-            /**
-             * Добавить конструктор
-             * @param obj
-             */
-			addConstr: function(obj) {
-				this.pvt.typeGuids[obj.classGuid] = obj;
-			},
 
             getUser: function(){
                 return this.pvt.user;
@@ -193,7 +180,7 @@ define(
                         formGuids:formGuids,
                         rpc: this.pvt.rpc,
                         proxyServer: this.pvt.proxyServer,
-                        components: this.pvt.components
+                        constructHolder: this.pvt.constructHolder
                     };
                     var context = new VisualContext(this.pvt.cmclient, params);
                     var result = {vc:context.getGuid(), side:'client', formGuids:formGuids};
@@ -226,7 +213,7 @@ define(
                 var s = that.pvt.clientConnection.socket;
                 var p = {socket: s, proxyServer: that.pvt.proxyServer}
                 p.formGuids = params.formGuids;
-                p.components = that.pvt.components; //  ссылка на хранилище конструкторов
+                p.constructHolder = that.pvt.constructHolder; //  ссылка на хранилище конструкторов
 
                 if (params.side == 'client') {
                     that.pvt.vc = this.pvt.cmclient.getByGuid(params.vc);
@@ -254,42 +241,6 @@ define(
                 });
             },
 
-            /**
-             * Загрузить контролы
-             * @param callback
-             */
-            loadControls: function(callback){
-                var that = this;
-                var scripts = [];
-                var ctrls = UCCELLO_CONFIG.controls;
-
-                // собираем все нужные скрипты в кучу
-                for (var i = 0; i < ctrls.length; i++) {
-                    var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath
-                    scripts.push(path+ctrls[i].component);
-                    if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
-                        var c = ctrls[i].className;
-                        scripts.push(UCCELLO_CONFIG.viewSet.path+'v'+c.charAt(0).toLowerCase() + c.slice(1));
-                    }
-                }
-
-                // загружаем скрипты и выполняем колбэк
-                that.pvt.components = {};
-                require(scripts, function(){
-                    var argIndex = 0;
-                    for(var i=0; i<ctrls.length; i++) {
-                        var className = ctrls[i].className;
-                        that.pvt.components[className] = {module:arguments[argIndex], viewsets:{}};
-                        argIndex++;
-                        if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
-                            that.pvt.components[className].viewsets[UCCELLO_CONFIG.viewSet.name] = arguments[argIndex];
-                            argIndex++;
-                        }
-                    }
-                    callback();
-                });
-            },
-
             subscribeUser: function(callback) {
                 var user = this.getClient().authenticated;
                 if (!user) {
@@ -310,7 +261,7 @@ define(
                     transArr[UCCELLO_CONFIG.classGuids.Session] = UCCELLO_CONFIG.classGuids.SessionInfo; // Session -> SessionInfo
                     classGuid = transArr[classGuid]? transArr[classGuid]: classGuid;
                     var params = {objGuid: obj.getGuid()};
-                    var component = new (that.getConstr(classGuid))(that.pvt.cmsys, params);
+                    var component = new (that.pvt.constructHolder.getComponent(classGuid).module)(that.pvt.cmsys, params);
                     if (classGuid == UCCELLO_CONFIG.classGuids.UserInfo) { // UserInfo
                         that.pvt.user = component;
                     }

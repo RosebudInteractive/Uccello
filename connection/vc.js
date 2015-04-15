@@ -52,14 +52,12 @@ define(
 
 				if (params == undefined) return;
 
-				//this.pvt.typeGuids = params.typeGuids;
 				var controller = cm.getDB().getController();
 				this.pvt.proxyServer = params.proxyServer;
-				this.pvt.components = params.components;
+				this.pvt.constructHolder = params.constructHolder;
 				this.pvt.renderRoot = renderRoot;
 				this.pvt.formParams = {};
 				this.pvt.memParams = [];
-
 				this.pvt.socket = params.socket;
 
 				var that = this;
@@ -308,14 +306,13 @@ define(
 
 				// DbNavigator выбор базы
 				if (g == "38aec981-30ae-ec1d-8f8f-5004958b4cfa") {
-					params.dbSelector = [{'guid':this.getDB().getGuid(), 'name':'Пользовательская БД'}, {'guid':uccelloClt.getSysDB().getGuid(), 'name':'Системная БД'}];
+					params.dbSelector = [{
+						'guid': this.getDB().getGuid(),
+						'name': 'Пользовательская БД'
+					}, {'guid': uccelloClt.getSysDB().getGuid(), 'name': 'Системная БД'}];
 				}
 
-				new (this.getComponent(className).module)(cm, params);
-			},
-
-			getComponent: function(className){
-				return this.pvt.components[className];
+				new (this.pvt.constructHolder.getComponent(g).module)(cm, params);
 			},
 
 			renderAll: function(pd) {
@@ -384,6 +381,10 @@ define(
 					var db = this.getObj().getDB();
 					db.getController().genDeltas(db.getGuid());
 				}
+			},
+
+			getConstructorHolder: function() {
+				return this.pvt.constructHolder;
 			}
 
 		});

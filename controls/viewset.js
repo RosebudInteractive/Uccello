@@ -45,7 +45,7 @@ define(
 
 				if ("_isRendered" in component) {
 					if (!component._isRendered()) {
-						var viewsets = this.cm.getContext().getComponent(component.className).viewsets;
+						var viewsets = this.cm.getContext().getConstructorHolder().getComponent(component.classGuid).viewsets;
 						if (viewsets && viewsets[this.ini.name]) {
 							//console.log("Render component "+component.className+" "+component.id());
 							component.irender(viewsets[this.ini.name], options);
