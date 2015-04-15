@@ -164,6 +164,25 @@ define(
 				if (col == undefined) return undefined;
 				else return this.getControlMgr().get(col.get(i).getGuid());				
 			},
+			/*addControl = function(guid, ini, cm) {
+                if (!cm) cm = myApp.controlMgr;
+                if (!ini) ini = {fields: {"Id": 99, "Name": "Name99", "Left":"300", "Top":"150"}};
+
+                var rootCont = null;
+                var gl = cm._getCompGuidList();
+                for (var f in gl)
+                    if (gl[f].getClassName() == "Container") { rootCont=gl[f]; break; }
+
+                var control = new typeGuids[guid](cm, {parent: rootCont, colName: "Children", ini:ini }, {parent:'#result'});
+                myApp.controller.genDeltas(cm.getDB().getGuid());
+                renderControls(cm);
+            }*/
+			addChild: function(typeGuid, ini, colName) {
+				if (colName == undefined) colName = "Children";
+				var col = this.getObj().getCol(colName);
+				if (col == undefined) return undefined;
+				col._add(
+			},
 
             getControlMgr: function() {
                 return this.pvt.controlMgr;

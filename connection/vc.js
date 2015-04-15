@@ -52,7 +52,7 @@ define(
 
 				if (params == undefined) return;
 
-				this.pvt.typeGuids = params.typeGuids;
+				//this.pvt.typeGuids = params.typeGuids;
 				var controller = cm.getDB().getController();
 				this.pvt.proxyServer = params.proxyServer;
 				this.pvt.components = params.components;
