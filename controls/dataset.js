@@ -170,19 +170,21 @@ define(
 			
             /**
              *  добавить новый объект в коллекцию
-             * @param fields - поля объекта для инициализации
+             * @param flds - поля объекта для инициализации
              */
-			addObject: function(fields) {
+			addObject: function(flds) {
 				// TODO
 				// имплементировать добавление 
 				// нужно добавить в ini рутовый элемент, имя коллекции
 				// и вызвать конструктор соответствующего objType - запросив его у контролменеджера
-				/*var cm = this.getControlMgr();
-				var dataRoot = cm.getDB().getRoot(this.root());
-				var params = {parent:dataRoot, colName: "DataElements", ini:{fields:fields}};
-				var comp = cm.getContext().getConstructorHolder().getComponent(this.objtype());
-				var obj = new comp.constr(cm, params);
-				cm.userEventHandler(obj);*/
+				//var cm = this.getControlMgr();
+				var dataRoot = this.getDB().getRoot(this.root()).obj;
+				//var params = {parent:dataRoot, colName: "DataElements", ini:{fields:fields}};
+				var parent = {obj:dataRoot, colName: "DataElements"};
+				return this.getDB().addObj(this.objtype(),parent,flds);
+				//var comp = cm.getContext().getConstructorHolder().getComponent(this.objtype());
+				//var obj = new comp.constr(cm, params);
+				//cm.userEventHandler(obj);
 			},
 			
 			getDataVer: function() {

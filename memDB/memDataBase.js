@@ -459,13 +459,8 @@ define(
 							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber; //subProxy;
 
 						}
-					}
-
-					
-					
+					}					
 				}
-
-
 
 				if (!this.inTran()) { // автоматом "закрыть" транзакцию (VALID VERSION = DRAFT VERSION)
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
@@ -474,6 +469,10 @@ define(
 				if (DEBUG) console.log("SERVER VERSION " + this.getVersion());
 
 				return res;
+			},
+			
+			addObj: function(objType, parent, flds) {
+				return new MemObj(objType, parent, flds);
 			},
 
             /**
