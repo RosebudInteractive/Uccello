@@ -177,12 +177,12 @@ define(
                 myApp.controller.genDeltas(cm.getDB().getGuid());
                 renderControls(cm);
             }*/
-			addChild: function(typeGuid, ini, colName) {
+			/*addChild: function(typeGuid, ini, colName) {
 				if (colName == undefined) colName = "Children";
 				var col = this.getObj().getCol(colName);
 				if (col == undefined) return undefined;
 				col._add(
-			},
+			},*/
 
             getControlMgr: function() {
                 return this.pvt.controlMgr;
