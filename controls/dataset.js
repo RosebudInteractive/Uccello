@@ -167,6 +167,19 @@ define(
 				}
 			},
 			
+            /**
+             *  добавить новый объект в коллекцию
+             * @param fields - поля объекта для инициализации
+			 
+             */
+
+			addObject: function(fields) {
+				// TODO
+				// имплементировать добавление 
+				// нужно добавить в ini рутовый элемент, имя коллекции
+				// и вызвать конструктор соответствующего objType - запросив его у контролменеджера
+			},
+			
 			getDataVer: function() {
 				return this.pvt.dataVer;
 			},
@@ -196,7 +209,7 @@ define(
 				var newVal = this._genericSetter("Root", value);
 				
 				if (newVal!=oldVal) {
-					console.log("refreshData in root() "+this.id());
+					//console.log("refreshData in root() "+this.id());
 					this.event.fire({
 						type: 'refreshData',
 						target: this				
