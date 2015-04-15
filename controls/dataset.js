@@ -15,7 +15,8 @@ define(
                 {fname: "Cursor", ftype: "string"},
                 {fname: "Active", ftype: "boolean"},
                 {fname: "Master", ftype: "string"},
-				{fname: "OnMoveCursor", ftype: "event"}
+				{fname: "OnMoveCursor", ftype: "event"},
+				{fname: "ObjType", ftype: "string"}
             ],
 			metaCols: [ {"cname": "Fields", "ctype": "DataField"}],
 
@@ -163,21 +164,25 @@ define(
 						this.event.fire({
 							type: 'modFld',
 							target: this				
-						});						;
+						});
 				}
 			},
 			
             /**
              *  добавить новый объект в коллекцию
              * @param fields - поля объекта для инициализации
-			 
              */
-
 			addObject: function(fields) {
 				// TODO
 				// имплементировать добавление 
 				// нужно добавить в ini рутовый элемент, имя коллекции
 				// и вызвать конструктор соответствующего objType - запросив его у контролменеджера
+				/*var cm = this.getControlMgr();
+				var dataRoot = cm.getDB().getRoot(this.root());
+				var params = {parent:dataRoot, colName: "DataElements", ini:{fields:fields}};
+				var comp = cm.getContext().getConstructorHolder().getComponent(this.objtype());
+				var obj = new comp.constr(cm, params);
+				cm.userEventHandler(obj);*/
 			},
 			
 			getDataVer: function() {
@@ -252,6 +257,10 @@ define(
 
             master: function (value) {
                 return this._genericSetter("Master", value);
+            },
+
+			objtype: function (value) {
+                return this._genericSetter("ObjType", value);
             }
 
         });
