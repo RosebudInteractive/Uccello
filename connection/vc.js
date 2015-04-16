@@ -369,7 +369,8 @@ define(
 				if (result.target.getObjType().getGuid() == UCCELLO_CONFIG.classGuids.Form) {
 					// ищем по Title и добавляем id если найден для уникальности
 					var found = false, title = result.target.get('Title');
-					var col = this.getObj().getCol('Resources')
+					var col = this.getCol('Resources')
+					//var col = this.getObj().getCol('Resources')
 					for(var i= 0, len=col.count(); i<len; i++) {
 						if (title == col.get(i).get('Title'))
 							found = true;
@@ -378,7 +379,8 @@ define(
 					if (found || !title) title += id;
 
 					var vcResource = new Vcresource(this.getControlMgr(), {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
-					var db = this.getObj().getDB();
+					//var db = this.getObj().getDB();
+					var db = this.getDB();
 					db.getController().genDeltas(db.getGuid());
 				}
 			},

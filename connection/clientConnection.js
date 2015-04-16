@@ -61,7 +61,8 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                                 break;
                             case 'sendDelta':
                                 if (DEBUG) console.timeEnd('applyDeltas');
-                                that.getObj().getDB().getController().applyDeltas(data.args.dbGuid, data.args.srcDbGuid, data.args.delta);
+								that.getDB().getController().applyDeltas(data.args.dbGuid, data.args.srcDbGuid, data.args.delta);
+                                //that.getObj().getDB().getController().applyDeltas(data.args.dbGuid, data.args.srcDbGuid, data.args.delta);
                                 break;
                             case 'newTab':
                                 if (that.newTabCallback)

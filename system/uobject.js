@@ -6,7 +6,7 @@ if (typeof define !== 'function') {
 define(
     ['../memDB/memMetaObj', '../memDB/memObj', '../memDB/memMetaObjFields','../memDB/memMetaObjCols'],
     function(MemMetaObj, MemObj, MemMetaObjFields, MemMetaObjCols) {
-        var UObject = Class.extend({
+        var UObject = MemObj.extend({
 
             className: "UObject",
             classGuid: "3b02ef32-83b7-e470-ec5c-f6605e46e9dc",
@@ -19,19 +19,40 @@ define(
              * @param params
              */
             init: function(cm, params){
-                this.pvt = {};
+			
+				if (!("pvt" in this)) this.pvt = {};
+			
+                this._buildMetaInfo(cm.getDB());
+                if (params==undefined) return; // в этом режиме только создаем метаинфо			
+
+				params.ini = params.ini ? params.ini : {};
+				if (!("colName" in params))
+					var col = "Children";
+				else col = params.colName;
+				// если рутовый то указываем db
+				if (params.parent===undefined) {
+					// корневой компонент
+					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{db: cm.getDB(), mode: "RW"}, params.ini);
+					var parent = {db: cm.getDB(), mode: "RW"};
+				}
+				else {
+					// компонент с парентом
+					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{obj: params.parent.getObj(), "colName": col}, params.ini);
+					parent = {obj: params.parent, "colName": col};
+				}				
+				this._super(cm.getDB().getObj(this.classGuid),parent,params.ini);
+                //this.pvt = {};
                 this.pvt.controlMgr = cm;
                 this.pvt.isProcessed = true; // признак обработки входящей дельты
-                this._buildMetaInfo(cm.getDB());
+				
+				cm.add(this);
 
-                if (params==undefined) return; // в этом режиме только создаем метаинфо
-                if (params.objGuid!==undefined) {
+                /*if (params.objGuid!==undefined) {
                     this.pvt.obj = cm.getDB().getObj(params.objGuid);
-                    //cm.add(this);
                 }
-                else {
+                else {*/
                     //  создать новый объект
-                    if (!("colName" in params))
+                    /*if (!("colName" in params))
                         var col = "Children";
                     else col = params.colName;
 
@@ -47,10 +68,10 @@ define(
                         // компонент с парентом
                         this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{obj: params.parent.getObj(), "colName": col}, params.ini);
                         this.pvt.parent = params.parent;
-                    }
+                    }*/
 
-                }
-                cm.add(this);
+                //}
+                //cm.add(this);
             },
 
             // no op function - имплементируется в наследниках для подписки
@@ -89,14 +110,16 @@ define(
             /**
              * Возвращает локальный идентификатор
              */
-            getLid: function() {
+            // в мемпрото - УБРАТЬ
+			/*
+			getLid: function() {
                 return this.pvt.obj.getLid();
 
             },
 
             getGuid: function() {
                 return this.pvt.obj.getGuid();
-            },
+            },*/
 
             getClassGuid: function() {
                 return this.classGuid;
@@ -106,28 +129,30 @@ define(
                 return this.className;
             },
 
-            getObj: function() {
+            /*getObj: function() {
                 return this.pvt.obj;
             },
 
             getDB: function() {
                 return this.pvt.obj.getDB();
-            },
+            },*/
 
             /**
              * Возвращает компонент того же контролМенеджера по его гуиду
              */
-			 
+			 // TODOR2 удалить - дублирует getObj
             getComp: function(guid) {
-                return this.pvt.controlMgr.get(guid);
+				this.getObj(guid)
+                //return this.pvt.controlMgr.get(guid);
             },
 
             /**
              * Возвращает корневой компонент для данного
              */
+			 /*
             getRoot: function() {
                 return this.pvt.controlMgr.get(this.pvt.obj.getRoot().getGuid());
-            },
+            },*/
 
             /**
              * Возвращает объект-модуль текущего объекта или undefined если модуля нет 
@@ -144,23 +169,26 @@ define(
             /**
              * Возвращает родительский элемент или нулл
              */
+			 /*
             getParent: function() {
                 if (this.getObj().getParent() == null)
                     return null
                 else
                     return this.pvt.controlMgr.getByGuid(this.getObj().getParent().getGuid());
-            },
+            },*/
 			
 			countChild: function(colName) {
 				if (colName == undefined) colName = "Children";
-				var col = this.getObj().getCol(colName);
+				//var col = this.getObj().getCol(colName);
+				var col = this.getCol(colName);
 				if (col == undefined) return undefined;
 				else return col.count();
 			},
 			
 			getChild: function(i,colName) {
 				if (colName == undefined) colName = "Children";
-				var col = this.getObj().getCol(colName);
+				//var col = this.getObj().getCol(colName);
+				var col = this.getCol(colName);
 				if (col == undefined) return undefined;
 				else return this.getControlMgr().get(col.get(i).getGuid());				
 			},
@@ -189,31 +217,36 @@ define(
             },
 
             _delChild: function(colName, obj) {
-                this.getObj().getCol(colName)._del(obj);
+                //this.getObj().getCol(colName)._del(obj);
+				this.getCol(colName)._del(obj);
             },
 
             // метаинформация (properties)
-
+			// TODOR2 убрать двойственность
             countProps: function() {
-                return this.pvt.obj.countFields();
+                //return this.pvt.obj.countFields();
+				return this.countFields();
             },
-
+			// TODOR2 убрать двойственность
             getPropName: function(i) {
-                if (i>=0 && i<this.pvt.obj.countFields())
-                    return this.pvt.obj.getFieldName(i);
+                if (i>=0 && i<this.countFields())
+					return this.getFieldName(i);
+				//if (i>=0 && i<this.pvt.obj.countFields())
+                    //return this.pvt.obj.getFieldName(i);
             },
-
+			// TODOR2 убрать двойственность
             getPropType: function(i) {
-                if (i>=0 && i<this.pvt.obj.countFields())
-                    return this.pvt.obj.getFieldType(i);
+                if (i>=0 && i<this.countFields())
+					return this.getFieldType(i);
+				//if (i>=0 && i<this.pvt.obj.countFields())
+                    //return this.pvt.obj.getFieldType(i);
             },
 			
 			isModule: function() { 
-				if (this.pvt.parent)
+				if (this.getParent())
 					return false;
 				else 
 					return true;
-				//return false;
 			},
 			
             /**
@@ -223,7 +256,8 @@ define(
 				// Пользуемся ассоциировнной БД, чтобы понять в каком режиме модуль
 				// Можно, теоретически, запоминять состояние - когда будем создавать БД внутри модуля
 				// то этим гарантируется когерентность состояния MASTER/SLAVE у модуля и у его базы
-				return this.getObj().getDB().isMaster();
+				//return this.getObj().getDB().isMaster();
+				return this.getDB().isMaster()
 				
 			},
 			
@@ -239,7 +273,8 @@ define(
 					return;
 				}
 				var socket = this.getControlMgr().getSocket();
-				var pg = this.getObj().getDB().getProxyMaster().guid;
+				//var pg = this.getObj().getDB().getProxyMaster().guid;
+				var pg = this.getDB().getProxyMaster().guid;
 							
 				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func };
 				var args={action:"remoteCall2",type:"method",args: myargs};
@@ -270,15 +305,17 @@ define(
             _genericSetter: function(fldName,fldVal, kind) {
                 //console.log(fldName, fldVal, this.getObj())
                 if (fldVal!==undefined) {
-                    var val=this.getObj().get(fldName);
+                    //var val=this.getObj().get(fldName);
+					var val=this.get(fldName);
                    if (val!=fldVal) {
 						if (this.isMaster() || !(kind=="MASTER"))
-							this.pvt.obj.set(fldName,fldVal);
+							this.set(fldName,fldVal);
+							//this.pvt.obj.set(fldName,fldVal);
 						else if (DEBUG) console.log("ERROR SET PROP"); // TODO заменить на exception
                     }
                 }
-
-                return this.pvt.obj.get(fldName);
+				return this.get(fldName);
+                //return this.pvt.obj.get(fldName);
             }
 
         });

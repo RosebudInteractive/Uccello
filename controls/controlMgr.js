@@ -101,7 +101,8 @@ define(
 				delete this.pvt.compByLid[c.getLid()];
 				delete this.pvt.compByGuid[c.getGuid()];
 				if (c.getParent())
-					c.getParent()._delChild(c.getObj().getColName(),c.getObj());
+					c.getParent()._delChild(c.getColName(),c);
+					//c.getParent()._delChild(c.getObj().getColName(),c.getObj());
 				else
 					delete this.pvt.rootGuids[c.getGuid()];
 			},

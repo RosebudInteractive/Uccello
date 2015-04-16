@@ -33,7 +33,8 @@ define(
             irender: function(viewset, options) {
 
                 // проверяем ширины столбцов
-                var columns = this.getObj().getCol('Columns');
+                //var columns = this.getObj().getCol('Columns');
+				var columns = this.getCol('Columns');
                 if (columns) {
                     var modified = false;
                     for (var i = 0, len = columns.count(); i < len; i++) {
@@ -69,8 +70,9 @@ define(
             isOnlyCursor: function() {
                 if (this.dataset()) {
                     var dataset = this.getComp(this.dataset());
-					var mo = this.getObj();
-                    if ((this.pvt.renderDataVer == dataset.getDataVer()) && (!dataset.isDataModified()) && (dataset.getObj().isFldModified("Cursor")) && (!mo.isDataModified()))
+					//var mo = this.getObj();
+                    //if ((this.pvt.renderDataVer == dataset.getDataVer()) && (!dataset.isDataModified()) && (dataset.getObj().isFldModified("Cursor")) && (!mo.isDataModified()))
+					if ((this.pvt.renderDataVer == dataset.getDataVer()) && (!dataset.isDataModified()) && (dataset.isFldModified("Cursor")) && (!this.isDataModified()))
                         return true;
                     else
                         return false;

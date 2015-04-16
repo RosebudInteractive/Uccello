@@ -374,7 +374,7 @@ define(
 							o = new MemObj( typeObj,parent,sobj);
 							if (typeObj)
 								if ((typeObj.getRtype() == "res") && (cb!=undefined)) cb(o);
-							//if ((parent.rtype == "res") &&(cb!==undefined)) cb(o);
+							
 							break;
 					}
 					for (var cn in sobj.collections) {

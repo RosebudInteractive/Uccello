@@ -41,7 +41,8 @@ define(
                     var userData = user.getData();
                     var result = {
                         masterSysGuid:that.getUserMgr().dbsys.getGuid(),
-                        sysRootGuid:user.getObj().getGuid()
+						sysRootGuid:user.getGuid()
+                       // sysRootGuid:user.getObj().getGuid()
                     };
                     done(result);
                     return result;
@@ -49,15 +50,6 @@ define(
 				
 				
 				this.getRouter().add('testIntf', function(data, done) { done({ intf: interface1 }); }); 
-
-                /*this.getRouter().add('getRootGuids', function(data, done) {
-                    //console.log(that.getUserMgr().getController().getDB(data.db))
-                    var result = {
-                        roots: that.getUserMgr().getController().getDB(data.db).getRootGuids(data.rootKind)
-                    };
-                    done(result);
-                    return result;
-                });*/
 
                 this.getRouter().add('getSessions', function(data, done) {
                     var sessions = that.getUserMgr().getSessions();
@@ -79,9 +71,6 @@ define(
                     var result = {res:this.getUserMgr().loadRes(this.getUserMgr().getController().guid())};
                     done(result);
                 });
-
-				//this.getRouter().add('createRootS', function() { return that.routerCreateRootS.apply(that, arguments); });
-
 
                 // запускаем вебсокетсервер
                 this.wss = new WebSocketServer.Server(UCCELLO_CONFIG.webSocketServer);

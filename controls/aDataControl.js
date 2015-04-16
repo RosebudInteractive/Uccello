@@ -27,7 +27,7 @@ define(
 				var dsg = this.dataset();
 				if (dsg) { // TODO лучше сделать через методы компонента чем лезть в ОД
 					var dsc = this.getComp(dsg); //getControlMgr().get(dsg);
-					var dso = dsc.getObj();
+					var dso = dsc; //.getObj();
 					if (!dsc._isProcessed()) dsc.processDelta(); // если у датасета processDelta еще не вызван, то вызвать его
 					if (dsc.root() && this.getControlMgr().getDB().getObj(dsc.root()))
 					  var dsmod = this.getDB().getObj(dsc.root()).isDataModified();

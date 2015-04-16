@@ -244,9 +244,13 @@ define(
 
                         if (userObj) {
                             that.removeUser(session.getUser().name());
-                            session.getUser().getObj().getCol("Sessions")._del(session.getObj());
-                            session.getObj().pvt.parent = userObj.getObj();
-                            userObj.getObj().getCol("Sessions")._add(session.getObj());
+                            //session.getUser().getObj().getCol("Sessions")._del(session.getObj());
+							session.getUser().getCol("Sessions")._del(session);
+							// TODOR2 исправить
+							session.pvt.parent = userObj;
+                            //session.getObj().pvt.parent = userObj.getObj();
+							userObj.getCol("Sessions")._add(session);
+                            //userObj.getObj().getCol("Sessions")._add(session.getObj());
                         } else {
                             userObj = session.getUser();
                             that.removeUser(userObj.name());
@@ -282,10 +286,13 @@ define(
                         session.deviceType(data.session.deviceType);
                         session.deviceColor(data.session.deviceColor);
 
-						// рассылка дельт 1/9/14
+
 						that.dbcsys.genDeltas(that.dbsys.getGuid());
-                        done({user:{user: userObj.name(), guid:userObj.getObj().getGuid(), loginTime: userObj.loginTime(),
+                        done({user:{user: userObj.name(), guid:userObj.getGuid(), loginTime: userObj.loginTime(),
                                 session:{id:session.getId(), guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
+						/*
+                        done({user:{user: userObj.name(), guid:userObj.getObj().getGuid(), loginTime: userObj.loginTime(),
+                                session:{id:session.getId(), guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});*/
                     } else {
                         done({user:null});
                     }
@@ -303,17 +310,22 @@ define(
 
                 // удаляем у именованного
                 session.getUser().removeSession(sessionId);
-                session.getUser().getObj().getCol("Sessions")._del(session.getObj());
+				session.getUser().getCol("Sessions")._del(session);
+                //session.getUser().getObj().getCol("Sessions")._del(session.getObj());
 
                 // создаем noname
                 var user = this._newUser();
                 user.addSession(session);
-                session.getObj().pvt.parent = user.getObj();
-                user.getObj().getCol("Sessions")._add(session.getObj());
+				// TODO R2 исправить
+				session.pvt.parent = user;
+                user.getCol("Sessions")._add(session);
+                //session.getObj().pvt.parent = user.getObj();
+                //user.getObj().getCol("Sessions")._add(session.getObj());
 
                 // рассылка дельт
                 this.dbcsys.genDeltas(this.dbsys.getGuid());
-                done({user:{user: user.name(), guid:user.getObj().getGuid(), session:{id:session.getId(), guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
+				done({user:{user: user.name(), guid:user.getGuid(), session:{id:session.getId(), guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
+                //done({user:{user: user.name(), guid:user.getObj().getGuid(), session:{id:session.getId(), guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
             },
 
             /**

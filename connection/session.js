@@ -64,8 +64,8 @@ define(
                 callback: function(args){
                     that.getDB().getController().onDisconnect(args.connId);
                     that.removeConn(args.connId);
-                    that.getObj().getCol("Connects")._del(conn.getObj());
-                    var db = that.getObj().getDB();
+                    that.getCol("Connects")._del(conn); //that.getObj().getCol("Connects")._del(conn.getObj());
+                    var db = that.getDB(); //var db = that.getObj().getDB();
                     db.getController().genDeltas(db.getGuid());
                 }
             });

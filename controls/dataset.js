@@ -43,11 +43,13 @@ define(
 					//debugger;
 				}
 				// 
-				if (this.getObj()) {
+				/*if (this.getObj()) {
 					if (this.getObj().get("OnMoveCursor")) {
 						this.onMoveCursor = new Function("newVal",this.getObj().get("OnMoveCursor"));
 					}
-				}				
+				}*/
+					if (this.get("OnMoveCursor")) {
+						this.onMoveCursor = new Function("newVal",this.get("OnMoveCursor"));				
 
             },
 			
@@ -76,8 +78,9 @@ define(
 			
 			processDelta: function() {
 				
-				var obj = this.getObj();
-				if (obj.isFldModified("Cursor")) {
+				//var obj = this.getObj();
+				//if (obj.isFldModified("Cursor")) {
+				if (this.isFldModified("Cursor")) {
 					//if (DEBUG)
 					//	console.log("processDelta "+this.id());
 					this._setDataObj(this.cursor());
