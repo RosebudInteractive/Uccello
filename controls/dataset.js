@@ -48,8 +48,8 @@ define(
 						this.onMoveCursor = new Function("newVal",this.getObj().get("OnMoveCursor"));
 					}
 				}*/
-					if (this.get("OnMoveCursor")) {
-						this.onMoveCursor = new Function("newVal",this.get("OnMoveCursor"));				
+				if (this.get("OnMoveCursor"))
+					this.onMoveCursor = new Function("newVal", this.get("OnMoveCursor"));
 
             },
 			

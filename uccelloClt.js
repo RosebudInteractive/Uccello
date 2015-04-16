@@ -253,18 +253,19 @@ define(
                 this.pvt.guids.sysRootGuid = user.guid;
 
                 var that = this;
-                var compCallBack = function (obj) {
-                    var classGuid = obj.getTypeGuid();
+                var compCallBack = function (typeObj, sobj, parent) {
+                    var classGuid = sobj.$sys.typeGuid;
                     var transArr = {};
                     transArr[UCCELLO_CONFIG.classGuids.User] = UCCELLO_CONFIG.classGuids.UserInfo; // User -> UserInfo
                     transArr[UCCELLO_CONFIG.classGuids.Connect] = UCCELLO_CONFIG.classGuids.ConnectInfo; // Connect -> ConnectInfo
                     transArr[UCCELLO_CONFIG.classGuids.Session] = UCCELLO_CONFIG.classGuids.SessionInfo; // Session -> SessionInfo
                     classGuid = transArr[classGuid]? transArr[classGuid]: classGuid;
-                    var params = {objGuid: obj.getGuid()};
+                    var params = {objGuid: sobj.$sys.guid};
                     var component = new (that.pvt.constructHolder.getComponent(classGuid).constr)(that.pvt.cmsys, params);
                     if (classGuid == UCCELLO_CONFIG.classGuids.UserInfo) { // UserInfo
                         that.pvt.user = component;
                     }
+                    return component;
                 };
                 this.getSysDB().setDefaultCompCallback(compCallBack);
                 this.getSysDB().subscribeRoots(this.pvt.guids.sysRootGuid, callback, compCallBack);

@@ -371,10 +371,11 @@ define(
 								parent.nolog = true;
 								//parent.db = that;
 							}
-							o = new MemObj( typeObj,parent,sobj);
+							// o = new MemObj( typeObj,parent,sobj);
 							if (typeObj)
-								if ((typeObj.getRtype() == "res") && (cb!=undefined)) cb(o);
-							
+								//if ((typeObj.getRtype() == "res") && (cb!=undefined)) cb(0);
+								if ((typeObj.getRtype() == "res") && (cb!=undefined)) o = cb(typeObj, sobj, parent);
+
 							break;
 					}
 					for (var cn in sobj.collections) {
