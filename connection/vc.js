@@ -46,7 +46,7 @@ define(
 					cb(this.pvt.db.getRootGuids("res"));
 					return;
 				}
-				this.pvt.db = null;
+				this.pvt.cdb = null;
 				this.pvt.tranQueue = null; // очередь выполнения методов если в транзакции
 				this.pvt.inTran = false; // признак транзакции
 
@@ -62,7 +62,9 @@ define(
 
 				var that = this;
 				if (!cb) // если нет колбэка значит на сервере - но это надо поменять TODO
-					var createCompCallback = function (obj) {
+					//var createCompCallback = function (obj) {
+					createCompCallback = function (typeObj, parent, sobj) {
+					/* TODOR2 переделать в соответствии с новыми реалиями
 						if (obj.getTypeGuid() == UCCELLO_CONFIG.classGuids.FormParam) { // Form Param
 							obj.event.on({
 								type: "mod", // TODO не забыть про отписку
@@ -81,10 +83,14 @@ define(
 							subscriber: that,
 							callback: that._setFormParams
 						});
+						*/
+						return  that.createComponent.apply(that, [typeObj, parent, sobj]);
+						
 					}
 				else
-					createCompCallback = function (obj) {
-						that.createComponent.apply(that, [obj, that.pvt.cm]);
+					createCompCallback = function (typeObj, parent, sobj) {
+						return  that.createComponent.apply(that, [typeObj, parent, sobj]);
+						// that.createComponent.apply(that, [obj, that.pvt.cm]);
 					}
 				this.pvt.compCallback = createCompCallback;
 
@@ -93,18 +99,18 @@ define(
 					//var params2 = {name: "VisualContextDB", kind: "master"};
 					//if (createCompCallback)
 					//	params2.compcb = createCompCallback;
-					this.pvt.db = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
-					this.pvt.cm = new ControlMgr(this.getDB(),null,this,this.pvt.socket);
+					this.pvt.cdb = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
+					this.pvt.cm = new ControlMgr(this.getContentDB(),null,this,this.pvt.socket);
 
 					// подписываемся на добавление нового рута
-					this.pvt.db.event.on( {
+					this.pvt.cdb.event.on( {
 						type: "newRoot",
 						subscriber: this,
 						callback: this.onNewRoot
 					});
 
 					this.loadNewRoots(params.formGuids, { rtype: "res", compcb: createCompCallback },cb);
-					this.dataBase(this.pvt.db.getGuid());
+					this.dataBase(this.pvt.cdb.getGuid());
 					this.contextGuid(this.getGuid());
 					this.pvt.isOn = true;
 					if (this.pvt.renderRoot) this.pvt.isVisible = true;
@@ -117,16 +123,16 @@ define(
 						cb(res);
 					}
 
-					this.pvt.db = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
+					this.pvt.cdb = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
 						// подписываемся либо на все руты либо выборочно formGuids
-						that.pvt.cm = new ControlMgr(that.getDB(),null,that,that.pvt.socket);
+						that.pvt.cm = new ControlMgr(that.getContentDB(),null,that,that.pvt.socket);
 						var forms = params.formGuids;
 						if (forms == null) forms = "all";
 						else if (forms == "") forms = [];
-						that.getDB().subscribeRoots(forms, cb2, createCompCallback);
+						that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
 					});
 				}
-				this.pvt.db.setDefaultCompCallback(createCompCallback);
+				this.pvt.cdb.setDefaultCompCallback(createCompCallback);
 			},
 
 			/**
@@ -139,7 +145,7 @@ define(
 				if (!this.isOn()) return false;
 				if (this.getModule().isMaster())
 					this.loadNewRoots(resGuids, { rtype: "res", compcb: this.pvt.compCallback}, cb); //function (res) { console.log(res); cb(res); } );
-				else this.getDB().subscribeRoots(resGuids, cbtest, this.pvt.compCallback);
+				else this.getContentDB().subscribeRoots(resGuids, cbtest, this.pvt.compCallback);
 				return true;
 			},
 
@@ -209,7 +215,7 @@ define(
 					}
 				}
 				this.pvt.memParams = [];
-				this.getDB().getController().genDeltas(this.getDB().getGuid());
+				this.getDB().getController().genDeltas(this.getContentDB().getGuid());
 			},
 
 			/**
@@ -277,7 +283,7 @@ define(
 					var override = true;
 
 					function icb(r) {
-						var res = that.getDB().addRoots(r.datas, params.compcb, params.subDbGuid, override);
+						var res = that.getContentDB().addRoots(r.datas, params.compcb, params.subDbGuid, override);
 						if (cb) cb({guids:res});
 					}
 
@@ -299,27 +305,43 @@ define(
 			},
 
 
-			createComponent: function(obj, cm) {
+			createComponent: function(typeObj, parent, sobj) {
+				//var g = obj.getTypeGuid();
+				//var className = cm.getContentDB().getObj(g).get("typeName");
+				var params = {objGuid: typeObj.getGuid(), ini: sobj, parent: parent.obj, colName: parent.colName};
+
+				// DbNavigator выбор базы
+				/* TODOR2
+				if (g == "38aec981-30ae-ec1d-8f8f-5004958b4cfa") {
+					params.dbSelector = [{
+						'guid': this.getContentDB().getGuid(),
+						'name': 'Пользовательская БД'
+					}, {'guid': uccelloClt.getSysDB().getGuid(), 'name': 'Системная БД'}];
+				}*/
+
+				return new (this.pvt.constructHolder.getComponent(typeObj.getGuid()).constr)(this.getContextCM(), params);
+			},
+			/*createComponent: function(obj, cm) {
 				var g = obj.getTypeGuid();
-				var className = cm.getDB().getObj(g).get("typeName");
+				var className = cm.getContentDB().getObj(g).get("typeName");
 				var params = {objGuid: obj.getGuid()};
 
 				// DbNavigator выбор базы
 				if (g == "38aec981-30ae-ec1d-8f8f-5004958b4cfa") {
 					params.dbSelector = [{
-						'guid': this.getDB().getGuid(),
+						'guid': this.getContentDB().getGuid(),
 						'name': 'Пользовательская БД'
 					}, {'guid': uccelloClt.getSysDB().getGuid(), 'name': 'Системная БД'}];
 				}
 
 				new (this.pvt.constructHolder.getComponent(g).constr)(cm, params);
 			},
-
+*/
 			renderAll: function(pd) {
 				var ga = this.pvt.cm.getRootGuids()
 				for (var i=0; i<ga.length; i++)
 					this.pvt.cm.render(this.pvt.cm.get(ga[i]), this.pvt.renderRoot(ga[i]), pd);
-				this.getDB().resetModifLog();
+				this.getContentDB().resetModifLog();
 			},
 
 			renderForms: function(roots, pd) {
@@ -329,18 +351,11 @@ define(
 					if (root !== undefined)
 						this.pvt.cm.render(root, this.pvt.renderRoot(roots[i]), pd);
 				}
-				this.getDB().resetModifLog();
-			},
-
-
-
-
-			getDB: function() {
-				return this.pvt.db;
+				this.getContentDB().resetModifLog();
 			},
 
 			getContentDB: function() {
-				return this.pvt.db;
+				return this.pvt.cdb;
 			},
 
 			getContextCM: function() {
@@ -380,7 +395,7 @@ define(
 
 					var vcResource = new Vcresource(this.getControlMgr(), {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
 					//var db = this.getObj().getDB();
-					var db = this.getDB();
+					var db = this.getContentDB();
 					db.getController().genDeltas(db.getGuid());
 				}
 			},

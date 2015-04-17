@@ -19,6 +19,7 @@ define(
 
             init: function(cm,params){
                 this._super(cm,params);
+				if (!params) return;
 
                 // onModify абв
                 /*if (this.getObj()) {
@@ -31,8 +32,8 @@ define(
             },
 
             processDelta: function() {
-                var obj = this.getObj();
-                if (obj.isFldModified("Value") && ( "onModify" in this)) {
+                //var obj = this.getObj();
+                if (this.isFldModified("Value") && ( "onModify" in this)) {
                     this.onModify(this.value());
                 }
             },

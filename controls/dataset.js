@@ -27,6 +27,7 @@ define(
              */
             init: function(cm, params) {
                 this._super(cm,params);
+				if (!params) return;
                 this.pvt.params = params;
 				this.pvt.dataObj = null;
 				this.pvt.dataVer = 0; // версия данных (локально)		

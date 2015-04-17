@@ -374,7 +374,7 @@ define(
 							// o = new MemObj( typeObj,parent,sobj);
 							if (typeObj)
 								//if ((typeObj.getRtype() == "res") && (cb!=undefined)) cb(0);
-								if ((typeObj.getRtype() == "res") && (cb!=undefined)) o = cb(typeObj, sobj, parent);
+								if ((typeObj.getRtype() == "res") && (cb!=undefined)) o = cb(typeObj, parent, sobj);
 
 							break;
 					}

@@ -233,7 +233,7 @@ define(
              */
             createRoot: function(formGuids, rtype, callback, context) {
                 var that = this;
-                var subDbGuid = context? context.dataBase(): this.getContext().getDB().getGuid();
+                var subDbGuid = context? context.dataBase(): this.getContext().getContentDB().getGuid();
                 context = context? context: this.getContext();
                 context.loadNewRoots(formGuids, {rtype:rtype, subDbGuid: subDbGuid }, function(result){
                     context.renderForms(result.guids, true);
@@ -253,7 +253,7 @@ define(
                 this.pvt.guids.sysRootGuid = user.guid;
 
                 var that = this;
-                var compCallBack = function (typeObj, sobj, parent) {
+                var compCallBack = function (typeObj, parent, sobj) {
                     var classGuid = sobj.$sys.typeGuid;
                     var transArr = {};
                     transArr[UCCELLO_CONFIG.classGuids.User] = UCCELLO_CONFIG.classGuids.UserInfo; // User -> UserInfo
