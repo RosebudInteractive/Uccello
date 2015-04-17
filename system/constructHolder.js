@@ -16,36 +16,53 @@ define(
              * Загрузить контролы
              * @param callback
              */
-            loadControls: function(callback){
+            loadControls: function(side, callback){
                 var that = this;
                 var scripts = [];
                 var ctrls = UCCELLO_CONFIG.controls;
-
-                // собираем все нужные скрипты в кучу
-                for (var i = 0; i < ctrls.length; i++) {
-                    var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath
-                    scripts.push(path+ctrls[i].component);
-                    if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
-                        var c = ctrls[i].className;
-                        scripts.push(UCCELLO_CONFIG.viewSet.path+'v'+c.charAt(0).toLowerCase() + c.slice(1));
-                    }
-                }
-
-                // загружаем скрипты и выполняем колбэк
                 that.pvt.components = {};
-                require(scripts, function(){
-                    var argIndex = 0;
-                    for(var i=0; i<ctrls.length; i++) {
+
+                if (side == 'server') {
+                    for (var i = 0; i < ctrls.length; i++) {
+                        var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath
+                        var constr = require(path+ctrls[i].component);
+                        var viewset = null;
                         var className = ctrls[i].className;
-                        that.pvt.components[UCCELLO_CONFIG.classGuids[className]] = {constr:arguments[argIndex], viewsets:{}};
-                        argIndex++;
                         if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
-                            that.pvt.components[UCCELLO_CONFIG.classGuids[className]].viewsets[UCCELLO_CONFIG.viewSet.name] = arguments[argIndex];
-                            argIndex++;
+                            var c = ctrls[i].className;
+                            viewset = require(UCCELLO_CONFIG.viewSet.path+'v'+c.charAt(0).toLowerCase() + c.slice(1));
+                        }
+                        that.pvt.components[UCCELLO_CONFIG.classGuids[className]] = {constr:constr, viewsets:{}};
+                        if (viewset)
+                            that.pvt.components[UCCELLO_CONFIG.classGuids[className]].viewsets[UCCELLO_CONFIG.viewSet.name] = viewset;
+                    }
+                    if (callback) callback();
+                } else {
+                    // собираем все нужные скрипты в кучу
+                    for (var i = 0; i < ctrls.length; i++) {
+                        var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath
+                        scripts.push(path+ctrls[i].component);
+                        if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
+                            var c = ctrls[i].className;
+                            scripts.push(UCCELLO_CONFIG.viewSet.path+'v'+c.charAt(0).toLowerCase() + c.slice(1));
                         }
                     }
-                    callback();
-                });
+
+                    // загружаем скрипты и выполняем колбэк
+                    require(scripts, function(){
+                        var argIndex = 0;
+                        for(var i=0; i<ctrls.length; i++) {
+                            var className = ctrls[i].className;
+                            that.pvt.components[UCCELLO_CONFIG.classGuids[className]] = {constr:arguments[argIndex], viewsets:{}};
+                            argIndex++;
+                            if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
+                                that.pvt.components[UCCELLO_CONFIG.classGuids[className]].viewsets[UCCELLO_CONFIG.viewSet.name] = arguments[argIndex];
+                                argIndex++;
+                            }
+                        }
+                        callback();
+                    });
+                }
             },
 
             /**

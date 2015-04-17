@@ -36,7 +36,7 @@ define(
                     that.pvt.sessionGuid = null;
 
                 this.pvt.constructHolder = new ConstructHolder();
-                this.pvt.constructHolder.loadControls(function(){
+                this.pvt.constructHolder.loadControls('client', function(){
                     that.getClient().connect("ws://"+url('hostname')+":"+UCCELLO_CONFIG.webSocketServer.port, {guid:that.getSessionGuid()},  function(result){
                         $.cookie('sid', result.session.guid);
                         that.pvt.sessionId = result.session.id;

@@ -12,6 +12,7 @@ define(
             init: function(router, options){
 				this.pvt = {};
 				this.pvt.contextCounter = 1;
+                this.pvt.constructHolder =  options.constructHolder;
                 this.sessions = {};
                 this.connects = {};
                 this.users = {};
@@ -116,8 +117,15 @@ define(
                 var user = this.getConnect(data.$sys.socket.getConnectId()).getSession().getUser();
                 var controller = this.getController();
 				var contextId = this.getNewContextId();
-				var params = {parent: user, colName: "VisualContext", socket: this.getConnect(data.$sys.socket.getConnectId()).getConnection(), rpc: this.rpc, proxyServer: this.proxyServer,
-                    ini: {fields: {Id: contextId, Name: 'context'+contextId, Kind: "master"}}, formGuids:data.formGuids};
+				var params = {
+                    parent: user,
+                    colName: "VisualContext",
+                    socket: this.getConnect(data.$sys.socket.getConnectId()).getConnection(),
+                    rpc: this.rpc, proxyServer: this.proxyServer,
+                    ini: {fields: {Id: contextId, Name: 'context'+contextId, Kind: "master"}},
+                    formGuids:data.formGuids,
+                    constructHolder: this.pvt.constructHolder
+                };
                 var context = new VisualContext(this.cmsys, params);
 				context.on(this.cmsys, params);
                 var result = {roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};

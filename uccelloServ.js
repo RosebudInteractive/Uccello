@@ -5,8 +5,8 @@ if (typeof define !== 'function') {
 
 define(
     ['./connection/socket', './system/logger', './dataman/dataman', 'ws', './connection/router', './connection/userSessionMgr',
-	'./system/rpc','./controls/controlMgr', './resman/resman'],
-    function(Socket, Logger, Dataman, WebSocketServer, Router, UserSessionMgr, Rpc, ControlMgr, Resman) {
+	'./system/rpc','./controls/controlMgr', './resman/resman', './system/constructHolder'],
+    function(Socket, Logger, Dataman, WebSocketServer, Router, UserSessionMgr, Rpc, ControlMgr, Resman, ConstructHolder) {
 	
 		var guidServer = "d3d7191b-3b4c-92cc-43d4-a84221eb35f5";
 	
@@ -30,9 +30,9 @@ define(
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
 				
 				this.pvt.proxyServer = rpc._publ(this, interface1); //
-
-
-                this.pvt.userSessionMgr = new UserSessionMgr(this.getRouter(), {authenticate:options.authenticate, rpc:this.pvt.rpc, proxyServer: this.pvt.proxyServer});
+				this.pvt.constructHolder = new ConstructHolder();
+				this.pvt.constructHolder.loadControls('server');
+                this.pvt.userSessionMgr = new UserSessionMgr(this.getRouter(), {authenticate:options.authenticate, rpc:this.pvt.rpc, proxyServer: this.pvt.proxyServer, constructHolder:this.pvt.constructHolder});
                 this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController());
                 this.pvt.resman = new Resman(that.getUserMgr().getController());
 
