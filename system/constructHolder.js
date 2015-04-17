@@ -24,17 +24,10 @@ define(
 
                 if (side == 'server') {
                     for (var i = 0; i < ctrls.length; i++) {
-                        var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath
+                        var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath;
                         var constr = require(path+ctrls[i].component);
-                        var viewset = null;
                         var className = ctrls[i].className;
-                        if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
-                            var c = ctrls[i].className;
-                            viewset = require(UCCELLO_CONFIG.viewSet.path+'v'+c.charAt(0).toLowerCase() + c.slice(1));
-                        }
                         that.pvt.components[UCCELLO_CONFIG.classGuids[className]] = {constr:constr, viewsets:{}};
-                        if (viewset)
-                            that.pvt.components[UCCELLO_CONFIG.classGuids[className]].viewsets[UCCELLO_CONFIG.viewSet.name] = viewset;
                     }
                     if (callback) callback();
                 } else {
