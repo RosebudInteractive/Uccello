@@ -226,6 +226,18 @@ define(
 
                 return null;
             },
+
+			/**
+			 * Получит список баз данных без proxy
+			 * @returns {Array}
+			 */
+            getDbList: function(){
+				var dbCollection = this.pvt.dbCollection;
+				var dbList = [];
+				for(var guid in dbCollection)
+					if (dbCollection[guid].db) dbList.push(dbCollection[guid]);
+                return dbList;
+            },
 			
 			getProxy: function(dbGuid) {
 				return this.pvt.dbCollection[dbGuid];
