@@ -142,8 +142,8 @@ define(
              */
 			 // TODOR2 удалить - дублирует getObj
             getComp: function(guid) {
-				this.getObj(guid)
-                //return this.pvt.controlMgr.get(guid);
+				//return this.getObj(guid)
+                return this.pvt.controlMgr.get(guid);
             },
 
             /**
