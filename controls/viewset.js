@@ -53,7 +53,8 @@ define(
 					}
 				}
 
-                var col=component.pvt.obj.getCol("Children");
+                //var col=component.pvt.obj.getCol("Children");
+				var col=component.getCol("Children");
                 if (col == undefined) return;
                 for (var i=0; i<col.count(); i++) {
                     var co=this.cm.get(col.get(i).getGuid());
