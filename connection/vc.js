@@ -308,7 +308,7 @@ define(
 			createComponent: function(typeObj, parent, sobj) {
 				//var g = obj.getTypeGuid();
 				//var className = cm.getContentDB().getObj(g).get("typeName");
-				var params = {objGuid: typeObj.getGuid(), ini: sobj, parent: parent.obj, colName: parent.colName};
+				var params = {/*objGuid: typeObj.getGuid(),*/ ini: sobj, parent: parent.obj, colName: parent.colName};
 
 				// DbNavigator выбор базы
 				/* TODOR2

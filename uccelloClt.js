@@ -254,13 +254,14 @@ define(
 
                 var that = this;
                 var compCallBack = function (typeObj, parent, sobj) {
-                    var classGuid = sobj.$sys.typeGuid;
+                    var classGuid = typeObj.getGuid();
                     var transArr = {};
                     transArr[UCCELLO_CONFIG.classGuids.User] = UCCELLO_CONFIG.classGuids.UserInfo; // User -> UserInfo
                     transArr[UCCELLO_CONFIG.classGuids.Connect] = UCCELLO_CONFIG.classGuids.ConnectInfo; // Connect -> ConnectInfo
                     transArr[UCCELLO_CONFIG.classGuids.Session] = UCCELLO_CONFIG.classGuids.SessionInfo; // Session -> SessionInfo
                     classGuid = transArr[classGuid]? transArr[classGuid]: classGuid;
-                    var params = {objGuid: sobj.$sys.guid};
+                    //var params = {objGuid: sobj.$sys.guid};
+					var params = {ini: sobj, parent: parent.obj, colName: parent.colName};
                     var component = new (that.pvt.constructHolder.getComponent(classGuid).constr)(that.pvt.cmsys, params);
                     if (classGuid == UCCELLO_CONFIG.classGuids.UserInfo) { // UserInfo
                         that.pvt.user = component;
