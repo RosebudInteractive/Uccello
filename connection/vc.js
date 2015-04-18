@@ -52,7 +52,7 @@ define(
 
 				if (params == undefined) return;
 
-				var controller = cm.getDB().getController();
+				var controller = cm.getController();
 				this.pvt.proxyServer = params.proxyServer;
 				this.pvt.constructHolder = params.constructHolder;
 				this.pvt.renderRoot = renderRoot;
@@ -100,7 +100,7 @@ define(
 					//if (createCompCallback)
 					//	params2.compcb = createCompCallback;
 					this.pvt.cdb = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
-					this.pvt.cm = new ControlMgr(this.getContentDB(),null,this,this.pvt.socket);
+					//this.pvt.cm = new ControlMgr(this.getContentDB(),this,this.pvt.socket);
 
 					// подписываемся на добавление нового рута
 					this.pvt.cdb.event.on( {
@@ -123,9 +123,17 @@ define(
 						cb(res);
 					}
 
-					this.pvt.cdb = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
+					/*this.pvt.cdb = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
 						// подписываемся либо на все руты либо выборочно formGuids
-						that.pvt.cm = new ControlMgr(that.getContentDB(),null,that,that.pvt.socket);
+						that.pvt.cm = new ControlMgr(that.getContentDB(),that,that.pvt.socket);
+						var forms = params.formGuids;
+						if (forms == null) forms = "all";
+						else if (forms == "") forms = [];
+						that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
+					});
+					*/
+					var dbp = {name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}};
+					this.pvt.cdb = this.pvt.cm = new ControlMgr( { controller: controller, dbparams: dbp}, that,that.pvt.socket, function(){
 						var forms = params.formGuids;
 						if (forms == null) forms = "all";
 						else if (forms == "") forms = [];
@@ -168,7 +176,7 @@ define(
 			 */
 			_dispose: function(cb) {
 				if (!this.getModule().isMaster()) {
-					var controller = this.getControlMgr().getDB().getController();
+					var controller = this.getControlMgr().getController();
 					controller.delDataBase(this.getContentDB().getGuid(), cb);
 				}
 				else cb();
@@ -215,7 +223,7 @@ define(
 					}
 				}
 				this.pvt.memParams = [];
-				this.getDB().getController().genDeltas(this.getContentDB().getGuid());
+				this.getController().genDeltas(this.getContentDB().getGuid());
 			},
 
 			/**
@@ -225,10 +233,13 @@ define(
 			 * @returns {object}
 			 */
 			createDb: function(dbc, params){
-				var db = dbc.newDataBase(params);
+			
+				var cm = this.pvt.cm = new ControlMgr( { controller: dbc, dbparams: params },this,this.pvt.socket);
+				//var db = dbc.newDataBase(params);
 
 				// meta
-				var cm = new ControlMgr(db, null);
+				//var cm = new ControlMgr(db);
+				// TODO R2  - а нужно? Сергею исправить
 				new UObject(cm);
 				new AComponent(cm); new AControl(cm);
 
@@ -240,7 +251,7 @@ define(
 					new comp(cm);
 				}
 
-				return db;
+				return cm;
 			},
 
 

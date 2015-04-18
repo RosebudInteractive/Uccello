@@ -27,7 +27,7 @@ define(
              * @param params
 			 *		params.name - имя базы
 			 *		params.guid - гуид базы данных (если не передается, то генерируем в конструкторе)
-			 *		params. kind - master | slave
+			 *		params.kind - master | slave
 			 *		params.proxyMaster - прокси мастер-базы (для kind = "slave")
              * @param cb
              */

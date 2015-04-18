@@ -22,7 +22,8 @@ define(
 			
 				if (!("pvt" in this)) this.pvt = {};
 			
-                this._buildMetaInfo(cm.getDB());
+                //this._buildMetaInfo(cm.getDB());
+				 this._buildMetaInfo(cm);
                 if (params==undefined) return; // в этом режиме только создаем метаинфо			
 
 				params.ini = params.ini ? params.ini : {};
@@ -33,14 +34,15 @@ define(
 				if (params.parent===undefined) {
 					// корневой компонент
 					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{db: cm.getDB(), mode: "RW"}, params.ini);
-					var parent = {db: cm.getDB(), mode: "RW"};
+					//var parent = {db: cm.getDB(), mode: "RW"};
+					var parent = {db: cm, mode: "RW"};
 				}
 				else {
 					// компонент с парентом
 					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{obj: params.parent.getObj(), "colName": col}, params.ini);
 					parent = {obj: params.parent, "colName": col};
 				}				
-				this._super(cm.getDB().getObj(this.classGuid),parent,params.ini);
+				this._super(cm.getObj(this.classGuid),parent,params.ini);
                 //this.pvt = {};
                 this.pvt.controlMgr = cm;
                 this.pvt.isProcessed = true; // признак обработки входящей дельты
@@ -257,7 +259,8 @@ define(
 				// Можно, теоретически, запоминять состояние - когда будем создавать БД внутри модуля
 				// то этим гарантируется когерентность состояния MASTER/SLAVE у модуля и у его базы
 				//return this.getObj().getDB().isMaster();
-				return this.getDB().isMaster()
+				return this.getControlMgr().isMaster();
+				//return this.isMaster();
 				
 			},
 			
@@ -274,7 +277,8 @@ define(
 				}
 				var socket = this.getControlMgr().getSocket();
 				//var pg = this.getObj().getDB().getProxyMaster().guid;
-				var pg = this.getDB().getProxyMaster().guid;
+				var pg = this.getControlMgr().getProxyMaster().guid;
+				//var pg = this.getProxyMaster().guid;
 							
 				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func };
 				var args={action:"remoteCall2",type:"method",args: myargs};

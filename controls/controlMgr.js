@@ -4,26 +4,29 @@
 }
 
 define(
-	['../system/uobjectMgr', './viewset'],
-	function(UObjectMgr, ViewSet) {
-		var ControlMgr = UObjectMgr.extend({
+	['../memDB/memDataBase', './viewset'],
+	function(MemDataBase, ViewSet) {
+		var ControlMgr = MemDataBase.extend({
 
             /**
              * @constructs
-             * @param db {MemDataBase} - база данных
-			 * @param rootGuid - гуид рутового элемента
+             * @param dbinit {MemDataBase} - база данных
+			 * @param dbinit.controller
+			 * @param dbinit.dbparams
+			 * @param 
 			 * @param vc - контекст менеджера
              */
-			init: function(db, rootGuid, vc, socket){
-				this._super(db, rootGuid, vc);
-				this.pvt = {};
-				this.pvt.guid = db.getController().guid();
+			init: function(dbinit, vc, socket, cb){
+				
+				this._super(dbinit.controller, dbinit.dbparams, cb);
+				//this.pvt = {};
+				//this.pvt.guid = db.getController().guid();
 				this.pvt.compByLid = {};
 				this.pvt.compByGuid = {};
 				this.pvt.compByName = {};				
 				this.pvt.subsInitFlag = false;
 				this.pvt.dataInitFlag = false;
-				this.pvt.db = db;
+				//this.pvt.db = db;
 				// REFACT213
 				// this.pvt.rootGuid = rootGuid;
 				this.pvt.rootGuids = {};
@@ -39,7 +42,9 @@ define(
 				// REFACT213
 				//if (rootGuid) {
 				//	if (db.getObj(rootGuid)==undefined) {
-						db.event.on( {
+				//
+					    this.event.on( {
+						//db.event.on( {
 							type: "newRoot",
 							subscriber: this,
 							callback: this.onNewRoot
@@ -128,11 +133,13 @@ define(
 			
             /**
 			 * Вернуть базу данных, с которой связан менеджер контролов
-             */					
+             */		
+// TODO R2 убрать		
+/*	 
 			getDB: function() {
-				return this.pvt.db;
+				return this;
 			},
-
+*/
             /**
 			 * Вернуть контекст, в котором создан менеджер контролов
              */					
@@ -246,7 +253,8 @@ define(
 					
 				}*/
 				if (this.pvt.rootGuids[result.target.getGuid()] ) {
-	                    this.getDB().getRoot(result.target.getGuid()).event.on({
+	                    //this.getDB().getRoot(result.target.getGuid()).event.on({
+						this.getRoot(result.target.getGuid()).event.on({
 							type: "delObj",
 							subscriber: this,
 							callback: this.onDeleteComponent
@@ -269,14 +277,15 @@ define(
              */
             userEventHandler: function(context, f, args) {
                 var nargs = [];
-				var db = this.getDB();
+				//var db = this.getDB();
 				var vc = this.getContext();
                 if (args) nargs = [args];
 				//  стартовать транзакцию
 				if (vc) vc.tranStart();
                 if (f) f.apply(context, nargs);
                 if (this.autoSendDeltas())
-                    db.getController().genDeltas(db.getGuid());
+					this.getController().genDeltas(this.getGuid());
+                    //db.getController().genDeltas(db.getGuid());
                 //this.render(undefined); // TODO - на сервере это не вызывать
 				if (vc) vc.renderAll();
 				//  закрыть транзакцию

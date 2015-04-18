@@ -27,8 +27,10 @@ define(
 
                 // системные объекты
                 this.dbcsys = new MemDBController(router);
-                this.dbsys = this.dbcsys.newDataBase({name: "System", kind: "master", guid:UCCELLO_CONFIG.guids.sysDB});
-                this.cmsys = new ControlMgr(this.dbsys);
+                //this.dbsys = this.dbcsys.newDataBase({name: "System", kind: "master", guid:UCCELLO_CONFIG.guids.sysDB});
+				var dbp =  {name: "System", kind: "master", guid:UCCELLO_CONFIG.guids.sysDB}
+                this.cmsys = new ControlMgr( { controller: this.dbcsys, dbparams: dbp });
+				this.dbsys = this.cmsys; // TODO R2 поправить потом (слились)
 
                 // создаем метаинфо
                 new UObject(this.cmsys);

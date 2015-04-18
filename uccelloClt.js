@@ -91,12 +91,18 @@ define(
                     });
 
                     // создаем системную бд
-                    that.pvt.dbsys = that.pvt.controller.newDataBase({name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}}, done);
-                    that.pvt.cmsys = new ControlMgr(that.pvt.dbsys,null,null,that.pvt.clientConnection.socket);
+                    //that.pvt.dbsys = that.pvt.controller.newDataBase({name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}}, done);
+					var dbp = {name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}};
+                    //that.pvt.cmsys = new ControlMgr(that.pvt.dbsys,null,that.pvt.clientConnection.socket);
+					that.pvt.cmsys = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket);
+					that.pvt.dbsys = that.pvt.cmsys; // TODOR2 убрать
 
                     // создаем мастер базу для clientConnection
-                    that.pvt.dbclient = that.pvt.controller.newDataBase({name:"MasterClient", kind: "master"});
-                    that.pvt.cmclient = new ControlMgr(that.pvt.dbclient,null,null,that.pvt.clientConnection.socket);
+                    //that.pvt.dbclient = that.pvt.controller.newDataBase({name:"MasterClient", kind: "master"});
+                    //that.pvt.cmclient = new ControlMgr(that.pvt.dbclient,null,that.pvt.clientConnection.socket);
+                    dbp = {name:"MasterClient", kind: "master"};
+                    that.pvt.cmclient = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket);
+					that.pvt.dbclient =  that.pvt.cmclient; // TODOR2 убрать
                     new UObject(that.pvt.cmclient);
                     new UModule(that.pvt.cmclient);
                     new AComponent(that.pvt.cmclient);

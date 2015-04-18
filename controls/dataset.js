@@ -87,7 +87,8 @@ define(
 					this._setDataObj(this.cursor());
 				}
 				
-				var r=this.getDB().getObj(this.root());
+				//var r=this.getDB().getObj(this.root());
+				var r=this.getComp(this.root());
 				if (r) {
 					if (r.isDataModified()) {
 						// данные поменялись
@@ -122,7 +123,8 @@ define(
 				//master = undefined;
 				//END DEBUG
 				if (rg) {
-					var dataRoot = this.getControlMgr().getDB().getRoot(rg);
+					//var dataRoot = this.getControlMgr().getDB().getRoot(rg);
+					var dataRoot = this.getRoot(rg);
 					if (!dataRoot || !onlyMaster) {
 						if (onlyMaster && master) return; // если НЕ мастер, а детейл, то пропустить
 						var that = this;
@@ -142,7 +144,8 @@ define(
 			_initCursor: function() {
 				var rg = this.root();
 				if (rg) {
-					var dataRoot = this.getDB().getObj(rg);
+					//var dataRoot = this.getDB().getObj(rg);
+					var dataRoot = this.getComp(rg);
 					if (dataRoot) {
 						var col = dataRoot.getCol("DataElements");
 						if (!dataRoot.getCol("DataElements").getObjById(this.cursor()))
@@ -182,7 +185,8 @@ define(
 				// нужно добавить в ini рутовый элемент, имя коллекции
 				// и вызвать конструктор соответствующего objType - запросив его у контролменеджера
 				//var cm = this.getControlMgr();
-				var dataRoot = this.getDB().getRoot(this.root()).obj;
+				//var dataRoot = this.getDB().getRoot(this.root()).obj;
+				var dataRoot = this.getRoot(this.root());
 				//var params = {parent:dataRoot, colName: "DataElements", ini:{fields:fields}};
 				var parent = {obj:dataRoot, colName: "DataElements"};
 				return this.getDB().addObj(this.objtype(),parent,flds);
@@ -199,7 +203,8 @@ define(
 			isDataModified: function() {
 				var r = this.root();
 				if (r) {
-					var rootObj = this.getDB().getObj(r);
+					//var rootObj = this.getDB().getObj(r);
+					var rootObj = this.getComp(r);
 					if (rootObj)
 						return rootObj.isDataModified();
 					else
@@ -254,7 +259,8 @@ define(
 					console.log("SET CURSOR TO UNDEF");
 				}*/
 				//console.log("SET CuRSOR "+value);
-				this.pvt.dataObj =  this.getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
+				this.pvt.dataObj =  this.getComp(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
+				// this.pvt.dataObj =  this.getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
 			},
 
             active: function (value) {
