@@ -123,8 +123,8 @@ define(
 				//master = undefined;
 				//END DEBUG
 				if (rg) {
-					//var dataRoot = this.getControlMgr().getDB().getRoot(rg);
-					var dataRoot = this.getRoot(rg);
+					var dataRoot = this.getControlMgr().getRoot(rg);
+					//var dataRoot = this.getRoot(this.getComp(rg));
 					if (!dataRoot || !onlyMaster) {
 						if (onlyMaster && master) return; // если НЕ мастер, а детейл, то пропустить
 						var that = this;

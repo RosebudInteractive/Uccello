@@ -30,7 +30,8 @@ define(
 					var dso = dsc; //.getObj();
 					if (!dsc._isProcessed()) dsc.processDelta(); // если у датасета processDelta еще не вызван, то вызвать его
 					if (dsc.root() && this.getControlMgr().getObj(dsc.root()))
-						var dsmod = this.getComp(dsc.root()).isDataModified();
+						var dsmod = this.getDB().getObj(dsc.root()).isDataModified();
+					// TODO R2 поменять когда в контролМенеджере будут компоненты
 					  //var dsmod = this.getDB().getObj(dsc.root()).isDataModified();
 					else dsmod = false;
 					if (dso.isFldModified("Root") || dso.isFldModified("Cursor") || dsmod) this._isRendered(false);

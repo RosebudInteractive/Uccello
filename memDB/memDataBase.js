@@ -372,11 +372,11 @@ define(
 								//parent.db = that;
 							}
 							// o = new MemObj( typeObj,parent,sobj);
-							if (typeObj && (typeObj.getRtype() == "res") ) {
+							if (typeObj /*&& (typeObj.getRtype() == "res") */) {
 								//if ((typeObj.getRtype() == "res") && (cb!=undefined)) cb(0);
-								if ((typeObj.getRtype() == "res") && (cb!=undefined)) o = cb(typeObj, parent, sobj);
+								if (/*(typeObj.getRtype() == "res") && */(cb!=undefined)) o = cb(typeObj, parent, sobj);
 							}
-							else o = new MemObj( typeObj,parent,sobj); // если данные
+							//else o = new MemObj( typeObj,parent,sobj); // если данные
 
 							break;
 					}
