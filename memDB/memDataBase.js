@@ -366,18 +366,16 @@ define(
 							break;
 						default:
 							var typeObj = that.getObj(sobj.$sys.typeGuid);
-							//if ("db" in parent) parent.nolog=true;
-							if (!("obj" in parent)) { // вместо верхней строки, теперь db не нужно передавать сюда
+							/*if (!("obj" in parent)) { 
 								parent.nolog = true;
-								//parent.db = that;
-							}
+							}*/
 							// o = new MemObj( typeObj,parent,sobj);
 							if (typeObj /*&& (typeObj.getRtype() == "res") */) {
 								//if ((typeObj.getRtype() == "res") && (cb!=undefined)) cb(0);
 								if (/*(typeObj.getRtype() == "res") && */(cb!=undefined)) o = cb(typeObj, parent, sobj);
+								if (!o) 
+								  console.log("BAD GUID === "+sobj.$sys.typeGuid);
 							}
-							//else o = new MemObj( typeObj,parent,sobj); // если данные
-
 							break;
 					}
 					for (var cn in sobj.collections) {
