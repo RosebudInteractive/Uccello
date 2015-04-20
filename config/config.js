@@ -13,8 +13,8 @@ define([], function() {
 
         // расширяемый список контролов
         controls: [
-            {className:'DataControl', isUccello:true, component:'controls/aDataControl'},
-            {className:'DataFieldControl', isUccello:true, component:'controls/aDataFieldControl'},
+            {className:'ADataControl', isUccello:true, component:'controls/aDataControl'},
+            {className:'ADataFieldControl', isUccello:true, component:'controls/aDataFieldControl'},
             {className:'DataRoot', isUccello:true, component:'dataman/dataRoot'},
             {className:'ADataModel', isUccello:true, component:'controls/aDataModel'},
             {className:'DataField', isUccello:true, component:'controls/dataField'},
