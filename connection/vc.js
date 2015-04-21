@@ -351,8 +351,11 @@ define(
 */
 			renderAll: function(pd) {
 				var ga = this.pvt.cm.getRootGuids()
-				for (var i=0; i<ga.length; i++)
-					this.pvt.cm.render(this.pvt.cm.get(ga[i]), this.pvt.renderRoot(ga[i]), pd);
+				for (var i=0; i<ga.length; i++) {
+					var root = this.pvt.cm.get(ga[i]);
+					if (root.getObjType().getRtype() == "res")
+						this.pvt.cm.render(root, this.pvt.renderRoot(ga[i]), pd);
+				}
 				this.getContentDB().resetModifLog();
 			},
 
