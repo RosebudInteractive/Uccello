@@ -88,7 +88,7 @@ define(
              */			
 			add: function(component) {
 				this.pvt.compByLid[component.getLid()] = component;
-				//this.pvt.compByGuid[component.getGuid()] = component;
+				this.pvt.compByGuid[component.getGuid()] = component;
 				if (("name" in component) && component.name())
 					this.pvt.compByName[component.name()] = component;
 				if (!component.getParent()) {// корневой элемент
