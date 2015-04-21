@@ -89,7 +89,23 @@ define(
 					}
 				else
 					createCompCallback = function (typeObj, parent, sobj) {
-						return  that.createComponent.apply(that, [typeObj, parent, sobj]);
+						if (sobj.$sys.typeGuid == "59583572-20fa-1f58-8d3f-5114af0f2c51") {
+							if (!that.timeDataCompany)
+								that.timeDataCompany = 0;
+							var start = performance.now();
+						}
+
+						var comp =  that.createComponent.apply(that, [typeObj, parent, sobj]);
+
+						if (sobj.$sys.typeGuid == "59583572-20fa-1f58-8d3f-5114af0f2c51") {
+							var end = performance.now();
+							var time = end - start;
+							that.timeDataCompany += time;
+							console.log('timeOneDataCompany', time);
+							console.log('timeAllDataCompany', that.timeDataCompany);
+						}
+
+						return comp;
 						// that.createComponent.apply(that, [obj, that.pvt.cm]);
 					}
 				this.pvt.compCallback = createCompCallback;
