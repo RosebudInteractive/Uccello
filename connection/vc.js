@@ -63,7 +63,7 @@ define(
 				var that = this;
 				if (!cb) // если нет колбэка значит на сервере - но это надо поменять TODO
 					//var createCompCallback = function (obj) {
-					createCompCallback = function (typeObj, parent, sobj) {
+					var createCompCallback = function (typeObj, parent, sobj) {
 
 						// подписаться на событие завершения applyDelta в контроллере, чтобы переприсвоить параметры 
 						controller.event.on({
@@ -99,13 +99,7 @@ define(
 				this.pvt.compCallback = createCompCallback;
 
 				if (this.getModule().isMaster()) { // главная (master) TODO разобраться с KIND
-					//var params2 = {name: "VisualContextDB", kind: "master", cbfinal:cb};
-					//var params2 = {name: "VisualContextDB", kind: "master"};
-					//if (createCompCallback)
-					//	params2.compcb = createCompCallback;
 					this.pvt.cdb = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
-					//this.pvt.cm = new ControlMgr(this.getContentDB(),this,this.pvt.socket);
-
 					// подписываемся на добавление нового рута
 					this.pvt.cdb.event.on( {
 						type: "newRoot",
@@ -127,15 +121,6 @@ define(
 						cb(res);
 					}
 
-					/*this.pvt.cdb = controller.newDataBase({name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}}, function(){
-						// подписываемся либо на все руты либо выборочно formGuids
-						that.pvt.cm = new ControlMgr(that.getContentDB(),that,that.pvt.socket);
-						var forms = params.formGuids;
-						if (forms == null) forms = "all";
-						else if (forms == "") forms = [];
-						that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
-					});
-					*/
 					var dbp = {name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}};
 					this.pvt.cdb = this.pvt.cm = new ControlMgr( { controller: controller, dbparams: dbp}, that,that.pvt.socket, function(){
 						var forms = params.formGuids;
@@ -239,10 +224,7 @@ define(
 			createDb: function(dbc, params){
 			
 				var cm = this.pvt.cm = new ControlMgr( { controller: dbc, dbparams: params },this,this.pvt.socket);
-				//var db = dbc.newDataBase(params);
 
-				// meta
-				//var cm = new ControlMgr(db);
 				// TODOR2  - а нужно? Сергею исправить
 				new UObject(cm);
 				new AComponent(cm); new AControl(cm);
@@ -321,38 +303,11 @@ define(
 
 
 			createComponent: function(typeObj, parent, sobj) {
-				//var g = obj.getTypeGuid();
-				//var className = cm.getContentDB().getObj(g).get("typeName");
-				var params = {/*objGuid: typeObj.getGuid(),*/ ini: sobj, parent: parent.obj, colName: parent.colName};
 
-				// DbNavigator выбор базы
-				/* TODOR2
-				if (g == "38aec981-30ae-ec1d-8f8f-5004958b4cfa") {
-					params.dbSelector = [{
-						'guid': this.getContentDB().getGuid(),
-						'name': 'Пользовательская БД'
-					}, {'guid': uccelloClt.getSysDB().getGuid(), 'name': 'Системная БД'}];
-				}*/
-				//console.log(typeObj.getGuid());
-
+				var params = {ini: sobj, parent: parent.obj, colName: parent.colName};
 				return new (this.pvt.constructHolder.getComponent(typeObj.getGuid()).constr)(this.getContextCM(), params);
 			},
-			/*createComponent: function(obj, cm) {
-				var g = obj.getTypeGuid();
-				var className = cm.getContentDB().getObj(g).get("typeName");
-				var params = {objGuid: obj.getGuid()};
 
-				// DbNavigator выбор базы
-				if (g == "38aec981-30ae-ec1d-8f8f-5004958b4cfa") {
-					params.dbSelector = [{
-						'guid': this.getContentDB().getGuid(),
-						'name': 'Пользовательская БД'
-					}, {'guid': uccelloClt.getSysDB().getGuid(), 'name': 'Системная БД'}];
-				}
-
-				new (this.pvt.constructHolder.getComponent(g).constr)(cm, params);
-			},
-*/
 			renderAll: function(pd) {
 				var ga = this.pvt.cm.getRootGuids()
 				for (var i=0; i<ga.length; i++) {
@@ -401,8 +356,7 @@ define(
 				if (result.target.getObjType().getGuid() == UCCELLO_CONFIG.classGuids.Form) {
 					// ищем по Title и добавляем id если найден для уникальности
 					var found = false, title = result.target.get('Title');
-					var col = this.getCol('Resources')
-					//var col = this.getObj().getCol('Resources')
+					var col = this.getCol('Resources');
 					for(var i= 0, len=col.count(); i<len; i++) {
 						if (title == col.get(i).get('Title'))
 							found = true;
@@ -411,7 +365,6 @@ define(
 					if (found || !title) title += id;
 
 					var vcResource = new Vcresource(this.getControlMgr(), {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
-					//var db = this.getObj().getDB();
 					var db = this.getContentDB();
 					db.getController().genDeltas(db.getGuid());
 				}
