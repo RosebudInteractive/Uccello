@@ -94,7 +94,7 @@ define(
                     //that.pvt.dbsys = that.pvt.controller.newDataBase({name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}}, done);
 					var dbp = {name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}};
                     //that.pvt.cmsys = new ControlMgr(that.pvt.dbsys,null,that.pvt.clientConnection.socket);
-					that.pvt.cmsys = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket);
+					that.pvt.cmsys = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket, done);
 					that.pvt.dbsys = that.pvt.cmsys; // TODOR2 убрать
 
                     // создаем мастер базу для clientConnection
