@@ -3,9 +3,9 @@ if (typeof define !== 'function') {
     var Class = require('class.extend');
 }
 define(
-    ['../controls/aComponent'],
-    function(AComponent) {
-        var DataRoot = AComponent.extend({
+    ['../system/uobject'],
+    function(UObject) {
+        var DataRoot = UObject.extend({
 
             className: "DataRoot",
             classGuid: UCCELLO_CONFIG.classGuids.DataRoot,
