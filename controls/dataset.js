@@ -243,7 +243,7 @@ define(
 					this._setDataObj(value);
 					//
 					if ("onMoveCursor" in this) this.onMoveCursor(newVal);
-					console.log("move cursor "+this.name());
+
 					this.event.fire({
 						type: 'moveCursor',
 						target: this				
@@ -255,10 +255,7 @@ define(
 			
 			// установить "курсор" на внутренний объект dataobj
 			_setDataObj: function(value) {
-				/*if (value == undefined) {
-					console.log("SET CURSOR TO UNDEF");
-				}*/
-				//console.log("SET CuRSOR "+value);
+
 				this.pvt.dataObj =  this.getComp(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
 				// this.pvt.dataObj =  this.getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
 			},

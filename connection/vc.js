@@ -329,7 +329,7 @@ define(
 						'name': 'Пользовательская БД'
 					}, {'guid': uccelloClt.getSysDB().getGuid(), 'name': 'Системная БД'}];
 				}*/
-				console.log(typeObj.getGuid());
+				//console.log(typeObj.getGuid());
 
 				return new (this.pvt.constructHolder.getComponent(typeObj.getGuid()).constr)(this.getContextCM(), params);
 			},

@@ -52,7 +52,7 @@ define(
 					ds.event.on({
 						type: 'moveCursor',
 						subscriber: this,
-						callback: function(){ this._isRendered(false); console.log("isrendered subs "+this.name()); }
+						callback: function(){ this._isRendered(false); /* console.log("isrendered subs "+this.name());*/ }
 					});
 					ds.event.on({
 						type: 'modFld',
