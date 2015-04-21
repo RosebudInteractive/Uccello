@@ -169,13 +169,14 @@ define(
 			 * Вернуть компонент по его гуид
              */	
 			 // TODOR2 - убрать после чистки вызовов в прото1
+			 /*
 			getByGuid: function(guid) {
 				return this.pvt.compByGuid[guid];
-			},
+			},*/
 
             /**
-			 * то же самое, но лаконичнее
-             */				
+			 * Вернуть компонент по его гуид
+             */			
 			get: function(guid) {
 				return this.pvt.compByGuid[guid];
 			},
