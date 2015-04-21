@@ -33,22 +33,7 @@ define(
 				this.pvt.dataVer = 0; // версия данных (локально)		
 				
 				this.event = new Event();
-				if (params) { 
-					this.event.name = "DATASETEVENT "+this.name()+Math.round(Math.random()*1000) ;
-					console.log("++++++++++++++++++++++++++++++" + this.event.name);
-					/*try { throw "exception";
-					} catch(e) {
-					}*/
-					//console.trace();
-					//console.assert(false);
-					//debugger;
-				}
-				// 
-				/*if (this.getObj()) {
-					if (this.getObj().get("OnMoveCursor")) {
-						this.onMoveCursor = new Function("newVal",this.getObj().get("OnMoveCursor"));
-					}
-				}*/
+
 				if (this.get("OnMoveCursor"))
 					this.onMoveCursor = new Function("newVal", this.get("OnMoveCursor"));
 
@@ -78,17 +63,11 @@ define(
 			},
 			
 			processDelta: function() {
-				
-				//var obj = this.getObj();
-				//if (obj.isFldModified("Cursor")) {
-				if (this.isFldModified("Cursor")) {
-					//if (DEBUG)
-					//	console.log("processDelta "+this.id());
+
+				if (this.isFldModified("Cursor")) 
 					this._setDataObj(this.cursor());
-				}
-				
-				//var r=this.getDB().getObj(this.root());
-				var r=this.getComp(this.root());
+								
+				var r=this.getDB().getObj(this.root());
 				if (r) {
 					if (r.isDataModified()) {
 						// данные поменялись
@@ -119,12 +98,8 @@ define(
 				
 				var rg = this.root();
 				var master = this.master();
-				// DEBUG
-				//master = undefined;
-				//END DEBUG
 				if (rg) {
 					var dataRoot = this.getControlMgr().getRoot(rg);
-					//var dataRoot = this.getRoot(this.getComp(rg));
 					if (!dataRoot || !onlyMaster) {
 						if (onlyMaster && master) return; // если НЕ мастер, а детейл, то пропустить
 						var that = this;
@@ -132,10 +107,8 @@ define(
 						if (master) { // если детейл, то экспрешн
 							params.expr = this.getControlMgr().get(master).getField("Id");
 						}
-						//this.cursor(undefined);
-						
 						this.getControlMgr().getContext().loadNewRoots([rg],params, icb);
-						//this.getModule().load([rg],params, icb);
+
 					}
 					else this._initCursor();
 				}
@@ -144,8 +117,7 @@ define(
 			_initCursor: function() {
 				var rg = this.root();
 				if (rg) {
-					//var dataRoot = this.getDB().getObj(rg);
-					var dataRoot = this.getComp(rg);
+					var dataRoot = this.getDB().getObj(rg);
 					if (dataRoot) {
 						var col = dataRoot.getCol("DataElements");
 						if (!dataRoot.getCol("DataElements").getObjById(this.cursor()))
@@ -203,8 +175,8 @@ define(
 			isDataModified: function() {
 				var r = this.root();
 				if (r) {
-					//var rootObj = this.getDB().getObj(r);
-					var rootObj = this.getComp(r);
+					var rootObj = this.getDB().getObj(r);
+					//var rootObj = this.getComp(r);
 					if (rootObj)
 						return rootObj.isDataModified();
 					else
@@ -236,12 +208,10 @@ define(
             },
 
             cursor: function (value) {
-				//console.log("Cursor "+this.getGuid()+"  set to "+value);
 				var oldVal = this._genericSetter("Cursor");
                 var newVal=this._genericSetter("Cursor", value);
 				if (newVal!=oldVal) {
 					this._setDataObj(value);
-					//
 					if ("onMoveCursor" in this) this.onMoveCursor(newVal);
 
 					this.event.fire({
@@ -255,9 +225,7 @@ define(
 			
 			// установить "курсор" на внутренний объект dataobj
 			_setDataObj: function(value) {
-
-				this.pvt.dataObj =  this.getComp(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
-				// this.pvt.dataObj =  this.getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
+				this.pvt.dataObj =  this.getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
 			},
 
             active: function (value) {
