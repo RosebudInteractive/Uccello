@@ -12,10 +12,10 @@ define(
 	function(Event,MemCollection,MemObj,MemMetaRoot,MemMetaObj,MemMetaObjFields,MemMetaObjCols) {
 
 
-		var metaObjFieldsGuid =  "0fa90328-4e86-eba7-b12b-4fff3a057533";
-		var metaObjColsGuid =  "99628583-1667-3341-78e0-fb2af29dbe8";
-		var metaRootGuid =  "fc13e2b8-3600-b537-f9e5-654b7418c156";
-		var metaObjGuid =  "4dcd61c3-3594-7456-fd86-5a3527c5cdcc";
+		var metaObjFieldsGuid =  UCCELLO_CONFIG.guids.metaObjFieldsGuid;
+		var metaObjColsGuid =  UCCELLO_CONFIG.guids.metaObjColsGuid;
+		var metaRootGuid =  UCCELLO_CONFIG.guids.metaRootGuid;
+		var metaObjGuid =  UCCELLO_CONFIG.guids.metaObjGuid;
 
 		var MemDataBase = Class.extend(/** @lends module:MemDataBase.MemDataBase.prototype */{
 
@@ -64,7 +64,7 @@ define(
 						pvt.version = result.data.dbVersion; // устанавливаем номер версии базы по версии мастера
 						pvt.validVersion = pvt.version;
 						pvt.sentVersion = pvt.version;
-						controller.subscribeRoots(db,"fc13e2b8-3600-b537-f9e5-654b7418c156", function(){
+						controller.subscribeRoots(db, UCCELLO_CONFIG.guids.metaRootGuid, function(){
 								db._buildMetaTables();
 								if (cb !== undefined && (typeof cb == "function")) cb();
 							});

@@ -9,7 +9,7 @@ define(
         var UObject = MemObj.extend({
 
             className: "UObject",
-            classGuid: "3b02ef32-83b7-e470-ec5c-f6605e46e9dc",
+            classGuid: UCCELLO_CONFIG.classGuids.UObject,
             metaFields: [],
             metaCols: [],
 

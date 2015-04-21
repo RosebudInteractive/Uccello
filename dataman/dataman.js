@@ -51,23 +51,23 @@ define(
             loadQuery: function (guidRoot, expression, done) {
                 var hehe = {};
                 switch (guidRoot) {
-                    case 'ab573a02-b888-b3b4-36a7-38629a5fe6b7':
+                    case UCCELLO_CONFIG.guids.rootCompany:
                         this.getCompany(guidRoot, 10000, done);
                         break;
-                    case 'b49d39c9-b903-cccd-7d32-b84beb1b76dc':
+                    case UCCELLO_CONFIG.guids.rootContact:
                         this.getContact(guidRoot, expression, done);
                         break;
-                    case '8583ee1d-6936-19da-5ef0-9025fb7d1d8d':
+                    case UCCELLO_CONFIG.guids.rootContract:
                         this.getContract(guidRoot, expression, done);
                         break;
-                    case 'edca46bc-3389-99a2-32c0-a59665fcb6a7':
+                    case UCCELLO_CONFIG.guids.rootAddress:
                         this.getAddress(guidRoot, expression, done);
                         break;
-                    case 'c170c217-e519-7c23-2811-ff75cd4bfe81':
-                        this.getList(guidRoot, '86c611ee-ed58-10be-66f0-dfbb60ab8907', 'lead', done);
+                    case UCCELLO_CONFIG.guids.rootLead:
+                        this.getList(guidRoot, UCCELLO_CONFIG.classGuids.DataLead, 'lead', done);
                         break;
-                    case '8770f400-fd42-217c-90f5-507ca52943c2':
-                        this.getList(guidRoot, '56cc264c-5489-d367-1783-2673fde2edaf', 'incomeplan', done, 'leadId=?', [expression]);
+                    case UCCELLO_CONFIG.guids.rootIncomeplan:
+                        this.getList(guidRoot, UCCELLO_CONFIG.classGuids.DataIncomeplan, 'incomeplan', done, 'leadId=?', [expression]);
                         break;
                 }
             },
@@ -175,11 +175,11 @@ define(
                     var conn = this.getMysqlConnection();
                     conn.query('SELECT * FROM company LIMIT ?', [num?num:0], function(err, rows) {
                         if (err) throw err;
-                        var result = that.createResult(guidRoot, "59583572-20fa-1f58-8d3f-5114af0f2c51", rows);
+                        var result = that.createResult(guidRoot, UCCELLO_CONFIG.classGuids.DataCompany, rows);
                         done(result);
                     });
                 } else
-                    this.readTableFile('company.json', guidRoot, "59583572-20fa-1f58-8d3f-5114af0f2c51", false, done);
+                    this.readTableFile('company.json', guidRoot, UCCELLO_CONFIG.classGuids.DataCompany, false, done);
 				return "XXX";
             },
 
@@ -190,11 +190,11 @@ define(
                     var conn = this.getMysqlConnection();
                     conn.query('SELECT * FROM contact WHERE parent=?', [expression], function(err, rows) {
                         if (err) throw err;
-                        var result = that.createResult(guidRoot, "73596fd8-6901-2f90-12d7-d1ba12bae8f4", rows);
+                        var result = that.createResult(guidRoot, UCCELLO_CONFIG.classGuids.DataContact, rows);
                         done(result);
                     });
                 } else
-                    this.readTableFile('contact-'+expression+'.json', guidRoot, "73596fd8-6901-2f90-12d7-d1ba12bae8f4", expression, done);
+                    this.readTableFile('contact-'+expression+'.json', guidRoot, UCCELLO_CONFIG.classGuids.DataContact, expression, done);
             },
 
             getContract: function(guidRoot, expression, done){
@@ -204,11 +204,11 @@ define(
                     var conn = this.getMysqlConnection();
                     conn.query('SELECT * FROM contract WHERE parent=?', [expression], function(err, rows) {
                         if (err) throw err;
-                        var result = that.createResult(guidRoot, "08a0fad1-d788-3604-9a16-3544a6f97721", rows);
+                        var result = that.createResult(guidRoot, UCCELLO_CONFIG.classGuids.DataContract, rows);
                         done(result);
                     });
                 } else
-                    this.readTableFile('contract-'+expression+'.json', guidRoot, "08a0fad1-d788-3604-9a16-3544a6f97721", expression, done);
+                    this.readTableFile('contract-'+expression+'.json', guidRoot, UCCELLO_CONFIG.classGuids.DataContract, expression, done);
             },
 
             getAddress: function(guidRoot, expression, done){
@@ -218,11 +218,11 @@ define(
                     var conn = this.getMysqlConnection();
                     conn.query('SELECT * FROM address WHERE parent=?', [expression], function(err, rows) {
                         if (err) throw err;
-                        var result = that.createResult(guidRoot, "16ec0891-1144-4577-f437-f98699464948", rows);
+                        var result = that.createResult(guidRoot, UCCELLO_CONFIG.classGuids.DataAddress, rows);
                         done(result);
                     });
                 } else
-                    this.readTableFile('address-'+expression+'.json', guidRoot, "16ec0891-1144-4577-f437-f98699464948", expression, done);
+                    this.readTableFile('address-'+expression+'.json', guidRoot, UCCELLO_CONFIG.classGuids.DataAddress, expression, done);
             }
 
         });

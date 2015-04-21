@@ -62,7 +62,7 @@ define(
                         });
 
                         that.pvt.clientConnection.socket.send({action:"testIntf", type:'method'}, function(result){
-                            var guidServer = "d3d7191b-3b4c-92cc-43d4-a84221eb35f5";
+                            var guidServer = UCCELLO_CONFIG.guids.guidServer;
                             that.pvt.servInterface = result.intf;
                             that.pvt.proxyServer = rpc._publProxy(guidServer, clt.socket, result.intf); // публикуем прокси серверного интерфейса
                         });

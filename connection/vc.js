@@ -93,7 +93,7 @@ define(
 					}
 				else
 					createCompCallback = function (typeObj, parent, sobj) {
-						if (sobj.$sys.typeGuid == "59583572-20fa-1f58-8d3f-5114af0f2c51") {
+						if (sobj.$sys.typeGuid == UCCELLO_CONFIG.classGuids.DataCompany) {
 							if (!that.timeDataCompany)
 								that.timeDataCompany = 0;
 							var start = performance.now();
@@ -101,7 +101,7 @@ define(
 
 						var comp =  that.createComponent.apply(that, [typeObj, parent, sobj]);
 
-						if (sobj.$sys.typeGuid == "59583572-20fa-1f58-8d3f-5114af0f2c51") {
+						if (sobj.$sys.typeGuid == UCCELLO_CONFIG.classGuids.DataCompany) {
 							var end = performance.now();
 							var time = end - start;
 							that.timeDataCompany += time;

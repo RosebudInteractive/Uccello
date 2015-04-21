@@ -14,7 +14,7 @@ define(
 				var db = (parent.db) ? parent.db: parent.obj.getDB();
 				//if (db.getMeta())
 				this._super(null,{ obj: db.getMeta(), colName: "MetaObjects" },flds); 
-				this.pvt.typeGuid = "4dcd61c3-3594-7456-fd86-5a3527c5cdcc";
+				this.pvt.typeGuid = UCCELLO_CONFIG.guids.metaObjGuid;
 				//else 
 				//	this._super(null,{ db: db },flds); // Корневой метаобъект в БД - является корнем всех остальных метаобъектов
 				this.pvt.fields.push(flds.fields.typeName); // TODO проверка наличия с пустой инициализацией
@@ -30,12 +30,12 @@ define(
 				
 				// TODO ПЕРЕДЕЛАТЬ!!!
 				if ((flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataRoot) ||
-					(flds.$sys.guid == "73596fd8-6901-2f90-12d7-d1ba12bae8f4") ||
-					(flds.$sys.guid == "59583572-20fa-1f58-8d3f-5114af0f2c51") ||
-					(flds.$sys.guid == "16ec0891-1144-4577-f437-f98699464948") ||
-					(flds.$sys.guid == "08a0fad1-d788-3604-9a16-3544a6f97721") ||
-					(flds.$sys.guid == "86c611ee-ed58-10be-66f0-dfbb60ab8907") ||
-					(flds.$sys.guid == "56cc264c-5489-d367-1783-2673fde2edaf")
+					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataContact) ||
+					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataCompany) ||
+					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataAddress) ||
+					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataContract) ||
+					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataLead) ||
+					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataIncomeplan)
 				)
 					this.pvt.rtype = "data";
 				else

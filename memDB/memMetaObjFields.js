@@ -12,7 +12,7 @@ define(
 				//flds.$sys = { guid: "0fa90328-4e86-eba7-b12b-4fff3a057533" };
 
 				this._super(null,{obj : parent.obj, colName : "fields" }, flds ); 
-				this.pvt.typeGuid = "0fa90328-4e86-eba7-b12b-4fff3a057533";
+				this.pvt.typeGuid = UCCELLO_CONFIG.guids.metaObjFieldsGuid;
 				this.pvt.fields.push(flds.fields.fname);
 				this.pvt.fields.push(flds.fields.ftype);
 				this.pvt.fields.push(flds.fields.fdefault);

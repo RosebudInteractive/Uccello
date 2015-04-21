@@ -33,7 +33,19 @@ define([], function() {
 
         // остальные гуиды
         guids: {
-            'sysDB': 'fb41702c-faba-b5c0-63a8-8d553bfe54a6'
+            'sysDB': 'fb41702c-faba-b5c0-63a8-8d553bfe54a6',
+            'guidServer': 'd3d7191b-3b4c-92cc-43d4-a84221eb35f5',
+            'rootCompany': 'ab573a02-b888-b3b4-36a7-38629a5fe6b7',
+            'rootContact': 'b49d39c9-b903-cccd-7d32-b84beb1b76dc',
+            'rootContract': '8583ee1d-6936-19da-5ef0-9025fb7d1d8d',
+            'rootAddress': 'edca46bc-3389-99a2-32c0-a59665fcb6a7',
+            'rootLead': 'c170c217-e519-7c23-2811-ff75cd4bfe81',
+            'rootIncomeplan': '8770f400-fd42-217c-90f5-507ca52943c2',
+            'Interfsrv': 'ef9bfa83-8371-6aaa-b510-28cd83291ce9',
+            'metaObjFieldsGuid': '0fa90328-4e86-eba7-b12b-4fff3a057533',
+            'metaObjColsGuid': '99628583-1667-3341-78e0-fb2af29dbe8',
+            'metaRootGuid': 'fc13e2b8-3600-b537-f9e5-654b7418c156',
+            'metaObjGuid': '4dcd61c3-3594-7456-fd86-5a3527c5cdcc'
         },
 
         // гуиды классов учелло
@@ -65,7 +77,8 @@ define([], function() {
             'DataGrid':"ff7830e2-7add-e65e-7ddf-caba8992d6d8",
             'UModule':"8fead303-a4e1-98bb-efb6-ee38ee021265",
             'VisualContext':"64827c89-e73e-215f-f71a-7f90627ae61d",
-            'Vcresource':"870c63b5-7aed-bb44-3109-bb63a407988f"
+            'Vcresource':"870c63b5-7aed-bb44-3109-bb63a407988f",
+            'UObject':"3b02ef32-83b7-e470-ec5c-f6605e46e9dc"
         },
 
         // изменяемые свойства

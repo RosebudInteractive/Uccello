@@ -8,12 +8,12 @@ define(
 	'./system/rpc','./controls/controlMgr', './resman/resman', './system/constructHolder'],
     function(Socket, Logger, Dataman, WebSocketServer, Router, UserSessionMgr, Rpc, ControlMgr, Resman, ConstructHolder) {
 	
-		var guidServer = "d3d7191b-3b4c-92cc-43d4-a84221eb35f5";
+		var guidServer = UCCELLO_CONFIG.guids.guidServer;
 	
 		var interface1 = {
 		
 			className: "Interfsrv",
-			classGuid: "ef9bfa83-8371-6aaa-b510-28cd83291ce9",
+			classGuid: UCCELLO_CONFIG.guids.Interfsrv,
 
 			loadResources: "function",
 			queryDatas: "function"

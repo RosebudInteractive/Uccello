@@ -10,10 +10,10 @@ define(
 		
 			init: function(parent, flds){
 				
-				flds.$sys = { guid: "fc13e2b8-3600-b537-f9e5-654b7418c156" };
+				flds.$sys = { guid: UCCELLO_CONFIG.guids.metaRootGuid };
 				
 				this._super(null,{ db: parent.db },flds); // Корневой метаобъект в БД - является корнем всех остальных метаобъектов
-				this.pvt.typeGuid = "fc13e2b8-3600-b537-f9e5-654b7418c156";				
+				this.pvt.typeGuid = UCCELLO_CONFIG.guids.metaRootGuid;
 				// инициализируем коллекции для метаинфо - описание вложенных метаобъектов
 				new MemCol("MetaObjects",this);
 				
@@ -39,7 +39,7 @@ define(
 				if (typeof col == "number") 
 					return this._super(col);
 				return null;
-			},
+			}
 
 			
 

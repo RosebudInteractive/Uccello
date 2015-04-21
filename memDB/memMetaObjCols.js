@@ -12,7 +12,7 @@ define(
 				//flds.$sys = { guid: "99628583-1667-3341-78e0-fb2af29dbe8" };
 
 				this._super(null,{obj : parent.obj, colName : "cols" },flds );
-				this.pvt.typeGuid = "99628583-1667-3341-78e0-fb2af29dbe8";				
+				this.pvt.typeGuid = UCCELLO_CONFIG.guids.metaObjColsGuid;
 				this.pvt.fields.push(flds.fields.cname);
 				this.pvt.fields.push(flds.fields.ctype);
 				this.finit();				
