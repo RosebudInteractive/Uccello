@@ -363,7 +363,7 @@ define(
 				for (var i=0; i<roots.length; i++) {
 					// TODO отсеять лишние руты, сделать проверку на данные
 					var root = this.pvt.cm.get(roots[i]);
-					if (root !== undefined)
+					if (root !== undefined && root.getObjType().getRtype() == "res")
 						this.pvt.cm.render(root, this.pvt.renderRoot(roots[i]), pd);
 				}
 				this.getContentDB().resetModifLog();
