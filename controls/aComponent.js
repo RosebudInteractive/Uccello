@@ -29,6 +29,9 @@ define(
 						subscriber: this,
 						callback: this._onDirtyRender
 				});
+				
+				cm.add(this); // данные регистрируются в ControlMgr если они компоненты!
+
             },
 
 			_onDirtyRender: function(result) {

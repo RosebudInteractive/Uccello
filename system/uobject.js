@@ -46,7 +46,7 @@ define(
                 this.pvt.controlMgr = cm;
                 this.pvt.isProcessed = true; // признак обработки входящей дельты
 				
-				cm.add(this);
+				//cm.add(this);
 
                 /*if (params.objGuid!==undefined) {
                     this.pvt.obj = cm.getDB().getObj(params.objGuid);
