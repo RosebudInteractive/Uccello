@@ -22,8 +22,7 @@ define(
 			
 				if (!("pvt" in this)) this.pvt = {};
 			
-                //this._buildMetaInfo(cm.getDB());
-				 this._buildMetaInfo(cm);
+				this._buildMetaInfo(cm);
                 if (params==undefined) return; // в этом режиме только создаем метаинфо			
 
 				params.ini = params.ini ? params.ini : {};
@@ -109,20 +108,6 @@ define(
                 }
             },
 
-            /**
-             * Возвращает локальный идентификатор
-             */
-            // в мемпрото - УБРАТЬ
-			/*
-			getLid: function() {
-                return this.pvt.obj.getLid();
-
-            },
-
-            getGuid: function() {
-                return this.pvt.obj.getGuid();
-            },*/
-
             getClassGuid: function() {
                 return this.classGuid;
             },
@@ -130,14 +115,6 @@ define(
             getClassName: function() {
                 return this.className;
             },
-
-            /*getObj: function() {
-                return this.pvt.obj;
-            },
-
-            getDB: function() {
-                return this.pvt.obj.getDB();
-            },*/
 
             /**
              * Возвращает компонент того же контролМенеджера по его гуиду
@@ -148,9 +125,6 @@ define(
                 return this.pvt.controlMgr.get(guid);
             },
 
-            /**
-             * Возвращает корневой компонент для данного
-             */
 			 /*
             getRoot: function() {
                 return this.pvt.controlMgr.get(this.pvt.obj.getRoot().getGuid());
@@ -167,10 +141,6 @@ define(
 					return undefined;
 			},
 
-
-            /**
-             * Возвращает родительский элемент или нулл
-             */
 			 /*
             getParent: function() {
                 if (this.getObj().getParent() == null)
@@ -255,10 +225,6 @@ define(
              * Возвращает true если модуль в режиме MASTER и false если в режиме SLAVE
              */			
 			isMaster: function() {
-				// Пользуемся ассоциировнной БД, чтобы понять в каком режиме модуль
-				// Можно, теоретически, запоминять состояние - когда будем создавать БД внутри модуля
-				// то этим гарантируется когерентность состояния MASTER/SLAVE у модуля и у его базы
-				//return this.getObj().getDB().isMaster();
 				return this.getControlMgr().isMaster();
 				//return this.isMaster();
 				
