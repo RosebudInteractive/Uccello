@@ -64,7 +64,17 @@ define(
 				if (!cb) // если нет колбэка значит на сервере - но это надо поменять TODO
 					//var createCompCallback = function (obj) {
 					createCompCallback = function (typeObj, parent, sobj) {
-					/* TODOR2 переделать в соответствии с новыми реалиями
+
+						// подписаться на событие завершения applyDelta в контроллере, чтобы переприсвоить параметры 
+						controller.event.on({
+							type: 'end2ApplyDeltas',
+							subscriber: that,
+							callback: that._setFormParams
+						});
+						
+						var obj =  that.createComponent.apply(that, [typeObj, parent, sobj]);
+						
+						// TODOR2 переделать в соответствии с новыми реалиями
 						if (obj.getTypeGuid() == UCCELLO_CONFIG.classGuids.FormParam) { // Form Param
 							obj.event.on({
 								type: "mod", // TODO не забыть про отписку
@@ -77,14 +87,8 @@ define(
 							that.pvt.formParams[obj.get("Name")].push(obj);
 
 						}
-						// подписаться на событие завершения applyDelta в контроллере, чтобы переприсвоить параметры 
-						controller.event.on({
-							type: 'end2ApplyDeltas',
-							subscriber: that,
-							callback: that._setFormParams
-						});
-						*/
-						return  that.createComponent.apply(that, [typeObj, parent, sobj]);
+						
+						return obj;
 						
 					}
 				else
@@ -223,7 +227,7 @@ define(
 					}
 				}
 				this.pvt.memParams = [];
-				this.getController().genDeltas(this.getContentDB().getGuid());
+				this.getContextCM().getController().genDeltas(this.getContentDB().getGuid());
 			},
 
 			/**
@@ -239,7 +243,7 @@ define(
 
 				// meta
 				//var cm = new ControlMgr(db);
-				// TODO R2  - а нужно? Сергею исправить
+				// TODOR2  - а нужно? Сергею исправить
 				new UObject(cm);
 				new AComponent(cm); new AControl(cm);
 

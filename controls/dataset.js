@@ -31,8 +31,6 @@ define(
                 this.pvt.params = params;
 				this.pvt.dataObj = null;
 				this.pvt.dataVer = 0; // версия данных (локально)		
-				
-				this.event = new Event();
 
 				if (this.get("OnMoveCursor"))
 					this.onMoveCursor = new Function("newVal", this.get("OnMoveCursor"));
