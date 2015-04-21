@@ -222,10 +222,10 @@ define(
                 p.constructHolder = that.pvt.constructHolder; //  ссылка на хранилище конструкторов
 
                 if (params.side == 'client') {
-                    that.pvt.vc = this.pvt.cmclient.getByGuid(params.vc);
+                    that.pvt.vc = this.pvt.cmclient.get(params.vc);
                     that.pvt.vc.on(this.pvt.cmclient, p, cbfinal2, renderRoot);
                 } else {
-                    that.pvt.vc = that.pvt.cmsys.getByGuid(params.vc);
+                    that.pvt.vc = that.pvt.cmsys.get(params.vc);
                     that.pvt.vc.on(that.pvt.cmsys, p, cbfinal2, renderRoot);
                 }
 			},
