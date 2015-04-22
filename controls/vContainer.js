@@ -15,17 +15,6 @@ define(
 
             init: function(cm,params){
                 this._super(cm,params);
-            },
-
-            getRenderArea: function(control) {
-                var div = this._super(control);
-                var width=control.width(), height=control.height();
-                if ($.isNumeric(width)) width += 'px';
-                else if (!width) width = '100%';
-                if ($.isNumeric(height)) height += 'px';
-                else if (!height) height = '100%';
-                div.css({width:width, height:height});
-                return div;
             }
         });
         return VContainer;

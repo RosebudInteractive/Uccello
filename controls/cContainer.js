@@ -15,22 +15,6 @@ define(
 
             init: function(cm,params){
                 this._super(cm,params);
-            },
-
-            getRenderArea: function(control) {
-                var div = this._super(control);
-                // если не указаны единицы то считаем пикселями
-                var left=control.left(), top=control.top(), width=control.width(), height=control.height();
-                if ($.isNumeric(left)) left += 'px';
-                if ($.isNumeric(top)) top += 'px';
-                if ($.isNumeric(width)) width += 'px';
-                else if (!width) width = '100%';
-                if ($.isNumeric(height)) height += 'px';
-                else if (!height) height = '100%';
-
-                // установка размеров и положения дива
-                div.css({top:top, left:left, width:width, height:height});
-                return div;
             }
         });
         return CContainer;
