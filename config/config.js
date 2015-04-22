@@ -23,6 +23,9 @@ define([], function() {
             {className:'SubForm', isUccello:true, component:'controls/subForm'},
             {className:'Container', isUccello:true, component:'controls/container', viewset:false},
             {className:'CContainer', isUccello:true, component:'controls/cContainer', viewset:false},
+            {className:'HContainer', isUccello:true, component:'controls/hContainer', viewset:false},
+            {className:'VContainer', isUccello:true, component:'controls/vContainer', viewset:false},
+            {className:'GContainer', isUccello:true, component:'controls/gContainer', viewset:false},
             {className:'Form', isUccello:true, component:'controls/form', viewset:false},
             {className:'Button', isUccello:true, component:'controls/button', viewset:false},
             {className:'DataColumn', isUccello:true, component:'controls/dataColumn'},
@@ -80,7 +83,10 @@ define([], function() {
             'Vcresource':"870c63b5-7aed-bb44-3109-bb63a407988f",
             'UObject':"3b02ef32-83b7-e470-ec5c-f6605e46e9dc",
             'Container':"d9f2fe22-ba91-1638-0f64-fb15a5410d01",
-            'CContainer':"1d95ab61-df00-aec8-eff5-0f90187891cf"
+            'CContainer':"1d95ab61-df00-aec8-eff5-0f90187891cf",
+            'HContainer':"638c1e37-2105-9676-f3c9-dfc2746d1265",
+            'VContainer':"a56e2e53-c72d-f014-d763-e096bfb51b8f",
+            'GContainer':"26309035-7f47-422e-26c8-6c25a091c20e"
         },
 
         // изменяемые свойства

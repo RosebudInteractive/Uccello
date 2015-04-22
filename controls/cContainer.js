@@ -6,7 +6,7 @@ if (typeof define !== 'function') {
 define(
     [UCCELLO_CONFIG.uccelloPath+'controls/container'],
     function(Container) {
-        var СContainer = Container.extend({
+        var CContainer = Container.extend({
 
             className: "CContainer",
             classGuid: UCCELLO_CONFIG.classGuids.CContainer,
@@ -33,6 +33,6 @@ define(
                 return div;
             }
         });
-        return СContainer;
+        return CContainer;
     }
 );

@@ -4,9 +4,9 @@ if (typeof define !== 'function') {
 }
 
 define(
-    [UCCELLO_CONFIG.uccelloPath+'controls/container'],
-    function(Container ) {
-        var Form = Container.extend({
+    [UCCELLO_CONFIG.uccelloPath+'controls/vContainer'],
+    function(VContainer ) {
+        var Form = VContainer.extend({
 
             className: "Form",
             classGuid: UCCELLO_CONFIG.classGuids.Form,
