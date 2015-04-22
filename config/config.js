@@ -22,6 +22,7 @@ define([], function() {
             {className:'FormParam', isUccello:true, component:'controls/formParam'},
             {className:'SubForm', isUccello:true, component:'controls/subForm'},
             {className:'Container', isUccello:true, component:'controls/container', viewset:false},
+            {className:'CContainer', isUccello:true, component:'controls/cContainer', viewset:false},
             {className:'Form', isUccello:true, component:'controls/form', viewset:false},
             {className:'Button', isUccello:true, component:'controls/button', viewset:false},
             {className:'DataColumn', isUccello:true, component:'controls/dataColumn'},
@@ -72,13 +73,14 @@ define([], function() {
             'Edit':"f79d78eb-4315-5fac-06e0-d58d07572482",
             'DataEdit':"affff8b1-10b0-20a6-5bb5-a9d88334b48e",
             'DataColumn':"100f774a-bd84-8c46-c55d-ba5981c09db5",
-            'Container':"1d95ab61-df00-aec8-eff5-0f90187891cf",
             'Button':"af419748-7b25-1633-b0a9-d539cada8e0d",
             'DataGrid':"ff7830e2-7add-e65e-7ddf-caba8992d6d8",
             'UModule':"8fead303-a4e1-98bb-efb6-ee38ee021265",
             'VisualContext':"64827c89-e73e-215f-f71a-7f90627ae61d",
             'Vcresource':"870c63b5-7aed-bb44-3109-bb63a407988f",
-            'UObject':"3b02ef32-83b7-e470-ec5c-f6605e46e9dc"
+            'UObject':"3b02ef32-83b7-e470-ec5c-f6605e46e9dc",
+            'Container':"d9f2fe22-ba91-1638-0f64-fb15a5410d01",
+            'CContainer':"1d95ab61-df00-aec8-eff5-0f90187891cf"
         },
 
         // изменяемые свойства
