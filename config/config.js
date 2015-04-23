@@ -26,6 +26,9 @@ define([], function() {
             {className:'HContainer', isUccello:true, component:'controls/hContainer', viewset:false},
             {className:'VContainer', isUccello:true, component:'controls/vContainer', viewset:false},
             {className:'GContainer', isUccello:true, component:'controls/gContainer', viewset:false},
+            {className:'GColumn', isUccello:true, component:'controls/gColumn', viewset:false},
+            {className:'GRow', isUccello:true, component:'controls/gRow', viewset:false},
+            {className:'GCell', isUccello:true, component:'controls/gCell', viewset:false},
             {className:'Form', isUccello:true, component:'controls/form', viewset:false},
             {className:'Button', isUccello:true, component:'controls/button', viewset:false},
             {className:'DataColumn', isUccello:true, component:'controls/dataColumn'},
@@ -86,7 +89,10 @@ define([], function() {
             'CContainer':"1d95ab61-df00-aec8-eff5-0f90187891cf",
             'HContainer':"638c1e37-2105-9676-f3c9-dfc2746d1265",
             'VContainer':"a56e2e53-c72d-f014-d763-e096bfb51b8f",
-            'GContainer':"26309035-7f47-422e-26c8-6c25a091c20e"
+            'GContainer':"26309035-7f47-422e-26c8-6c25a091c20e",
+            'GColumn':"9d00a857-4a93-6b7a-9ef0-08b14dc81e54",
+            'GRow':"157eb87c-3331-97cf-e307-a0c5311ba7d5",
+            'GCell':"69087f9c-99ed-14f1-0fe7-05058a862af5"
         },
 
         // изменяемые свойства
