@@ -238,21 +238,13 @@ define(
 			 * @returns {object}
 			 */
 			createDb: function(dbc, params){
-			
 				var cm = this.pvt.cm = new ControlMgr( { controller: dbc, dbparams: params },this,this.pvt.socket);
-
-				// TODOR2  - а нужно? Сергею исправить
-				new UObject(cm);
-				new AComponent(cm); new AControl(cm);
-
-				// другие компоненты
 				var ctrls = UCCELLO_CONFIG.controls;
 				for (var i in ctrls) {
 					var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath;
 					var comp = require(path + ctrls[i].component);
 					new comp(cm);
 				}
-
 				return cm;
 			},
 

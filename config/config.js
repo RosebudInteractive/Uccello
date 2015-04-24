@@ -13,6 +13,9 @@ define([], function() {
 
         // расширяемый список контролов
         controls: [
+            {className:'UObject', isUccello:true, component:'system/uobject'},
+            {className:'AComponent', isUccello:true, component:'controls/aComponent'},
+            {className:'AControl', isUccello:true, component:'controls/aControl'},
             {className:'ADataControl', isUccello:true, component:'controls/aDataControl'},
             {className:'ADataFieldControl', isUccello:true, component:'controls/aDataFieldControl'},
             {className:'DataRoot', isUccello:true, component:'dataman/dataRoot'},
