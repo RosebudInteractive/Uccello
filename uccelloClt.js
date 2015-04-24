@@ -119,10 +119,6 @@ define(
 				return this.pvt.dbsys; 
 			},
 
-            getClientDB: function() {
-				return this.pvt.dbclient;
-			},
-
             getClientCM: function() {
 				return this.pvt.cmclient;
 			},
