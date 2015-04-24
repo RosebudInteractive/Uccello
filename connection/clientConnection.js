@@ -29,6 +29,7 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                 this.connected = false;
                 this.authenticated = false;
                 this.newTabCallback = params.newTabCallback;
+                this.commClient = null;
             }
         },
 
@@ -41,8 +42,13 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
         connect: function(url, session, callback) {
             var that = this;
             this.session = session;
-            that.socket = new Socket(url, {
-                open: function(){ // при открытии соединения
+
+            if (! this.commClient)
+                throw new Error("ClientConnection.connect: CommunicationClient object is EMPTY.");
+
+            //that.socket = new Socket(url, {
+            that.socket = this.commClient.newChannel(url, {
+                    open: function(){ // при открытии соединения
                     that.connected = true;
                     // отправляем сообщение что подключились
                     that.socket.send({action:'connect', type:'method', session: JSON.stringify(session), agent:navigator.userAgent}, callback);

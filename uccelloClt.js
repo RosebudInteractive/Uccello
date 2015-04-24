@@ -24,7 +24,9 @@ define(
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
 
                 var clt = this.pvt.clientConnection = new ClientConnection(null, {newTabCallback:options.newTabCallback});
-				this.pvt.dbcontext = null;
+                clt.commClient = options.commClient;
+
+                this.pvt.dbcontext = null;
                 this.pvt.controlMgr = {};
 				this.pvt.vc = null; // VisualContext
 				this.pvt.clientContextId = 0;

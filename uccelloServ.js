@@ -35,6 +35,7 @@ define(
                 this.pvt.userSessionMgr = new UserSessionMgr(this.getRouter(), {authenticate:options.authenticate, rpc:this.pvt.rpc, proxyServer: this.pvt.proxyServer, constructHolder:this.pvt.constructHolder});
                 this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController());
                 this.pvt.resman = new Resman(that.getUserMgr().getController());
+                this.pvt.commServer = options.commServer;
 
                 this.getRouter().add('getGuids', function(data, done) {
                     var user = that.getUserMgr().getConnect(data.$sys.socket.getConnectId()).getSession().getUser();
@@ -73,23 +74,18 @@ define(
                 });
 
                 // запускаем вебсокетсервер
-                this.wss = new WebSocketServer.Server(UCCELLO_CONFIG.webSocketServer);
-                this.wss.on('connection', function(ws) {
-                    // id подключения
-                    that._connectId++;
-                    new Socket(ws, {
-                        side: 'server',
-                        connectId: that._connectId,
-                        close: function(event, connectId) { // при закрытии коннекта
+                if (this.pvt.commServer != null)
+                    this.pvt.commServer.setEventHandlers({
+                        close: function (event, connectId) { // при закрытии коннекта
                             var connect = that.getUserMgr().getConnect(connectId);
                             if (connect)
                                 connect.closeConnect();
                             if (DEBUG)
                                 console.log("отключился клиент: " + connectId);
                         },
-                        router: function(data, connectId, socket, done) {
+                        router: function (data, connectId, socket, done) {
                             if (DEBUG)
-                                console.log('сообщение с клиента '+connectId+':', data);
+                                console.log('сообщение с клиента ' + connectId + ':', data);
 
                             // логирование входящих запросов
                             that.pvt.logger.addLog(data);
@@ -101,7 +97,35 @@ define(
                             that.getRouter().exec(data.args, done);
                         }
                     });
-                });
+                //this.wss = new WebSocketServer.Server(UCCELLO_CONFIG.webSocketServer);
+                //this.wss.on('connection', function(ws) {
+                //    // id подключения
+                //    that._connectId++;
+                //    new Socket(ws, {
+                //        side: 'server',
+                //        connectId: that._connectId,
+                //        close: function(event, connectId) { // при закрытии коннекта
+                //            var connect = that.getUserMgr().getConnect(connectId);
+                //            if (connect)
+                //                connect.closeConnect();
+                //            if (DEBUG)
+                //                console.log("отключился клиент: " + connectId);
+                //        },
+                //        router: function(data, connectId, socket, done) {
+                //            if (DEBUG)
+                //                console.log('сообщение с клиента '+connectId+':', data);
+
+                //            // логирование входящих запросов
+                //            that.pvt.logger.addLog(data);
+
+                //            // обработчик
+                //            data.args.$sys = {};
+                //            data.args.$sys.connect = that.getUserMgr().getConnect(connectId);
+                //            data.args.$sys.socket = socket;
+                //            that.getRouter().exec(data.args, done);
+                //        }
+                //    });
+                //});
             },
 			
 			getUserMgr: function() {

@@ -7,7 +7,19 @@ if (typeof define !== 'function') {
  * Config
  * @module Config
  */
-define([], function() {
+define([], function () {
+
+    var CommClientTypes = {
+        AJAX: 1,
+        WEB_SOCKET: 2,
+        SOCKET_IO: 4
+    };
+
+    var CommServerTypes = {
+        AJAX: 1,
+        WEB_SOCKET: 2,
+        SOCKET_IO: 4
+    };
 
     var config = Class.extend({
 
@@ -99,7 +111,22 @@ define([], function() {
         controlsPath: '',
         uccelloPath: '',
         viewSet: null,
-        webSocketServer: {port:8081},
+        commServerTypes: CommServerTypes,
+        commClientTypes: CommClientTypes,
+        webSocketServer: {
+            port: 8081,
+            //type: CommServerTypes.AJAX + CommServerTypes.WEB_SOCKET
+            type: CommServerTypes.SOCKET_IO
+        },
+        webSocketClient: {
+            //type: CommClientTypes.WEB_SOCKET
+            type: CommClientTypes.SOCKET_IO
+            //type: CommClientTypes.AJAX,
+            //ajax: 
+            //    {
+            //        polling_timeout: 500
+            //    }
+        },
 
         init: function(config) {
             for(var index in config) {
