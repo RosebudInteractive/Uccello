@@ -239,12 +239,13 @@ define(
 			 */
 			createDb: function(dbc, params){
 				var cm = this.pvt.cm = new ControlMgr( { controller: dbc, dbparams: params },this,this.pvt.socket);
-				var ctrls = UCCELLO_CONFIG.controls;
+				cm.buildMetaInfo('content');
+				/*var ctrls = UCCELLO_CONFIG.controls;
 				for (var i in ctrls) {
 					var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath;
 					var comp = require(path + ctrls[i].component);
 					new comp(cm);
-				}
+				}*/
 				return cm;
 			},
 

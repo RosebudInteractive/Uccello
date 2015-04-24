@@ -4,9 +4,8 @@ if (typeof define !== 'function') {
 }
 
 define(
-    ['../memDB/memDBController', '../controls/controlMgr', '../system/uobject', '../system/umodule', '../controls/aComponent', '../controls/aControl', './sessioninfo', './session', './connectinfo', './connect', './userinfo', './user', '../system/event',
-        './vc',  '../connection/vcresource', '../system/utils'],
-    function(MemDBController, ControlMgr, UObject, UModule, AComponent, AControl, SessionInfo, Session, ConnectInfo, Connect, UserInfo, User, Event, VisualContext, Vcresource, Utils) {
+    ['../memDB/memDBController', '../controls/controlMgr', '../system/event', '../system/utils', './user', './vc', './connect', './session'],
+    function(MemDBController, ControlMgr, Event,  Utils, User, VisualContext, Connect, Session) {
             var UserSessionMgr = Class.extend({
 
             init: function(router, options){
@@ -33,17 +32,7 @@ define(
 				this.dbsys = this.cmsys; // TODO R2 поправить потом (слились)
 
                 // создаем метаинфо
-                new UObject(this.cmsys);
-                new UModule(this.cmsys);
-                new AComponent(this.cmsys);
-                new UserInfo(this.cmsys);
-                new User(this.cmsys);
-                new SessionInfo(this.cmsys);
-                new Session(this.cmsys);
-                new ConnectInfo(this.cmsys);
-                new Connect(this.cmsys);
-                new VisualContext(this.cmsys);
-                new Vcresource(this.cmsys);
+                this.cmsys.buildMetaInfo('sys');
 
                 // функции роутера
                 var that = this;

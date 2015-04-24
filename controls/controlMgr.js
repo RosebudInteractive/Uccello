@@ -304,7 +304,37 @@ define(
                 if (value !== undefined)
                     this.pvt.asd = value;
                 return this.pvt.asd;
-            }
+            },
+
+			buildMetaInfo: function(type, side, done){
+				var ctrls = UCCELLO_CONFIG.controls;
+
+				if (!side || side == 'server') {
+					for (var i in ctrls) {
+						if ((!ctrls[i].metaType && type=='content') || (ctrls[i].metaType && ctrls[i].metaType.indexOf(type)!=-1)) {
+							var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath;
+							var comp = require(path + ctrls[i].component);
+							new comp(this);
+						}
+					}
+				} else {
+					var that = this;
+					var scripts = [];
+					// собираем все нужные скрипты в кучу
+					for (var i = 0; i < ctrls.length; i++) {
+						if ((!ctrls[i].metaType && type=='content') || (ctrls[i].metaType && ctrls[i].metaType.indexOf(type)!=-1)) {
+							var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath : UCCELLO_CONFIG.controlsPath
+							scripts.push(path + ctrls[i].component);
+						}
+					}
+					// загружаем скрипты и выполняем колбэк
+					require(scripts, function(){
+						for(var i=0; i<scripts.length; i++)
+							new (arguments[i])(that);
+						done();
+					});
+				}
+			}
 
 		});
 		return ControlMgr;

@@ -98,18 +98,11 @@ define(
 					that.pvt.dbsys = that.pvt.cmsys; // TODOR2 убрать
 
                     // создаем мастер базу для clientConnection
-                    //that.pvt.dbclient = that.pvt.controller.newDataBase({name:"MasterClient", kind: "master"});
-                    //that.pvt.cmclient = new ControlMgr(that.pvt.dbclient,null,that.pvt.clientConnection.socket);
                     dbp = {name:"MasterClient", kind: "master"};
                     that.pvt.cmclient = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket);
-					that.pvt.dbclient =  that.pvt.cmclient; // TODOR2 убрать
-                    new UObject(that.pvt.cmclient);
-                    new UModule(that.pvt.cmclient);
-                    new AComponent(that.pvt.cmclient);
-                    new VisualContext(that.pvt.cmclient);
-                    new Vcresource(that.pvt.cmclient);
-                    new ClientConnection(that.pvt.cmclient);
-                    that.pvt.clientConnection.init(that.pvt.cmclient, {});
+                    that.pvt.cmclient.buildMetaInfo('client', 'client', function(){
+                        that.pvt.clientConnection.init(that.pvt.cmclient, {});
+                    });
 
                 });
             },
