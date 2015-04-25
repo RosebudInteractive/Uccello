@@ -26,10 +26,8 @@ define(
 
                 // системные объекты
                 this.dbcsys = new MemDBController(router);
-                //this.dbsys = this.dbcsys.newDataBase({name: "System", kind: "master", guid:UCCELLO_CONFIG.guids.sysDB});
 				var dbp =  {name: "System", kind: "master", guid:UCCELLO_CONFIG.guids.sysDB}
                 this.cmsys = new ControlMgr( { controller: this.dbcsys, dbparams: dbp });
-				this.dbsys = this.cmsys; // TODO R2 поправить потом (слились)
 
                 // создаем метаинфо
                 this.cmsys.buildMetaInfo('sys');
@@ -120,7 +118,7 @@ define(
                 var context = new VisualContext(this.cmsys, params);
 				context.on(this.cmsys, params);
                 var result = {roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};
-                controller.genDeltas(this.dbsys.getGuid());
+				controller.genDeltas(this.cmsys.getGuid());
                 done(result);
             },
 
@@ -285,13 +283,9 @@ define(
                         session.deviceType(data.session.deviceType);
                         session.deviceColor(data.session.deviceColor);
 
-
-						that.dbcsys.genDeltas(that.dbsys.getGuid());
+						that.dbcsys.genDeltas(that.cmsys.getGuid());
                         done({user:{user: userObj.name(), guid:userObj.getGuid(), loginTime: userObj.loginTime(),
                                 session:{id:session.getId(), guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
-						/*
-                        done({user:{user: userObj.name(), guid:userObj.getObj().getGuid(), loginTime: userObj.loginTime(),
-                                session:{id:session.getId(), guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});*/
                     } else {
                         done({user:null});
                     }
@@ -322,9 +316,8 @@ define(
                 //user.getObj().getCol("Sessions")._add(session.getObj());
 
                 // рассылка дельт
-                this.dbcsys.genDeltas(this.dbsys.getGuid());
+				this.cmsys.genDeltas(this.cmsys.getGuid());
 				done({user:{user: user.name(), guid:user.getGuid(), session:{id:session.getId(), guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
-                //done({user:{user: user.name(), guid:user.getObj().getGuid(), session:{id:session.getId(), guid:session.sessionGuid(), deviceName:session.deviceName(), deviceType:session.deviceType(), deviceColor:session.deviceColor()}}});
             },
 
             /**
@@ -340,8 +333,10 @@ define(
                     user.removeSession(sessions[i].getId())
                 }
             },
-
-
+			
+			getSysCM: function() {
+				return this.cmsys;
+			},
 
             addSession: function(session){
                 this.sessions[session.getId()] = {item:session, date:new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')};

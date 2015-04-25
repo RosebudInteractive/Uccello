@@ -149,19 +149,17 @@ define(
              * @param flds - поля объекта для инициализации
              */
 			addObject: function(flds) {
-				// TODO
-				// имплементировать добавление 
-				// нужно добавить в ini рутовый элемент, имя коллекции
-				// и вызвать конструктор соответствующего objType - запросив его у контролменеджера
-				//var cm = this.getControlMgr();
-				//var dataRoot = this.getDB().getRoot(this.root()).obj;
-				var dataRoot = this.getRoot(this.root());
-				//var params = {parent:dataRoot, colName: "DataElements", ini:{fields:fields}};
+				var db = this.getDB();
+				var dataRoot = db.getRoot(this.root()).obj;
 				var parent = {obj:dataRoot, colName: "DataElements"};
-				return this.getDB().addObj(this.objtype(),parent,flds);
-				//var comp = cm.getContext().getConstructorHolder().getComponent(this.objtype());
-				//var obj = new comp.constr(cm, params);
-				//cm.userEventHandler(obj);
+				//return 
+				var obj=  db.addObj(db.getObj(this.objtype()),parent,flds);
+				
+				this.event.fire({ // TODO другое событие сделать
+							type: 'modFld',
+							target: this				
+						});
+				return obj;
 			},
 			
 			getDataVer: function() {

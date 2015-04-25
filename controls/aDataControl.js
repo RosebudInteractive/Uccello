@@ -26,15 +26,12 @@ define(
 			processDelta: function() {
 				var dsg = this.dataset();
 				if (dsg) { // TODO лучше сделать через методы компонента чем лезть в ОД
-					var dsc = this.getComp(dsg); //getControlMgr().get(dsg);
-					var dso = dsc; //.getObj();
+					var dsc = this.getComp(dsg);
 					if (!dsc._isProcessed()) dsc.processDelta(); // если у датасета processDelta еще не вызван, то вызвать его
-					if (dsc.root() && this.getControlMgr().getObj(dsc.root()))
+					if (dsc.root() && this.getDB().getObj(dsc.root()))
 						var dsmod = this.getDB().getObj(dsc.root()).isDataModified();
-					// TODO R2 поменять когда в контролМенеджере будут компоненты
-					  //var dsmod = this.getDB().getObj(dsc.root()).isDataModified();
 					else dsmod = false;
-					if (dso.isFldModified("Root") || dso.isFldModified("Cursor") || dsmod) this._isRendered(false);
+					if (dsc.isFldModified("Root") || dsc.isFldModified("Cursor") || dsmod) this._isRendered(false);
 				}
 				this._isProcessed(true);
 

@@ -41,9 +41,8 @@ define(
                     var user = that.getUserMgr().getConnect(data.$sys.socket.getConnectId()).getSession().getUser();
                     var userData = user.getData();
                     var result = {
-                        masterSysGuid:that.getUserMgr().dbsys.getGuid(),
+						masterSysGuid:that.getUserMgr().getSysCM().getGuid(),
 						sysRootGuid:user.getGuid()
-                       // sysRootGuid:user.getObj().getGuid()
                     };
                     done(result);
                     return result;

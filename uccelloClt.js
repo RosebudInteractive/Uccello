@@ -93,11 +93,8 @@ define(
                     });
 
                     // создаем системную бд
-                    //that.pvt.dbsys = that.pvt.controller.newDataBase({name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}}, done);
 					var dbp = {name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}};
-                    //that.pvt.cmsys = new ControlMgr(that.pvt.dbsys,null,that.pvt.clientConnection.socket);
 					that.pvt.cmsys = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket, done);
-					that.pvt.dbsys = that.pvt.cmsys; // TODOR2 убрать
 
                     // создаем мастер базу для clientConnection
                     dbp = {name:"MasterClient", kind: "master"};
@@ -115,10 +112,6 @@ define(
 			
 			getController: function() {
 				return this.pvt.controller;
-			},
-			
-			getSysDB: function() {
-				return this.pvt.dbsys; 
 			},
 
             getClientCM: function() {
@@ -257,7 +250,6 @@ define(
                     transArr[UCCELLO_CONFIG.classGuids.Connect] = UCCELLO_CONFIG.classGuids.ConnectInfo; // Connect -> ConnectInfo
                     transArr[UCCELLO_CONFIG.classGuids.Session] = UCCELLO_CONFIG.classGuids.SessionInfo; // Session -> SessionInfo
                     classGuid = transArr[classGuid]? transArr[classGuid]: classGuid;
-                    //var params = {objGuid: sobj.$sys.guid};
 					var params = {ini: sobj, parent: parent.obj, colName: parent.colName};
                     var component = new (that.pvt.constructHolder.getComponent(classGuid).constr)(that.pvt.cmsys, params);
                     if (classGuid == UCCELLO_CONFIG.classGuids.UserInfo) { // UserInfo
@@ -265,8 +257,8 @@ define(
                     }
                     return component;
                 };
-                this.getSysDB().setDefaultCompCallback(compCallBack);
-                this.getSysDB().subscribeRoots(this.pvt.guids.sysRootGuid, callback, compCallBack);
+                this.getSysCM().setDefaultCompCallback(compCallBack);
+                this.getSysCM().subscribeRoots(this.pvt.guids.sysRootGuid, callback, compCallBack);
             },
 
             deauthenticate: function(callback){
@@ -275,7 +267,7 @@ define(
                     that.pvt.sessionGuid = result.user.session.guid;
                     that.pvt.sessionId = result.user.session.id;
                     that.pvt.guids.sysRootGuid = result.user.guid;
-                    that.getSysDB().subscribeRoots(that.pvt.guids.sysRootGuid, callback);
+                    that.getSysCM().subscribeRoots(that.pvt.guids.sysRootGuid, callback);
                 });
             }
 
