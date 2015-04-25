@@ -46,12 +46,12 @@ define(
 					this.getControlMgr().get(master).event.on({
 						type: 'refreshData',
 						subscriber: this,
-						callback: function(){ this._dataInit(true); } // false вернуть
+						callback: function(){ this._dataInit(false); } 
 					});
 					this.getControlMgr().get(master).event.on({
 						type: 'moveCursor',
 						subscriber: this,
-						callback: function(){ this._dataInit(false); } // false вернуть
+						callback: function(){ this._dataInit(false); } 
 					});
 				}
 			},
@@ -93,7 +93,7 @@ define(
 					that.getControlMgr().userEventHandler(that, refrcb );
 				}
 			
-				
+				debugger;
 				var rg = this.root();
 				var master = this.master();
 				if (rg) {
@@ -118,8 +118,9 @@ define(
 					var dataRoot = this.getDB().getObj(rg);
 					if (dataRoot) {
 						var col = dataRoot.getCol("DataElements");
-						if (!dataRoot.getCol("DataElements").getObjById(this.cursor()))
+						if (!dataRoot.getCol("DataElements").getObjById(this.cursor())) {
 							if (col.count()>0) this.cursor(col.get(0).get("Id")); // установить курсор в новую позицию (наверх)
+						}
 						else this._setDataObj(this.cursor()); // 
 					}
 				}
