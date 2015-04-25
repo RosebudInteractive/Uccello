@@ -39,9 +39,7 @@ define(
 			
 			subsInit: function() {
 				var master = this.master(); // подписаться на обновление данных мастер датасета
-				// DEBUG
-				//master = undefined;
-				//END DEBUG
+
 				if (master && this.active()) {
 					this.getControlMgr().get(master).event.on({
 						type: 'refreshData',
@@ -93,7 +91,7 @@ define(
 					that.getControlMgr().userEventHandler(that, refrcb );
 				}
 			
-				debugger;
+				//debugger;
 				var rg = this.root();
 				var master = this.master();
 				if (rg) {
