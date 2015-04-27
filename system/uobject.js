@@ -97,7 +97,7 @@ define(
 					// компонент с парентом
 					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{obj: params.parent.getObj(), "colName": col}, params.ini);
 					parent = {obj: params.parent, "colName": col};
-				}				
+				}
 				this.memobjInit(cm.getObj(this.classGuid),parent,params.ini);
                 //this.pvt = {};
                 this.pvt.controlMgr = cm;

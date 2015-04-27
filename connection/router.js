@@ -45,7 +45,7 @@ define(['../system/event'], function(event) {
             if (this._actions[data.action]) {
                 var log = [Date.now(), data.action];
                 function doneTime() {
-                    log.push((Date.now()-log[0])+' ms');
+                    log.push((Date.now()-log[0]));
                     log[0] = (new Date(log[0])).toISOString();
 
                     if (data.action == "remoteCall2") {

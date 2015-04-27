@@ -99,17 +99,20 @@ define(
 						if (sobj.$sys.typeGuid == UCCELLO_CONFIG.classGuids.DataCompany) {
 							if (!that.timeDataCompany)
 								that.timeDataCompany = 0;
-							var start = performance.now();
+							if (DEBUG)
+								var start = performance.now();
 						}
 
 						var comp =  that.createComponent.apply(that, [typeObj, parent, sobj]);
 
-						if (sobj.$sys.typeGuid == UCCELLO_CONFIG.classGuids.DataCompany) {
-							var end = performance.now();
-							var time = end - start;
-							that.timeDataCompany += time;
-							console.log('timeOneDataCompany', time);
-							console.log('timeAllDataCompany', that.timeDataCompany);
+						if (DEBUG) {
+							if (sobj.$sys.typeGuid == UCCELLO_CONFIG.classGuids.DataCompany) {
+								var end = performance.now();
+								var time = end - start;
+								that.timeDataCompany += time;
+								console.log('timeOneDataCompany', time);
+								console.log('timeAllDataCompany', that.timeDataCompany);
+							}
 						}
 
 						return comp;
