@@ -39,6 +39,38 @@ define(
 				}
 			},
 			
+			memobjInit: function(objType, parent, flds) {
+
+				this.protoobjInit(objType, parent, flds);
+				
+				this.event = new Event();
+				
+				var ot = this.pvt.objType;
+				for (var i=0; i<ot.pvt.fieldsArr.length; i++) {
+						var f = ot.pvt.fieldsArr[i];
+						if ((flds!=undefined) && ("fields" in flds) && (f in flds.fields))
+						  this.pvt.fields[i] = flds.fields[f]; // TODO проверять типы?	
+						else
+						  this.pvt.fields[i] = undefined;				
+				}
+				
+				// создать пустые коллекции по типу
+				var ccol = objType.getCol("cols");
+				for (var i=0; i<ccol.count(); i++) {
+					new MemCol(ccol.get(i).get("cname"),this);
+				}
+				
+				this.finit();
+
+				if (!parent.obj) { // TODO возможно потребуется сделать подобное собыие для метаинформации
+					this.getDB().event.fire({
+						type: 'newRoot',
+						target: this
+					});
+				}
+			},
+
+			
 			// получить коллекцию по имени или по индексу
 			getCol: function(col) {
 				if (typeof col == "string") {

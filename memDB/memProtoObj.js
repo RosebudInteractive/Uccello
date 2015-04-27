@@ -59,6 +59,57 @@ define(
 				this.getDB()._addObj(this);
 										
 			},
+
+			protoobjInit: function(objType, parent,flds){
+			
+				var pvt = this.pvt = {}; // приватные члены
+				 
+				pvt.objType = objType;
+				pvt.fields = [];				// значения полей объекта
+				pvt.collections = [];			// массив дочерних коллекций
+				pvt.log = null; 
+				//pvt.state = 0;
+				pvt.fldLog = {};
+				pvt.colLog = {};				// лог изменений в дочерних коллекциях
+				pvt.isModified = false;
+				pvt.cntFldModif=0;
+				pvt.cntColModif=0;
+				
+				if (!parent.obj) {	// корневой объект
+					pvt.col = null;
+					pvt.db = parent.db;
+					pvt.parent = null;
+				}
+				else {				// объект в коллекции (не корневой)
+					pvt.col = parent.obj.getCol(parent.colName);
+					pvt.parent = parent.obj;	
+					pvt.colName = parent.colName;
+				}
+
+				if (this.getDB()==undefined) if (DEBUG) console.log(parent.obj);
+				pvt.$id = this.getDB().getNewLid();		// локальный идентификатор
+				if ((flds) && (flds.$sys) && (flds.$sys.guid))	// если гуид пришел в системных полях, то используем его
+					pvt.guid = flds.$sys.guid;
+				else 											// если нет - генерируем динамически
+					pvt.guid =  this.getDB().getController().guid();  // TODO перенести в UTILS?
+				
+				if (!parent.obj) {	// корневой объект				
+					pvt.log = new MemObjLog(this);	// создать лог записи изменений
+					// активизация корневого НЕ НУЖНА? TODO R2
+					// 20/4 - не факт, что это правильно, пока оставляем в комментах..
+					//if ((parent.mode == "RW") && (!parent.nolog) && (!pvt.db.isMaster())) // не мастер, то активируем, для мастера - на 1й подписке
+					//	pvt.log.setActive(true); // лог активен только для корневого объекта, который создан в режиме ReadWrite
+					// ## перенес на 3 строки ниже, чтобы лог уже существовал
+					if (!objType || objType.getGuid()==UCCELLO_CONFIG.classGuids.DataRoot)
+						pvt.db._addRoot(this,{ type: "data", mode: parent.mode});
+					else 
+						pvt.db._addRoot(this,{ type: "res", mode: parent.mode});
+				}
+
+				this.getDB()._addObj(this);
+										
+			},
+
 			
 			// завершение инициализации (вызывается из наследников)
 			finit: function() {

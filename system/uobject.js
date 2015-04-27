@@ -74,6 +74,35 @@ define(
                 //}
                 //cm.add(this);
             },
+			
+			uobjectInit: function(cm, params){
+			
+				if (!("pvt" in this)) this.pvt = {};
+			
+				this._buildMetaInfo(cm);
+                if (params==undefined) return; // в этом режиме только создаем метаинфо			
+
+				params.ini = params.ini ? params.ini : {};
+				if (!("colName" in params))
+					var col = "Children";
+				else col = params.colName;
+				// если рутовый то указываем db
+				if (params.parent===undefined) {
+					// корневой компонент
+					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{db: cm.getDB(), mode: "RW"}, params.ini);
+					//var parent = {db: cm.getDB(), mode: "RW"};
+					var parent = {db: cm, mode: "RW"};
+				}
+				else {
+					// компонент с парентом
+					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{obj: params.parent.getObj(), "colName": col}, params.ini);
+					parent = {obj: params.parent, "colName": col};
+				}				
+				this.memobjInit(cm.getObj(this.classGuid),parent,params.ini);
+                //this.pvt = {};
+                this.pvt.controlMgr = cm;
+                this.pvt.isProcessed = true; // признак обработки входящей дельты
+			},
 
             // no op function - имплементируется в наследниках для подписки
             // порядок вызова: 1) init (конструктор), 2) subsInit (подписка), 3) dataInit (дальнейшая инициализация, в основном данные)

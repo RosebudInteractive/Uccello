@@ -19,16 +19,12 @@ define(
 			init: function(dbinit, vc, socket, cb){
 				
 				this._super(dbinit.controller, dbinit.dbparams, cb);
-				//this.pvt = {};
-				//this.pvt.guid = db.getController().guid();
+
 				this.pvt.compByLid = {};
 				this.pvt.compByGuid = {};
 				this.pvt.compByName = {};				
 				this.pvt.subsInitFlag = false;
 				this.pvt.dataInitFlag = false;
-				//this.pvt.db = db;
-				// REFACT213
-				// this.pvt.rootGuid = rootGuid;
 				this.pvt.rootGuids = {};
 				this.pvt.vc = vc;
 				
@@ -39,18 +35,13 @@ define(
 						this.pvt.socket = vc.getSocket();
 				this.pvt.viewSets = [this.createViewSet(UCCELLO_CONFIG.viewSet)];
                 this.pvt.asd = true;
-				// REFACT213
-				//if (rootGuid) {
-				//	if (db.getObj(rootGuid)==undefined) {
-				//
-					    this.event.on( {
-						//db.event.on( {
-							type: "newRoot",
-							subscriber: this,
-							callback: this.onNewRoot
-						});
-				//	}
-				//}
+
+				this.event.on( {
+
+					type: "newRoot",
+					subscriber: this,
+					callback: this.onNewRoot
+				});
                     
 /*                } else { // MemObj
                     this.pvt.root = dbOrRoot;
@@ -64,7 +55,6 @@ define(
 			},
 			
 			subsInit: function() {
-				//var c = this.getRoot();
 
 				for (var g in this.pvt.compByGuid)
 					this.pvt.compByGuid[g].subsInit();
