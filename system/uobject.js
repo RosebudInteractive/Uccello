@@ -87,19 +87,12 @@ define(
 					var col = "Children";
 				else col = params.colName;
 				// если рутовый то указываем db
-				if (params.parent===undefined) {
-					// корневой компонент
-					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{db: cm.getDB(), mode: "RW"}, params.ini);
-					//var parent = {db: cm.getDB(), mode: "RW"};
+				if (params.parent===undefined)
 					var parent = {db: cm, mode: "RW"};
-				}
-				else {
-					// компонент с парентом
-					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{obj: params.parent.getObj(), "colName": col}, params.ini);
+				else
 					parent = {obj: params.parent, "colName": col};
-				}				
+			
 				this.memobjInit(cm.getObj(this.classGuid),parent,params.ini);
-                //this.pvt = {};
                 this.pvt.controlMgr = cm;
                 this.pvt.isProcessed = true; // признак обработки входящей дельты
 			},

@@ -16,18 +16,17 @@ define(
 
 				var ot = this.pvt.objType;
 				for (var i=0; i<ot.pvt.fieldsArr.length; i++) {
-						var f = ot.pvt.fieldsArr[i];
-						if ((flds!=undefined) && ("fields" in flds) && (f in flds.fields))
-						  this.pvt.fields[i] = flds.fields[f]; // TODO проверять типы?	
-						else
-						  this.pvt.fields[i] = undefined;				
+					var f = ot.pvt.fieldsArr[i];
+					if ((flds!=undefined) && ("fields" in flds) && (f in flds.fields))
+					  this.pvt.fields[i] = flds.fields[f]; // TODO проверять типы?	
+					else
+					  this.pvt.fields[i] = undefined;				
 				}
 				
 				// создать пустые коллекции по типу
 				var ccol = objType.getCol("cols");
-				for (var i=0; i<ccol.count(); i++) {
+				for (var i=0; i<ccol.count(); i++)
 					new MemCol(ccol.get(i).get("cname"),this);
-				}
 				
 				this.finit();
 
@@ -43,26 +42,30 @@ define(
 
 				this.protoobjInit(objType, parent, flds);
 				
-				this.event = new Event();
+				//this.event = new Event();
 				
 				var ot = this.pvt.objType;
-				for (var i=0; i<ot.pvt.fieldsArr.length; i++) {
-						var f = ot.pvt.fieldsArr[i];
-						if ((flds!=undefined) && ("fields" in flds) && (f in flds.fields))
-						  this.pvt.fields[i] = flds.fields[f]; // TODO проверять типы?	
-						else
-						  this.pvt.fields[i] = undefined;				
+				var cf = this.pvt.fields;
+				if ((flds!=undefined) && ("fields" in flds)) {
+					for (var i=0; i<ot.pvt.fieldsArr.length; i++) {
+							var f = ot.pvt.fieldsArr[i];
+							if (f in flds.fields)
+							  cf[i] = flds.fields[f]; // TODO проверять типы?	
+							else
+							  cf[i] = undefined;				
+					}
 				}
 				
 				// создать пустые коллекции по типу
 				var ccol = objType.getCol("cols");
-				for (var i=0; i<ccol.count(); i++) {
+				for (var i=0; i<ccol.count(); i++) 
 					new MemCol(ccol.get(i).get("cname"),this);
-				}
+			
 				
 				this.finit();
 
 				if (!parent.obj) { // TODO возможно потребуется сделать подобное собыие для метаинформации
+					this.event = new Event();
 					this.getDB().event.fire({
 						type: 'newRoot',
 						target: this
@@ -78,7 +81,7 @@ define(
 					return this.pvt.collections[i];
 				}
 				if (typeof col == "number") 
-					return this._super(col);
+					return this.getCol2(col);
 				return null;
 			},
 			
