@@ -49,7 +49,7 @@ define(['../system/event'], function(event) {
                     log[0] = (new Date(log[0])).toISOString();
 
                     if (data.action == "remoteCall2") {
-                        log[1] = log[1]+':'+JSON.stringify(data.args);
+                        log[1] = log[1]+':'+data.args.func; //JSON.stringify(data.args);
                     }
 
                     logger.info(log.join(';'));
