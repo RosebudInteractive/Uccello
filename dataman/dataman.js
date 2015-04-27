@@ -55,7 +55,7 @@ define(
                         var time = Date.now();
                         function ddd() {
                             var timeEnd = Date.now();
-                            logger.info((new Date()).toISOString()+';readCompanyFile;'+(timeEnd-time)+' ms');
+                            logger.info((new Date()).toISOString()+';readCompanyFile;'+(timeEnd-time));
                             done.apply(this, arguments)
                         }
                         this.getCompany(guidRoot, 10000, ddd);

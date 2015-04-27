@@ -60,8 +60,7 @@ define(
 				var ccol = objType.getCol("cols");
 				for (var i=0; i<ccol.count(); i++) 
 					new MemCol(ccol.get(i).get("cname"),this);
-			
-				
+
 				this.finit();
 
 				if (!parent.obj) { // TODO возможно потребуется сделать подобное собыие для метаинформации

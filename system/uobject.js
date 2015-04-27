@@ -91,7 +91,7 @@ define(
 					var parent = {db: cm, mode: "RW"};
 				else
 					parent = {obj: params.parent, "colName": col};
-			
+
 				this.memobjInit(cm.getObj(this.classGuid),parent,params.ini);
                 this.pvt.controlMgr = cm;
                 this.pvt.isProcessed = true; // признак обработки входящей дельты
