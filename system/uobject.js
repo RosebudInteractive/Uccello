@@ -19,7 +19,7 @@ define(
              * @param params
              */
             init: function(cm, params){
-			
+
 				if (!("pvt" in this)) this.pvt = {};
 			
 				this._buildMetaInfo(cm);

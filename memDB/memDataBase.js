@@ -432,12 +432,19 @@ define(
 
 				if (!cb) cb = this.getDefaultCompCallback();
 
+
 				for (var i=0; i<sobjs.length; i++) {
 					var root = this.getRoot(sobjs[i].$sys.guid); 
 					if (!root || override) {
+						var time = Date.now();
 						var croot = this.deserialize(sobjs[i], { }, cb);
+						var timeEnd = Date.now();
+						logger.info((new Date()).toISOString()+';deserialize;'+(timeEnd-time)+' ms');
 						// добавить в лог новый корневой объект, который можно вернуть в виде дельты
+						var time = Date.now();
 						var serializedObj=this.serialize(croot); // TODO по идее можно взять sobjs[i], но при десериализации могут добавляться гуиды
+						var timeEnd = Date.now();
+						logger.info((new Date()).toISOString()+';serialize;'+(timeEnd-time)+' ms');
 						var o = { adObj: serializedObj, obj:croot, type:"newRoot"};
 						croot.getLog().add(o);
 						

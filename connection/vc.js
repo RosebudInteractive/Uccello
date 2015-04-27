@@ -71,9 +71,12 @@ define(
 							subscriber: that,
 							callback: that._setFormParams
 						});
-						
+
+						//var timeStart = perfomance.now();
 						var obj =  that.createComponent.apply(that, [typeObj, parent, sobj]);
-						
+						//var timeEnd = perfomance.now() - timeStart;
+						//logger.info('createComponent;'+timeEnd);
+
 						// TODOR2 переделать в соответствии с новыми реалиями
 						if (obj.getTypeGuid() == UCCELLO_CONFIG.classGuids.FormParam) { // Form Param
 							obj.event.on({

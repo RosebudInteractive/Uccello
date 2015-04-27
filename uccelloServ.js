@@ -24,7 +24,7 @@ define(
                 var that = this;
                 this._connectId = 0;
 				this.pvt = {};
-                this.pvt.logger = new Logger();
+                //this.pvt.logger = new Logger();
                 this.pvt.router = new Router();
 
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
@@ -87,7 +87,7 @@ define(
                                 console.log('сообщение с клиента ' + connectId + ':', data);
 
                             // логирование входящих запросов
-                            that.pvt.logger.addLog(data);
+                            //that.pvt.logger.addLog(data);
 
                             // обработчик
                             data.args.$sys = {};

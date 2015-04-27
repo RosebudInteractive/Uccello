@@ -11,9 +11,9 @@ define(
 
 			init: function(objType, parent, flds){
 				this._super(objType, parent, flds);
-				
+
 				this.event = new Event();
-				
+
 				var ot = this.pvt.objType;
 				for (var i=0; i<ot.pvt.fieldsArr.length; i++) {
 						var f = ot.pvt.fieldsArr[i];

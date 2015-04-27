@@ -42,8 +42,21 @@ define(['../system/event'], function(event) {
          * @param action
          */
         exec: function(data, done) {
-            if (this._actions[data.action])
-                return this._actions[data.action](data, done);
+            if (this._actions[data.action]) {
+                var log = [Date.now(), data.action];
+                function doneTime() {
+                    log.push((Date.now()-log[0])+' ms');
+                    log[0] = (new Date(log[0])).toISOString();
+
+                    if (data.action == "remoteCall2") {
+                        log[1] = log[1]+':'+JSON.stringify(data.args);
+                    }
+
+                    logger.info(log.join(';'));
+                    done.apply(this, arguments);
+                }
+                return this._actions[data.action](data, doneTime);
+            }
             return null;
         }
 

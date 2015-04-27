@@ -1,45 +1,45 @@
 /**
- * Синтаксис:
+ * РЎРёРЅС‚Р°РєСЃРёСЃ:
  * Class.extend(props)
  * Class.extend(props, staticProps)
  * Class.extend([mixins], props)
  * Class.extend([mixins], props, staticProps)
-*/
+ */
 !function() {
 
-  window.Class = function() { /* вся магия - в Class.extend */  };
+  window.Class = function() { /* РІСЃСЏ РјР°РіРёСЏ - РІ Class.extend */  };
 
 
   Class.extend = function(props, staticProps) {
 
     var mixins = [];
 
-    // если первый аргумент -- массив, то переназначить аргументы    
+    // РµСЃР»Рё РїРµСЂРІС‹Р№ Р°СЂРіСѓРјРµРЅС‚ -- РјР°СЃСЃРёРІ, С‚Рѕ РїРµСЂРµРЅР°Р·РЅР°С‡РёС‚СЊ Р°СЂРіСѓРјРµРЅС‚С‹    
     if ({}.toString.apply(arguments[0]) == "[object Array]") {
       mixins = arguments[0];
       props = arguments[1];
       staticProps = arguments[2];
     }
 
-    // эта функция будет возвращена как результат работы extend
+    // СЌС‚Р° С„СѓРЅРєС†РёСЏ Р±СѓРґРµС‚ РІРѕР·РІСЂР°С‰РµРЅР° РєР°Рє СЂРµР·СѓР»СЊС‚Р°С‚ СЂР°Р±РѕС‚С‹ extend
     function Constructor() {
       this.init && this.init.apply(this, arguments);
     }
 
-    // this -- это класс "перед точкой", для которого вызван extend (Animal.extend)
-    // наследуем от него:
+    // this -- СЌС‚Рѕ РєР»Р°СЃСЃ "РїРµСЂРµРґ С‚РѕС‡РєРѕР№", РґР»СЏ РєРѕС‚РѕСЂРѕРіРѕ РІС‹Р·РІР°РЅ extend (Animal.extend)
+    // РЅР°СЃР»РµРґСѓРµРј РѕС‚ РЅРµРіРѕ:
     Constructor.prototype = Class.inherit(this.prototype);
 
-    // constructor был затёрт вызовом inherit
+    // constructor Р±С‹Р» Р·Р°С‚С‘СЂС‚ РІС‹Р·РѕРІРѕРј inherit
     Constructor.prototype.constructor = Constructor;
 
-    // добавим возможность наследовать дальше
+    // РґРѕР±Р°РІРёРј РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊ РЅР°СЃР»РµРґРѕРІР°С‚СЊ РґР°Р»СЊС€Рµ
     Constructor.extend = Class.extend;
 
-    // скопировать в Constructor статические свойства
+    // СЃРєРѕРїРёСЂРѕРІР°С‚СЊ РІ Constructor СЃС‚Р°С‚РёС‡РµСЃРєРёРµ СЃРІРѕР№СЃС‚РІР°
     copyWrappedProps(staticProps, Constructor, this);
 
-    // скопировать в Constructor.prototype свойства из примесей и props
+    // СЃРєРѕРїРёСЂРѕРІР°С‚СЊ РІ Constructor.prototype СЃРІРѕР№СЃС‚РІР° РёР· РїСЂРёРјРµСЃРµР№ Рё props
     for (var i = 0; i < mixins.length; i++) {
       copyWrappedProps(mixins[i], Constructor.prototype, this.prototype);
     }
@@ -49,32 +49,32 @@
   };
 
 
-  //---------- вспомогательные методы ----------
+  //---------- РІСЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ РјРµС‚РѕРґС‹ ----------
 
-  // fnTest -- регулярное выражение, 
-  // которое проверяет функцию на то, есть ли в её коде вызов _super
+  // fnTest -- СЂРµРіСѓР»СЏСЂРЅРѕРµ РІС‹СЂР°Р¶РµРЅРёРµ, 
+  // РєРѕС‚РѕСЂРѕРµ РїСЂРѕРІРµСЂСЏРµС‚ С„СѓРЅРєС†РёСЋ РЅР° С‚Рѕ, РµСЃС‚СЊ Р»Рё РІ РµС‘ РєРѕРґРµ РІС‹Р·РѕРІ _super
   // 
-  // для его объявления мы проверяем, поддерживает ли функция преобразование
-  // в код вызовом toString: /xyz/.test(function() {xyz})
-  // в редких мобильных браузерах -- не поддерживает, поэтому регэксп будет /./
+  // РґР»СЏ РµРіРѕ РѕР±СЉСЏРІР»РµРЅРёСЏ РјС‹ РїСЂРѕРІРµСЂСЏРµРј, РїРѕРґРґРµСЂР¶РёРІР°РµС‚ Р»Рё С„СѓРЅРєС†РёСЏ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ
+  // РІ РєРѕРґ РІС‹Р·РѕРІРѕРј toString: /xyz/.test(function() {xyz})
+  // РІ СЂРµРґРєРёС… РјРѕР±РёР»СЊРЅС‹С… Р±СЂР°СѓР·РµСЂР°С… -- РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚, РїРѕСЌС‚РѕРјСѓ СЂРµРіСЌРєСЃРї Р±СѓРґРµС‚ /./
   var fnTest = /xyz/.test(function() {xyz}) ? /\b_super\b/ : /./;
 
 
-  // копирует свойства из props в targetPropsObj
-  // третий аргумент -- это свойства родителя
+  // РєРѕРїРёСЂСѓРµС‚ СЃРІРѕР№СЃС‚РІР° РёР· props РІ targetPropsObj
+  // С‚СЂРµС‚РёР№ Р°СЂРіСѓРјРµРЅС‚ -- СЌС‚Рѕ СЃРІРѕР№СЃС‚РІР° СЂРѕРґРёС‚РµР»СЏ
   // 
-  // при копировании, если выясняется что свойство есть и в родителе тоже,
-  // и является функцией -- его вызов оборачивается в обёртку,
-  // которая ставит this._super на метод родителя, 
-  // затем вызывает его, затем возвращает this._super
+  // РїСЂРё РєРѕРїРёСЂРѕРІР°РЅРёРё, РµСЃР»Рё РІС‹СЏСЃРЅСЏРµС‚СЃСЏ С‡С‚Рѕ СЃРІРѕР№СЃС‚РІРѕ РµСЃС‚СЊ Рё РІ СЂРѕРґРёС‚РµР»Рµ С‚РѕР¶Рµ,
+  // Рё СЏРІР»СЏРµС‚СЃСЏ С„СѓРЅРєС†РёРµР№ -- РµРіРѕ РІС‹Р·РѕРІ РѕР±РѕСЂР°С‡РёРІР°РµС‚СЃСЏ РІ РѕР±С‘СЂС‚РєСѓ,
+  // РєРѕС‚РѕСЂР°СЏ СЃС‚Р°РІРёС‚ this._super РЅР° РјРµС‚РѕРґ СЂРѕРґРёС‚РµР»СЏ, 
+  // Р·Р°С‚РµРј РІС‹Р·С‹РІР°РµС‚ РµРіРѕ, Р·Р°С‚РµРј РІРѕР·РІСЂР°С‰Р°РµС‚ this._super
   function copyWrappedProps(props, targetPropsObj, parentPropsObj) {
     if (!props) return;
 
     for (var name in props) {
       if (typeof props[name] == "function"
-        && typeof parentPropsObj[name] == "function"
-        && fnTest.test(props[name])) {
-        // скопировать, завернув в обёртку
+          && typeof parentPropsObj[name] == "function"
+          && fnTest.test(props[name])) {
+        // СЃРєРѕРїРёСЂРѕРІР°С‚СЊ, Р·Р°РІРµСЂРЅСѓРІ РІ РѕР±С‘СЂС‚РєСѓ
         targetPropsObj[name] = wrap(props[name], parentPropsObj[name]);
       } else {
         targetPropsObj[name] = props[name];
@@ -83,8 +83,8 @@
 
   }
 
-  // возвращает обёртку вокруг method, которая ставит this._super на родителя
-  // и возвращает его потом 
+  // РІРѕР·РІСЂР°С‰Р°РµС‚ РѕР±С‘СЂС‚РєСѓ РІРѕРєСЂСѓРі method, РєРѕС‚РѕСЂР°СЏ СЃС‚Р°РІРёС‚ this._super РЅР° СЂРѕРґРёС‚РµР»СЏ
+  // Рё РІРѕР·РІСЂР°С‰Р°РµС‚ РµРіРѕ РїРѕС‚РѕРј 
   function wrap(method, parentMethod) {
     return function() {
       var backup = this._super;
@@ -99,7 +99,7 @@
     }
   }
 
-  // эмуляция Object.create для старых IE
+  // СЌРјСѓР»СЏС†РёСЏ Object.create РґР»СЏ СЃС‚Р°СЂС‹С… IE
   Class.inherit = Object.create || function(proto) {
     function F() {}
     F.prototype = proto;

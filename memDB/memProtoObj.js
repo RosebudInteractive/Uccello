@@ -11,7 +11,7 @@ define(
 			// objType - ссылка на объект-тип
 			// parent - ссылка на объект и имя коллекции либо db, null для корневых  (obj и colname)
 			init: function(objType, parent,flds){
-			
+
 				var pvt = this.pvt = {}; // приватные члены
 				 
 				pvt.objType = objType;
@@ -24,7 +24,7 @@ define(
 				pvt.isModified = false;
 				pvt.cntFldModif=0;
 				pvt.cntColModif=0;
-				
+
 				if (!parent.obj) {	// корневой объект
 					pvt.col = null;
 					pvt.db = parent.db;
@@ -42,7 +42,7 @@ define(
 					pvt.guid = flds.$sys.guid;
 				else 											// если нет - генерируем динамически
 					pvt.guid =  this.getDB().getController().guid();  // TODO перенести в UTILS?
-				
+
 				if (!parent.obj) {	// корневой объект				
 					pvt.log = new MemObjLog(this);	// создать лог записи изменений
 					// активизация корневого НЕ НУЖНА? TODO R2
@@ -57,7 +57,7 @@ define(
 				}
 
 				this.getDB()._addObj(this);
-										
+
 			},
 
 			protoobjInit: function(objType, parent,flds){

@@ -52,7 +52,13 @@ define(
                 var hehe = {};
                 switch (guidRoot) {
                     case UCCELLO_CONFIG.guids.rootCompany:
-                        this.getCompany(guidRoot, 10000, done);
+                        var time = Date.now();
+                        function ddd() {
+                            var timeEnd = Date.now();
+                            logger.info((new Date()).toISOString()+';readCompanyFile;'+(timeEnd-time)+' ms');
+                            done.apply(this, arguments)
+                        }
+                        this.getCompany(guidRoot, 10000, ddd);
                         break;
                     case UCCELLO_CONFIG.guids.rootContact:
                         this.getContact(guidRoot, expression, done);
