@@ -5,7 +5,7 @@ var logger = new winston.Logger({
     transports: [
         new winston.transports.File({
             level: 'info',
-            filename: './logs/funcexec.csv',
+            filename: UCCELLO_CONFIG.logger.file,
             handleExceptions: true,
             json: false,
             maxsize: 5242880, //5MB

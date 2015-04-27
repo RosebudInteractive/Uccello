@@ -141,6 +141,11 @@ define([], function () {
             //    }
         },
 
+        logger: {
+            file: '../logs/funcexec.csv',
+            clearOnStart: true
+        },
+
         init: function(config) {
             for(var index in config) {
                 switch (index) {
