@@ -12,7 +12,7 @@ define(
 				this.pvt = {};
 				this.pvt.router = router;
 				this.pvt.controller = controller;
-				this.pvt.dataSource = 'local'; // 'local' or 'mysql'
+				this.pvt.dataSource = 'mysql'; // 'local' or 'mysql'
 				var that = this;
                 router.add('query', function(){ return that.query.apply(that, arguments); });
 
@@ -179,9 +179,15 @@ define(
                 var that = this;
                 if (source == 'mysql') {
                     var conn = this.getMysqlConnection();
+                    var time = Date.now();
                     conn.query('SELECT * FROM company LIMIT ?', [num?num:0], function(err, rows) {
+                        var timeEnd = Date.now();
+                        logger.info((new Date()).toISOString()+';selectCompany;'+(timeEnd-time));
                         if (err) throw err;
+                        time = Date.now();
                         var result = that.createResult(guidRoot, UCCELLO_CONFIG.classGuids.DataCompany, rows);
+                        var timeEnd = Date.now();
+                        logger.info((new Date()).toISOString()+';createResult;'+(timeEnd-time));
                         done(result);
                     });
                 } else
