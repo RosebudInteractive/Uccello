@@ -181,6 +181,10 @@ define(
 			get: function(field) {
 				return this.pvt.fields[field];
 			},
+			// поиск по индексу
+			_get: function(field) {
+				return this.pvt.fields[field];
+			},		
 			
 			// вернуть количество полей объекта
 			count: function() {

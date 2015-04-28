@@ -61,16 +61,17 @@ define(
 				this.pvt.socket = params.socket;
 
 				var that = this;
-				if (!cb) // если нет колбэка значит на сервере - но это надо поменять TODO
+				if (!cb) {// если нет колбэка значит на сервере - но это надо поменять TODO
 					//var createCompCallback = function (obj) {
+					// подписаться на событие завершения applyDelta в контроллере, чтобы переприсвоить параметры 
+					controller.event.on({
+						type: 'end2ApplyDeltas',
+						subscriber: that,
+						callback: that._setFormParams
+					});
+					
 					var createCompCallback = function (typeObj, parent, sobj) {
 
-						// подписаться на событие завершения applyDelta в контроллере, чтобы переприсвоить параметры 
-						controller.event.on({
-							type: 'end2ApplyDeltas',
-							subscriber: that,
-							callback: that._setFormParams
-						});
 
 						//var timeStart = perfomance.now();
 						var obj =  that.createComponent.apply(that, [typeObj, parent, sobj]);
@@ -92,8 +93,9 @@ define(
 						}
 						
 						return obj;
-						
 					}
+						
+				}
 				else
 					createCompCallback = function (typeObj, parent, sobj) {
 						if (sobj.$sys.typeGuid == UCCELLO_CONFIG.classGuids.DataCompany) {

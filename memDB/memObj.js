@@ -44,13 +44,14 @@ define(
 				
 				//this.event = new Event();
 				
-				var ot = this.pvt.objType;
+				var ot = this.pvt.objType.pvt.fieldsArr;
+				this.pvt.fields = new Array(ot.length);
 				var cf = this.pvt.fields;
 				if ((flds!=undefined) && ("fields" in flds)) {
-					for (var i=0; i<ot.pvt.fieldsArr.length; i++) {
-							var f = ot.pvt.fieldsArr[i];
-							if (f in flds.fields)
-							  cf[i] = flds.fields[f]; // TODO проверять типы?	
+					for (var i=0; i<ot.length; i++) {
+							//var f = ;
+							if (ot[i] in flds.fields)
+							  cf[i] = flds.fields[ot[i]]; // TODO проверять типы?	
 							else
 							  cf[i] = undefined;				
 					}
@@ -94,7 +95,7 @@ define(
 					return this.pvt.fields[i];
 				}
 				if (typeof field == "number")  // ищем по индексу
-					return this._super(field);
+					return this._get(field);
 					
 				return undefined;				
 			},
