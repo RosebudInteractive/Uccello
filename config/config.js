@@ -167,6 +167,10 @@ define([], function () {
                     case 'guids': // запретить перезатирать
                     case 'classGuids':
                         break;
+                    case 'webSocketServer': // разрешить изменять лишь порт
+                        if ('port' in config.webSocketServer)
+                            this.webSocketServer.port = config.webSocketServer.port;
+                        break;
                     default:
                         this[index] = config[index];
                         break;
