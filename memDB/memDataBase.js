@@ -19,7 +19,7 @@ define(
 
 		var MemDataBase = Class.extend(/** @lends module:MemDataBase.MemDataBase.prototype */{
 
-            /**
+		    /**
              * params.kind - "master" - значит мастер-база, другое значение - подчиненная база
              * params.proxyMaster
              * @constructs
@@ -31,103 +31,259 @@ define(
 			 *		params.proxyMaster - прокси мастер-базы (для kind = "slave")
              * @param cb
              */
-			init: function(controller, params, cb) {
-				var pvt = this.pvt = {};
-				pvt.name = params.name;
-				pvt.robjs = [];				// корневые объекты базы данных
-				pvt.rcoll = {};
-				pvt.objs = {};				// все объекты по гуидам
-				pvt.logIdx = [];			// упорядоченный индекс логов
-				pvt.$idCnt = 0;
-				pvt.subscribers = {}; 		// все базы-подписчики
-				//pvt.tranCounter = 0;		// счетчик транзакции
-				pvt.inTran = false;
-				if ("guid" in params)
-					pvt.guid = params.guid;
-				else
-					pvt.guid = controller.guid();
-				pvt.counter = 0;
-				pvt.controller = controller; //TODO  если контроллер не передан, то ДБ может быть неактивна
-				pvt.controller.createLocalProxy(this);
-				pvt.defaultCompCallback = null; // коллбэк по умолчанию для создания компонентов
-				// TODOX УБРАТЬ
-				pvt.version = 0;
-				pvt.validVersion = 0;
-				pvt.sentVersion = 0;
-				// TODOX END
-				this.event = new Event();
+		    init: function(controller, params, cb) {
+		        var pvt = this.pvt = {};
+		        pvt.name = params.name;
+		        pvt.robjs = [];				// корневые объекты базы данных
+		        pvt.rcoll = {};
+		        pvt.objs = {};				// все объекты по гуидам
+		        pvt.resMap = {};			// связь гуида ресурса и гуида экземпляра
+		        pvt.refTo = {};			    // исходящие ссылки (по объектам)
+		        pvt.refFrom = {};			// входящие ссылки (по объектам)
+		        pvt.uLinks = {};			// неразрешенные ссылки
+		        pvt.logIdx = [];			// упорядоченный индекс логов
+		        pvt.$idCnt = 0;
+		        pvt.subscribers = {}; 		// все базы-подписчики
+		        //pvt.tranCounter = 0;		// счетчик транзакции
+		        pvt.inTran = false;
+		        if ("guid" in params)
+		            pvt.guid = params.guid;
+		        else
+		            pvt.guid = controller.guid();
+		        pvt.counter = 0;
+		        pvt.controller = controller; //TODO  если контроллер не передан, то ДБ может быть неактивна
+		        pvt.controller.createLocalProxy(this);
+		        pvt.defaultCompCallback = null; // коллбэк по умолчанию для создания компонентов
+		        // TODOX УБРАТЬ
+		        pvt.version = 0;
+		        pvt.validVersion = 0;
+		        pvt.sentVersion = 0;
+		        // TODOX END
+		        this.event = new Event();
 
-				if (params.kind != "master") {
-					var db=this;
-					controller._subscribe(this,params.proxyMaster, function(result) {
-						pvt.proxyMaster = controller.getProxy(params.proxyMaster.guid);
-						pvt.version = result.data.dbVersion; // устанавливаем номер версии базы по версии мастера
-						pvt.validVersion = pvt.version;
-						pvt.sentVersion = pvt.version;
-						controller.subscribeRoots(db, UCCELLO_CONFIG.guids.metaRootGuid, function(){
-								db._buildMetaTables();
-								if (cb !== undefined && (typeof cb == "function")) cb();
-							});
-						});
+		        if (params.kind != "master") {
+		            var db=this;
+		            controller._subscribe(this,params.proxyMaster, function(result) {
+		                pvt.proxyMaster = controller.getProxy(params.proxyMaster.guid);
+		                pvt.version = result.data.dbVersion; // устанавливаем номер версии базы по версии мастера
+		                pvt.validVersion = pvt.version;
+		                pvt.sentVersion = pvt.version;
+		                controller.subscribeRoots(db, UCCELLO_CONFIG.guids.metaRootGuid, function(){
+		                    db._buildMetaTables();
+		                    if (cb !== undefined && (typeof cb == "function")) cb();
+		                });
+		            });
 
-					}
-				else { // master base
-					// Создать объект с коллекцией метаинфо
-					pvt.meta = new MemMetaRoot( { db: this },{});
-					if (cb !== undefined && (typeof cb == "function")) cb(this);
-				}
-			},
+		        }
+		        else { // master base
+		            // Создать объект с коллекцией метаинфо
+		            pvt.meta = new MemMetaRoot( { db: this },{});
+		            if (cb !== undefined && (typeof cb == "function")) cb(this);
+		        }
+		    },
 
-            /**
+		    /**
              * Добавить корневой объект в БД
              * @param obj
              * @param opt - опции opt.type - тип (res|data), opt.mode - режим ("RO"|"RW")
              * @private
              */
-			_addRoot: function(obj,opt) {
-				var root = this.getRoot(obj.getGuid());
-				if (root) {
-					// TODO проверить, что root.obj==null?
-					root.obj = obj;
-				}
-				else {
-					root = {};
-					root.obj = obj;
-					root.mode = opt.mode;
-					root.type = opt.type;
-					root.subscribers = {};	// подписчики корневого объекта
-					root.master = null;		// мастер
-					root.dver = 0; 			// версии корневого объекта: draft / sent / valid
-					root.sver = 0;
-					root.vver = 0;
-					root.callbackNewObject = undefined;
-					root.event = new Event();
-					this.pvt.robjs.push(root);
-					this.pvt.rcoll[obj.getGuid()] = root;
-				}
-				/*  --- Перенесено в memObj
+		    _addRoot: function(obj,opt) {
+		        var root = this.getRoot(obj.getGuid());
+		        if (root) {
+		            // TODO проверить, что root.obj==null?
+		            root.obj = obj;
+		        }
+		        else {
+		            root = {};
+		            root.obj = obj;
+		            root.mode = opt.mode;
+		            root.type = opt.type;
+		            root.subscribers = {};	// подписчики корневого объекта
+		            root.master = null;		// мастер
+		            root.dver = 0; 			// версии корневого объекта: draft / sent / valid
+		            root.sver = 0;
+		            root.vver = 0;
+		            root.callbackNewObject = undefined;
+		            root.event = new Event();
+		            this.pvt.robjs.push(root);
+		            this.pvt.rcoll[obj.getGuid()] = root;
+		        }
+		        /*  --- Перенесено в memObj
 				this.event.fire({
                     type: 'newRoot',
                     target: obj,
 					options:opt
 				});*/
 
-			},
+		    },
 
-			/*
+		    /*
 			_delRoot: function(obj) {
 				if (obj.getDB()!=this) return;
 				if (obj.getParent()) return
 
 			},*/
 
-            /**
+		    /**
              * зарегистрировать объект в списке по гуидам
              * @param obj
              * @private
              */
-			_addObj: function(obj) {
-				this.pvt.objs[obj.getGuid()] = obj;
+		    _addObj: function (obj) {
+
+		        var root = obj.getRoot();
+		        var is_root = ! obj.getParent();
+		        var guid = obj.getGuid();
+		        var guidRes = obj.getGuidRes();
+
+		        var rootGuid = root.getGuid();
+		        var rootGuidRes = root.getGuidRes();
+
+		        if (is_root) {
+		            if (!this.pvt.resMap[rootGuidRes])
+		                this.pvt.resMap[rootGuidRes] = {};
+		            this.pvt.resMap[rootGuidRes][guid] = { root: obj, elems: {} };
+		        } else {
+		            this.pvt.resMap[rootGuidRes][rootGuid].elems[guidRes] = obj;
+		        };
+
+		        this.pvt.objs[guid] = obj;
+		    },
+
+		    _deleteRefs: function (guid) {
+		        var refTo = this.pvt.refTo[guid];
+		        if (refTo) {
+		            var links = Object.keys(refTo);
+		            for (var i = 0; i < links.length; i++) {
+		                var link = refTo[links[i]];
+		                if (link.val.objRef) {
+		                    var refGuid = link.val.objRef.getGuid();
+		                    var refFrom = this.pvt.refFrom[refGuid];
+		                    if (refFrom)
+		                        delete refFrom[guid + "_" + links[i]];
+		                } else
+		                    delete this.pvt.uLinks[guid + "_" + links[i]];
+		            };
+		        };
+		        var refFrom = this.pvt.refFrom[guid];
+		        if (refFrom) {
+		            var links = Object.keys(refFrom);
+		            for (var i = 0; i < links.length; i++) {
+		                var link = refFrom[links[i]];
+		                link.val.objRef=null;
+		                this.pvt.uLinks[link.src.getGuid() + "_" + link.field] = link;
+		            };
+		            delete this.pvt.refFrom[guid];
+		        };
+		    },
+
+		    addLink: function (obj, ref, field, type) {
+		        var guid = obj.getGuid();
+		        var link = this.pvt.refTo[guid];
+		        var refFrom = null;
+
+		        if (link)
+		            link = link[field];
+		        else
+		            this.pvt.refTo[guid] = {};
+
+		        if (link) {
+		            // Link already exists
+		            var old_ref = link.val;
+		            if (type.isEqual(old_ref, ref))
+		                return; // If values are equal we'll do nothing
+
+		            if (old_ref.objRef) {
+		                refFrom = this.pvt.refFrom[old_ref.objRef.getGuid()];
+		                if (refFrom) {
+		                    delete refFrom[guid + "_" + field];
+		                };
+		            } else
+		                if (ref.objRef)
+		                    delete this.pvt.uLinks[guid + "_" + field];
+		        };
+
+		        link = { src: obj, val: ref, field: field, type: type };
+		        this.pvt.refTo[guid][field] = link;
+
+		        if (ref.objRef) {
+		            var refGuid = ref.objRef.getGuid();
+		            refFrom = this.pvt.refFrom[refGuid];
+		            if (!refFrom) {
+		                refFrom = {};
+		                this.pvt.refFrom[refGuid] = refFrom;
+		            };
+		            refFrom[guid + "_" + field] = link;
+		        }
+		        else
+		            this.pvt.uLinks[guid + "_" + field] = link;
+		    },
+
+		    resolveAllRefs: function () {
+		        var uLinks = this.pvt.uLinks;
+		        var refs = Object.keys(uLinks);
+		        for (var i = 0; i < refs.length; i++) {
+		            var link = uLinks[refs[i]];
+		            this.resolveRef(link.val, link.src);
+		            if (link.val.objRef) {
+		                // Resolved !
+		                var refGuid = link.val.objRef.getGuid();
+		                var refFrom = this.pvt.refFrom[refGuid];
+		                if (!refFrom) {
+		                    refFrom = {};
+		                    this.pvt.refFrom[refGuid] = refFrom;
+		                };
+		                refFrom[link.src.getGuid() + "_" + link.val.field] = link;
+
+		                delete uLinks[refs[i]];
+		            };
+		        };
+		    },
+
+		    resolveRef: function (ref, obj) {
+			    ref.objRef = null;
+			    var objRef = null;
+
+			    if (ref.is_external) {
+			        // External ref
+			        var objResBase = this.pvt.resMap[ref.guidRes];
+			        if (objResBase) {
+			            // Try to get resorce with GuidInstance == GuidResource
+			            objRef = objResBase[ref.guidRes];
+			        };
+			        if (objResBase && (!objRef)) {
+			            // Resorce with GuidInstance == GuidResource doesn't exist,
+			            //   then try to get another resorce with that Guid
+			            var guids = Object.keys(objResBase);
+			            if (guids.length == 1) {
+			                // There should be the only resource
+			                objRef = objResBase[guids[0]];
+			            };
+			        };
+			        if (objRef) {
+			            ref.guidInstanceRes = objRef.root.getGuid();
+			        };
+                } else {
+			        // Internal ref
+
+			        if (obj && (typeof (obj.getRoot) === "function")) {
+                        // Set root of current object to resource reference
+			            var root = obj.getRoot();
+			            ref.guidRes = root.getGuidRes();
+			            ref.guidInstanceRes = root.getGuid();
+			            objRef = this.pvt.resMap[ref.guidRes];
+			            if (objRef)
+			                objRef = objRef[ref.guidInstanceRes];
+                    };
+                };
+
+			    if (objRef)
+			        objRef = objRef.elems[ref.guidElem];
+			    if (objRef) {
+			        ref.guidInstanceElem = objRef.getGuid();
+			        ref.objRef = objRef;
+			    };
 			},
 
             /**
@@ -177,14 +333,34 @@ define(
 
 			},
 
-
             /**
              * вызывается коллекциями при удалении объекта, генерирует событие, на которое можно подписаться
              */
 			onDeleteObject: function(obj) {
 				var root = this.getRoot(obj.getRoot().getGuid());
-				delete this.pvt.objs[obj.getGuid()];
-				// TODO проверить не корневой ли объект - и тогда тоже удалить его со всей обработкой
+
+				var is_root = !obj.getParent();
+				var guid = obj.getGuid();
+				var guidRes = obj.getGuidRes();
+				var rootGuid = root.obj.getGuid();
+				var rootGuidRes = root.obj.getGuidRes();
+
+				this._deleteRefs(guid);
+
+				delete this.pvt.objs[guid];
+
+				if (this.pvt.resMap[rootGuidRes]) {
+				    if (is_root) {
+				        delete this.pvt.resMap[rootGuidRes][guid];
+				        if (Object.keys(this.pvt.resMap[rootGuidRes]).length == 0)
+				            delete this.pvt.resMap[rootGuidRes];
+				    } else {
+				        if (this.pvt.resMap[rootGuidRes][rootGuid])
+				            delete this.pvt.resMap[rootGuidRes][rootGuid].elems[guidRes];
+				    };
+				};
+
+			    // TODO проверить не корневой ли объект - и тогда тоже удалить его со всей обработкой
 				this.event.fire({
                     type: 'delObj',
                     target: obj
@@ -324,8 +500,8 @@ define(
 				newObj.$sys.typeGuid = obj.getTypeGuid();
 				// поля объекта TODO? можно сделать сериализацию в более "компактном" формате, то есть "массивом" и без названий полей
 				newObj.fields = {};
-				for (var i=0; i<obj.count(); i++)
-					newObj.fields[obj.getFieldName(i)] = obj.get(i);
+				for (var i = 0; i < obj.count() ; i++)
+				    newObj.fields[obj.getFieldName(i)] = obj.getSerialized(i);
 				// коллекции
 				newObj.collections = {};
 				for (i=0; i<obj.countCol(); i++) {
@@ -346,8 +522,8 @@ define(
 			 * @callback cb - вызов функции, которая выполняет доп.действия после создания объекта
              * @returns {*}
              */
-			deserialize: function(sobj,parent,cb) {
-				function ideser(that,sobj,parent) {
+			deserialize: function(sobj,parent,cb,make_clone) {
+			    function ideser(that, sobj, parent) {
 					if (!("obj" in parent)) parent.db = that;
 					switch (sobj.$sys.typeGuid) {
 						case metaObjFieldsGuid:
@@ -365,7 +541,9 @@ define(
 							o = new MemMetaObj(parent,sobj);
 							break;
 						default:
-							var typeObj = that.getObj(sobj.$sys.typeGuid);
+						    if (make_clone)
+						        sobj.$sys.make_clone = true;
+						    var typeObj = that.getObj(sobj.$sys.typeGuid);
 							/*if (!("obj" in parent)) { 
 								parent.nolog = true;
 							}*/
@@ -403,6 +581,7 @@ define(
 						rholder.dver = sobj.ver;
 					}
 				}
+				this.resolveAllRefs();
 				res.getLog().setActive(true);
 				// TODO - запомнить "сериализованный" объект (или еще раз запустить сериализацию?)
 				return res;

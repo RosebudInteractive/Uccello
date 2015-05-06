@@ -14,13 +14,20 @@ define(
 
 				this.event = new Event();
 
-				var ot = this.pvt.objType;
-				for (var i=0; i<ot.pvt.fieldsArr.length; i++) {
-					var f = ot.pvt.fieldsArr[i];
-					if ((flds!=undefined) && ("fields" in flds) && (f in flds.fields))
-					  this.pvt.fields[i] = flds.fields[f]; // TODO проверять типы?	
-					else
-					  this.pvt.fields[i] = undefined;				
+				var ot = this.pvt.objType.pvt;
+				for (var i=0; i<ot.fieldsArr.length; i++) {
+				    var f = ot.fieldsArr[i];
+				    var ft = ot.fieldsTypes[i];
+				    var is_complex = ft.is_complex;
+				    ft = ft.type;
+				    if ((flds != undefined) && ("fields" in flds) && (f in flds.fields)) {
+				        if (is_complex) {
+				            var val = ft.setValue(flds.fields[f], f, this, false);
+				            this.pvt.fields[i] = val;
+				        } else
+				            this.pvt.fields[i] = flds.fields[f]; // TODO проверять типы?
+				    } else
+				        this.pvt.fields[i] = undefined;
 				}
 				
 				// создать пустые коллекции по типу
@@ -44,16 +51,24 @@ define(
 				
 				//this.event = new Event();
 				
-				var ot = this.pvt.objType.pvt.fieldsArr;
+				var otp = this.pvt.objType.pvt;
+				var ot = otp.fieldsArr;
 				this.pvt.fields = new Array(ot.length);
 				var cf = this.pvt.fields;
 				if ((flds!=undefined) && ("fields" in flds)) {
 					for (var i=0; i<ot.length; i++) {
 							//var f = ;
-							if (ot[i] in flds.fields)
-							  cf[i] = flds.fields[ot[i]]; // TODO проверять типы?	
-							else
-							  cf[i] = undefined;				
+					    var ft = otp.fieldsTypes[i];
+					    var is_complex = ft.is_complex;
+					    ft = ft.type;
+					    if (ot[i] in flds.fields) {
+					        if (is_complex) {
+					            var val = ft.setValue(flds.fields[ot[i]], ot[i], this, false);
+					            cf[i] = val;
+					        } else
+					            cf[i] = flds.fields[ot[i]]; // TODO проверять типы?
+					    } else
+					        cf[i] = undefined;
 					}
 				}
 				
@@ -88,26 +103,76 @@ define(
 			
 			// получить значение поля по имени или по названию
 			get: function(field) {
-				if (typeof field == "string") { // ищем по имени
-					if (this.pvt.objType.pvt.fieldsTable[field]=== undefined)
+			    var fldIdx = -1;
+			    var objType = this.pvt.objType.pvt;
+			    var maxIdx = objType.fieldsArr.length;
+
+			    if (typeof field == "string") { // ищем по имени
+			        if (objType.fieldsTable[field] === undefined)
 						return undefined;
-					var i=this.pvt.objType.pvt.fieldsTable[field].cidx;
-					return this.pvt.fields[i];
-				}
+			        fldIdx = objType.fieldsTable[field].cidx;
+                }
 				if (typeof field == "number")  // ищем по индексу
-					return this._get(field);
-					
-				return undefined;				
+				    fldIdx = field;
+
+				if ((fldIdx != -1) && (fldIdx < maxIdx)) {
+				    var val = this.pvt.fields[fldIdx];
+				    var tp = objType.fieldsTypes[fldIdx];
+				    if (tp.is_complex)
+				        val = tp.type.getValue(val);
+				    return val;
+				} else
+				    return undefined;
 			},
 			
-			set: function(field,value) {
-				var i=this.pvt.objType.pvt.fieldsTable[field].cidx;
+			getSerialized: function (field) {
+			    var fldIdx = -1;
+			    var objType = this.pvt.objType.pvt;
+			    var maxIdx = objType.fieldsArr.length;
+
+			    if (typeof field == "string") { // ищем по имени
+			        if (objType.fieldsTable[field] === undefined)
+			            return undefined;
+			        fldIdx = objType.fieldsTable[field].cidx;
+			    }
+			    if (typeof field == "number")  // ищем по индексу
+			        fldIdx = field;
+
+			    if ((fldIdx != -1) && (fldIdx < maxIdx)) {
+			        return objType.fieldsTypes[fldIdx].type.getSerializedValue(this.pvt.fields[fldIdx]);
+			    } else
+			        return undefined;
+			},
+
+			set: function (field, value, withCheckVal) {
+			    var objType = this.pvt.objType.pvt;
+
+			    if (objType.fieldsTable[field] === undefined)
+			        throw new Error("Field \"" + field + "\" doesn't exist in the object \"" + this.pvt.guid + "\".");
+			    var i = objType.fieldsTable[field].cidx;
 				var oldValue = this.pvt.fields[i];
-				if (this.pvt.fields[i] == value) return;
-				this.pvt.fields[i] = value;
+
+				var fldType = objType.fieldsTypes[i];
+				var is_complex = fldType.is_complex;
+				fldType = fldType.type;
+				var newValue = value;
+				if (is_complex || withCheckVal)
+				    newValue = fldType.setValue(value, field, this, withCheckVal);
+
+				if (fldType.isEqual(oldValue, newValue)) return;
+
+				this.pvt.fields[i] = newValue;
+				var oldSerialized = oldValue;
+				var newSerialized = newValue;
+
+				if (is_complex) {
+				    oldSerialized = fldType.getSerializedValue(oldValue);
+				    newSerialized = fldType.getSerializedValue(newValue);
+				}
+
 				if (this.getLog().getActive()) {
 					var o = { flds: {}, obj:this, type:"mp"};
-					o.flds[field] = {old:oldValue,new:value};
+					o.flds[field] = { old: oldSerialized, new: newSerialized };
 					this.getLog().add(o);
 				}
 				//else { // запоминаем свойства только если ЛОГ выключен - это соответствует режиму применения дельты
@@ -115,7 +180,7 @@ define(
 						console.log("MEMCURSOR " +value);
 					}*/
 					if (!this.isFldModified(field)) { // запоминаем измененные свойства
-						this._setModified(field,oldValue);
+					    this._setModified(field, oldSerialized);
 						//this.pvt.fldLog[field] = oldValue;
 					}
 					if (this.getParent()) this.getParent().logColModif("mod",this.getColName(),this);

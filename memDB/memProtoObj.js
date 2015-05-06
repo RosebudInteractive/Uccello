@@ -29,19 +29,26 @@ define(
 					pvt.col = null;
 					pvt.db = parent.db;
 					pvt.parent = null;
-				}
+					pvt.root = this;
+                }
 				else {				// объект в коллекции (не корневой)
 					pvt.col = parent.obj.getCol(parent.colName);
 					pvt.parent = parent.obj;	
 					pvt.colName = parent.colName;
-				}
+					pvt.root = pvt.parent.pvt.root;
+                }
 
-				if (this.getDB()==undefined) if (DEBUG) console.log(parent.obj);
+				if (this.getDB() == undefined) if (DEBUG) console.log(parent.obj);
 				pvt.$id = this.getDB().getNewLid();		// локальный идентификатор
 				if ((flds) && (flds.$sys) && (flds.$sys.guid))	// если гуид пришел в системных полях, то используем его
 					pvt.guid = flds.$sys.guid;
 				else 											// если нет - генерируем динамически
 					pvt.guid =  this.getDB().getController().guid();  // TODO перенести в UTILS?
+
+				if ((flds) && (flds.$sys) && (flds.$sys.make_clone))
+				    pvt.guidInstance = this.getDB().getController().guid();
+				else
+				    pvt.guidInstance = pvt.guid;
 
 				if (!parent.obj) {	// корневой объект				
 					pvt.log = new MemObjLog(this);	// создать лог записи изменений
@@ -79,11 +86,13 @@ define(
 					pvt.col = null;
 					pvt.db = parent.db;
 					pvt.parent = null;
+					pvt.root = this;
 				}
 				else {				// объект в коллекции (не корневой)
 					pvt.col = parent.obj.getCol(parent.colName);
 					pvt.parent = parent.obj;	
 					pvt.colName = parent.colName;
+					pvt.root = pvt.parent.pvt.root;
 				}
 
 				pvt.$id = this.getDB().getNewLid();		// локальный идентификатор
@@ -92,6 +101,11 @@ define(
 				else 											// если нет - генерируем динамически
 					pvt.guid =  this.getDB().getController().guid();  // TODO перенести в UTILS?
 				
+				if ((flds) && (flds.$sys) && (flds.$sys.make_clone))
+				    pvt.guidInstance = this.getDB().getController().guid();
+				else
+				    pvt.guidInstance = pvt.guid;
+
 				if (!parent.obj) {	// корневой объект				
 					pvt.log = new MemObjLog(this);	// создать лог записи изменений
 					if (!objType || objType.getGuid()==UCCELLO_CONFIG.classGuids.DataRoot)
@@ -105,7 +119,14 @@ define(
 			},
 
 			
-			// завершение инициализации (вызывается из наследников)
+		    // вернуть корневой элемент объекта
+			_getRoot: function () {
+			    var r = this;
+			    while (r.getParent() != null) r = r.getParent();
+			    return r;
+			},
+
+		    // завершение инициализации (вызывается из наследников)
 			finit: function() {
 				if (this.pvt.col)
 					this.pvt.col._add(this);
@@ -131,10 +152,14 @@ define(
             },
 			
 			getGuid: function() {
-				return this.pvt.guid;
+				return this.pvt.guidInstance;
 			},
 			
-			getObjType: function() {
+			getGuidRes: function () {
+			    return this.pvt.guid;
+			},
+
+			getObjType: function () {
 				return this.pvt.objType;
 			},
 			
@@ -142,15 +167,31 @@ define(
 				return (this.pvt.objType == null) ? this.pvt.typeGuid : this.pvt.objType.getGuid();
 			},
 			
-			getParent: function() {
+			isInstanceOf: function (typeGuid, isStrict) {
+			    var result = false;
+			    if (this.pvt.objType) {
+			        var ancestors = this.pvt.objType.pvt.ancestors;
+			        var depth = -1;
+			        if (ancestors) {
+			            for (var i = 0; i < ancestors.length - 1; i++) {
+			                if (ancestors[i].getGuid() === typeGuid) {
+			                    depth = i;
+			                    break;
+			                }
+			            };
+			            result = ((depth == 0) && isStrict) || ((depth != -1) && (!isStrict));
+			        };
+			    };
+			    return result;
+			},
+
+			getParent: function () {
 				return this.pvt.parent;
 			},
 			
 			// вернуть корневой элемент объекта
 			getRoot: function() {
-				var r = this;
-				while (r.getParent()!=null) r = r.getParent();
-				return r;
+				return this.pvt.root;
 			},
 			
             /**

@@ -54,6 +54,7 @@ define(
 				var pvt = this.pvt;
 				pvt.fieldsTable = {};
 				pvt.fieldsArr = [];
+				pvt.fieldsTypes = [];
 				var n = this.countParentClass();
 				var k=0;
 				for (var i=0; i<n; i++) {
@@ -63,7 +64,8 @@ define(
 						var typ = c.getCol("fields").get(j).get("ftype");
 						pvt.fieldsTable[name]= { obj: c, idx: j, cidx:k++, ftype: typ };
 						pvt.fieldsArr.push(name);
-					}
+						pvt.fieldsTypes.push({ type: typ, is_complex: typ.isComplex() });
+                    }
 				}
 			},
 			
@@ -100,7 +102,11 @@ define(
 				return undefined;				
 			},
 			
-			// получить имя поля по индексу
+			getSerialized: function (field) {
+			    return this.get(field);
+			},
+
+		    // получить имя поля по индексу
 			getFieldName: function(i) {
 				if (i==0) return "typeName";
 				if (i==1) return "parentClass";

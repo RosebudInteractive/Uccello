@@ -31,7 +31,12 @@ define(
 					return this._super(field);
 			},
 			
-			// получить имя поля по индексу
+			getSerialized: function (field) {
+			    return this.get(field);
+			},
+
+		    // получить имя поля по индексу
+		    // получить имя поля по индексу
 			getFieldName: function(i) {
 				if (i==0) return "cname";
 				if (i==1) return "ctype";
