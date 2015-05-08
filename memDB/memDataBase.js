@@ -151,6 +151,19 @@ define(
 		        this.pvt.objs[guid] = obj;
 		    },
 
+		    getObjByRoot: function (root, objGuid) {
+		        var res = undefined;
+		        var root_guid = root.getGuid();
+		        var root_guidRes = root.getGuidRes();
+		        var obj = this.pvt.resMap[root_guidRes];
+		        if (obj) {
+		            obj = obj[root_guid];
+		            if (obj)
+		                res = obj.elems[objGuid];
+		        };
+		        return res;
+		    },
+
 		    _deleteRefs: function (guid) {
 		        var refTo = this.pvt.refTo[guid];
 		        if (refTo) {

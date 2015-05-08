@@ -215,12 +215,18 @@ define(
                 var result = true;
                 var msg;
                 if (!val.objRef) {
-                    result = typeof (val.guidElem) === "string";
-                    if (val.is_external)
-                        result = result && (typeof (val.guidRes) === "string");
+                    // Check for the NULL reference which is valid as well
+                    result = (val.objRef === null) && (val.guidElem === null) &&
+                        ((!val.is_external) || (val.guidRes === null));
+
                     if (!result) {
-                        msg = "Invalid reference: \"" +
-                                JSON.stringify(this.getSerializedValue(val)) + "\".";
+                        result = typeof (val.guidElem) === "string";
+                        if (val.is_external)
+                            result = result && (typeof (val.guidRes) === "string");
+                        if (!result) {
+                            msg = "Invalid reference: \"" +
+                                    JSON.stringify(this.getSerializedValue(val)) + "\".";
+                        };
                     };
                 } else {
                     if (!val.objRef.isInstanceOf(this._resElemType, this._strict)) {
