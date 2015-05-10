@@ -151,6 +151,14 @@ define(
 		        this.pvt.objs[guid] = obj;
 		    },
 
+		    /**
+             * Returns MemPrortoObject
+             * given by it's [root] and resource GUID.
+             * 
+             * @param {Object} root A Root
+             * @param {String} objGuid A MemProtoObject object resource GUID
+             * @return {Object} A MemProtoObject
+             */
 		    getObjByRoot: function (root, objGuid) {
 		        var res = undefined;
 		        var root_guid = root.getGuid();
@@ -164,6 +172,12 @@ define(
 		        return res;
 		    },
 
+		    /**
+             * Deletes all the referencies related to the MemPrortoObject
+             * given by it's instance GUID.
+             * 
+             * @param {String} guid A MemProtoObject object instance GUID
+             */
 		    _deleteRefs: function (guid) {
 		        var refTo = this.pvt.refTo[guid];
 		        if (refTo) {
@@ -191,6 +205,18 @@ define(
 		        };
 		    },
 
+		    /**
+             * Adds reference to the appropriate lists.
+             * Adds link to the [obj] outgoing links list ([refTo]) and
+             * if reference is resolved (ref.objRef !== null) adds it to the [ref.objRef]
+             * incoming links list ([refFrom]), otherwise adds it to the global
+             * unresolved links list ([uLinks]).
+             * 
+             * @param {Object}  obj A MemProtoObject which [field] belongs to 
+             * @param {Object}  ref A value of the reference type
+             * @param {String}  field A field name of the [ref] value
+             * @param {Object}  type A reference type object
+             */
 		    addLink: function (obj, ref, field, type) {
 		        var guid = obj.getGuid();
 		        var link = this.pvt.refTo[guid];
@@ -233,6 +259,10 @@ define(
 		            this.pvt.uLinks[guid + "_" + field] = link;
 		    },
 
+		    /**
+             * Resolves all the unresolved referencies.
+             * 
+             */
 		    resolveAllRefs: function () {
 		        var uLinks = this.pvt.uLinks;
 		        var refs = Object.keys(uLinks);
@@ -254,6 +284,14 @@ define(
 		        };
 		    },
 
+		    /**
+             * Resolves reference.
+             * Fills [ref.objRef] field with MemProtoObject if reference can be resolved
+             * and set it to NULL otherwise.
+             * 
+             * @param {Object} ref The internal representaton of a value of the reference type
+             * @param {Object} obj A MemProtoObject which [ref] belongs to
+             */
 		    resolveRef: function (ref, obj) {
 			    ref.objRef = null;
 			    var objRef = null;
@@ -504,7 +542,7 @@ define(
 
 				var newObj = {};
 				newObj.$sys = {};
-				newObj.$sys.guid = obj.getGuid();
+				newObj.$sys.guid = obj.getGuidRes();
 				newObj.ver = obj.getRootVersion();
 				/*if (obj.getObjType()) // obj
 					newObj.$sys.typeGuid = obj.getObjType().getGuid();
@@ -533,6 +571,7 @@ define(
              * @param {object} sobj - объект который нужно десериализовать
 			 * @param {object} parent - родительский "объект" - parent.obj, parent.colName для некорневых либо {} для корня, rtype: "res"|"data"
 			 * @callback cb - вызов функции, которая выполняет доп.действия после создания объекта
+			 * @param {boolean} make_clone клонировать ли объект при десериализации?
              * @returns {*}
              */
 			deserialize: function(sobj,parent,cb,make_clone) {

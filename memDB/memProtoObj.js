@@ -167,6 +167,13 @@ define(
 				return (this.pvt.objType == null) ? this.pvt.typeGuid : this.pvt.objType.getGuid();
 			},
 			
+		    /**
+             * Checks if this object is an instance of given type
+             * 
+             * @param {String} typeGuid A type GUID
+             * @param {Boolean} isStrict If true then object should be exactly of this type
+             * @return {Boolean} True if this object is instance of [typeGuid]
+             */
 			isInstanceOf: function (typeGuid, isStrict) {
 			    var result = false;
 			    if (this.pvt.objType) {

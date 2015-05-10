@@ -1,4 +1,11 @@
-﻿if (typeof define !== 'function') {
+﻿/**
+ * Implementation of functionality which ensures data type control for fields of Uccello objects.
+ * All data types inherit from the BaseType object.
+ *
+ * @fileOverview The Data type Objects.
+ * @class DataTypes
+ */
+if (typeof define !== 'function') {
     var define = require('amdefine')(module);
     var Class = require('class.extend');
 }
@@ -10,41 +17,97 @@ define(
         var fldTypeCodes;
         
         var BaseType = Class.extend({
+            /**
+             * The Base Type all Type objects inherit from.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @constructor
+             */
             init: function (typeObj, refResolver) {
                 this._is_complex = false;
                 this._refResolver = refResolver;
-                this.deserialize(typeObj);
+                this._deserialize(typeObj);
             },
             
+            /**
+             * Data Type name.
+             * Ex.: "string", "int", etc.
+             * 
+             * @return {Strng} Data type name
+             */
             typeName: function () {
                 return this._fldType;
             },
             
+            /**
+             * Data Type code.
+             * 
+             * @return {Integer} Data type code
+             */
             type: function () {
                 return this._fldTypeCode;
             },
 
+            /**
+             * Data Type hash code.
+             * Uniquely represents data type instance.
+             * 
+             * @return {Strng} The hash code
+             */
             hash: function () {
                 return this._fldType;
             },
 
+            /**
+             * True if value of the data type is stored as a structure but not a simple value 
+             * 
+             * @return {Boolean} True if value is complex
+             */
             isComplex: function () {
                 return this._is_complex;
             },
 
+            /**
+             * Checks if value is correct.
+             * 
+             * @param {Any}       val A value to be checked
+             * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
+             * @param {String}    errObj.errMsg Error message
+             * @return {Boolean} True if value is corect
+             */
             checkVal: function (val, errObj) {
                 return true;
             },
 
+            /**
+             * Checks if val1 is equal to val2.
+             * 
+             * @param {Any}       val1 First value
+             * @param {Any}       val2 Second value
+             * @return {Boolean} True if values are equal
+             */
             isEqual: function (val1, val2) {
                 return val1 === val2;
             },
 
+            /**
+             * Returns a serialized representation of the data type
+             * 
+             * @return {Object} Serialized representation
+             */
             serialize: function () {
                 return { type: this._fldType };
             },
 
-            deserialize: function (val) {
+            /**
+             * Converts this data type from the serialized representation 
+             * to the internal one (only constructor can invoke it)
+             * 
+             * @param {String|Object} val Serialized representation of this data type
+             * @private
+             */
+            _deserialize: function (val) {
                 if (typeof (val) === "string") {
                     this._fldType = val;
                 } else {
@@ -53,14 +116,39 @@ define(
                 this._fldTypeCode = fldTypeCodes[this._fldType].code;
             },
 
+            /**
+             * Converts a Value of this data type from the internal representation
+             * to the serialized one
+             *
+             * @param {Any}     val An internal value
+             * @return {Object} Serialized representation of the value
+             */
             getSerializedValue: function (val) {
                 return val;
             },
 
+            /**
+             * Converts a Value of this data type from the internal representation
+             * to "end-user" one
+             *
+             * @param {Any}   val An internal value
+             * @return {Object} "End-user" representation of the value
+             */
             getValue: function (val) {
                 return val;
             },
 
+            /**
+             * Converts a Value of this data type from the serialized
+             * or "end-user" representation to the internal one
+             * 
+             * @param {Any}     val A value of this data type
+             * @param {String}  fldName A field name of the value
+             * @param {Object}  obj An MemProtoObject which fldName belongs to 
+             * @param {Boolean} withCheckVal True if the value needs to be checked
+             * @throws Will throw an error if the value isn't correct
+             * @return {Object} Internal representation of the value
+             */
             setValue: function (val, fldName, obj, withCheckVal) {
                 if (withCheckVal) {
                     var errObj = {};
@@ -75,47 +163,109 @@ define(
         });
         
         var IntegerType = BaseType.extend({
+            /**
+             * The Integer Type.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends BaseType
+             * @constructor
+             */
             init: function (typeObj, refResolver) {
                 this._super(typeObj, refResolver);
             }
         });
         
         var StringType = BaseType.extend({
+            /**
+             * The String Type.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends BaseType
+             * @constructor
+             */
             init: function (typeObj, refResolver) {
                 this._super(typeObj, refResolver);
             }
         });
         
         var FloatType = BaseType.extend({
+            /**
+             * The Float Type.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends BaseType
+             * @constructor
+             */
             init: function (typeObj, refResolver) {
                 this._super(typeObj, refResolver);
             }
         });
         
         var DateTimeType = BaseType.extend({
+            /**
+             * The Date-time Type.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends BaseType
+             * @constructor
+             */
             init: function (typeObj, refResolver) {
                 this._super(typeObj, refResolver);
             }
         });
         
         var BooleanType = BaseType.extend({
+            /**
+             * The Boolean Type.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends BaseType
+             * @constructor
+             */
             init: function (typeObj, refResolver) {
                 this._super(typeObj, refResolver);
             }
         });
 
         var DecimalType = BaseType.extend({
+            /**
+             * The Decimal Type.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends BaseType
+             * @constructor
+             */
             init: function (typeObj, refResolver) {
                 this._super(typeObj, refResolver);
             }
         });
 
         var RefType = BaseType.extend({
+            /**
+             * The Reference Type.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends BaseType
+             * @constructor
+             */
             init: function (typeObj, refResolver) {
                 this._super(typeObj, refResolver);
                 this._is_complex = true;
             },
 
+            /**
+             * Data Type hash code.
+             * Uniquely represents data type instance.
+             * 
+             * @return {Strng} The hash code
+             */
             hash: function () {
                 var result = this._super();
 
@@ -133,6 +283,11 @@ define(
                 return result;
             },
 
+            /**
+             * Returns a serialized representation of the data type
+             * 
+             * @return {Object} Serialized representation
+             */
             serialize: function () {
                 var result = this._super();
                 result.res_elem_type = this._resElemType;
@@ -146,7 +301,19 @@ define(
                 return result;
             },
 
-            deserialize: function (val) {
+            /**
+             * Converts this data type from the serialized representation 
+             * to the internal one (only constructor can invoke it)
+             * 
+             * @param {String|Object}                    val Serialized representation of this data type
+             * @param {Boolean} [val.external=false]     True if ref is external
+             * @param {Boolean} [val.res_type=null]      Resource type GUID
+             * @param {Boolean} [val.res_elem_type=null] Resource element type GUID
+             * @param {Boolean} [val.strict=false]       True if ref type should be checked strictly
+             * @throws                                   Will throw an error if the value isn't correct
+             * @private
+             */
+            _deserialize: function (val) {
                 this._super(val);
 
                 this._external = false;
@@ -178,6 +345,15 @@ define(
                 };
             },
 
+            /**
+             * Converts a Value of this data type from the internal representation
+             * to the serialized one.
+             * Serialized value:
+             *   for exteranl ref - object: {guidRes,guidElem}
+             *   for internal ref - string: guidElem
+             * @param {Any}      val An internal value
+             * @return {Object} Serialized representation of the value
+             */
             getSerializedValue: function (val) {
                 var result = val;
                 if (val)
@@ -188,10 +364,25 @@ define(
                 return result;
             },
 
+            /**
+             * Converts a Value of this data type from the internal representation
+             * to "end-user" one.
+             * "End-user" representation is refernce to the MemProtoObject instance
+             *
+             * @param {Any}   val An internal value
+             * @return {Object} "End-user" representation of the value
+             */
             getValue: function (val) {
                 return val ? val.objRef : null;
             },
 
+            /**
+             * Checks if val1 is equal to val2.
+             * 
+             * @param {Any}       val1 First value (could be MemProtoObj or serialized reference)
+             * @param {Any}       val2 Second value (could be MemProtoObj or serialized reference)
+             * @return {Boolean} True if values are equal
+             */
             isEqual: function (val1, val2) {
 
                 if (val1 && val2) {
@@ -211,6 +402,14 @@ define(
                 return false;
             },
 
+            /**
+             * Checks if value is correct.
+             * 
+             * @param {Any}       val A value to be checked (could be MemProtoObj or serialized reference)
+             * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
+             * @param {String}    errObj.errMsg Error message
+             * @return {Boolean} True if value is corect
+             */
             checkVal: function (val, errObj, obj) {
                 var result = true;
                 var msg;
@@ -252,6 +451,25 @@ define(
                 return result;
             },
 
+            /**
+             * Converts a Value of this data type from the serialized
+             * or "end-user" representation to the internal one.
+             * Using [refResolver] interface resolves reference and adds it to the link storage
+             * Internal reference representation:
+             *   guidRes          - Resource GUID (for external ref)
+             *   guidInstanceRes  - GUID of the resource instanse (for external ref)
+             *   guidElem         - Resource element GUID
+             *   guidInstanceElem - GUID of the resource element instanse
+             *   objRef           - reference to the referenced MemProtoObject (NULL if ref is unresolved)
+             *   is_external      - TRUE if ref is external
+             * 
+             * @param {Any}     val A value of this data type (could be MemProtoObj or serialized reference)
+             * @param {String}  fldName A field name of the value
+             * @param {Object}  obj A MemProtoObject which [fldName] belongs to 
+             * @param {Boolean} withCheckVal True if the value needs to be checked
+             * @throws          Will throw an error if the value isn't correct
+             * @return {Object} Internal representation of the value
+             */
             setValue: function (val, fldName, obj, withCheckVal) {
 
                 var result = {
@@ -300,6 +518,16 @@ define(
 
         var typeObjects = {};
 
+        /**
+         * Data Type Factory.
+         * Returns an existing data type object or creates a new instance.
+         * Decision (whether we use the existing object or use a new one) is based on hash() function
+         * 
+         * @param {String|Object} typeObj Serialized data type representation
+         * @param {Object}        refResolver An Object which implements link resolver interface
+         * @return {Object}       Data type object
+         * @constructor
+         */
         function GetFldTypeUniq(typeObj, refResolver) {
 
             var result = null;
