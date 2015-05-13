@@ -126,6 +126,9 @@ define([], function () {
         viewSet: null,
         commServerTypes: CommServerTypes,
         commClientTypes: CommClientTypes,
+        webServer: {
+            port:1325
+        },
         webSocketServer: {
             port: 8081,
             //type: CommServerTypes.AJAX + CommServerTypes.WEB_SOCKET
@@ -168,7 +171,7 @@ define([], function () {
                     case 'classGuids':
                         break;
                     case 'webSocketServer': // разрешить изменять лишь порт
-                        if ('port' in config.webSocketServer)
+                        if ('port' in config.webSocketServer && config.webSocketServer.port)
                             this.webSocketServer.port = config.webSocketServer.port;
                         break;
                     default:
