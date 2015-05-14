@@ -12,7 +12,13 @@ define(
 		
 			className: "AControl",
 			classGuid: UCCELLO_CONFIG.classGuids.AControl,
-            metaFields: [ {fname:"Top",ftype:"int"}, {fname:"Left",ftype:"int"}, {fname:"Width",ftype:"int"}, {fname:"Height",ftype:"int"} ],
+            metaFields: [
+                {fname:"Top", ftype:"int"},
+                {fname:"Left", ftype:"int"},
+                {fname:"Width", ftype:"int"},
+                {fname:"Height", ftype:"int"},
+                {fname:"LayoutProp", ftype:"string"}
+            ],
 				
 			init: function(cm,params){
 				this._super(cm,params);

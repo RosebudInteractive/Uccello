@@ -51,6 +51,7 @@ define([], function () {
             {className:'HContainer', isUccello:true, component:'controls/hContainer', viewset:false, metaType:['content']},
             {className:'VContainer', isUccello:true, component:'controls/vContainer', viewset:false, metaType:['content']},
             {className:'GContainer', isUccello:true, component:'controls/gContainer', viewset:false, metaType:['content']},
+            {className:'FContainer', isUccello:true, component:'controls/fContainer', viewset:false, metaType:['content']},
             {className:'GColumn', isUccello:true, component:'controls/gColumn', viewset:false, metaType:['content']},
             {className:'GRow', isUccello:true, component:'controls/gRow', viewset:false, metaType:['content']},
             {className:'GCell', isUccello:true, component:'controls/gCell', viewset:false, metaType:['content']},
@@ -117,7 +118,8 @@ define([], function () {
             'GContainer':"26309035-7f47-422e-26c8-6c25a091c20e",
             'GColumn':"9d00a857-4a93-6b7a-9ef0-08b14dc81e54",
             'GRow':"157eb87c-3331-97cf-e307-a0c5311ba7d5",
-            'GCell':"69087f9c-99ed-14f1-0fe7-05058a862af5"
+            'GCell':"69087f9c-99ed-14f1-0fe7-05058a862af5",
+            'FContainer':"902822d8-3079-f394-2eed-3ad9ac27b2f2"
         },
 
         // изменяемые свойства
