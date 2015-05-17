@@ -122,11 +122,29 @@ define(
 					pvt.guid = flds.$sys.guid;
 				else 											// если нет - генерируем динамически
 					pvt.guid =  this.getDB().getController().guid();  // TODO перенести в UTILS?
-				
-				if ((flds) && (flds.$sys) && (flds.$sys.make_clone))
-				    pvt.guidInstance = this.getDB().getController().guid();
-				else
-				    pvt.guidInstance = pvt.guid;
+
+				var fullGuid = this.parseGuid(pvt.guid);
+				var keep_guid = (flds) && (flds.$sys) && (flds.$sys.keep_guid);
+
+				pvt.$rootId = fullGuid.rootId;
+				if (fullGuid.rootId == -1) {
+				    if (!keep_guid) {
+				        if (!pvt.parent)
+				            pvt.$rootId = this.getDB().getNextRootId();
+				        else
+				            pvt.$rootId = pvt.root.getRootId();
+				    };
+				} else {
+				    if (!pvt.parent)
+				        this.getDB().setMaxRootId(fullGuid.rootId);
+				    else {
+				        var rootId = pvt.root.getRootId();
+				        if (rootId != fullGuid.rootId)
+				            throw new Error("Root (\"" + pvt.root.getGuid() +
+                                "\") and object (\"" + pvt.guid + "\") GUIDs are inconsistent.");
+				    };
+				};
+				pvt.guid = fullGuid.guid + ((pvt.$rootId > 0) ? csFullGuidDelimiter + pvt.$rootId : "");
 
 				if (!parent.obj) {	// корневой объект				
 					pvt.log = new MemObjLog(this);	// создать лог записи изменений
