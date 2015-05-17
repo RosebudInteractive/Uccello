@@ -10,7 +10,7 @@ define(
 		
 			init: function(parent, flds){
 				
-				flds.$sys = { guid: UCCELLO_CONFIG.guids.metaRootGuid };
+			    flds.$sys = { guid: UCCELLO_CONFIG.guids.metaRootGuid, keep_guid: (flds) && (flds.$sys) && (flds.$sys.keep_guid) };
 				
 				this._super(null,{ db: parent.db },flds); // Корневой метаобъект в БД - является корнем всех остальных метаобъектов
 				this.pvt.typeGuid = UCCELLO_CONFIG.guids.metaRootGuid;

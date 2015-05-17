@@ -125,7 +125,7 @@ define(
 				    return undefined;
 			},
 			
-			getSerialized: function (field) {
+			getSerialized: function (field, use_resource_guid) {
 			    var fldIdx = -1;
 			    var objType = this.pvt.objType.pvt;
 			    var maxIdx = objType.fieldsArr.length;
@@ -139,7 +139,7 @@ define(
 			        fldIdx = field;
 
 			    if ((fldIdx != -1) && (fldIdx < maxIdx)) {
-			        return objType.fieldsTypes[fldIdx].type.getSerializedValue(this.pvt.fields[fldIdx]);
+			        return objType.fieldsTypes[fldIdx].type.getSerializedValue(this.pvt.fields[fldIdx], use_resource_guid);
 			    } else
 			        return undefined;
 			},

@@ -43,6 +43,7 @@ define(
 		        pvt.uLinks = {};			// неразрешенные ссылки
 		        pvt.logIdx = [];			// упорядоченный индекс логов
 		        pvt.$idCnt = 0;
+		        pvt.$maxRootId = -1;        // максимальный номер корневого объекта
 		        pvt.subscribers = {}; 		// все базы-подписчики
 		        //pvt.tranCounter = 0;		// счетчик транзакции
 		        pvt.inTran = false;
@@ -177,6 +178,7 @@ define(
              * given by it's instance GUID.
              * 
              * @param {String} guid A MemProtoObject object instance GUID
+             * @private
              */
 		    _deleteRefs: function (guid) {
 		        var refTo = this.pvt.refTo[guid];
@@ -198,7 +200,7 @@ define(
 		            var links = Object.keys(refFrom);
 		            for (var i = 0; i < links.length; i++) {
 		                var link = refFrom[links[i]];
-		                link.val.objRef=null;
+		                link.val.objRef = null;
 		                this.pvt.uLinks[link.src.getGuid() + "_" + link.field] = link;
 		            };
 		            delete this.pvt.refFrom[guid];
@@ -296,48 +298,86 @@ define(
 			    ref.objRef = null;
 			    var objRef = null;
 
-			    if (ref.is_external) {
-			        // External ref
-			        var objResBase = this.pvt.resMap[ref.guidRes];
-			        if (objResBase) {
-			            // Try to get resorce with GuidInstance == GuidResource
-			            objRef = objResBase[ref.guidRes];
-			        };
-			        if (objResBase && (!objRef)) {
-			            // Resorce with GuidInstance == GuidResource doesn't exist,
-			            //   then try to get another resorce with that Guid
-			            var guids = Object.keys(objResBase);
-			            if (guids.length == 1) {
-			                // There should be the only resource
-			                objRef = objResBase[guids[0]];
+		        // Backup initial state
+			    var oldGuidInstanceRes = ref.guidInstanceRes;
+			    var isChanged = false;
+
+			    if (ref.guidInstanceElem) {
+			        objRef = this.getObj(ref.guidInstanceElem);
+			        if (objRef)
+			            ref.objRef = objRef;
+                } else {
+			        if (ref.is_external) {
+			            // External ref
+			            var objResBase = this.pvt.resMap[ref.guidRes];
+			            if (objResBase) {
+			                if (ref.guidInstanceRes) {
+			                    objRef = objResBase[ref.guidInstanceRes];
+			                } else
+			                    // Try to get resorce with GuidInstance == GuidResource
+			                    objRef = objResBase[ref.guidRes];
+			            };
+			            if ((!ref.guidInstanceRes) && objResBase && (!objRef)) {
+			                // Resorce with GuidInstance == GuidResource doesn't exist,
+			                //   then try to get another resorce with that Guid
+			                var guids = Object.keys(objResBase);
+			                if (guids.length == 1) {
+			                    // There should be the only resource
+			                    objRef = objResBase[guids[0]];
+			                };
+			            };
+			            if ((!ref.guidInstanceRes) && objRef) {
+			                ref.guidInstanceRes = objRef.root.getGuid();
+			                isChanged = true;
+			            };
+			        } else {
+			            // Internal ref
+
+			            if (obj && (typeof (obj.getRoot) === "function")) {
+			                if (!(ref.guidInstanceRes && ref.guidRes)) {
+			                    // Set root of current object to resource reference
+			                    var root = obj.getRoot();
+			                    ref.guidRes = root.getGuidRes();
+			                    ref.guidInstanceRes = root.getGuid();
+			                };
+			                objRef = this.pvt.resMap[ref.guidRes];
+			                if (objRef)
+			                    objRef = objRef[ref.guidInstanceRes];
 			            };
 			        };
-			        if (objRef) {
-			            ref.guidInstanceRes = objRef.root.getGuid();
-			        };
-                } else {
-			        // Internal ref
 
-			        if (obj && (typeof (obj.getRoot) === "function")) {
-                        // Set root of current object to resource reference
-			            var root = obj.getRoot();
-			            ref.guidRes = root.getGuidRes();
-			            ref.guidInstanceRes = root.getGuid();
-			            objRef = this.pvt.resMap[ref.guidRes];
-			            if (objRef)
-			                objRef = objRef[ref.guidInstanceRes];
-                    };
+			        if (objRef)
+			            objRef = objRef.elems[ref.guidElem];
+			        if (objRef) {
+			            ref.guidInstanceElem = objRef.getGuid();
+			            ref.objRef = objRef;
+			        } else
+			            // Restore initial state
+			            if (isChanged)
+			                ref.guidInstanceRes = oldGuidInstanceRes;
                 };
 
-			    if (objRef)
-			        objRef = objRef.elems[ref.guidElem];
-			    if (objRef) {
-			        ref.guidInstanceElem = objRef.getGuid();
-			        ref.objRef = objRef;
-			    };
 			},
 
-            /**
+		    /**
+             * Will set new maximal root id if a parameter value is greater than current one.
+             * 
+             * @param {Integer} val A new value
+             */
+		    setMaxRootId: function (val) {
+		        this.pvt.$maxRootId = (this.pvt.$maxRootId < val) ? val : this.pvt.$maxRootId;
+		    },
+
+		    /**
+             * Returns the next incremental root id.
+             * 
+             * @return {Integer}
+             */
+		    getNextRootId: function () {
+		        return ++this.pvt.$maxRootId;
+		    },
+
+		    /**
              * addLogItem description
              * @param item
              * @private
@@ -533,16 +573,22 @@ define(
 
             /**
              * "сериализация" объекта базы
-             * @param {object} obj
+             * @param {object}  obj
+             * @param {boolean} [use_resource_guid = false] использовать гуид ресурса вместо гуида инстанса
              * @returns {*}
              */
-			serialize: function(obj) {
+			serialize: function(obj, use_resource_guid) {
 				// проверить, что объект принадлежит базе
 				if (!("getDB" in obj) || (obj.getDB()!=this)) return null;
 
 				var newObj = {};
 				newObj.$sys = {};
-				newObj.$sys.guid = obj.getGuidRes();
+
+				if (use_resource_guid)
+				    newObj.$sys.guid = obj.getGuidRes();
+                else
+				    newObj.$sys.guid = obj.getGuid();
+
 				newObj.ver = obj.getRootVersion();
 				/*if (obj.getObjType()) // obj
 					newObj.$sys.typeGuid = obj.getObjType().getGuid();
@@ -552,14 +598,14 @@ define(
 				// поля объекта TODO? можно сделать сериализацию в более "компактном" формате, то есть "массивом" и без названий полей
 				newObj.fields = {};
 				for (var i = 0; i < obj.count() ; i++)
-				    newObj.fields[obj.getFieldName(i)] = obj.getSerialized(i);
+				    newObj.fields[obj.getFieldName(i)] = obj.getSerialized(i, use_resource_guid);
 				// коллекции
 				newObj.collections = {};
 				for (i=0; i<obj.countCol(); i++) {
 					var cc=obj.getCol(i);
 					var cc2=newObj.collections[cc.getName()] = {};
 					for (var j=0; j<cc.count(); j++) {
-						var o2=this.serialize(cc.get(j));
+					    var o2 = this.serialize(cc.get(j), use_resource_guid);
 						cc2[j] = o2;
 					}
 				}
@@ -571,12 +617,19 @@ define(
              * @param {object} sobj - объект который нужно десериализовать
 			 * @param {object} parent - родительский "объект" - parent.obj, parent.colName для некорневых либо {} для корня, rtype: "res"|"data"
 			 * @callback cb - вызов функции, которая выполняет доп.действия после создания объекта
-			 * @param {boolean} make_clone клонировать ли объект при десериализации?
+			 * @param {boolean} keep_guid сохранять ли оригинальные GUID-ы при десериализации?
              * @returns {*}
              */
-			deserialize: function(sobj,parent,cb,make_clone) {
+			deserialize: function (sobj, parent, cb, keep_guid) {
+
+                // TEMPORARY SOLUTION (will be deleted) !!!
+			    if (keep_guid === undefined)
+			        keep_guid = true;
+
 			    function ideser(that, sobj, parent) {
 					if (!("obj" in parent)) parent.db = that;
+					if (keep_guid)
+					    sobj.$sys.keep_guid = true;
 					switch (sobj.$sys.typeGuid) {
 						case metaObjFieldsGuid:
 							var o = new MemMetaObjFields(parent,sobj);
@@ -593,8 +646,6 @@ define(
 							o = new MemMetaObj(parent,sobj);
 							break;
 						default:
-						    if (make_clone)
-						        sobj.$sys.make_clone = true;
 						    var typeObj = that.getObj(sobj.$sys.typeGuid);
 							/*if (!("obj" in parent)) { 
 								parent.nolog = true;
