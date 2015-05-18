@@ -11,7 +11,13 @@ define(
             className: "DataColumn",
             classGuid: UCCELLO_CONFIG.classGuids.DataColumn,
             metaCols: [],
-            metaFields: [{fname:"Label", ftype:"string"}, {fname:"Width", ftype:"int"}, {fname:"Field", ftype:"string"}],
+            metaFields: [{ fname: "Label", ftype: "string" }, { fname: "Width", ftype: "int" },
+                {
+                    fname: "Field", ftype: {
+                        type: "ref",
+                        res_elem_type: UCCELLO_CONFIG.classGuids.DataField
+                    }
+                }],
 
             init: function(cm, params) {
                 this._super(cm, params);

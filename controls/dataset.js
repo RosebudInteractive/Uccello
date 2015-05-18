@@ -15,7 +15,12 @@ define(
 				{fname: "RootInstance", ftype: "string"},
                 {fname: "Cursor", ftype: "string"},
                 {fname: "Active", ftype: "boolean"},
-                {fname: "Master", ftype: "string"},
+                {
+                    fname: "Master", ftype: {
+                        type: "ref",
+                        res_elem_type: UCCELLO_CONFIG.classGuids.Dataset
+                    }
+                },
 				{fname: "OnMoveCursor", ftype: "event"},
 				{fname: "ObjType", ftype: "string"}
             ],
@@ -42,13 +47,15 @@ define(
 				var master = this.master(); // подписаться на обновление данных мастер датасета
 
 				if (master && this.active()) {
-					this.getControlMgr().get(master).event.on({
-						type: 'refreshData',
+					//this.getControlMgr().get(master).event.on({
+				    master.event.on({
+				        type: 'refreshData',
 						subscriber: this,
 						callback: function(){ this._dataInit(false); } 
 					});
-					this.getControlMgr().get(master).event.on({
-						type: 'moveCursor',
+					//this.getControlMgr().get(master).event.on({
+				    master.event.on({
+				        type: 'moveCursor',
 						subscriber: this,
 						callback: function(){ this._dataInit(false); } 
 					});
@@ -110,8 +117,9 @@ define(
 						var that = this;
 						var params = {rtype:"data"};
 						if (master) { // если детейл, то экспрешн
-							params.expr = this.getControlMgr().get(master).getField("Id");
-						}
+							//params.expr = this.getControlMgr().get(master).getField("Id");
+							params.expr = master.getField("Id");
+                        }
 						if (rgi)
 						  var rgp = rgi;
 						else rgp = rg;
@@ -139,7 +147,8 @@ define(
 			},	
 
 			_initCursor: function() {
-				var rg = this.root();
+			    //var rg = this.root();
+			    var rg = this.rootInstance();
 				if (rg) {
 					var dataRoot = this.getDB().getObj(rg);
 					if (dataRoot) {
@@ -252,7 +261,8 @@ define(
 			
 			// установить "курсор" на внутренний объект dataobj
 			_setDataObj: function(value) {
-				this.pvt.dataObj =  this.getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
+				//this.pvt.dataObj =  this.getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
+			    this.pvt.dataObj = this.getDB().getObj(this.rootInstance()).getCol("DataElements").getObjById(value); // TODO поменять потом
 			},
 
             active: function (value) {

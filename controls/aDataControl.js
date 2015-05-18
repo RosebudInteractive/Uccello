@@ -10,7 +10,12 @@ define(
 
 			className: "ADataControl",
 			classGuid: UCCELLO_CONFIG.classGuids.ADataControl,
-            metaFields: [{fname: "Dataset", ftype: "string"}],
+			metaFields: [{
+			    fname: "Dataset", ftype: {
+			        type: "ref",
+			        res_elem_type: UCCELLO_CONFIG.classGuids.Dataset
+			    }
+			}],
 
 			init: function(cm,params){
 				this._super(cm,params);
@@ -26,11 +31,14 @@ define(
 			processDelta: function() {
 				var dsg = this.dataset();
 				if (dsg) { // TODO лучше сделать через методы компонента чем лезть в ОД
-					var dsc = this.getComp(dsg);
-					if (!dsc._isProcessed()) dsc.processDelta(); // если у датасета processDelta еще не вызван, то вызвать его
-					if (dsc.root() && this.getDB().getObj(dsc.root()))
-						var dsmod = this.getDB().getObj(dsc.root()).isDataModified();
-					else dsmod = false;
+				    //var dsc = this.getComp(dsg);
+				    var dsc = dsg;
+				    if (!dsc._isProcessed()) dsc.processDelta(); // если у датасета processDelta еще не вызван, то вызвать его
+					//if (dsc.root() && this.getDB().getObj(dsc.root()))
+					//	var dsmod = this.getDB().getObj(dsc.root()).isDataModified();
+				    if (dsc.rootInstance() && this.getDB().getObj(dsc.rootInstance()))
+				        var dsmod = this.getDB().getObj(dsc.rootInstance()).isDataModified();
+				    else dsmod = false;
 					if (dsc.isFldModified("Root") || dsc.isFldModified("Cursor") || dsmod) this._isRendered(false);
 				}
 				this._isProcessed(true);
@@ -40,8 +48,9 @@ define(
 			_subsDataSet: function() {
 				var dsg = this.dataset();
 				if (dsg) {					
-					var ds = this.getComp(dsg);
-					ds.event.on({
+				    //var ds = this.getComp(dsg);
+				    var ds = dsg;
+				    ds.event.on({
 						type: 'refreshData',
 						subscriber: this,
 						callback: function(){ this._isRendered(false); }

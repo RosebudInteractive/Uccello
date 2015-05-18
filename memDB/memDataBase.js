@@ -623,8 +623,8 @@ define(
 			deserialize: function (sobj, parent, cb, keep_guid, instGuid) {
 
                 // TEMPORARY SOLUTION (will be deleted) !!!
-			    if (keep_guid === undefined)
-			        keep_guid = true;
+			    //if (keep_guid === undefined)
+			    //    keep_guid = true;
 
 			    function ideser(that, sobj, parent) {
 					if (!("obj" in parent)) parent.db = that;
