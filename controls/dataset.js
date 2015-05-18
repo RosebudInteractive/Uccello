@@ -12,6 +12,7 @@ define(
             classGuid: UCCELLO_CONFIG.classGuids.Dataset,
             metaFields: [
                 {fname: "Root", ftype: "string"},
+				{fname: "RootInstance", ftype: "string"},
                 {fname: "Cursor", ftype: "string"},
                 {fname: "Active", ftype: "boolean"},
                 {fname: "Master", ftype: "string"},
@@ -71,6 +72,8 @@ define(
 					}
 				}
 				
+				// TODO RFDS изменение root или rootInstance !
+				
 				this._isProcessed(true);
 	
 			},
@@ -78,9 +81,10 @@ define(
 			_dataInit: function(onlyMaster) {
 				
 				if (!this.active()) return;
-				function icb() {				
+				function icb(res) {		
 					function refrcb() {
 						this.pvt.dataVer++;
+						this.rootInstance(res.guids[0]);
 						this._initCursor();
 						this.event.fire({
 							type: 'refreshData',
@@ -88,12 +92,35 @@ define(
 						});
 
 					}
+					
 					that.getControlMgr().userEventHandler(that, refrcb );
 				}
 			
 				//debugger;
+				// TODO RFDS
+				// rootGuid
 				var rg = this.root();
+				var rgi = this.rootInstance();
 				var master = this.master();
+				// RFDS NEW
+				if (rg) {
+					var dataRoot = this.getControlMgr().getRoot(rg);
+					if (!dataRoot || !onlyMaster) {
+						if (onlyMaster && master) return; // если НЕ мастер, а детейл, то пропустить
+						var that = this;
+						var params = {rtype:"data"};
+						if (master) { // если детейл, то экспрешн
+							params.expr = this.getControlMgr().get(master).getField("Id");
+						}
+						if (rgi)
+						  var rgp = rgi;
+						else rgp = rg;
+						this.getControlMgr().getContext().loadNewRoots([rgp],params, icb);
+
+					}
+					else this._initCursor();
+				}
+				/*
 				if (rg) {
 					var dataRoot = this.getControlMgr().getRoot(rg);
 					if (!dataRoot || !onlyMaster) {
@@ -108,6 +135,7 @@ define(
 					}
 					else this._initCursor();
 				}
+				*/
 			},	
 
 			_initCursor: function() {
@@ -200,6 +228,10 @@ define(
 				}
 			
                 return newVal;
+            },
+			
+            rootInstance: function (value) {
+                return this._genericSetter("RootInstance", value);
             },
 
             cursor: function (value) {

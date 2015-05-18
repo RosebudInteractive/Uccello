@@ -18,7 +18,8 @@ define(
              * @returns {obj}
              */
             loadRes: function (guidRoot) {
-                var json = require(UCCELLO_CONFIG.dataPath + 'forms/'+guidRoot+'.json');
+				var gr = guidRoot.slice(0,36);
+                var json = require(UCCELLO_CONFIG.dataPath + 'forms/'+gr+'.json');
                 return json;
             }
 
