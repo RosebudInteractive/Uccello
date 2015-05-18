@@ -574,7 +574,7 @@ define(
 			 * @param {boolean} make_clone клонировать ли объект при десериализации?
              * @returns {*}
              */
-			deserialize: function(sobj,parent,cb,make_clone) {
+			deserialize: function(sobj,parent,cb,make_clone,instGuid) {
 			    function ideser(that, sobj, parent) {
 					if (!("obj" in parent)) parent.db = that;
 					switch (sobj.$sys.typeGuid) {
@@ -619,6 +619,9 @@ define(
 				//this.getCurrentVersion(); // пока из-за этого не работает!
 
 				if ("obj" in parent) parent.obj.getLog().setActive(false); // отключить лог на время десериализации
+				// заменить гуид ресурса на гуид экземпляра
+				if (instGuid) sobj.$sys.guid = instGuid;
+				
 				var res = ideser(this,sobj,parent);
 				var rholder = this.getRoot(res.getGuid());
 				if (rholder) { // TODO Сергей: поставил проверку иначе при создании контекста ошибки
@@ -653,22 +656,29 @@ define(
 			 * @callback cb - вызов функции, которая выполняет доп.действия после создания каждого объекта
 			 * @param subDbGuid - гуид базы данных подписчика (для идентификации)
 			 * @param override - true - перезагрузить рут, false - только подписать
-             * @returns {*}
+             * @returns {*} - возвращает массив корневых гуидов - либо созданных рутов либо уже существующих но на которые не были подписаны
              */
 			// ДОЛЖНА РАБОТАТЬ ТОЛЬКО ДЛЯ МАСТЕР БАЗЫ - СЛЕЙВ НЕ МОЖЕТ ДОБАВИТЬ В СЕБЯ РУТ, МОЖЕТ ТОЛЬКО ПОДПИСАТЬСЯ НА РУТ МАСТЕРА!
-			addRoots: function(sobjs, cb, subDbGuid, override) {
+			addRoots: function(sobjs, params, rg, override) {
+				var subDbGuid = params.subDbGuid;
+				var cb = params.compcb;
+				
 				var res = [];
 
 				this.getCurrentVersion();
 
 				if (!cb) cb = this.getDefaultCompCallback();
 
-
-				for (var i=0; i<sobjs.length; i++) {
-					var root = this.getRoot(sobjs[i].$sys.guid); 
+				//for (var i=0; i<sobjs.length; i++) {
+				for (var i=0; i<rg.length; i++) {
+					var root = null;
+					if (rg[i].length>36) root = this.getRoot(rg[i]); //sobjs[i].$sys.guid);
 					if (!root || override) {
 						var time = Date.now();
-						var croot = this.deserialize(sobjs[i], { }, cb);
+						if (rg[i].length>36)
+							var croot = this.deserialize(sobjs[i], { }, cb, false, rg[i]);
+						else croot = this.deserialize(sobjs[i], { }, cb);
+						
 						var timeEnd = Date.now();
 						logger.info((new Date()).toISOString()+';deserialize;'+(timeEnd-time));
 						// добавить в лог новый корневой объект, который можно вернуть в виде дельты
@@ -684,21 +694,26 @@ define(
 					var allSubs = this.getSubscribers();
 
 					// возвращаем гуид если рута не было, или был, но не были подписаны, или в режиме оверрайд
+					// TODO RFDS проверить нужно ли условие с  "|| override"
 					if (!root || (root && !(root.subscribers[subDbGuid])) || override) res.push(croot.getGuid());		
 
 					// форсированная подписка для данных (не для ресурсов) - в будущем скорее всего понадобится управлять этим
-
+					// если добавляются новые ДАННЫЕ, то все подписчики этого корня также будут на них подписаны
+					// Альтернатива: можно запрашивать их с клиента при изменении rootInstance, несколько проще, но придется посылать их много раз
+					// что хуже с точки зрения нагрузки на сервер и трафика
 					for (var guid in allSubs) {
 						var subscriber = allSubs[guid];
 						if (subscriber.kind == 'remote') {
-							/*UCCELLO_CONFIG.classGuids.DataRoot "87510077-53d2-00b3-0032-f1245ab1b74d"*/
 							// Подписываем либо данные (тогда всех) либо подписчика
-							if ((croot.getTypeGuid() == UCCELLO_CONFIG.classGuids.DataRoot ) || (subDbGuid==subscriber.guid))
-								//root.subscribers[subscriber.guid] = subscriber;
-							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber; //subProxy;
-
+							if ((croot.getTypeGuid() == UCCELLO_CONFIG.classGuids.DataRoot ) || (subDbGuid == subscriber.guid))
+							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber;
 						}
-					}					
+					}			
+					
+					if (params.expr) {
+						root = this.getRoot(croot.getGuid()); 
+						root.hash = params.expr;
+					}
 				}
 
 				if (!this.inTran()) { // автоматом "закрыть" транзакцию (VALID VERSION = DRAFT VERSION)

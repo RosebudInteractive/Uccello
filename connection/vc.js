@@ -165,7 +165,7 @@ define(
 				function cbtest(res) { console.log(res); cb(res); }
 				if (!this.isOn()) return false;
 				if (this.getModule().isMaster())
-					this.loadNewRoots(resGuids, { rtype: "res", compcb: this.pvt.compCallback}, cb); //function (res) { console.log(res); cb(res); } );
+					this.loadNewRoots(resGuids, { rtype: "res", compcb: this.pvt.compCallback}, cb); 
 				else this.getContentDB().subscribeRoots(resGuids, cbtest, this.pvt.compCallback);
 				return true;
 			},
@@ -297,17 +297,36 @@ define(
 					var override = true;
 
 					function icb(r) {
-						var res = that.getContentDB().addRoots(r.datas, params.compcb, params.subDbGuid, override);
+						var res = that.getContentDB().addRoots(r.datas, params, rg,/*params.compcb, params.subDbGuid,*/ override);
 						if (cb) cb({guids:res});
 					}
+					// TODO RFDS Проверять, есть ли уже объект с таким гуидом и хэшем !!! (expression)
+					// если есть - то просто возвращать его, а не загружать заново. Если нет, тогда грузить.
+					var rg = [];
+					
+					// Всегда добавляем новые - проверка существования не имеет смысла, мы говорим о гуидах прототипов
+					for (var i=0; i<rootGuids.length; i++) {
+					    if (rootGuids[i].length > 36) { // instance Guid
+							var cr = this.getRoot(rootGuids[i]);
+							if (cr) {
+								if ((params.expr &&  params.expr!=cr.hash) || !params.expr) {
+									rg.push(rootGuids[i]);
+								}
+							}
+						}
+						else rg.push(rootGuids[i]); // если resourceGuid
+							
+					}
 
+					//rg=rootGuids;
+					
 					if (params.rtype == "res") {
 						override = false;
-						this.pvt.proxyServer.loadResources(rootGuids, icb);
+						this.pvt.proxyServer.loadResources(rg, icb);
 						return "XXX";
 					}
 					if (params.rtype == "data") {
-						this.pvt.proxyServer.queryDatas(rootGuids, params.expr, icb);
+						this.pvt.proxyServer.queryDatas(rg, params.expr, icb);
 						return "XXX";
 					}
 				}
