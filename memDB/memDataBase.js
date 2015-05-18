@@ -620,7 +620,7 @@ define(
 			 * @param {boolean} keep_guid сохранять ли оригинальные GUID-ы при десериализации?
              * @returns {*}
              */
-			deserialize: function (sobj, parent, cb, keep_guid) {
+			deserialize: function (sobj, parent, cb, keep_guid, instGuid) {
 
                 // TEMPORARY SOLUTION (will be deleted) !!!
 			    if (keep_guid === undefined)
