@@ -41,6 +41,7 @@ define([], function () {
             {className:'ADataControl', isUccello:true, component:'controls/aDataControl', metaType:['content']},
             {className:'ADataFieldControl', isUccello:true, component:'controls/aDataFieldControl', metaType:['content']},
             {className:'DataRoot', isUccello:true, component:'dataman/dataRoot', metaType:['content']},
+            {className:'DataObject', isUccello:true, component:'dataman/dataobject', metaType:['content']},
             {className:'ADataModel', isUccello:true, component:'controls/aDataModel', metaType:['content']},
             {className:'DataField', isUccello:true, component:'controls/dataField', metaType:['content']},
             {className:'Dataset', isUccello:true, component:'controls/dataset', metaType:['content']},
@@ -119,7 +120,8 @@ define([], function () {
             'GColumn':"9d00a857-4a93-6b7a-9ef0-08b14dc81e54",
             'GRow':"157eb87c-3331-97cf-e307-a0c5311ba7d5",
             'GCell':"69087f9c-99ed-14f1-0fe7-05058a862af5",
-            'FContainer':"902822d8-3079-f394-2eed-3ad9ac27b2f2"
+            'FContainer':"902822d8-3079-f394-2eed-3ad9ac27b2f2",
+            'DataObject':"edb1b63c-f72c-6f0a-b64c-3b34da7facdb"
         },
 
         // изменяемые свойства

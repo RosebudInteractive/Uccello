@@ -4,8 +4,8 @@
 }
 
 define(
-	['./memProtoObj','./memCol'],
-	function(MemProtoObj,MemCol) {
+	['./memProtoObj', './memCol'],
+	function(MemProtoObj, MemCol) {
 		var MemMetaObj = MemProtoObj.extend({
 		
 			init: function(parent, flds){
@@ -27,25 +27,30 @@ define(
 					this.pvt.ancestors.push(par);
 					par = (par.get("parentClass")==undefined) ? null : this.getDB().getObj(par.get("parentClass"));
 				}
-				
-				// TODO ПЕРЕДЕЛАТЬ!!!
-				if ((flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataRoot) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataContact) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataCompany) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataAddress) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataContract) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataLead) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataIncomeplan)
-				)
+
+				if (flds.fields.parentClass == UCCELLO_CONFIG.classGuids.DataRoot) {
 					this.pvt.rtype = "data";
-				else
-					this.pvt.rtype = "res";
+				} else {
+					// TODO ПЕРЕДЕЛАТЬ!!!
+					if ((flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataRoot) ||
+						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataContact) ||
+						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataCompany) ||
+						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataAddress) ||
+						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataContract) ||
+						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataLead) ||
+						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataIncomeplan)
+					)
+						this.pvt.rtype = "data";
+					else
+						this.pvt.rtype = "res";
+				}
 
 				// инициализируем коллекции для метаинфо - описание полей и описание коллекций
 				new MemCol("fields",this);
 				new MemCol("cols",this);
 				
 				this.finit();
+
 
 			},
 			

@@ -4,8 +4,8 @@
 }
 
 define(
-    ['./dataRoot'],
-    function(DataRoot)  {
+    [],
+    function()  {
 		var Dataman = Class.extend({
 
 			init: function(router, controller){
@@ -91,11 +91,11 @@ define(
                 var result = {
                     "$sys": {
                         "guid": guidRoot,
-                        "typeGuid": UCCELLO_CONFIG.classGuids.DataRoot
+                        "typeGuid": UCCELLO_CONFIG.classGuids.RootLead
                     },
                     "fields": {
                         "Id": 1000,
-                        "Name": "DataRoot"
+                        "Name": "RootLead"
                     },
                     "collections": {
                         "DataElements": [

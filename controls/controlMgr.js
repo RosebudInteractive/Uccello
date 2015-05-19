@@ -311,8 +311,10 @@ define(
 					}
 					// загружаем скрипты и выполняем колбэк
 					require(scripts, function(){
-						for(var i=0; i<scripts.length; i++)
+						for(var i=0; i<scripts.length; i++) {
 							new (arguments[i])(that);
+							console.log(arguments[i].className);
+						}
 						done();
 					});
 				}
