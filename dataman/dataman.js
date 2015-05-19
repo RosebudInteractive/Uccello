@@ -91,11 +91,11 @@ define(
                 var result = {
                     "$sys": {
                         "guid": guidRoot,
-                        "typeGuid": UCCELLO_CONFIG.classGuids.RootLead
+                        "typeGuid": UCCELLO_CONFIG.classGuids.DataRoot
                     },
                     "fields": {
                         "Id": 1000,
-                        "Name": "RootLead"
+                        "Name": "DataRoot"
                     },
                     "collections": {
                         "DataElements": [
