@@ -86,9 +86,9 @@ define(
 								callback: that._onModifParam
 							});
 
-							if (!that.pvt.formParams[obj.get("Name")])  // добавить в список параметров
-								that.pvt.formParams[obj.get("Name")] = [];
-							that.pvt.formParams[obj.get("Name")].push(obj);
+							if (!that.pvt.formParams[obj.name()])  // добавить в список параметров
+								that.pvt.formParams[obj.name()] = [];
+							that.pvt.formParams[obj.name()].push(obj);
 
 						}
 						
@@ -229,10 +229,10 @@ define(
 			_setFormParams: function(ev) {
 				for (var i=0; i<this.pvt.memParams.length; i++) {
 					var obj = this.pvt.memParams[i];
-					var pn = obj.get("Name");
+					var pn = obj.name();
 					for (var j=0; j<this.pvt.formParams[pn].length; j++) {
 						var obj2 = this.pvt.formParams[pn][j];
-						if (obj2.get("Kind")=="in") obj2.set("Value",obj.get("Value"));
+						if (obj2.kind()=="in") obj2.value(obj.value());
 					}
 				}
 				this.pvt.memParams = [];
@@ -391,10 +391,10 @@ define(
 
 				if (result.target.getObjType().getGuid() == UCCELLO_CONFIG.classGuids.Form) {
 					// ищем по Title и добавляем id если найден для уникальности
-					var found = false, title = result.target.get('Title');
+					var found = false, title = result.target.title();
 					var col = this.getCol('Resources');
 					for(var i= 0, len=col.count(); i<len; i++) {
-						if (title == col.get(i).get('Title'))
+						if (title == col.get(i).title())
 							found = true;
 					}
 					var id = ++this.pvt.vcrCounter;

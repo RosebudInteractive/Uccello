@@ -97,6 +97,7 @@ define(function () {
             if (event.msgId && this.messages[event.msgId]) {
                 var msg = this.messages[event.msgId];
                 delete this.messages[event.msgId];
+                delete event.msgId;
                 if (msg.callback)
                     msg.callback(event);
             }

@@ -154,7 +154,7 @@ define(
 					if (dataRoot) {
 						var col = dataRoot.getCol("DataElements");
 						if (!dataRoot.getCol("DataElements").getObjById(this.cursor())) {
-							if (col.count()>0) this.cursor(col.get(0).get("Id")); // установить курсор в новую позицию (наверх)
+							if (col.count()>0) this.cursor(col.get(0).id()); // установить курсор в новую позицию (наверх)
 						}
 						else this._setDataObj(this.cursor()); // 
 					}
@@ -172,7 +172,8 @@ define(
 			setField: function(name, value) {
 				if (this.pvt.dataObj) {
 					var vold = this.pvt.dataObj.get(name);
-					this.pvt.dataObj.set(name, value);
+					var nameLow = name.charAt(0).toLowerCase() + name.slice(1);
+					this.pvt.dataObj[nameLow](value);
 					if (value!=vold) // если значение действительно изменено, то возбуждаем событие
 						this.event.fire({
 							type: 'modFld',

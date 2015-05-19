@@ -10,7 +10,10 @@ define(
 
 			className: "Button",
 			classGuid: UCCELLO_CONFIG.classGuids.Button,
-            metaFields: [ {fname:"Caption",ftype:"string"} ],
+            metaFields: [
+                {fname:"Caption",ftype:"string"},
+                {fname: "OnClick", ftype: "event"}
+            ],
 
             /**
              * Инициализация объекта
@@ -19,7 +22,9 @@ define(
              */
             init: function(cm, params) {
                 this._super(cm, params);
-                this.params = params;
+                if (!params) return;
+                if (this.get("OnClick"))
+                    this.onClick = new Function(this.get("OnClick"));
             },
 
 			// Properties

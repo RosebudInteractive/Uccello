@@ -114,6 +114,7 @@ define(function() {
             if (data.msgId && this.messages[data.msgId]) {
                 var msg = this.messages[data.msgId];
                 delete this.messages[data.msgId];
+                delete data.msgId;
                 if (msg.callback)
                     msg.callback(data);
             }
