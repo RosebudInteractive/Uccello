@@ -23,12 +23,19 @@ define(
 				this.pvt.ancestors = [];
 				this.pvt.ancestors.push(this);
 				var par = this.getDB().getObj(flds.fields.parentClass);
+				if (this.getGuid() == UCCELLO_CONFIG.classGuids.DataRoot || this.getGuid() == UCCELLO_CONFIG.classGuids.DataObject)
+					this.pvt.rtype = "data";
+				else
+					this.pvt.rtype = "res";
 				while (par) {
 					this.pvt.ancestors.push(par);
+					if (par && (par.getGuid() == UCCELLO_CONFIG.classGuids.DataRoot || par.getGuid() == UCCELLO_CONFIG.classGuids.DataObject))
+						this.pvt.rtype = "data";				
 					par = (par.get("parentClass")==undefined) ? null : this.getDB().getObj(par.get("parentClass"));
+
 				}
 
-				if (flds.fields.parentClass == UCCELLO_CONFIG.classGuids.DataRoot) {
+				/*if (flds.fields.parentClass == UCCELLO_CONFIG.classGuids.DataRoot) {
 					this.pvt.rtype = "data";
 				} else {
 					// TODO ПЕРЕДЕЛАТЬ!!!
@@ -43,7 +50,7 @@ define(
 						this.pvt.rtype = "data";
 					else
 						this.pvt.rtype = "res";
-				}
+				}*/
 
 				// инициализируем коллекции для метаинфо - описание полей и описание коллекций
 				new MemCol("fields",this);
