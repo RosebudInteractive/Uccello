@@ -7,7 +7,8 @@
  */
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    //var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -16,7 +17,7 @@ define(
         
         var fldTypeCodes;
         
-        var BaseType = Class.extend({
+        var BaseType = UccelloClass.extend({
             /**
              * The Base Type all Type objects inherit from.
              *
@@ -172,7 +173,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
         
@@ -186,7 +188,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
         
@@ -200,7 +203,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
         
@@ -214,7 +218,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
         
@@ -228,7 +233,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
 
@@ -242,7 +248,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
 
@@ -256,7 +263,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
                 this._is_complex = true;
             },
 
@@ -267,7 +275,8 @@ define(
              * @return {Strng} The hash code
              */
             hash: function () {
-                var result = this._super();
+                //var result = this._super();
+                var result = UccelloClass.super.apply(this, []);
 
                 if ((this._refResolver) &&
                         (typeof (this._refResolver.getGuid) === "function"))
@@ -289,7 +298,9 @@ define(
              * @return {Object} Serialized representation
              */
             serialize: function () {
-                var result = this._super();
+                //var result = this._super();
+                var result = UccelloClass.super.apply(this, []);
+
                 result.res_elem_type = this._resElemType;
                 if (this._external) {
                     result.external = this._external;
@@ -314,7 +325,8 @@ define(
              * @private
              */
             _deserialize: function (val) {
-                this._super(val);
+                //this._super(val);
+                UccelloClass.super.apply(this, [val]);
 
                 this._external = false;
                 this._resType = null;
