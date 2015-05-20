@@ -30,35 +30,15 @@ define(
 				while (par) {
 					this.pvt.ancestors.push(par);
 					if (par && (par.getGuid() == UCCELLO_CONFIG.classGuids.DataRoot || par.getGuid() == UCCELLO_CONFIG.classGuids.DataObject))
-						this.pvt.rtype = "data";				
-					par = (par.get("parentClass")==undefined) ? null : this.getDB().getObj(par.get("parentClass"));
-
-				}
-
-				/*if (flds.fields.parentClass == UCCELLO_CONFIG.classGuids.DataRoot) {
-					this.pvt.rtype = "data";
-				} else {
-					// TODO ПЕРЕДЕЛАТЬ!!!
-					if ((flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataRoot) ||
-						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataContact) ||
-						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataCompany) ||
-						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataAddress) ||
-						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataContract) ||
-						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataLead) ||
-						(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataIncomeplan)
-					)
 						this.pvt.rtype = "data";
-					else
-						this.pvt.rtype = "res";
-				}*/
+					par = (par.get("parentClass")==undefined) ? null : this.getDB().getObj(par.get("parentClass"));
+				}
 
 				// инициализируем коллекции для метаинфо - описание полей и описание коллекций
 				new MemCol("fields",this);
 				new MemCol("cols",this);
-				
+
 				this.finit();
-
-
 			},
 			
 			// сделать таблицу элементов с учетом наследования
