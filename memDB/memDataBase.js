@@ -756,7 +756,7 @@ define(
 						var subscriber = allSubs[guid];
 						if (subscriber.kind == 'remote') {
 							// Подписываем либо данные (тогда всех) либо подписчика
-							if ((croot.getTypeGuid() == UCCELLO_CONFIG.classGuids.DataRoot ) || (croot.getTypeGuid() == UCCELLO_CONFIG.classGuids.RootLead ) || (subDbGuid==subscriber.guid))
+							if (croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid)
 							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber;
 						}
 					}			

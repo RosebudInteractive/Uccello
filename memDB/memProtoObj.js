@@ -79,7 +79,7 @@ define(
 					//if ((parent.mode == "RW") && (!parent.nolog) && (!pvt.db.isMaster())) // не мастер, то активируем, для мастера - на 1й подписке
 					//	pvt.log.setActive(true); // лог активен только для корневого объекта, который создан в режиме ReadWrite
 					// ## перенес на 3 строки ниже, чтобы лог уже существовал
-					if (!objType || objType.getGuid()==UCCELLO_CONFIG.classGuids.DataRoot || objType.getGuid()==UCCELLO_CONFIG.classGuids.RootLead)
+					if (!objType || this.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot))
 						pvt.db._addRoot(this,{ type: "data", mode: parent.mode});
 					else 
 						pvt.db._addRoot(this,{ type: "res", mode: parent.mode});
@@ -148,7 +148,7 @@ define(
 
 				if (!parent.obj) {	// корневой объект				
 					pvt.log = new MemObjLog(this);	// создать лог записи изменений
-					if (!objType || objType.getGuid()==UCCELLO_CONFIG.classGuids.DataRoot || objType.getGuid()==UCCELLO_CONFIG.classGuids.RootLead)
+					if (!objType || this.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot))
 						pvt.db._addRoot(this,{ type: "data", mode: parent.mode});
 					else 
 						pvt.db._addRoot(this,{ type: "res", mode: parent.mode});
