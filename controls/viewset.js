@@ -56,8 +56,8 @@ define(
 				var col=component.getCol("Children");
                 if (col == undefined) return;
                 for (var i=0; i<col.count(); i++) {
-                    var co=this.cm.get(col.get(i).getGuid());
-                    this.render(co, options);
+                    //var co=col.get(i)   //this.cm.get(col.get(i).getGuid());
+                    this.render(col.get(i), options);
                 }
             }
 

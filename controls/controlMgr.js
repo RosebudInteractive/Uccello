@@ -199,6 +199,8 @@ define(
              */				
 			render: function(component, options, pd) {
 			
+				console.log(component.getGuid()+"  "+component.pvt.fields[7])
+			
 				if (!this.pvt.subsInitFlag[component.getGuid()]) {
 					this.subsInit(component);  // если не выполнена постинициализация, то запустить
 					this.pvt.subsInitFlag[component.getGuid()] = true;
@@ -220,18 +222,31 @@ define(
 			},
 			
 			setToRendered: function(component, val) {
+				if (component == undefined) return;
+			
+				if ("_isRendered" in component) component._isRendered(val);
+				var col=component.getCol("Children");
+                if (col == undefined) return;
+                for (var i=0; i<col.count(); i++) 
+					this.setToRendered(col.get(i),val);
+
+            },
 				//this.getDB().resetModifLog();
-				for (var g in this.pvt.compByGuid) { //TODO нужно это делать не для всех компонентов или рендерить всегда с рута
+				/*for (var g in this.pvt.compByGuid) { //TODO нужно это делать не для всех компонентов или рендерить всегда с рута
 					//this.pvt.compByGuid[g].getObj().resetModifFldLog();	// обнуляем "измененные" поля в объектах 
 					var rg = this.pvt.compByGuid[g].getRoot().getGuid();
 					if (("_isRendered" in this.pvt.compByGuid[g]) && ((component && component.getGuid() == rg) || (component === undefined)))
 						this.pvt.compByGuid[g]._isRendered(val);			// выставляем флаг рендеринга
-				}			
-			},
+				}*/			
+			//},
 			
 			// переинициализация рендера
-			initRender: function() {
-				this.setToRendered(undefined, false);
+			initRender: function(rootGuids) {
+				
+				for (var i=0; i<rootGuids.length; i++)
+					this.setToRendered(this.get(rootGuids[i]), false);
+				
+				// TODO обход рекурс
 				for (var g in this.pvt.compByGuid) { 
 					if ("initRender" in this.pvt.compByGuid[g])
 						this.pvt.compByGuid[g].initRender();			// выставляем флаг рендеринга

@@ -42,8 +42,9 @@ define(
 			 */
 			on: function(cm, params,cb, renderRoot) {
 				if (this.isOn()) {
-					this.pvt.cm.initRender();
-					cb(this.pvt.cm.getRootGuids("res"));
+					var guids = this.pvt.cm.getRootGuids("res")
+					this.pvt.cm.initRender(guids);
+					cb(guids);
 					return;
 				}
 				this.pvt.cdb = null;

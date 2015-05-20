@@ -92,6 +92,9 @@ define(
 					function refrcb() {
 						this.pvt.dataVer++;
 						this.rootInstance(res.guids[0]);
+						console.log("ROOT INSTANCE SET TO ");
+						console.log(res);
+						console.log(this.rootInstance());
 						this._initCursor();
 						this.event.fire({
 							type: 'refreshData',
@@ -241,7 +244,9 @@ define(
             },
 			
             rootInstance: function (value) {
-                return this._genericSetter("RootInstance", value);
+               var val = this._genericSetter("RootInstance", value);
+			   console.log("SET ROOT INSTANCE "+this.name()+" "+val);
+			   return val;
             },
 
             cursor: function (value) {
