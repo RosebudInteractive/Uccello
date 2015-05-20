@@ -200,17 +200,17 @@ define(
                         cbfinal(result2);
                 }
 
-                var s = that.pvt.clientConnection.socket;
-                var p = {socket: s, proxyServer: that.pvt.proxyServer}
+                var s = this.pvt.clientConnection.socket;
+                var p = {socket: s, proxyServer: this.pvt.proxyServer}
                 p.formGuids = params.formGuids;
-                p.constructHolder = that.pvt.constructHolder; //  ссылка на хранилище конструкторов
+                p.constructHolder = this.pvt.constructHolder; //  ссылка на хранилище конструкторов
 
                 if (params.side == 'client') {
-                    that.pvt.vc = this.pvt.cmclient.get(params.vc);
-                    that.pvt.vc.on(this.pvt.cmclient, p, cbfinal2, renderRoot);
+                    this.pvt.vc = this.pvt.cmclient.get(params.vc);
+                    this.pvt.vc.on(this.pvt.cmclient, p, cbfinal2, renderRoot);
                 } else {
-                    that.pvt.vc = that.pvt.cmsys.get(params.vc);
-                    that.pvt.vc.on(that.pvt.cmsys, p, cbfinal2, renderRoot);
+                    this.pvt.vc = this.pvt.cmsys.get(params.vc);
+                    this.pvt.vc.on(this.pvt.cmsys, p, cbfinal2, renderRoot);
                 }
 			},
 
