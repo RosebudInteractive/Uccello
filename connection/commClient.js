@@ -464,12 +464,13 @@ define(
             _getWSMsgProcessor: function (chStateData) {
                 var self = this;
                 return function (event, callback) {
-                    var data = JSON.parse(event);
+                    var data;
                     if (chStateData.chType == CommunicationClient.WEB_SOCKET) {
-                        data = data.data;
+                        data = JSON.parse(event.data);
                     };
 
-                    if (chStateData.chType == CommunicationClient.SOCKET_IO){
+                    if (chStateData.chType == CommunicationClient.SOCKET_IO) {
+                        data = JSON.parse(event);
                         var msgId = data.msgId;
                         data = data.data;
 
