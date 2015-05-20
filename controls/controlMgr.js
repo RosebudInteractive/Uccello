@@ -23,8 +23,8 @@ define(
 				this.pvt.compByLid = {};
 				this.pvt.compByGuid = {};
 				this.pvt.compByName = {};				
-				this.pvt.subsInitFlag = false;
-				this.pvt.dataInitFlag = false;
+				this.pvt.subsInitFlag = {};
+				this.pvt.dataInitFlag = {};
 				this.pvt.rootGuids = {};
 				this.pvt.vc = vc;
 				
@@ -53,23 +53,44 @@ define(
                     });
                 }*/
 			},
-			
-			subsInit: function() {
 
-				for (var g in this.pvt.compByGuid)
-					this.pvt.compByGuid[g].subsInit();
-					
-				this.pvt.subsInitFlag =true;
+           /**
+			 * Инициализация подписки - делается 1 раз при загрузке нового ресурса
+             * @param component {AComponent} - корневой элемент
+             */				
+			subsInit: function(component) {
+
+				//for (var g in this.pvt.compByGuid)
+				//	this.pvt.compByGuid[g].subsInit();
+				component.subsInit();
+				//var col=component.getCol("Children");
+				for (j = 0 ; j < component.countCol() ; j++) {
+					var col = component.getCol(j);
+					for (var i=0; i<col.count(); i++) {
+						//var co=col.get(i); //this.cm.get(col.get(i).getGuid());
+						this.subsInit(col.get(i));
+					}					
+				}
+				//this.pvt.subsInitFlag[component.getGuid()] = true;
 			},
 
-			
-			dataInit: function() {
-				//var c = this.getRoot();
+           /**
+			 * Инициализация данны - делается 1 раз при загрузке нового ресурса
+             * @param component {AComponent} - корневой элемент
+             */				
+			dataInit: function(component) {
 
-				for (var g in this.pvt.compByGuid)
-					this.pvt.compByGuid[g].dataInit();
-					
-				this.pvt.dataInitFlag =true;
+				//for (var g in this.pvt.compByGuid)
+				//	this.pvt.compByGuid[g].dataInit();
+				component.dataInit();
+				for (j = 0 ; j < component.countCol() ; j++) {
+					var col = component.getCol(j);
+					for (var i=0; i<col.count(); i++) {
+						//var co=col.get(i); //this.cm.get(col.get(i).getGuid());
+						this.dataInit(col.get(i));
+					}	
+				}
+				//this.pvt.dataInitFlag[component.getGuid()] = true;
 			},
 
             /**
@@ -149,15 +170,6 @@ define(
 
             /**
 			 * Вернуть компонент по его гуид
-             */	
-			 // TODOR2 - убрать после чистки вызовов в прото1
-			 /*
-			getByGuid: function(guid) {
-				return this.pvt.compByGuid[guid];
-			},*/
-
-            /**
-			 * Вернуть компонент по его гуид
              */			
 			get: function(guid) {
 				return this.pvt.compByGuid[guid];
@@ -183,12 +195,18 @@ define(
 
             /**
 			 * Рендеринг компонентов интерфейса
-			 *  @param component - корневой элемент, с которого запускается рендеринг, если undef, то с корня
+			 *  @param component - корневой (обязательно) элемент, с которого запускается рендеринг
              */				
 			render: function(component, options, pd) {
 			
-				if (!this.pvt.subsInitFlag) this.subsInit();  // если не выполнена постинициализация, то запустить
-				if (!this.pvt.dataInitFlag) this.dataInit();
+				if (!this.pvt.subsInitFlag[component.getGuid()]) {
+					this.subsInit(component);  // если не выполнена постинициализация, то запустить
+					this.pvt.subsInitFlag[component.getGuid()] = true;
+				}
+				if (!this.pvt.dataInitFlag[component.getGuid()]) {
+					this.dataInit(component);
+					this.pvt.dataInitFlag[component.getGuid()] = true;
+				}
 				
 				if (pd) this.processDelta();
 			

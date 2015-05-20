@@ -187,6 +187,7 @@ define(
              * @param params - параметры
 			 *        params.formGuids - массив гуидов ресурсов, которые должны быть загружены
 			 *        params.vc - гуид контекста
+			 *        params.side - "client" для клиентского контекста, "server" для серверного
 			 * @param cbfinal - финальный коллбэк
 			 * @param renderRoot - коллбэк на рендеринг, если не передается, то контекст активируется, но остается скрытым
              */	
@@ -222,10 +223,12 @@ define(
              * @param callback
              */
             createRoot: function(formGuids, rtype, callback, context) {
-                var that = this;
-                var subDbGuid = context? context.dataBase(): this.getContext().getContentDB().getGuid();
+
+				// F606 - предположительно - передача subDbGuid не требуется, так как назначается внутри VC
+                //var subDbGuid = context? context.dataBase(): this.getContext().getContentDB().getGuid();
                 context = context? context: this.getContext();
-                context.loadNewRoots(formGuids, {rtype:rtype, subDbGuid: subDbGuid }, function(result){
+				
+                context.loadNewRoots(formGuids, {rtype:rtype /*, subDbGuid: subDbGuid*/ }, function(result){
                     context.renderForms(result.guids, true);
                     if (callback) callback(result);
                 });

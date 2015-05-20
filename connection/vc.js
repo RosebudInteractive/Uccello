@@ -107,7 +107,7 @@ define(
 
 						var comp =  that.createComponent.apply(that, [typeObj, parent, sobj]);
 
-						if (DEBUG) {
+						if (false) {
 							if (sobj.$sys.typeGuid == UCCELLO_CONFIG.classGuids.DataCompany) {
 								var end = performance.now();
 								var time = end - start;
