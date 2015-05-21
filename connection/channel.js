@@ -1,11 +1,11 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(function () {
     
-    var Channel = Class.extend({
+    var Channel = UccelloClass.extend({
         /**
          * Инициализация объекта
          * @constructs

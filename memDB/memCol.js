@@ -1,12 +1,12 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
 	[],
 	function() {
-		var MemCol = Class.extend({
+		var MemCol = UccelloClass.extend({
 		
 			init: function(name,obj){
 				this._elems = [];			// массив элементов коллекции

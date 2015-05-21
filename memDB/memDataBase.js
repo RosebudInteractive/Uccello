@@ -1,6 +1,6 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 /**
@@ -17,7 +17,7 @@ define(
 		var metaRootGuid =  UCCELLO_CONFIG.guids.metaRootGuid;
 		var metaObjGuid =  UCCELLO_CONFIG.guids.metaObjGuid;
 
-		var MemDataBase = Class.extend(/** @lends module:MemDataBase.MemDataBase.prototype */{
+		var MemDataBase = UccelloClass.extend(/** @lends module:MemDataBase.MemDataBase.prototype */{
 
 		    /**
              * params.kind - "master" - значит мастер-база, другое значение - подчиненная база

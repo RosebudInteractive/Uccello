@@ -1,6 +1,6 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -40,8 +40,8 @@ define(
 					// компонент с парентом
 					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{obj: params.parent.getObj(), "colName": col}, params.ini);
 					parent = {obj: params.parent, "colName": col};
-				}				
-				this._super(cm.getObj(this.classGuid),parent,params.ini);
+				}
+                UccelloClass.super.apply(this, [cm.getObj(this.classGuid),parent,params.ini]);
                 //this.pvt = {};
                 this.pvt.controlMgr = cm;
                 this.pvt.isProcessed = true; // признак обработки входящей дельты

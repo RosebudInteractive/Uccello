@@ -1,6 +1,6 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -13,7 +13,7 @@ define(
 				//flds.$sys = { guid: "4dcd61c3-3594-7456-fd86-5a3527c5cdcc" };
 				var db = (parent.db) ? parent.db: parent.obj.getDB();
 				//if (db.getMeta())
-				this._super(null,{ obj: db.getMeta(), colName: "MetaObjects" },flds); 
+				UccelloClass.super.apply(this, [null,{ obj: db.getMeta(), colName: "MetaObjects" },flds]);
 				this.pvt.typeGuid = UCCELLO_CONFIG.guids.metaObjGuid;
 				//else 
 				//	this._super(null,{ db: db },flds); // Корневой метаобъект в БД - является корнем всех остальных метаобъектов
@@ -89,7 +89,7 @@ define(
 						return this.pvt.fields[1];
 				}
 				if (typeof field == "number")  // ищем по индексу
-					return this._super(field);
+					return UccelloClass.super.apply(this, [field]);
 					
 				return undefined;				
 			},
@@ -116,7 +116,7 @@ define(
 						return this.pvt.collections[1];
 				}
 				if (typeof col == "number") 
-					return this._super(col);
+					return UccelloClass.super.apply(this, [col]);
 				return null;
 			},
 			

@@ -1,6 +1,6 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 /** +
@@ -22,7 +22,7 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
          */
         init: function(cm, params) {
             if (cm) {
-                this._super(cm, params);
+                UccelloClass.super.apply(this, [cm, params]);
             } else {
                 this.socket = null;
                 this.session = null;

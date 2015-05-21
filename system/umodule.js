@@ -1,6 +1,6 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -21,7 +21,7 @@ define(
 			 * @callback cb - коллбэк, который вызывается после отработки конструктора (асинхронный в случае slave)
              */
             init: function(cm, params, cb){
-                this._super(cm,params);
+                UccelloClass.super.apply(this, [cm, params]);
 				if (!(cm && params)) return;
 				
 				// запомнить базу данных

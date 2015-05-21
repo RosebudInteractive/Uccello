@@ -1,6 +1,6 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -10,8 +10,7 @@ define(
 		
 			init: function(parent, flds){
 				//flds.$sys = { guid: "0fa90328-4e86-eba7-b12b-4fff3a057533" };
-
-				this._super(null,{obj : parent.obj, colName : "fields" }, flds ); 
+				UccelloClass.super.apply(this, [null,{obj : parent.obj, colName : "fields" }, flds]);
 				this.pvt.typeGuid = UCCELLO_CONFIG.guids.metaObjFieldsGuid;
 				this.pvt.fields.push(flds.fields.fname);
 				this.pvt.fields.push(MemMetaType.createTypeObject(flds.fields.ftype, this.getDB()));
@@ -31,7 +30,7 @@ define(
 				}
 				
 				if (typeof field == "number")  // ищем по индексу
-				    return this._super(field);
+				    return UccelloClass.super.apply(this, [field]);
 			},
 			
 			getSerialized: function (field) {

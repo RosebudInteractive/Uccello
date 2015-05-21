@@ -1,6 +1,6 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -9,7 +9,7 @@ define(
 
 	    var csFullGuidDelimiter = "@"; // GUID delimiter
 
-		var MemProtoObj = Class.extend({
+		var MemProtoObj = UccelloClass.extend({
 				
 			// objType - ссылка на объект-тип
 			// parent - ссылка на объект и имя коллекции либо db, null для корневых  (obj и colname)

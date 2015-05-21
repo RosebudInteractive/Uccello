@@ -1,6 +1,6 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require('../system/uccello-class');
 }
 
 /**
@@ -21,7 +21,7 @@ define([], function () {
         SOCKET_IO: 4
     };
 
-    var config = Class.extend({
+    var config = UccelloClass.extend({
 
         // расширяемый список контролов
         controls: [

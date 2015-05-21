@@ -1,6 +1,6 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 /**
@@ -9,7 +9,7 @@ if (typeof define !== 'function') {
  */
 define(['../system/event'], function(event) {
 
-    var Router = Class.extend(/** @lends module:Router.Router.prototype */{
+    var Router = UccelloClass.extend(/** @lends module:Router.Router.prototype */{
 
         /**
          * Инициализация объекта

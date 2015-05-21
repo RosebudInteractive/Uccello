@@ -1,6 +1,6 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -17,8 +17,8 @@ define(
 			 * @param vc - контекст менеджера
              */
 			init: function(dbinit, vc, socket, cb){
-				
-				this._super(dbinit.controller, dbinit.dbparams, cb);
+
+				UccelloClass.super.apply(this, [dbinit.controller, dbinit.dbparams, cb]);
 
 				this.pvt.compByLid = {};
 				this.pvt.compByGuid = {};

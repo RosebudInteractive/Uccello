@@ -1,6 +1,6 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 // memobj
@@ -10,7 +10,7 @@ define(
 		var MemObj = MemProtoObj.extend({
 
 			init: function(objType, parent, flds){
-				this._super(objType, parent, flds);
+				UccelloClass.super.apply(this, [objType, parent, flds]);
 
 				this.event = new Event();
 
