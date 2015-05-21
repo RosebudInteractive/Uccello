@@ -162,6 +162,7 @@ define(
 			 * @params resGuids - массив гуидов ресурсов (явный)
 			 * @callback cb
 			 */
+			 /* Пользуемся CreateRoot
 			addNewResRoots: function(resGuids, cb) {
 				function cbtest(res) { console.log(res); cb(res); }
 				if (!this.isOn()) return false;
@@ -170,6 +171,7 @@ define(
 				else this.getContentDB().subscribeRoots(resGuids, cbtest, this.pvt.compCallback);
 				return true;
 			},
+			*/
 
 			// выключить контекст
 			// TODO пока работает только для SLAVE
