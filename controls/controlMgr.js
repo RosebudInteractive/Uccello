@@ -64,9 +64,9 @@ define(
 				//	this.pvt.compByGuid[g].subsInit();
 				component.subsInit();
 				//var col=component.getCol("Children");
-				for (j = 0 ; j < component.countCol() ; j++) {
+				for (var j=0, countCol=component.countCol(); j<countCol ; j++) {
 					var col = component.getCol(j);
-					for (var i=0; i<col.count(); i++) {
+					for (var i=0, cnt=col.count(); i<cnt; i++) {
 						//var co=col.get(i); //this.cm.get(col.get(i).getGuid());
 						this.subsInit(col.get(i));
 					}					
@@ -83,9 +83,9 @@ define(
 				//for (var g in this.pvt.compByGuid)
 				//	this.pvt.compByGuid[g].dataInit();
 				component.dataInit();
-				for (j = 0 ; j < component.countCol() ; j++) {
+				for (var j = 0, countCol=component.countCol() ; j < countCol ; j++) {
 					var col = component.getCol(j);
-					for (var i=0; i<col.count(); i++) {
+					for (var i=0, cnt=col.count(); i<cnt; i++) {
 						//var co=col.get(i); //this.cm.get(col.get(i).getGuid());
 						this.dataInit(col.get(i));
 					}	
