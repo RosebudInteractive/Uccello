@@ -60,6 +60,7 @@ define(
 				this.pvt.formParams = {};
 				this.pvt.memParams = [];
 				this.pvt.socket = params.socket;
+				this.pvt.cmsys = cm;
 
 				var that = this;
 				if (!cb) {// если нет колбэка значит на сервере - но это надо поменять TODO
@@ -369,6 +370,10 @@ define(
 				return this.pvt.cdb;
 			},
 
+			getSysCM: function() {
+				return this.pvt.cmsys;
+			},
+
 			getContextCM: function() {
 				return this.pvt.cm;
 			},
@@ -406,6 +411,8 @@ define(
 					var vcResource = new Vcresource(this.getControlMgr(), {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
 					var db = this.getContentDB();
 					db.getController().genDeltas(db.getGuid());
+					var dbSys = this.getSysCM();
+					dbSys.getController().genDeltas(dbSys.getGuid());
 				}
 			},
 
