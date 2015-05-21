@@ -59,19 +59,12 @@ define(
              * @param component {AComponent} - корневой элемент
              */				
 			subsInit: function(component) {
-
-				//for (var g in this.pvt.compByGuid)
-				//	this.pvt.compByGuid[g].subsInit();
 				component.subsInit();
-				//var col=component.getCol("Children");
 				for (var j=0, countCol=component.countCol(); j<countCol ; j++) {
 					var col = component.getCol(j);
-					for (var i=0, cnt=col.count(); i<cnt; i++) {
-						//var co=col.get(i); //this.cm.get(col.get(i).getGuid());
+					for (var i=0, cnt=col.count(); i<cnt; i++)
 						this.subsInit(col.get(i));
-					}					
 				}
-				//this.pvt.subsInitFlag[component.getGuid()] = true;
 			},
 
            /**
@@ -79,18 +72,12 @@ define(
              * @param component {AComponent} - корневой элемент
              */				
 			dataInit: function(component) {
-
-				//for (var g in this.pvt.compByGuid)
-				//	this.pvt.compByGuid[g].dataInit();
 				component.dataInit();
 				for (var j = 0, countCol=component.countCol() ; j < countCol ; j++) {
 					var col = component.getCol(j);
-					for (var i=0, cnt=col.count(); i<cnt; i++) {
-						//var co=col.get(i); //this.cm.get(col.get(i).getGuid());
+					for (var i=0, cnt=col.count(); i<cnt; i++) 
 						this.dataInit(col.get(i));
-					}	
 				}
-				//this.pvt.dataInitFlag[component.getGuid()] = true;
 			},
 
             /**
@@ -118,7 +105,6 @@ define(
 				delete this.pvt.compByGuid[c.getGuid()];
 				if (c.getParent())
 					c.getParent()._delChild(c.getColName(),c);
-					//c.getParent()._delChild(c.getObj().getColName(),c.getObj());
 				else
 					delete this.pvt.rootGuids[c.getGuid()];
 			},
@@ -199,7 +185,7 @@ define(
              */				
 			render: function(component, options, pd) {
 			
-				console.log("RENDER RENDER RENDER: "+component.getGuid()+"  "+component.pvt.fields[7])
+				//console.log("RENDER RENDER RENDER: "+component.getGuid()+"  "+component.pvt.fields[7])
 			
 				if (!this.pvt.subsInitFlag[component.getGuid()]) {
 					this.subsInit(component);  // если не выполнена постинициализация, то запустить
@@ -259,18 +245,7 @@ define(
 			},
 			
 			onNewRoot: function(result) {
-				// REFACT213
-				/*
-				if (result.target.getGuid() == this.pvt.rootGuid) {
-	                    this.getDB().getRoot(this.pvt.rootGuid).event.on({
-							type: "delObj",
-							subscriber: this,
-							callback: this.onDeleteComponent
-                    });				
-					
-				}*/
 				if (this.pvt.rootGuids[result.target.getGuid()] ) {
-	                    //this.getDB().getRoot(result.target.getGuid()).event.on({
 						this.getRoot(result.target.getGuid()).event.on({
 							type: "delObj",
 							subscriber: this,
@@ -294,7 +269,6 @@ define(
              */
             userEventHandler: function(context, f, args) {
                 var nargs = [];
-				//var db = this.getDB();
 				var vc = this.getContext();
                 if (args) nargs = [args];
 				//  стартовать транзакцию
@@ -302,7 +276,6 @@ define(
                 if (f) f.apply(context, nargs);
                 if (this.autoSendDeltas())
 					this.getController().genDeltas(this.getGuid());
-                    //db.getController().genDeltas(db.getGuid());
                 //this.render(undefined); // TODO - на сервере это не вызывать
 				if (vc) vc.renderAll();
 				//  закрыть транзакцию

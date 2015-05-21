@@ -321,9 +321,7 @@ define(
 						else rg.push(rootGuids[i]); // если resourceGuid
 							
 					}
-
-					//rg=rootGuids;
-					
+				
 					if (params.rtype == "res") {
 						override = false;
 						this.pvt.proxyServer.loadResources(rg, icb);
@@ -351,11 +349,6 @@ define(
 			renderAll: function(pd) {
 				var ga = this.pvt.cm.getRootGuids();
 				this.renderForms(ga,pd);
-				/*for (var i=0; i<ga.length; i++) {
-					var root = this.pvt.cm.get(ga[i]);
-					this.pvt.cm.render(root, this.pvt.renderRoot(ga[i]), pd);
-				}
-				this.getContentDB().resetModifLog();*/
 			},
 
 			renderForms: function(roots, pd) {

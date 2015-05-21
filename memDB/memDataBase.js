@@ -787,11 +787,7 @@ define(
 			getController: function() {
 				return this.pvt.controller;
 			},
-
-			/*getConnection: function() {
-				return this.pvt.masterConnection;
-			},*/
-
+			
             /**
              * Вернуть название БД
              * @returns {*}
