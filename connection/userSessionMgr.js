@@ -138,8 +138,8 @@ define(
                     var connects = session.getConnects();
                     for(var i in connects) {
                         if(connects[i].isConnected()) {
-                            connects[i].send({action:"newTab", contextGuid:data.contextGuid, resGuids:data.resGuids});
-                            result = {contextGuid:data.contextGuid, resGuids:data.resGuids};
+                            //connects[i].send({action:"newTab", contextGuid:data.contextGuid, resGuids:data.resGuids});
+                            result = {args:{action:"newTab", contextGuid:data.contextGuid, resGuids:data.resGuids}};
                             break;
                         }
                     }
