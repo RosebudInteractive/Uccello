@@ -205,8 +205,8 @@ define(
 			},
 			
 			// были ли изменены данные датасета
-			isDataModified: function() {
-				var r = this.root();
+			isDataSourceModified: function() {
+				var r = this.rootInstance();
 				if (r) {
 					var rootObj = this.getDB().getObj(r);
 					//var rootObj = this.getComp(r);

@@ -75,7 +75,7 @@ define(
                     var dataset = this.dataset();
                     //var mo = this.getObj();
                     //if ((this.pvt.renderDataVer == dataset.getDataVer()) && (!dataset.isDataModified()) && (dataset.getObj().isFldModified("Cursor")) && (!mo.isDataModified()))
-					if ((this.pvt.renderDataVer == dataset.getDataVer()) && (!dataset.isDataModified()) && (dataset.isFldModified("Cursor")) && (!this.isDataModified()))
+					if ((this.pvt.renderDataVer == dataset.getDataVer()) && (!dataset.isDataSourceModified()) && (dataset.isFldModified("Cursor")) && (!this.isDataModified()))
                         return true;
                     else
                         return false;
