@@ -199,7 +199,7 @@ define(
              */				
 			render: function(component, options, pd) {
 			
-				console.log(component.getGuid()+"  "+component.pvt.fields[7])
+				console.log("RENDER RENDER RENDER: "+component.getGuid()+"  "+component.pvt.fields[7])
 			
 				if (!this.pvt.subsInitFlag[component.getGuid()]) {
 					this.subsInit(component);  // если не выполнена постинициализация, то запустить
