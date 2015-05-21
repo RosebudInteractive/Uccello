@@ -135,12 +135,12 @@ define([], function () {
         },
         webSocketServer: {
             port: 8081,
-            //type: CommServerTypes.AJAX + CommServerTypes.WEB_SOCKET
-            type: CommServerTypes.SOCKET_IO
+            type: CommServerTypes.AJAX + CommServerTypes.WEB_SOCKET
+            //type: CommServerTypes.SOCKET_IO
         },
         webSocketClient: {
-            //type: CommClientTypes.WEB_SOCKET
-            type: CommClientTypes.SOCKET_IO
+            type: CommClientTypes.WEB_SOCKET
+            //type: CommClientTypes.SOCKET_IO
             //type: CommClientTypes.AJAX,
             //ajax: 
             //    {
