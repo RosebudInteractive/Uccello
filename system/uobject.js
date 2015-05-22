@@ -47,7 +47,7 @@ define(
                 this.pvt.isProcessed = true; // признак обработки входящей дельты
 
             },
-			
+			/*
 			uobjectInit: function(cm, params){
 			
 				if (!("pvt" in this)) this.pvt = {};
@@ -68,7 +68,7 @@ define(
 				this.memobjInit(cm.getObj(this.classGuid),parent,params.ini);
                 this.pvt.controlMgr = cm;
                 this.pvt.isProcessed = true; // признак обработки входящей дельты
-			},
+			},*/
 
             // no op function - имплементируется в наследниках для подписки
             // порядок вызова: 1) init (конструктор), 2) subsInit (подписка), 3) dataInit (дальнейшая инициализация, в основном данные)

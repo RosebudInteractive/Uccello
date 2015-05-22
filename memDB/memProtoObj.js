@@ -87,7 +87,7 @@ define(
 				this.getDB()._addObj(this);
 
 			},
-
+/*
 			protoobjInit: function(objType, parent,flds){
 			
 				var pvt = this.pvt = {}; // приватные члены
@@ -156,7 +156,7 @@ define(
 				this.getDB()._addObj(this);
 										
 			},
-
+*/
 			
 		    // вернуть корневой элемент объекта
 			_getRoot: function () {

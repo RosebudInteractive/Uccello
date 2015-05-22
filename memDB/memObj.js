@@ -65,7 +65,7 @@ define(
 					});
 				}
 			},
-			
+			/*
 			memobjInit: function(objType, parent, flds) {
 
 				this.protoobjInit(objType, parent, flds);
@@ -91,7 +91,7 @@ define(
 					    } else
 					        cf[i] = undefined;
 					}
-				}
+				}*/
 				
 				// создать пустые коллекции по типу
 				var ccol = objType.getCol("cols");
