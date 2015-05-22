@@ -21,7 +21,6 @@ define(
 				pvt.fields = [];				// значения полей объекта
 				pvt.collections = [];			// массив дочерних коллекций
 				pvt.log = null; 
-				//pvt.state = 0;
 				pvt.fldLog = {};
 				pvt.colLog = {};				// лог изменений в дочерних коллекциях
 				pvt.isModified = false;

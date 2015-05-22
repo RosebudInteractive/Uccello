@@ -13,7 +13,7 @@ define(
 				UccelloClass.super.apply(this, [objType, parent, flds]);
 
 				this.event = new Event();
-
+/*
 				var ot = this.pvt.objType.pvt;
 				for (var i=0; i<ot.fieldsArr.length; i++) {
 				    var f = ot.fieldsArr[i];
@@ -27,7 +27,28 @@ define(
 				        } else
 				            this.pvt.fields[i] = flds.fields[f]; // TODO проверять типы?
 				    } else
-				        this.pvt.fields[i] = undefined;
+				        this.pvt.fields[i] = undefined;						
+				}
+*/
+				var otp = this.pvt.objType.pvt;
+				var ot = otp.fieldsArr;
+				this.pvt.fields = new Array(ot.length);
+				var cf = this.pvt.fields;
+				if ((flds!=undefined) && ("fields" in flds)) {
+					for (var i=0; i<ot.length; i++) {
+							//var f = ;
+					    var ft = otp.fieldsTypes[i];
+					    var is_complex = ft.is_complex;
+					    ft = ft.type;
+					    if (ot[i] in flds.fields) {
+					        if (is_complex) {
+					            var val = ft.setValue(flds.fields[ot[i]], ot[i], this, false);
+					            cf[i] = val;
+					        } else
+					            cf[i] = flds.fields[ot[i]];
+					    } else
+					        cf[i] = undefined;
+					}
 				}
 				
 				// создать пустые коллекции по типу
