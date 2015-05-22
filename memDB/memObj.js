@@ -91,7 +91,7 @@ define(
 					    } else
 					        cf[i] = undefined;
 					}
-				}*/
+				}
 				
 				// создать пустые коллекции по типу
 				var ccol = objType.getCol("cols");
@@ -107,7 +107,7 @@ define(
 						target: this
 					});
 				}
-			},
+			},*/
 
 			
 			// получить коллекцию по имени или по индексу
