@@ -347,7 +347,10 @@ define(
 			        };
 
 			        if (objRef)
-			            objRef = objRef.elems[ref.guidElem];
+			            if (ref.guidElem == ref.guidRes)
+			                objRef = objRef.root; // Ref to the root object
+			            else
+			                objRef = objRef.elems[ref.guidElem];
 			        if (objRef) {
 			            ref.guidInstanceElem = objRef.getGuid();
 			            ref.objRef = objRef;

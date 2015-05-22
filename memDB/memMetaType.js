@@ -516,17 +516,28 @@ define(
                     } else {
                         // Val is serialized reference
                         if (result.is_external) {
-                            result.guidInstanceRes = val.guidInstanceRes ? val.guidInstanceRes : null;
-                            if (result.guidInstanceRes)
-                                result.guidRes = obj.parseGuid(result.guidInstanceRes).guid;
-                            else
-                                result.guidRes = val.guidRes ? val.guidRes : null;
-
-                            result.guidInstanceElem = val.guidInstanceElem ? val.guidInstanceElem : null;
-                            if (result.guidInstanceElem)
+                            if (typeof (val) === "string") {
+                                result.guidInstanceElem = val;
                                 result.guidElem = obj.parseGuid(result.guidInstanceElem).guid;
-                            else
-                                result.guidElem = val.guidElem ? val.guidElem : null;
+                                if (result.guidElem == result.guidInstanceElem)
+                                    result.guidInstanceElem = null; //It's most likely "guidElem"
+
+                                // Ref to ROOT element is supposed here.
+                                result.guidRes = result.guidElem;
+                                result.guidInstanceRes = result.guidInstanceElem;
+                            } else {
+                                result.guidInstanceRes = val.guidInstanceRes ? val.guidInstanceRes : null;
+                                if (result.guidInstanceRes)
+                                    result.guidRes = obj.parseGuid(result.guidInstanceRes).guid;
+                                else
+                                    result.guidRes = val.guidRes ? val.guidRes : null;
+
+                                result.guidInstanceElem = val.guidInstanceElem ? val.guidInstanceElem : null;
+                                if (result.guidInstanceElem)
+                                    result.guidElem = obj.parseGuid(result.guidInstanceElem).guid;
+                                else
+                                    result.guidElem = val.guidElem ? val.guidElem : null;
+                            }
                         } else {
                             if (typeof (val) === "string") {
                                 result.guidInstanceElem = val;

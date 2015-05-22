@@ -11,7 +11,14 @@ define(
             className: "Dataset",
             classGuid: UCCELLO_CONFIG.classGuids.Dataset,
             metaFields: [
-                {fname: "Root", ftype: "string"},
+                {
+                    fname: "Root", ftype: {
+                        type: "ref",
+                        external: true,
+                        res_type: UCCELLO_CONFIG.classGuids.DataRoot,
+                        res_elem_type: UCCELLO_CONFIG.classGuids.DataRoot
+                    }
+                },
 				{fname: "RootInstance", ftype: "string"},
                 {fname: "Cursor", ftype: "string"},
                 {fname: "Active", ftype: "boolean"},
@@ -71,7 +78,8 @@ define(
 				if (this.isFldModified("Cursor")) 
 					this._setDataObj(this.cursor());
 								
-				var r=this.getDB().getObj(this.root());
+				//var r=this.getDB().getObj(this.root());
+				var r = this.root();
 				if (r) {
 					if (r.isDataModified()) {
 						// данные поменялись
@@ -91,7 +99,9 @@ define(
 				function icb(res) {		
 					function refrcb() {
 						this.pvt.dataVer++;
-						this.rootInstance(res.guids[0]);
+						var dataRoot = this.getDB().getObj(res.guids[0]);
+						if (dataRoot)
+						    this.root(dataRoot);
 						this._initCursor();
 						this.event.fire({
 							type: 'refreshData',
@@ -105,13 +115,14 @@ define(
 			
 				//debugger;
 				// TODO RFDS
-				// rootGuid
-				var rg = this.root();
-				var rgi = this.rootInstance();
+			    // rootGuid
+				var dataRoot = this.root();
+				var rg = this.getSerialized("Root", true).guidRes;
+				var rgi = dataRoot ? dataRoot.getGuid() : null;
+
 				var master = this.master();
 				// RFDS NEW
 				if (rg) {
-					var dataRoot = this.getControlMgr().getRoot(rg);
 					if (!dataRoot || !onlyMaster) {
 						if (onlyMaster && master) return; // если НЕ мастер, а детейл, то пропустить
 						var that = this;
@@ -148,17 +159,14 @@ define(
 
 			_initCursor: function() {
 			    //var rg = this.root();
-			    var rg = this.rootInstance();
-				if (rg) {
-					var dataRoot = this.getDB().getObj(rg);
-					if (dataRoot) {
-						var col = dataRoot.getCol("DataElements");
-						if (!dataRoot.getCol("DataElements").getObjById(this.cursor())) {
-							if (col.count()>0) this.cursor(col.get(0).id()); // установить курсор в новую позицию (наверх)
-						}
-						else this._setDataObj(this.cursor()); // 
+				var dataRoot = this.root();
+				if (dataRoot) {
+					var col = dataRoot.getCol("DataElements");
+					if (!dataRoot.getCol("DataElements").getObjById(this.cursor())) {
+					    if (col.count() > 0) this.cursor(col.get(0).id()); // установить курсор в новую позицию (наверх)
 					}
-				}
+					else this._setDataObj(this.cursor()); // 
+				};
 			},
 
 			getField: function(name) {
@@ -206,16 +214,13 @@ define(
 			
 			// были ли изменены данные датасета
 			isDataSourceModified: function() {
-				var r = this.rootInstance();
-				if (r) {
-					var rootObj = this.getDB().getObj(r);
-					//var rootObj = this.getComp(r);
-					if (rootObj)
-						return rootObj.isDataModified();
-					else
-						return true;
-				}
-				else return true; // TODO можно оптимизировать - если хотим не перерисовывать пустой грид
+				var rootObj = this.root();
+				//var rootObj = this.getComp(r);
+				if (rootObj)
+				    return (rootObj.isDataModified()
+                        || this.isFldModified("Root"));
+				else
+					return true; // TODO можно оптимизировать - если хотим не перерисовывать пустой грид
 			},
 
 			initRender: function() {
@@ -264,7 +269,7 @@ define(
 			// установить "курсор" на внутренний объект dataobj
 			_setDataObj: function(value) {
 				//this.pvt.dataObj =  this.getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
-			    this.pvt.dataObj = this.getDB().getObj(this.rootInstance()).getCol("DataElements").getObjById(value); // TODO поменять потом
+			    this.pvt.dataObj = this.root().getCol("DataElements").getObjById(value); // TODO поменять потом
 			},
 
             active: function (value) {

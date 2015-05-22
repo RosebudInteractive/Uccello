@@ -35,9 +35,10 @@ define(
 				    var dsc = dsg;
 				    if (!dsc._isProcessed()) dsc.processDelta(); // если у датасета processDelta еще не вызван, то вызвать его
 					//if (dsc.root() && this.getDB().getObj(dsc.root()))
-					//	var dsmod = this.getDB().getObj(dsc.root()).isDataModified();
-				    if (dsc.rootInstance() && this.getDB().getObj(dsc.rootInstance()))
-				        var dsmod = this.getDB().getObj(dsc.rootInstance()).isDataModified();
+				    //	var dsmod = this.getDB().getObj(dsc.root()).isDataModified();
+				    var root = dsc.root();
+				    if (root)
+				        var dsmod = root.isDataModified();
 				    else dsmod = false;
 					if (dsc.isFldModified("Root") || dsc.isFldModified("Cursor") || dsmod) this._isRendered(false);
 				}
