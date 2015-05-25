@@ -75,11 +75,18 @@ define(
 
 				if (this.isFldModified("Cursor")) 
 					this._setDataObj(this.cursor());
-								
+
+				// DBG
+				if (this.root()) {
+				   var g = this.root().getGuid();
+				   this.setDbg("Root",g);
+				}
+				//
+				
 				var r = this.root();
 				if (r) {
 					if (r.isDataModified()) {
-						// данные поменялись
+						// данные поменялись - увеличиваем версию набора данных
 						this.pvt.dataVer++;
 					}
 				}
@@ -192,8 +199,8 @@ define(
 			isDataSourceModified: function() {
 				var rootObj = this.root();
 				if (rootObj)
-				    return (rootObj.isDataModified()
-                        || this.isFldModified("Root"));
+				    return (rootObj.isDataModified());
+                       // || this.isFldModified("Root"));
 				else
 					return true; // TODO можно оптимизировать - если хотим не перерисовывать пустой грид
 			},

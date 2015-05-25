@@ -215,7 +215,37 @@ define(
 				});	
 				
 			},
-						
+
+			// DBG - убрать после изменений 
+			setDbg: function (field, value, withCheckVal) {
+			    var objType = this.pvt.objType.pvt;
+
+			    if (objType.fieldsTable[field] === undefined)
+			        throw new Error("Field \"" + field + "\" doesn't exist in the object \"" + this.pvt.guid + "\".");
+			    var i = objType.fieldsTable[field].cidx;
+				var oldValue = this.pvt.fields[i];
+
+				var fldType = objType.fieldsTypes[i];
+				var is_complex = fldType.is_complex;
+				fldType = fldType.type;
+				var newValue = value;
+				if (is_complex || withCheckVal)
+				    newValue = fldType.setValue(value, field, this, withCheckVal);
+
+				if (fldType.isEqual(oldValue, newValue)) return;
+
+				this.pvt.fields[i] = newValue;
+				var oldSerialized = oldValue;
+				var newSerialized = newValue;
+
+				if (is_complex) {
+				    oldSerialized = fldType.getSerializedValue(oldValue);
+				    newSerialized = fldType.getSerializedValue(newValue);
+				}
+				
+			},
+
+			
 			// получить имя поля по индексу
 			getFieldName: function(i) {
 				return this.pvt.objType.pvt.fieldsArr[i];
