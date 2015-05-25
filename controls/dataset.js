@@ -54,13 +54,11 @@ define(
 				var master = this.master(); // подписаться на обновление данных мастер датасета
 
 				if (master && this.active()) {
-					//this.getControlMgr().get(master).event.on({
 				    master.event.on({
 				        type: 'refreshData',
 						subscriber: this,
 						callback: function(){ this._dataInit(false); } 
 					});
-					//this.getControlMgr().get(master).event.on({
 				    master.event.on({
 				        type: 'moveCursor',
 						subscriber: this,
@@ -78,7 +76,6 @@ define(
 				if (this.isFldModified("Cursor")) 
 					this._setDataObj(this.cursor());
 								
-				//var r=this.getDB().getObj(this.root());
 				var r = this.root();
 				if (r) {
 					if (r.isDataModified()) {
@@ -86,8 +83,6 @@ define(
 						this.pvt.dataVer++;
 					}
 				}
-				
-				// TODO RFDS изменение root или rootInstance !
 				
 				this._isProcessed(true);
 	
@@ -102,23 +97,18 @@ define(
 						var dataRoot = this.getDB().getObj(res.guids[0]);
 						if (dataRoot)
 						    this.root(dataRoot);
-						this._initCursor();
-						this.event.fire({
-							type: 'refreshData',
-							target: this				
-						});
-
+						this._initCursor(true);
 					}
 					
 					that.getControlMgr().userEventHandler(that, refrcb );
 				}
-			
-				//debugger;
-				// TODO RFDS
-			    // rootGuid
+
 				var dataRoot = this.root();
-				var rg = this.getSerialized("Root", true).guidRes;
-				var rgi = dataRoot ? dataRoot.getGuid() : null;
+				var rg = this.getSerialized("Root", true).guidRes; // R2305 почему guidRes, а не guidElem
+				
+				//var rgi = dataRoot ? dataRoot.getGuid() : null; 
+				// R2305 инстанс все время загружается новые ветки, а должны быть те же самые
+				var rgi = dataRoot ? dataRoot.getGuid() : this.getSerialized("Root", false).guidInstanceRes;
 
 				var master = this.master();
 				// RFDS NEW
@@ -128,44 +118,31 @@ define(
 						var that = this;
 						var params = {rtype:"data"};
 						if (master) { // если детейл, то экспрешн
-							//params.expr = this.getControlMgr().get(master).getField("Id");
 							params.expr = master.getField("Id");
                         }
 						if (rgi)
 						  var rgp = rgi;
 						else rgp = rg;
+						console.log("%cCALL LOADNEWROOTS "+rgp+" Params: "+params.expr, 'color: red');
 						this.getControlMgr().getContext().loadNewRoots([rgp],params, icb);
 
 					}
 					else this._initCursor();
 				}
-				/*
-				if (rg) {
-					var dataRoot = this.getControlMgr().getRoot(rg);
-					if (!dataRoot || !onlyMaster) {
-						if (onlyMaster && master) return; // если НЕ мастер, а детейл, то пропустить
-						var that = this;
-						var params = {rtype:"data"};
-						if (master) { // если детейл, то экспрешн
-							params.expr = this.getControlMgr().get(master).getField("Id");
-						}
-						this.getControlMgr().getContext().loadNewRoots([rg],params, icb);
-
-					}
-					else this._initCursor();
-				}
-				*/
 			},	
 
-			_initCursor: function() {
-			    //var rg = this.root();
+			// forceRefresh - возбудить событие даже если курсор "не двигался" - это нужно для случая загрузки данных
+			_initCursor: function(forceRefresh) {
 				var dataRoot = this.root();
 				if (dataRoot) {
 					var col = dataRoot.getCol("DataElements");
 					if (!dataRoot.getCol("DataElements").getObjById(this.cursor())) {
 					    if (col.count() > 0) this.cursor(col.get(0).id()); // установить курсор в новую позицию (наверх)
 					}
-					else this._setDataObj(this.cursor()); // 
+					else {
+						this._setDataObj(this.cursor());
+						if (forceRefresh) this.event.fire({type: 'refreshData', target: this });
+					}
 				};
 			},
 
@@ -236,10 +213,11 @@ define(
 				
 				if (newVal!=oldVal) {
 					//console.log("refreshData in root() "+this.id());
-					this.event.fire({
+					/*this.event.fire({
 						type: 'refreshData',
 						target: this				
-						});	
+						});
+*/						
 				}
 			
                 return newVal;

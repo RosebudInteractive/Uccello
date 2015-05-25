@@ -87,8 +87,16 @@ define(
                         subscriber: this,
                         callback: function(args){
                             var context = that.getContext();
-                            if (context)
+                            if (context) {
+								//console.log("%c RENDER END APPLY DELTAS ", 'color: red');
+								//console.log(args);
+								//console.log(context);
                                 context.renderAll(true);
+							}
+							else {
+								//console.log("%c NORENDER END APPLY DELTAS ", 'color: red');
+								//console.log(args);
+							}
                         }
                     });
 
@@ -196,7 +204,7 @@ define(
 
                 function cbfinal2(result2){
                     result2 = result2 && result2.guids ? result2.guids : result2;
-                    that.getContext().renderForms(result2, true);
+                    that.getContext().renderForms(result2, false);
                     if (cbfinal)
                         cbfinal(result2);
                 }
