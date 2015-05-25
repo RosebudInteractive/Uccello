@@ -111,7 +111,6 @@ define(
 				var rgi = dataRoot ? dataRoot.getGuid() : this.getSerialized("Root", false).guidInstanceRes;
 
 				var master = this.master();
-				// RFDS NEW
 				if (rg) {
 					if (!dataRoot || !onlyMaster) {
 						if (onlyMaster && master) return; // если НЕ мастер, а детейл, то пропустить
@@ -175,7 +174,7 @@ define(
 				var db = this.getDB();
 				var dataRoot = db.getRoot(this.root()).obj;
 				var parent = {obj:dataRoot, colName: "DataElements"};
-				//return 
+
 				var obj=  db.addObj(db.getObj(this.objtype()),parent,flds);
 				
 				this.event.fire({ // TODO другое событие сделать
@@ -192,7 +191,6 @@ define(
 			// были ли изменены данные датасета
 			isDataSourceModified: function() {
 				var rootObj = this.root();
-				//var rootObj = this.getComp(r);
 				if (rootObj)
 				    return (rootObj.isDataModified()
                         || this.isFldModified("Root"));
@@ -216,8 +214,7 @@ define(
 					/*this.event.fire({
 						type: 'refreshData',
 						target: this				
-						});
-*/						
+						});*/						
 				}
 			
                 return newVal;
@@ -246,7 +243,6 @@ define(
 			
 			// установить "курсор" на внутренний объект dataobj
 			_setDataObj: function(value) {
-				//this.pvt.dataObj =  this.getDB().getObj(this.root()).getCol("DataElements").getObjById(value); // TODO поменять потом
 			    this.pvt.dataObj = this.root().getCol("DataElements").getObjById(value); // TODO поменять потом
 			},
 
