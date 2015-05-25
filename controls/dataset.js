@@ -83,13 +83,15 @@ define(
 				}
 				//
 				
+				if (this.isDataSourceModified()) this.pvt.dataVer++;
+				/*
 				var r = this.root();
 				if (r) {
 					if (r.isDataModified()) {
 						// данные поменялись - увеличиваем версию набора данных
 						this.pvt.dataVer++;
 					}
-				}
+				}*/
 				
 				this._isProcessed(true);
 	
