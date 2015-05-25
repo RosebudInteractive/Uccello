@@ -650,13 +650,9 @@ define(
 							break;
 						default:
 						    var typeObj = that.getObj(sobj.$sys.typeGuid);
-							/*if (!("obj" in parent)) { 
-								parent.nolog = true;
-							}*/
-							// o = new MemObj( typeObj,parent,sobj);
-							if (typeObj /*&& (typeObj.getRtype() == "res") */) {
-								//if ((typeObj.getRtype() == "res") && (cb!=undefined)) cb(0);
-								if (/*(typeObj.getRtype() == "res") && */(cb!=undefined)) o = cb(typeObj, parent, sobj);
+
+							if (typeObj) {
+								if (cb!=undefined) o = cb(typeObj, parent, sobj);
 								if (!o) 
 								  console.log("BAD GUID === "+sobj.$sys.typeGuid);
 							}
