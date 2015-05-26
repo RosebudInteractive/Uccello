@@ -124,7 +124,7 @@ define(
 						if (rgi)
 						  var rgp = rgi;
 						else rgp = rg;
-						console.log("%cCALL LOADNEWROOTS "+rgp+" Params: "+params.expr, 'color: red');
+						//console.log("%cCALL LOADNEWROOTS "+rgp+" Params: "+params.expr, 'color: red');
 						this.getControlMgr().getContext().loadNewRoots([rgp],params, icb);
 
 					}
@@ -210,14 +210,14 @@ define(
 			
 				var oldVal = this._genericSetter("Root");
 				var newVal = this._genericSetter("Root", value);
-				
+				/*
 				if (newVal!=oldVal) {
 					//console.log("refreshData in root() "+this.id());
 					/*this.event.fire({
 						type: 'refreshData',
 						target: this				
-						});*/						
-				}
+						});					
+				}*/
 			
                 return newVal;
             },
