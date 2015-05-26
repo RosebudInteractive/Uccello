@@ -463,6 +463,7 @@ define(
              * вызывается коллекциями при удалении объекта, генерирует событие, на которое можно подписаться
              */
 			onDeleteObject: function (obj) {
+			    var root = this.getRoot(obj.getRoot().getGuid());
 
 			    this._clearSingleObjRefs(obj);
 
