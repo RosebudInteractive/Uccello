@@ -7,7 +7,6 @@
  */
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    //var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
@@ -173,7 +172,6 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                //this._super(typeObj, refResolver);
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
@@ -188,7 +186,6 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                //this._super(typeObj, refResolver);
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
@@ -203,7 +200,6 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                //this._super(typeObj, refResolver);
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
@@ -218,7 +214,6 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                //this._super(typeObj, refResolver);
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
@@ -233,7 +228,6 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                //this._super(typeObj, refResolver);
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
@@ -248,7 +242,6 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                //this._super(typeObj, refResolver);
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
@@ -263,7 +256,6 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                //this._super(typeObj, refResolver);
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
                 this._is_complex = true;
             },
@@ -275,7 +267,6 @@ define(
              * @return {Strng} The hash code
              */
             hash: function () {
-                //var result = this._super();
                 var result = UccelloClass.super.apply(this, []);
 
                 if ((this._refResolver) &&
@@ -298,7 +289,6 @@ define(
              * @return {Object} Serialized representation
              */
             serialize: function () {
-                //var result = this._super();
                 var result = UccelloClass.super.apply(this, []);
 
                 result.res_elem_type = this._resElemType;
@@ -325,7 +315,6 @@ define(
              * @private
              */
             _deserialize: function (val) {
-                //this._super(val);
                 UccelloClass.super.apply(this, [val]);
 
                 this._external = false;

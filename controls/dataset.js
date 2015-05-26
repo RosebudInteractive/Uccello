@@ -76,13 +76,6 @@ define(
 				if (this.isFldModified("Cursor")) 
 					this._setDataObj(this.cursor());
 
-				// DBG
-				if (this.root()) {
-				   var g = this.root().getGuid();
-				   this.setDbg("Root",g);
-				}
-				//
-				
 				if (this.isDataSourceModified()) this.pvt.dataVer++;
 				/*
 				var r = this.root();

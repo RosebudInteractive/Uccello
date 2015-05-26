@@ -7,9 +7,7 @@ define(
 	['./memObjLog'],
 	function(MemObjLog) {
 
-	    var csFullGuidDelimiter = "@"; // GUID delimiter
-
-		var MemProtoObj = UccelloClass.extend({
+	    var MemProtoObj = UccelloClass.extend({
 				
 			// objType - ссылка на объект-тип
 			// parent - ссылка на объект и имя коллекции либо db, null для корневых  (obj и colname)
@@ -69,7 +67,9 @@ define(
                                 "\") and object (\"" + pvt.guid + "\") GUIDs are inconsistent.");
 				    };
 				};
-				pvt.guid = fullGuid.guid + ((pvt.$rootId > 0) ? csFullGuidDelimiter + pvt.$rootId : "");
+
+				fullGuid.rootId = pvt.$rootId;
+			    pvt.guid= this.getDB().makeGuid(fullGuid);
 
 				if (!parent.obj) {	// корневой объект				
 					pvt.log = new MemObjLog(this);	// создать лог записи изменений
@@ -208,10 +208,7 @@ define(
 			},
 
 		    /**
-             * Splits "full" GUID into 2 parts:
-             * - GUID itself
-             * - root id (integer value)
-             * Full GUID format: <Guid><csFullGuidDelimiter><root id>
+             * Splits "full" GUID into 2 parts (see memDataBase.parseGuid)
              * 
              * @param {String} val Full GUID
              * @return {Object}
@@ -219,16 +216,7 @@ define(
              * @return {Integer} retval.rootId - root id part (=-1 if missing)
              */
 			parseGuid: function (aGuid) {
-			    var ret = { guid: aGuid, rootId: -1 };
-			    var i = aGuid.lastIndexOf(csFullGuidDelimiter);
-			    if (i != -1) {
-			        ret.guid = aGuid.substring(0, i);
-			        var id = aGuid.substring(i + 1);
-			        if (!isNaN(parseInt(id)) && isFinite(id)) {
-			            ret.rootId = parseInt(id);
-			        };
-                };
-			    return ret;
+			    return this.getDB().parseGuid(aGuid);
 			},
 
 			getObjType: function () {

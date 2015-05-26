@@ -17,6 +17,8 @@ define(
 		var metaRootGuid =  UCCELLO_CONFIG.guids.metaRootGuid;
 		var metaObjGuid =  UCCELLO_CONFIG.guids.metaObjGuid;
 
+		var csFullGuidDelimiter = "@"; // GUID delimiter
+
 		var MemDataBase = UccelloClass.extend(/** @lends module:MemDataBase.MemDataBase.prototype */{
 
 		    /**
@@ -427,32 +429,42 @@ define(
 
 			},
 
-            /**
+		    /**
+             * Deletes object [obj] from all the reference lists in memDB .
+             * 
+             * @param {Object} obj
+             */
+			_clearSingleObjRefs: function (obj) {
+			    var root = this.getRoot(obj.getRoot().getGuid());
+
+			    var is_root = !obj.getParent();
+			    var guid = obj.getGuid();
+			    var guidRes = obj.getGuidRes();
+			    var rootGuid = root.obj.getGuid();
+			    var rootGuidRes = root.obj.getGuidRes();
+
+			    this._deleteRefs(guid);
+
+			    delete this.pvt.objs[guid];
+
+			    if (this.pvt.resMap[rootGuidRes]) {
+			        if (is_root) {
+			            delete this.pvt.resMap[rootGuidRes][guid];
+			            if (Object.keys(this.pvt.resMap[rootGuidRes]).length == 0)
+			                delete this.pvt.resMap[rootGuidRes];
+			        } else {
+			            if (this.pvt.resMap[rootGuidRes][rootGuid])
+			                delete this.pvt.resMap[rootGuidRes][rootGuid].elems[guidRes];
+			        };
+			    };
+			},
+
+			 /**
              * вызывается коллекциями при удалении объекта, генерирует событие, на которое можно подписаться
              */
-			onDeleteObject: function(obj) {
-				var root = this.getRoot(obj.getRoot().getGuid());
+			onDeleteObject: function (obj) {
 
-				var is_root = !obj.getParent();
-				var guid = obj.getGuid();
-				var guidRes = obj.getGuidRes();
-				var rootGuid = root.obj.getGuid();
-				var rootGuidRes = root.obj.getGuidRes();
-
-				this._deleteRefs(guid);
-
-				delete this.pvt.objs[guid];
-
-				if (this.pvt.resMap[rootGuidRes]) {
-				    if (is_root) {
-				        delete this.pvt.resMap[rootGuidRes][guid];
-				        if (Object.keys(this.pvt.resMap[rootGuidRes]).length == 0)
-				            delete this.pvt.resMap[rootGuidRes];
-				    } else {
-				        if (this.pvt.resMap[rootGuidRes][rootGuid])
-				            delete this.pvt.resMap[rootGuidRes][rootGuid].elems[guidRes];
-				    };
-				};
+			    this._clearSingleObjRefs(obj);
 
 			    // TODO проверить не корневой ли объект - и тогда тоже удалить его со всей обработкой
 				this.event.fire({
@@ -615,7 +627,62 @@ define(
 				return newObj;	// TODO? делать stringify тут?
 			},
 
-            /**
+		    /**
+             * Splits "full" GUID into 2 parts:
+             * - GUID itself
+             * - root id (integer value)
+             * Full GUID format: <Guid><csFullGuidDelimiter><root id>
+             * 
+             * @param {String} val Full GUID
+             * @return {Object}
+             * @return {String} retval.guid - GUID part
+             * @return {Integer} retval.rootId - root id part (=-1 if missing)
+             */
+			parseGuid: function (aGuid) {
+			    var ret = { guid: aGuid, rootId: -1 };
+			    var i = aGuid.lastIndexOf(csFullGuidDelimiter);
+			    if (i != -1) {
+			        ret.guid = aGuid.substring(0, i);
+			        var id = aGuid.substring(i + 1);
+			        if (!isNaN(parseInt(id)) && isFinite(id)) {
+			            ret.rootId = parseInt(id);
+			        };
+			    };
+			    return ret;
+			},
+
+		    /**
+             * Makes "full" GUID from guid structure:
+             * - GUID itself
+             * - root id (integer value)
+             * Full GUID format: <Guid><csFullGuidDelimiter><root id>
+             * 
+             * @param {Object} aGuid
+             * @param {String} aGuid.guid GUID part
+             * @param {String} aGuid.rootId root id
+             * @return {String} "full" GUID
+             */
+			makeGuid: function (aGuid) {
+			    return aGuid.guid + ((aGuid.rootId > 0) ? csFullGuidDelimiter + aGuid.rootId : "");
+			},
+
+		    /**
+             * Deletes object [obj] (and it's childs as well)
+             *  from all the reference lists in memDB.
+             *
+             * @param {Object} obj
+             */
+			clearObjRefs: function (obj) {
+			    for (var i = 0; i < obj.countCol() ; i++) {
+			        var cc = obj.getCol(i);
+			        for (var j = 0; j < cc.count() ; j++) {
+			            this.clearObjRefs(cc.get(j));
+			        };
+                };
+			    this._clearSingleObjRefs(obj);
+			},
+
+		    /**
              * десериализация в объект
              * @param {object} sobj - объект который нужно десериализовать
 			 * @param {object} parent - родительский "объект" - parent.obj, parent.colName для некорневых либо {} для корня, rtype: "res"|"data"
@@ -668,11 +735,22 @@ define(
 
 				//this.getCurrentVersion(); // пока из-за этого не работает!
 
-				if ("obj" in parent) parent.obj.getLog().setActive(false); // отключить лог на время десериализации
+			    if ("obj" in parent) parent.obj.getLog().setActive(false); // отключить лог на время десериализации
+
 				// заменить гуид ресурса на гуид экземпляра
 				if (instGuid) sobj.$sys.guid = instGuid;
 				
-				var res = ideser(this,sobj,parent);
+                // Очистить все ссылки на объект, если он уже существует
+				if (sobj.$sys.guid) {
+				    if ((this.parseGuid(sobj.$sys.guid).rootId != -1)
+                            || keep_guid) {
+				        var currObj = this.getObj(sobj.$sys.guid);
+				        if (currObj)
+				            this.clearObjRefs(currObj);
+				    }
+				};
+
+				var res = ideser(this, sobj, parent);
 				var rholder = this.getRoot(res.getGuid());
 				if (rholder) { // TODO Сергей: поставил проверку иначе при создании контекста ошибки
 					if (!("ver" in sobj)) {
