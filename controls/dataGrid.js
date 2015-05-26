@@ -1,6 +1,6 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -19,7 +19,7 @@ define(
              * @param guid гуид объекта
              */
             init: function(cm, params) {
-                this._super(cm,params);
+                UccelloClass.super.apply(this, [cm, params]);
                 this.params = params;
 				
 				this.initRender();
@@ -41,7 +41,7 @@ define(
                         var column = columns.get(i);
                         if (column.isFldModified("Width")) {
                             modified = true;
-                            viewset.renderWidth.apply(this, [i, column.get('Width')]);
+                            viewset.renderWidth.apply(this, [i, column.width()]);
                             if (modified)
                                 return;
                         }
@@ -50,7 +50,7 @@ define(
 
                 // если надо лишь передвинуть курсор
                 if (this.isOnlyCursor()) {
-                    viewset.renderCursor.apply(this, [this.getComp(this.dataset()).cursor()]);
+                    viewset.renderCursor.apply(this, [this.dataset().cursor()]);
                     return;
                 }
 
@@ -59,7 +59,7 @@ define(
 
                 // доп. действия
                 if (this.dataset()) {
-                    this.pvt.renderDataVer = this.getComp(this.dataset()).getDataVer();
+                    this.pvt.renderDataVer = this.dataset().getDataVer();
                 }
             },
 
@@ -69,10 +69,8 @@ define(
              */
             isOnlyCursor: function() {
                 if (this.dataset()) {
-                    var dataset = this.getComp(this.dataset());
-					//var mo = this.getObj();
-                    //if ((this.pvt.renderDataVer == dataset.getDataVer()) && (!dataset.isDataModified()) && (dataset.getObj().isFldModified("Cursor")) && (!mo.isDataModified()))
-					if ((this.pvt.renderDataVer == dataset.getDataVer()) && (!dataset.isDataModified()) && (dataset.isFldModified("Cursor")) && (!this.isDataModified()))
+                    var ds = this.dataset();
+					if ((this.pvt.renderDataVer == ds.getDataVer()) && (!ds.isDataSourceModified()) && (ds.isFldModified("Cursor")) && (!this.isDataModified()))
                         return true;
                     else
                         return false;

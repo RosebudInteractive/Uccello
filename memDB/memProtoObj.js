@@ -1,12 +1,15 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
 	['./memObjLog'],
 	function(MemObjLog) {
-		var MemProtoObj = Class.extend({
+
+	    var csFullGuidDelimiter = "@"; // GUID delimiter
+
+		var MemProtoObj = UccelloClass.extend({
 				
 			// objType - ссылка на объект-тип
 			// parent - ссылка на объект и имя коллекции либо db, null для корневых  (obj и colname)
@@ -18,12 +21,12 @@ define(
 				pvt.fields = [];				// значения полей объекта
 				pvt.collections = [];			// массив дочерних коллекций
 				pvt.log = null; 
-				//pvt.state = 0;
 				pvt.fldLog = {};
 				pvt.colLog = {};				// лог изменений в дочерних коллекциях
 				pvt.isModified = false;
 				pvt.cntFldModif=0;
 				pvt.cntColModif=0;
+				pvt.$rootId = -1;
 
 				if (!parent.obj) {	// корневой объект
 					pvt.col = null;
@@ -45,10 +48,28 @@ define(
 				else 											// если нет - генерируем динамически
 					pvt.guid =  this.getDB().getController().guid();  // TODO перенести в UTILS?
 
-				if ((flds) && (flds.$sys) && (flds.$sys.make_clone))
-				    pvt.guidInstance = this.getDB().getController().guid();
-				else
-				    pvt.guidInstance = pvt.guid;
+				var fullGuid = this.parseGuid(pvt.guid);
+				var keep_guid = (flds) && (flds.$sys) && (flds.$sys.keep_guid);
+
+				pvt.$rootId = fullGuid.rootId;
+				if (fullGuid.rootId == -1) {
+				    if (!keep_guid) {
+				        if (!pvt.parent)
+				            pvt.$rootId = this.getDB().getNextRootId();
+				        else
+				            pvt.$rootId = pvt.root.getRootId();
+				    };
+                } else {
+				    if (!pvt.parent)
+				        this.getDB().setMaxRootId(fullGuid.rootId);
+				    else {
+				        var rootId = pvt.root.getRootId();
+				        if (rootId != fullGuid.rootId)
+				            throw new Error("Root (\"" + pvt.root.getGuid() +
+                                "\") and object (\"" + pvt.guid + "\") GUIDs are inconsistent.");
+				    };
+				};
+				pvt.guid = fullGuid.guid + ((pvt.$rootId > 0) ? csFullGuidDelimiter + pvt.$rootId : "");
 
 				if (!parent.obj) {	// корневой объект				
 					pvt.log = new MemObjLog(this);	// создать лог записи изменений
@@ -57,7 +78,7 @@ define(
 					//if ((parent.mode == "RW") && (!parent.nolog) && (!pvt.db.isMaster())) // не мастер, то активируем, для мастера - на 1й подписке
 					//	pvt.log.setActive(true); // лог активен только для корневого объекта, который создан в режиме ReadWrite
 					// ## перенес на 3 строки ниже, чтобы лог уже существовал
-					if (!objType || objType.getGuid()==UCCELLO_CONFIG.classGuids.DataRoot)
+					if (!objType || this.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot))
 						pvt.db._addRoot(this,{ type: "data", mode: parent.mode});
 					else 
 						pvt.db._addRoot(this,{ type: "res", mode: parent.mode});
@@ -66,7 +87,7 @@ define(
 				this.getDB()._addObj(this);
 
 			},
-
+/*
 			protoobjInit: function(objType, parent,flds){
 			
 				var pvt = this.pvt = {}; // приватные члены
@@ -100,15 +121,33 @@ define(
 					pvt.guid = flds.$sys.guid;
 				else 											// если нет - генерируем динамически
 					pvt.guid =  this.getDB().getController().guid();  // TODO перенести в UTILS?
-				
-				if ((flds) && (flds.$sys) && (flds.$sys.make_clone))
-				    pvt.guidInstance = this.getDB().getController().guid();
-				else
-				    pvt.guidInstance = pvt.guid;
+
+				var fullGuid = this.parseGuid(pvt.guid);
+				var keep_guid = (flds) && (flds.$sys) && (flds.$sys.keep_guid);
+
+				pvt.$rootId = fullGuid.rootId;
+				if (fullGuid.rootId == -1) {
+				    if (!keep_guid) {
+				        if (!pvt.parent)
+				            pvt.$rootId = this.getDB().getNextRootId();
+				        else
+				            pvt.$rootId = pvt.root.getRootId();
+				    };
+				} else {
+				    if (!pvt.parent)
+				        this.getDB().setMaxRootId(fullGuid.rootId);
+				    else {
+				        var rootId = pvt.root.getRootId();
+				        if (rootId != fullGuid.rootId)
+				            throw new Error("Root (\"" + pvt.root.getGuid() +
+                                "\") and object (\"" + pvt.guid + "\") GUIDs are inconsistent.");
+				    };
+				};
+				pvt.guid = fullGuid.guid + ((pvt.$rootId > 0) ? csFullGuidDelimiter + pvt.$rootId : "");
 
 				if (!parent.obj) {	// корневой объект				
 					pvt.log = new MemObjLog(this);	// создать лог записи изменений
-					if (!objType || objType.getGuid()==UCCELLO_CONFIG.classGuids.DataRoot)
+					if (!objType || this.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot))
 						pvt.db._addRoot(this,{ type: "data", mode: parent.mode});
 					else 
 						pvt.db._addRoot(this,{ type: "res", mode: parent.mode});
@@ -117,7 +156,7 @@ define(
 				this.getDB()._addObj(this);
 										
 			},
-
+*/
 			
 		    // вернуть корневой элемент объекта
 			_getRoot: function () {
@@ -152,11 +191,44 @@ define(
             },
 			
 			getGuid: function() {
-				return this.pvt.guidInstance;
+			    return this.pvt.guid;
 			},
 			
 			getGuidRes: function () {
-			    return this.pvt.guid;
+			    return this.parseGuid(this.pvt.guid).guid;
+			},
+
+		    /**
+             * Returns root id
+             * 
+             * @return {Integer}
+             */
+			getRootId: function () {
+			    return this.pvt.$rootId;
+			},
+
+		    /**
+             * Splits "full" GUID into 2 parts:
+             * - GUID itself
+             * - root id (integer value)
+             * Full GUID format: <Guid><csFullGuidDelimiter><root id>
+             * 
+             * @param {String} val Full GUID
+             * @return {Object}
+             * @return {String} retval.guid - GUID part
+             * @return {Integer} retval.rootId - root id part (=-1 if missing)
+             */
+			parseGuid: function (aGuid) {
+			    var ret = { guid: aGuid, rootId: -1 };
+			    var i = aGuid.lastIndexOf(csFullGuidDelimiter);
+			    if (i != -1) {
+			        ret.guid = aGuid.substring(0, i);
+			        var id = aGuid.substring(i + 1);
+			        if (!isNaN(parseInt(id)) && isFinite(id)) {
+			            ret.rootId = parseInt(id);
+			        };
+                };
+			    return ret;
 			},
 
 			getObjType: function () {

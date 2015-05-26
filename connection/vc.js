@@ -1,6 +1,6 @@
 if (typeof define !== 'function') {
 	var define = require('amdefine')(module);
-	var Class = require('class.extend');
+	var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 /**
@@ -28,7 +28,7 @@ define(
 			 * @param params {object}
 			 */
 			init: function(cm, params,cb) {
-				this._super(cm, params, cb);
+				UccelloClass.super.apply(this, [cm, params, cb]);
 				this.pvt.isOn = false;
 				this.pvt.isVisible = false;
 				this.pvt.vcrCounter = 0;
@@ -42,8 +42,9 @@ define(
 			 */
 			on: function(cm, params,cb, renderRoot) {
 				if (this.isOn()) {
-					this.pvt.cm.initRender();
-					cb(this.pvt.cm.getRootGuids("res"));
+					var guids = this.pvt.cm.getRootGuids("res")
+					this.pvt.cm.initRender(guids);
+					cb(guids);
 					return;
 				}
 				this.pvt.cdb = null;
@@ -59,6 +60,7 @@ define(
 				this.pvt.formParams = {};
 				this.pvt.memParams = [];
 				this.pvt.socket = params.socket;
+				this.pvt.cmsys = cm;
 
 				var that = this;
 				if (!cb) {// если нет колбэка значит на сервере - но это надо поменять TODO
@@ -86,9 +88,9 @@ define(
 								callback: that._onModifParam
 							});
 
-							if (!that.pvt.formParams[obj.get("Name")])  // добавить в список параметров
-								that.pvt.formParams[obj.get("Name")] = [];
-							that.pvt.formParams[obj.get("Name")].push(obj);
+							if (!that.pvt.formParams[obj.name()])  // добавить в список параметров
+								that.pvt.formParams[obj.name()] = [];
+							that.pvt.formParams[obj.name()].push(obj);
 
 						}
 						
@@ -107,7 +109,7 @@ define(
 
 						var comp =  that.createComponent.apply(that, [typeObj, parent, sobj]);
 
-						if (DEBUG) {
+						if (false) {
 							if (sobj.$sys.typeGuid == UCCELLO_CONFIG.classGuids.DataCompany) {
 								var end = performance.now();
 								var time = end - start;
@@ -161,14 +163,16 @@ define(
 			 * @params resGuids - массив гуидов ресурсов (явный)
 			 * @callback cb
 			 */
+			 /* Пользуемся CreateRoot
 			addNewResRoots: function(resGuids, cb) {
 				function cbtest(res) { console.log(res); cb(res); }
 				if (!this.isOn()) return false;
 				if (this.getModule().isMaster())
-					this.loadNewRoots(resGuids, { rtype: "res", compcb: this.pvt.compCallback}, cb); //function (res) { console.log(res); cb(res); } );
+					this.loadNewRoots(resGuids, { rtype: "res", compcb: this.pvt.compCallback}, cb); 
 				else this.getContentDB().subscribeRoots(resGuids, cbtest, this.pvt.compCallback);
 				return true;
 			},
+			*/
 
 			// выключить контекст
 			// TODO пока работает только для SLAVE
@@ -229,10 +233,10 @@ define(
 			_setFormParams: function(ev) {
 				for (var i=0; i<this.pvt.memParams.length; i++) {
 					var obj = this.pvt.memParams[i];
-					var pn = obj.get("Name");
+					var pn = obj.name();
 					for (var j=0; j<this.pvt.formParams[pn].length; j++) {
 						var obj2 = this.pvt.formParams[pn][j];
-						if (obj2.get("Kind")=="in") obj2.set("Value",obj.get("Value"));
+						if (obj2.kind()=="in") obj2.value(obj.value());
 					}
 				}
 				this.pvt.memParams = [];
@@ -297,17 +301,34 @@ define(
 					var override = true;
 
 					function icb(r) {
-						var res = that.getContentDB().addRoots(r.datas, params.compcb, params.subDbGuid, override);
+						var res = that.getContentDB().addRoots(r.datas, params, rg,/*params.compcb, params.subDbGuid,*/ override);
 						if (cb) cb({guids:res});
 					}
-
+					// TODO RFDS Проверять, есть ли уже объект с таким гуидом и хэшем !!! (expression)
+					// если есть - то просто возвращать его, а не загружать заново. Если нет, тогда грузить.
+					var rg = [];
+					
+					// Всегда добавляем новые - проверка существования не имеет смысла, мы говорим о гуидах прототипов
+					for (var i=0; i<rootGuids.length; i++) {
+					    if (rootGuids[i].length > 36) { // instance Guid
+							var cr = this.getRoot(rootGuids[i]);
+							if (cr) {
+								if ((params.expr &&  params.expr!=cr.hash) || !params.expr) {
+									rg.push(rootGuids[i]);
+								}
+							}
+						}
+						else rg.push(rootGuids[i]); // если resourceGuid
+							
+					}
+				
 					if (params.rtype == "res") {
 						override = false;
-						this.pvt.proxyServer.loadResources(rootGuids, icb);
+						this.pvt.proxyServer.loadResources(rg, icb);
 						return "XXX";
 					}
 					if (params.rtype == "data") {
-						this.pvt.proxyServer.queryDatas(rootGuids, params.expr, icb);
+						this.pvt.proxyServer.queryDatas(rg, params.expr, icb);
 						return "XXX";
 					}
 				}
@@ -326,17 +347,14 @@ define(
 			},
 
 			renderAll: function(pd) {
-				var ga = this.pvt.cm.getRootGuids()
-				for (var i=0; i<ga.length; i++) {
-					var root = this.pvt.cm.get(ga[i]);
-					this.pvt.cm.render(root, this.pvt.renderRoot(ga[i]), pd);
-				}
-				this.getContentDB().resetModifLog();
+				
+				var ga = this.pvt.cm.getRootGuids();
+				this.renderForms(ga,pd);
 			},
 
 			renderForms: function(roots, pd) {
+				console.log("%c RENDER FORMS "+pd, 'color: green');
 				for (var i=0; i<roots.length; i++) {
-					// TODO отсеять лишние руты, сделать проверку на данные
 					var root = this.pvt.cm.get(roots[i]);
 					this.pvt.cm.render(root, this.pvt.renderRoot(roots[i]), pd);
 				}
@@ -345,6 +363,10 @@ define(
 
 			getContentDB: function() {
 				return this.pvt.cdb;
+			},
+
+			getSysCM: function() {
+				return this.pvt.cmsys;
 			},
 
 			getContextCM: function() {
@@ -372,10 +394,10 @@ define(
 
 				if (result.target.getObjType().getGuid() == UCCELLO_CONFIG.classGuids.Form) {
 					// ищем по Title и добавляем id если найден для уникальности
-					var found = false, title = result.target.get('Title');
+					var found = false, title = result.target.title();
 					var col = this.getCol('Resources');
 					for(var i= 0, len=col.count(); i<len; i++) {
-						if (title == col.get(i).get('Title'))
+						if (title == col.get(i).title())
 							found = true;
 					}
 					var id = ++this.pvt.vcrCounter;
@@ -384,6 +406,8 @@ define(
 					var vcResource = new Vcresource(this.getControlMgr(), {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
 					var db = this.getContentDB();
 					db.getController().genDeltas(db.getGuid());
+					var dbSys = this.getSysCM();
+					dbSys.getController().genDeltas(dbSys.getGuid());
 				}
 			},
 

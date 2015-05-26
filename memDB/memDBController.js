@@ -1,12 +1,12 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
 	['./memDataBase', '../system/event'],
 	function(MemDataBase, Event) {
-		var MemDBController = Class.extend({
+		var MemDBController = UccelloClass.extend({
 		
 			init: function(router){
 				this.pvt = {};
@@ -257,8 +257,8 @@ define(
 			// пока только 1 дельта!!!! НО с буферизацией
             applyDeltas: function(dbGuid, srcDbGuid, delta) {
 
-				if (DEBUG) console.log("incoming delta: ");
-				if (DEBUG) console.log(delta);
+				console.log("incoming delta: ");
+				console.log(delta);
                 // находим рутовый объект к которому должна быть применена дельта
                 var db  = this.getDB(dbGuid);
                 //var root = db.getRoot(delta.rootGuid);

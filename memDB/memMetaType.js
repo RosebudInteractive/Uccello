@@ -7,7 +7,8 @@
  */
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    //var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -16,7 +17,7 @@ define(
         
         var fldTypeCodes;
         
-        var BaseType = Class.extend({
+        var BaseType = UccelloClass.extend({
             /**
              * The Base Type all Type objects inherit from.
              *
@@ -172,7 +173,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
         
@@ -186,7 +188,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
         
@@ -200,7 +203,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
         
@@ -214,7 +218,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
         
@@ -228,7 +233,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
 
@@ -242,7 +248,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
 
@@ -256,7 +263,8 @@ define(
              * @constructor
              */
             init: function (typeObj, refResolver) {
-                this._super(typeObj, refResolver);
+                //this._super(typeObj, refResolver);
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
                 this._is_complex = true;
             },
 
@@ -267,7 +275,8 @@ define(
              * @return {Strng} The hash code
              */
             hash: function () {
-                var result = this._super();
+                //var result = this._super();
+                var result = UccelloClass.super.apply(this, []);
 
                 if ((this._refResolver) &&
                         (typeof (this._refResolver.getGuid) === "function"))
@@ -289,7 +298,9 @@ define(
              * @return {Object} Serialized representation
              */
             serialize: function () {
-                var result = this._super();
+                //var result = this._super();
+                var result = UccelloClass.super.apply(this, []);
+
                 result.res_elem_type = this._resElemType;
                 if (this._external) {
                     result.external = this._external;
@@ -314,7 +325,8 @@ define(
              * @private
              */
             _deserialize: function (val) {
-                this._super(val);
+                //this._super(val);
+                UccelloClass.super.apply(this, [val]);
 
                 this._external = false;
                 this._resType = null;
@@ -351,16 +363,25 @@ define(
              * Serialized value:
              *   for exteranl ref - object: {guidRes,guidElem}
              *   for internal ref - string: guidElem
-             * @param {Any}      val An internal value
+             * @param {Any}     val An internal value
+             * @param {Boolean} [use_resource_guid=false] If true resource GUIDs are serialized
              * @return {Object} Serialized representation of the value
              */
-            getSerializedValue: function (val) {
+            getSerializedValue: function (val, use_resource_guid) {
                 var result = val;
                 if (val)
                     if (this._external) {
                         result = { guidRes: val.guidRes, guidElem: val.guidElem };
-                    } else
-                        result = val.guidElem;
+                        if ((!use_resource_guid) && val.guidInstanceRes && val.guidInstanceElem)
+                            result = {
+                                guidInstanceRes: val.guidInstanceRes,
+                                guidInstanceElem: val.guidInstanceElem
+                            };
+                    } else{
+                        result = { guidElem: val.guidElem };
+                        if ((!use_resource_guid) && val.guidInstanceElem)
+                            result = val.guidInstanceElem;
+                    };
                 return result;
             },
 
@@ -387,14 +408,17 @@ define(
 
                 if (val1 && val2) {
                     if (val1.objRef && val2.objRef)
-                        return val1.objRef == val2.objRef;
+                        return val1.objRef === val2.objRef;
 
                     if ((!val1.objRef) && (!val2.objRef)) {
                         if (this._external)
-                            return (val1.guidRes == val2.guidRes)
-                                && (val1.guidElem == val2.guidElem);
+                            return (val1.guidRes === val2.guidRes)
+                                && (val1.guidElem === val2.guidElem)
+                                && (val1.guidInstanceRes === val2.guidInstanceRes)
+                                && (val1.guidInstanceElem === val2.guidInstanceElem);
                         else
-                            return val1.guidElem == val2.guidElem;
+                            return (val1.guidElem === val2.guidElem)
+                                && (val1.guidInstanceElem === val2.guidInstanceElem);
                     };
                 }
                 else
@@ -492,13 +516,41 @@ define(
                     } else {
                         // Val is serialized reference
                         if (result.is_external) {
-                            result.guidRes = val.guidRes ? val.guidRes : null;
-                            result.guidElem = val.guidElem ? val.guidElem : null;
+                            if (typeof (val) === "string") {
+                                result.guidInstanceElem = val;
+                                result.guidElem = obj.parseGuid(result.guidInstanceElem).guid;
+                                if (result.guidElem == result.guidInstanceElem)
+                                    result.guidInstanceElem = null; //It's most likely "guidElem"
+
+                                // Ref to ROOT element is supposed here.
+                                result.guidRes = result.guidElem;
+                                result.guidInstanceRes = result.guidInstanceElem;
+                            } else {
+                                result.guidInstanceRes = val.guidInstanceRes ? val.guidInstanceRes : null;
+                                if (result.guidInstanceRes)
+                                    result.guidRes = obj.parseGuid(result.guidInstanceRes).guid;
+                                else
+                                    result.guidRes = val.guidRes ? val.guidRes : null;
+
+                                result.guidInstanceElem = val.guidInstanceElem ? val.guidInstanceElem : null;
+                                if (result.guidInstanceElem)
+                                    result.guidElem = obj.parseGuid(result.guidInstanceElem).guid;
+                                else
+                                    result.guidElem = val.guidElem ? val.guidElem : null;
+                            }
                         } else {
-                            if (typeof (val) === "string")
-                                result.guidElem = val;
-                            else
-                                result.guidElem = val.guidElem ? val.guidElem : null;
+                            if (typeof (val) === "string") {
+                                result.guidInstanceElem = val;
+                                result.guidElem = obj.parseGuid(result.guidInstanceElem).guid;
+                                if (result.guidElem == result.guidInstanceElem)
+                                    result.guidInstanceElem = null; //It's most likely "guidElem"
+                            } else {
+                                result.guidInstanceElem = val.guidInstanceElem ? val.guidInstanceElem : null;
+                                if (result.guidInstanceElem)
+                                    result.guidElem = obj.parseGuid(result.guidInstanceElem).guid;
+                                else
+                                    result.guidElem = val.guidElem ? val.guidElem : null;
+                            }
                         };
                     };
 

@@ -1,6 +1,6 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 // memobj
@@ -10,10 +10,10 @@ define(
 		var MemObj = MemProtoObj.extend({
 
 			init: function(objType, parent, flds){
-				this._super(objType, parent, flds);
+				UccelloClass.super.apply(this, [objType, parent, flds]);
 
 				this.event = new Event();
-
+/*
 				var ot = this.pvt.objType.pvt;
 				for (var i=0; i<ot.fieldsArr.length; i++) {
 				    var f = ot.fieldsArr[i];
@@ -27,7 +27,28 @@ define(
 				        } else
 				            this.pvt.fields[i] = flds.fields[f]; // TODO проверять типы?
 				    } else
-				        this.pvt.fields[i] = undefined;
+				        this.pvt.fields[i] = undefined;						
+				}
+*/
+				var otp = this.pvt.objType.pvt;
+				var ot = otp.fieldsArr;
+				this.pvt.fields = new Array(ot.length);
+				var cf = this.pvt.fields;
+				if ((flds!=undefined) && ("fields" in flds)) {
+					for (var i=0; i<ot.length; i++) {
+							//var f = ;
+					    var ft = otp.fieldsTypes[i];
+					    var is_complex = ft.is_complex;
+					    ft = ft.type;
+					    if (ot[i] in flds.fields) {
+					        if (is_complex) {
+					            var val = ft.setValue(flds.fields[ot[i]], ot[i], this, false);
+					            cf[i] = val;
+					        } else
+					            cf[i] = flds.fields[ot[i]];
+					    } else
+					        cf[i] = undefined;
+					}
 				}
 				
 				// создать пустые коллекции по типу
@@ -44,7 +65,7 @@ define(
 					});
 				}
 			},
-			
+			/*
 			memobjInit: function(objType, parent, flds) {
 
 				this.protoobjInit(objType, parent, flds);
@@ -86,7 +107,7 @@ define(
 						target: this
 					});
 				}
-			},
+			},*/
 
 			
 			// получить коллекцию по имени или по индексу
@@ -125,7 +146,7 @@ define(
 				    return undefined;
 			},
 			
-			getSerialized: function (field) {
+			getSerialized: function (field, use_resource_guid) {
 			    var fldIdx = -1;
 			    var objType = this.pvt.objType.pvt;
 			    var maxIdx = objType.fieldsArr.length;
@@ -139,7 +160,7 @@ define(
 			        fldIdx = field;
 
 			    if ((fldIdx != -1) && (fldIdx < maxIdx)) {
-			        return objType.fieldsTypes[fldIdx].type.getSerializedValue(this.pvt.fields[fldIdx]);
+			        return objType.fieldsTypes[fldIdx].type.getSerializedValue(this.pvt.fields[fldIdx], use_resource_guid);
 			    } else
 			        return undefined;
 			},
@@ -194,7 +215,37 @@ define(
 				});	
 				
 			},
-						
+
+			// DBG - убрать после изменений 
+			setDbg: function (field, value, withCheckVal) {
+			    var objType = this.pvt.objType.pvt;
+
+			    if (objType.fieldsTable[field] === undefined)
+			        throw new Error("Field \"" + field + "\" doesn't exist in the object \"" + this.pvt.guid + "\".");
+			    var i = objType.fieldsTable[field].cidx;
+				var oldValue = this.pvt.fields[i];
+
+				var fldType = objType.fieldsTypes[i];
+				var is_complex = fldType.is_complex;
+				fldType = fldType.type;
+				var newValue = value;
+				if (is_complex || withCheckVal)
+				    newValue = fldType.setValue(value, field, this, withCheckVal);
+
+				if (fldType.isEqual(oldValue, newValue)) return;
+
+				this.pvt.fields[i] = newValue;
+				var oldSerialized = oldValue;
+				var newSerialized = newValue;
+
+				if (is_complex) {
+				    oldSerialized = fldType.getSerializedValue(oldValue);
+				    newSerialized = fldType.getSerializedValue(newValue);
+				}
+				
+			},
+
+			
 			// получить имя поля по индексу
 			getFieldName: function(i) {
 				return this.pvt.objType.pvt.fieldsArr[i];

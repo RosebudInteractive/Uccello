@@ -1,6 +1,6 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -31,7 +31,7 @@ define(
         
         var MAX_NOT_CONFIRMED_LEN = 100;
 
-        CommunicationServer.Server = Class.extend({
+        CommunicationServer.Server = UccelloClass.extend({
             
             init: function (options) {
                 

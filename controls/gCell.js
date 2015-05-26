@@ -1,6 +1,6 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -18,7 +18,7 @@ define(
              * @param guid гуид объекта
              */
             init: function(cm, params) {
-                this._super(cm, params);
+                UccelloClass.super.apply(this, [cm, params]);
                 this.params = params;
             }
         });

@@ -1,11 +1,11 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(function () {
     
-    var Channel = Class.extend({
+    var Channel = UccelloClass.extend({
         /**
          * Инициализация объекта
          * @constructs
@@ -97,6 +97,7 @@ define(function () {
             if (event.msgId && this.messages[event.msgId]) {
                 var msg = this.messages[event.msgId];
                 delete this.messages[event.msgId];
+                delete event.msgId;
                 if (msg.callback)
                     msg.callback(event);
             }

@@ -1,12 +1,12 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
     [],
     function() {
-        var ViewSet = Class.extend({
+        var ViewSet = UccelloClass.extend({
 
             /**
              * Инициализация объекта
@@ -53,12 +53,11 @@ define(
 					}
 				}
 
-                //var col=component.pvt.obj.getCol("Children");
 				var col=component.getCol("Children");
                 if (col == undefined) return;
                 for (var i=0; i<col.count(); i++) {
-                    var co=this.cm.get(col.get(i).getGuid());
-                    this.render(co, options);
+                    //var co=col.get(i)   //this.cm.get(col.get(i).getGuid());
+                    this.render(col.get(i), options);
                 }
             }
 

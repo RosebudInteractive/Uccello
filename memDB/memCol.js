@@ -1,12 +1,12 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
 	[],
 	function() {
-		var MemCol = Class.extend({
+		var MemCol = UccelloClass.extend({
 		
 			init: function(name,obj){
 				this._elems = [];			// массив элементов коллекции
@@ -69,7 +69,7 @@ define(
 			// TODO ВРЕМЕННАЯ ИМПЛЕМЕНТАЦИЯ - УБРАТЬ ПОСЛЕ ТОГО КАК БУДУТ СДЕЛАНЫ ИНДЕКСЫ
 			getObjById: function(id) {
 				for (var i=0; i<this.count(); i++) {
-					if (this.get(i).get("Id")==id) return this.get(i);
+					if (this.get(i).id()==id) return this.get(i);
 				}
 			},
 			

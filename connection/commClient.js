@@ -1,6 +1,6 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -27,7 +27,7 @@ define(
 
         var MAX_NOT_CONFIRMED_LEN = 100;
 
-        CommunicationClient.Client = Class.extend({
+        CommunicationClient.Client = UccelloClass.extend({
             
             init: function (options_param) {
                 
@@ -464,12 +464,13 @@ define(
             _getWSMsgProcessor: function (chStateData) {
                 var self = this;
                 return function (event, callback) {
-                    var data = JSON.parse(event);
+                    var data;
                     if (chStateData.chType == CommunicationClient.WEB_SOCKET) {
-                        data = data.data;
+                        data = JSON.parse(event.data);
                     };
 
-                    if (chStateData.chType == CommunicationClient.SOCKET_IO){
+                    if (chStateData.chType == CommunicationClient.SOCKET_IO) {
+                        data = JSON.parse(event);
                         var msgId = data.msgId;
                         data = data.data;
 

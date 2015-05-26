@@ -1,6 +1,6 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -17,14 +17,14 @@ define(
 			 * @param vc - контекст менеджера
              */
 			init: function(dbinit, vc, socket, cb){
-				
-				this._super(dbinit.controller, dbinit.dbparams, cb);
+
+				UccelloClass.super.apply(this, [dbinit.controller, dbinit.dbparams, cb]);
 
 				this.pvt.compByLid = {};
 				this.pvt.compByGuid = {};
 				this.pvt.compByName = {};				
-				this.pvt.subsInitFlag = false;
-				this.pvt.dataInitFlag = false;
+				this.pvt.subsInitFlag = {};
+				this.pvt.dataInitFlag = {};
 				this.pvt.rootGuids = {};
 				this.pvt.vc = vc;
 				
@@ -53,23 +53,31 @@ define(
                     });
                 }*/
 			},
-			
-			subsInit: function() {
 
-				for (var g in this.pvt.compByGuid)
-					this.pvt.compByGuid[g].subsInit();
-					
-				this.pvt.subsInitFlag =true;
+           /**
+			 * Инициализация подписки - делается 1 раз при загрузке нового ресурса
+             * @param component {AComponent} - корневой элемент
+             */				
+			subsInit: function(component) {
+				component.subsInit();
+				for (var j=0, countCol=component.countCol(); j<countCol ; j++) {
+					var col = component.getCol(j);
+					for (var i=0, cnt=col.count(); i<cnt; i++)
+						this.subsInit(col.get(i));
+				}
 			},
 
-			
-			dataInit: function() {
-				//var c = this.getRoot();
-
-				for (var g in this.pvt.compByGuid)
-					this.pvt.compByGuid[g].dataInit();
-					
-				this.pvt.dataInitFlag =true;
+           /**
+			 * Инициализация данных - делается 1 раз при загрузке нового ресурса
+             * @param component {AComponent} - корневой элемент
+             */				
+			dataInit: function(component) {
+				component.dataInit();
+				for (var j = 0, countCol=component.countCol() ; j < countCol ; j++) {
+					var col = component.getCol(j);
+					for (var i=0, cnt=col.count(); i<cnt; i++) 
+						this.dataInit(col.get(i));
+				}
 			},
 
             /**
@@ -97,7 +105,6 @@ define(
 				delete this.pvt.compByGuid[c.getGuid()];
 				if (c.getParent())
 					c.getParent()._delChild(c.getColName(),c);
-					//c.getParent()._delChild(c.getObj().getColName(),c.getObj());
 				else
 					delete this.pvt.rootGuids[c.getGuid()];
 			},
@@ -149,15 +156,6 @@ define(
 
             /**
 			 * Вернуть компонент по его гуид
-             */	
-			 // TODOR2 - убрать после чистки вызовов в прото1
-			 /*
-			getByGuid: function(guid) {
-				return this.pvt.compByGuid[guid];
-			},*/
-
-            /**
-			 * Вернуть компонент по его гуид
              */			
 			get: function(guid) {
 				return this.pvt.compByGuid[guid];
@@ -183,12 +181,20 @@ define(
 
             /**
 			 * Рендеринг компонентов интерфейса
-			 *  @param component - корневой элемент, с которого запускается рендеринг, если undef, то с корня
+			 *  @param component - корневой (обязательно) элемент, с которого запускается рендеринг
              */				
 			render: function(component, options, pd) {
 			
-				if (!this.pvt.subsInitFlag) this.subsInit();  // если не выполнена постинициализация, то запустить
-				if (!this.pvt.dataInitFlag) this.dataInit();
+				//console.log("RENDER RENDER RENDER: "+component.getGuid()+"  "+component.pvt.fields[7])
+			
+				if (!this.pvt.subsInitFlag[component.getGuid()]) {
+					this.subsInit(component);  // если не выполнена постинициализация, то запустить
+					this.pvt.subsInitFlag[component.getGuid()] = true;
+				}
+				if (!this.pvt.dataInitFlag[component.getGuid()]) {
+					this.dataInit(component);
+					this.pvt.dataInitFlag[component.getGuid()] = true;
+				}
 				
 				if (pd) this.processDelta();
 			
@@ -202,18 +208,31 @@ define(
 			},
 			
 			setToRendered: function(component, val) {
+				if (component == undefined) return;
+			
+				if ("_isRendered" in component) component._isRendered(val);
+				var col=component.getCol("Children");
+                if (col == undefined) return;
+                for (var i=0; i<col.count(); i++) 
+					this.setToRendered(col.get(i),val);
+
+            },
 				//this.getDB().resetModifLog();
-				for (var g in this.pvt.compByGuid) { //TODO нужно это делать не для всех компонентов или рендерить всегда с рута
+				/*for (var g in this.pvt.compByGuid) { //TODO нужно это делать не для всех компонентов или рендерить всегда с рута
 					//this.pvt.compByGuid[g].getObj().resetModifFldLog();	// обнуляем "измененные" поля в объектах 
 					var rg = this.pvt.compByGuid[g].getRoot().getGuid();
 					if (("_isRendered" in this.pvt.compByGuid[g]) && ((component && component.getGuid() == rg) || (component === undefined)))
 						this.pvt.compByGuid[g]._isRendered(val);			// выставляем флаг рендеринга
-				}			
-			},
+				}*/			
+			//},
 			
 			// переинициализация рендера
-			initRender: function() {
-				this.setToRendered(undefined, false);
+			initRender: function(rootGuids) {
+				
+				for (var i=0; i<rootGuids.length; i++)
+					this.setToRendered(this.get(rootGuids[i]), false);
+				
+				// TODO обход рекурс
 				for (var g in this.pvt.compByGuid) { 
 					if ("initRender" in this.pvt.compByGuid[g])
 						this.pvt.compByGuid[g].initRender();			// выставляем флаг рендеринга
@@ -226,18 +245,7 @@ define(
 			},
 			
 			onNewRoot: function(result) {
-				// REFACT213
-				/*
-				if (result.target.getGuid() == this.pvt.rootGuid) {
-	                    this.getDB().getRoot(this.pvt.rootGuid).event.on({
-							type: "delObj",
-							subscriber: this,
-							callback: this.onDeleteComponent
-                    });				
-					
-				}*/
 				if (this.pvt.rootGuids[result.target.getGuid()] ) {
-	                    //this.getDB().getRoot(result.target.getGuid()).event.on({
 						this.getRoot(result.target.getGuid()).event.on({
 							type: "delObj",
 							subscriber: this,
@@ -261,7 +269,6 @@ define(
              */
             userEventHandler: function(context, f, args) {
                 var nargs = [];
-				//var db = this.getDB();
 				var vc = this.getContext();
                 if (args) nargs = [args];
 				//  стартовать транзакцию
@@ -269,7 +276,6 @@ define(
                 if (f) f.apply(context, nargs);
                 if (this.autoSendDeltas())
 					this.getController().genDeltas(this.getGuid());
-                    //db.getController().genDeltas(db.getGuid());
                 //this.render(undefined); // TODO - на сервере это не вызывать
 				if (vc) vc.renderAll();
 				//  закрыть транзакцию

@@ -1,12 +1,12 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
     ['../memDB/memDBController', '../controls/controlMgr', '../system/event', '../system/utils', './user', './vc', './connect', './session'],
     function(MemDBController, ControlMgr, Event,  Utils, User, VisualContext, Connect, Session) {
-            var UserSessionMgr = Class.extend({
+            var UserSessionMgr = UccelloClass.extend({
 
             init: function(router, options){
 				this.pvt = {};
@@ -138,8 +138,8 @@ define(
                     var connects = session.getConnects();
                     for(var i in connects) {
                         if(connects[i].isConnected()) {
-                            connects[i].send({action:"newTab", contextGuid:data.contextGuid, resGuids:data.resGuids});
-                            result = {contextGuid:data.contextGuid, resGuids:data.resGuids};
+                            //connects[i].send({action:"newTab", contextGuid:data.contextGuid, resGuids:data.resGuids});
+                            result = {args:{action:"newTab", contextGuid:data.contextGuid, resGuids:data.resGuids}};
                             break;
                         }
                     }

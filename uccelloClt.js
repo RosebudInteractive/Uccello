@@ -1,6 +1,6 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -13,7 +13,7 @@ define(
         UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContext, Vcresource,
         Rpc, ConstructHolder
         ) {
-        var UccelloClt = Class.extend({
+        var UccelloClt = UccelloClass.extend({
 
             init: function(options){
                 var that = this;
@@ -87,8 +87,16 @@ define(
                         subscriber: this,
                         callback: function(args){
                             var context = that.getContext();
-                            if (context)
+                            if (context) {
+								//console.log("%c RENDER END APPLY DELTAS ", 'color: red');
+								//console.log(args);
+								//console.log(context);
                                 context.renderAll(true);
+							}
+							else {
+								//console.log("%c NORENDER END APPLY DELTAS ", 'color: red');
+								//console.log(args);
+							}
                         }
                     });
 
@@ -187,6 +195,7 @@ define(
              * @param params - параметры
 			 *        params.formGuids - массив гуидов ресурсов, которые должны быть загружены
 			 *        params.vc - гуид контекста
+			 *        params.side - "client" для клиентского контекста, "server" для серверного
 			 * @param cbfinal - финальный коллбэк
 			 * @param renderRoot - коллбэк на рендеринг, если не передается, то контекст активируется, но остается скрытым
              */	
@@ -195,22 +204,22 @@ define(
 
                 function cbfinal2(result2){
                     result2 = result2 && result2.guids ? result2.guids : result2;
-                    that.getContext().renderForms(result2, true);
+                    that.getContext().renderForms(result2, false);
                     if (cbfinal)
                         cbfinal(result2);
                 }
 
-                var s = that.pvt.clientConnection.socket;
-                var p = {socket: s, proxyServer: that.pvt.proxyServer}
+                var s = this.pvt.clientConnection.socket;
+                var p = {socket: s, proxyServer: this.pvt.proxyServer}
                 p.formGuids = params.formGuids;
-                p.constructHolder = that.pvt.constructHolder; //  ссылка на хранилище конструкторов
+                p.constructHolder = this.pvt.constructHolder; //  ссылка на хранилище конструкторов
 
                 if (params.side == 'client') {
-                    that.pvt.vc = this.pvt.cmclient.get(params.vc);
-                    that.pvt.vc.on(this.pvt.cmclient, p, cbfinal2, renderRoot);
+                    this.pvt.vc = this.pvt.cmclient.get(params.vc);
+                    this.pvt.vc.on(this.pvt.cmclient, p, cbfinal2, renderRoot);
                 } else {
-                    that.pvt.vc = that.pvt.cmsys.get(params.vc);
-                    that.pvt.vc.on(that.pvt.cmsys, p, cbfinal2, renderRoot);
+                    this.pvt.vc = this.pvt.cmsys.get(params.vc);
+                    this.pvt.vc.on(this.pvt.cmsys, p, cbfinal2, renderRoot);
                 }
 			},
 
@@ -222,11 +231,14 @@ define(
              * @param callback
              */
             createRoot: function(formGuids, rtype, callback, context) {
-                var that = this;
+
+				// F606 - предположительно - передача subDbGuid не требуется, так как назначается внутри VC
                 var subDbGuid = context? context.dataBase(): this.getContext().getContentDB().getGuid();
                 context = context? context: this.getContext();
-                context.loadNewRoots(formGuids, {rtype:rtype, subDbGuid: subDbGuid }, function(result){
-                    context.renderForms(result.guids, true);
+				if (!context.isOn()) return false;
+                context.loadNewRoots(formGuids, {rtype:rtype /*, subDbGuid: subDbGuid*/ }, function(result){
+					//context.getContextCM().initRender(result.guids);
+                    //context.renderForms(result.guids, true);
                     if (callback) callback(result);
                 });
             },

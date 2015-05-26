@@ -1,11 +1,11 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
-	['./memProtoObj','./memCol'],
-	function(MemProtoObj,MemCol) {
+	['./memProtoObj', './memCol'],
+	function(MemProtoObj, MemCol) {
 		var MemMetaObj = MemProtoObj.extend({
 		
 			init: function(parent, flds){
@@ -13,7 +13,7 @@ define(
 				//flds.$sys = { guid: "4dcd61c3-3594-7456-fd86-5a3527c5cdcc" };
 				var db = (parent.db) ? parent.db: parent.obj.getDB();
 				//if (db.getMeta())
-				this._super(null,{ obj: db.getMeta(), colName: "MetaObjects" },flds); 
+				UccelloClass.super.apply(this, [null,{ obj: db.getMeta(), colName: "MetaObjects" },flds]);
 				this.pvt.typeGuid = UCCELLO_CONFIG.guids.metaObjGuid;
 				//else 
 				//	this._super(null,{ db: db },flds); // Корневой метаобъект в БД - является корнем всех остальных метаобъектов
@@ -23,30 +23,22 @@ define(
 				this.pvt.ancestors = [];
 				this.pvt.ancestors.push(this);
 				var par = this.getDB().getObj(flds.fields.parentClass);
-				while (par) {
-					this.pvt.ancestors.push(par);
-					par = (par.get("parentClass")==undefined) ? null : this.getDB().getObj(par.get("parentClass"));
-				}
-				
-				// TODO ПЕРЕДЕЛАТЬ!!!
-				if ((flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataRoot) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataContact) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataCompany) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataAddress) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataContract) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataLead) ||
-					(flds.$sys.guid == UCCELLO_CONFIG.classGuids.DataIncomeplan)
-				)
+				if (this.getGuid() == UCCELLO_CONFIG.classGuids.DataRoot || this.getGuid() == UCCELLO_CONFIG.classGuids.DataObject)
 					this.pvt.rtype = "data";
 				else
 					this.pvt.rtype = "res";
+				while (par) {
+					this.pvt.ancestors.push(par);
+					if (par && (par.getGuid() == UCCELLO_CONFIG.classGuids.DataRoot || par.getGuid() == UCCELLO_CONFIG.classGuids.DataObject))
+						this.pvt.rtype = "data";
+					par = (par.get("parentClass")==undefined) ? null : this.getDB().getObj(par.get("parentClass"));
+				}
 
 				// инициализируем коллекции для метаинфо - описание полей и описание коллекций
 				new MemCol("fields",this);
 				new MemCol("cols",this);
-				
-				this.finit();
 
+				this.finit();
 			},
 			
 			// сделать таблицу элементов с учетом наследования
@@ -97,7 +89,7 @@ define(
 						return this.pvt.fields[1];
 				}
 				if (typeof field == "number")  // ищем по индексу
-					return this._super(field);
+					return UccelloClass.super.apply(this, [field]);
 					
 				return undefined;				
 			},
@@ -124,7 +116,7 @@ define(
 						return this.pvt.collections[1];
 				}
 				if (typeof col == "number") 
-					return this._super(col);
+					return UccelloClass.super.apply(this, [col]);
 				return null;
 			},
 			

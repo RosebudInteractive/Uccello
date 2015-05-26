@@ -2,21 +2,20 @@ if (typeof define !== 'function') {
     var define = require('amdefine')(module);
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
-
 define(
-    [UCCELLO_CONFIG.uccelloPath+'controls/container'],
-    function(Container) {
-        var FContainer = Container.extend({
+    ['../system/uobject'],
+    function(UObject) {
+        var DataObject = UObject.extend({
 
-            className: "FContainer",
-            classGuid: UCCELLO_CONFIG.classGuids.FContainer,
-            metaCols: [{"cname": "Children", "ctype": "control"}],
+            className: "DataObject",
+            classGuid: UCCELLO_CONFIG.classGuids.DataObject,
+            metaCols: [],
             metaFields: [],
 
             init: function(cm,params){
                 UccelloClass.super.apply(this, [cm, params]);
             }
         });
-        return FContainer;
+        return DataObject;
     }
 );

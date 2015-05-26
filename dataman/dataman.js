@@ -1,12 +1,12 @@
 ﻿if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
-    ['./dataRoot'],
-    function(DataRoot)  {
-		var Dataman = Class.extend({
+    [],
+    function()  {
+		var Dataman = UccelloClass.extend({
 
 			init: function(router, controller){
 				this.pvt = {};
@@ -50,7 +50,8 @@ define(
              */
             loadQuery: function (guidRoot, expression, done) {
                 var hehe = {};
-                switch (guidRoot) {
+				var gr = guidRoot.slice(0,36);
+                switch (gr) {
                     case UCCELLO_CONFIG.guids.rootCompany:
                         var time = Date.now();
                         function ddd() {
@@ -58,22 +59,22 @@ define(
                             logger.info((new Date()).toISOString()+';readCompanyFile;'+(timeEnd-time));
                             done.apply(this, arguments)
                         }
-                        this.getCompany(guidRoot, 10000, ddd);
+                        this.getCompany(gr, 10000, ddd);
                         break;
                     case UCCELLO_CONFIG.guids.rootContact:
-                        this.getContact(guidRoot, expression, done);
+                        this.getContact(gr, expression, done);
                         break;
                     case UCCELLO_CONFIG.guids.rootContract:
-                        this.getContract(guidRoot, expression, done);
+                        this.getContract(gr, expression, done);
                         break;
                     case UCCELLO_CONFIG.guids.rootAddress:
-                        this.getAddress(guidRoot, expression, done);
+                        this.getAddress(gr, expression, done);
                         break;
                     case UCCELLO_CONFIG.guids.rootLead:
-                        this.getList(guidRoot, UCCELLO_CONFIG.classGuids.DataLead, 'lead', done);
+                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataLead, 'lead', done);
                         break;
                     case UCCELLO_CONFIG.guids.rootIncomeplan:
-                        this.getList(guidRoot, UCCELLO_CONFIG.classGuids.DataIncomeplan, 'incomeplan', done, 'leadId=?', [expression]);
+                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataIncomeplan, 'incomeplan', done, 'leadId=?', [expression]);
                         break;
                 }
             },

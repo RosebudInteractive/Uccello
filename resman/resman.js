@@ -1,12 +1,12 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
     [],
     function() {
-        var Resman = Class.extend({
+        var Resman = UccelloClass.extend({
 
             init: function(controller){
                 this.pvt = {};
@@ -18,7 +18,8 @@ define(
              * @returns {obj}
              */
             loadRes: function (guidRoot) {
-                var json = require(UCCELLO_CONFIG.dataPath + 'forms/'+guidRoot+'.json');
+				var gr = guidRoot.slice(0,36);
+                var json = require(UCCELLO_CONFIG.dataPath + 'forms/'+gr+'.json');
                 return json;
             }
 

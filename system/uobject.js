@@ -1,6 +1,6 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var Class = require('class.extend');
+    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 define(
@@ -40,41 +40,14 @@ define(
 					// компонент с парентом
 					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{obj: params.parent.getObj(), "colName": col}, params.ini);
 					parent = {obj: params.parent, "colName": col};
-				}				
-				this._super(cm.getObj(this.classGuid),parent,params.ini);
+				}
+                UccelloClass.super.apply(this, [cm.getObj(this.classGuid),parent,params.ini]);
                 //this.pvt = {};
                 this.pvt.controlMgr = cm;
                 this.pvt.isProcessed = true; // признак обработки входящей дельты
-				
-				//cm.add(this);
 
-                /*if (params.objGuid!==undefined) {
-                    this.pvt.obj = cm.getDB().getObj(params.objGuid);
-                }
-                else {*/
-                    //  создать новый объект
-                    /*if (!("colName" in params))
-                        var col = "Children";
-                    else col = params.colName;
-
-                    params.ini = params.ini ? params.ini : {};
-
-                    // если рутовый то указываем db
-                    if (params.parent===undefined) {
-                        // корневой компонент
-                        this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{db: cm.getDB(), mode: "RW"}, params.ini);
-                        this.pvt.parent = null;
-                    }
-                    else {
-                        // компонент с парентом
-                        this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{obj: params.parent.getObj(), "colName": col}, params.ini);
-                        this.pvt.parent = params.parent;
-                    }*/
-
-                //}
-                //cm.add(this);
             },
-			
+			/*
 			uobjectInit: function(cm, params){
 			
 				if (!("pvt" in this)) this.pvt = {};
@@ -95,7 +68,7 @@ define(
 				this.memobjInit(cm.getObj(this.classGuid),parent,params.ini);
                 this.pvt.controlMgr = cm;
                 this.pvt.isProcessed = true; // признак обработки входящей дельты
-			},
+			},*/
 
             // no op function - имплементируется в наследниках для подписки
             // порядок вызова: 1) init (конструктор), 2) subsInit (подписка), 3) dataInit (дальнейшая инициализация, в основном данные)
@@ -147,11 +120,6 @@ define(
                 return this.pvt.controlMgr.get(guid);
             },
 
-			 /*
-            getRoot: function() {
-                return this.pvt.controlMgr.get(this.pvt.obj.getRoot().getGuid());
-            },*/
-
             /**
              * Возвращает объект-модуль текущего объекта или undefined если модуля нет 
              */			
@@ -186,25 +154,7 @@ define(
 				if (col == undefined) return undefined;
 				else return this.getControlMgr().get(col.get(i).getGuid());				
 			},
-			/*addControl = function(guid, ini, cm) {
-                if (!cm) cm = myApp.controlMgr;
-                if (!ini) ini = {fields: {"Id": 99, "Name": "Name99", "Left":"300", "Top":"150"}};
 
-                var rootCont = null;
-                var gl = cm._getCompGuidList();
-                for (var f in gl)
-                    if (gl[f].getClassName() == "Container") { rootCont=gl[f]; break; }
-
-                var control = new typeGuids[guid](cm, {parent: rootCont, colName: "Children", ini:ini }, {parent:'#result'});
-                myApp.controller.genDeltas(cm.getDB().getGuid());
-                renderControls(cm);
-            }*/
-			/*addChild: function(typeGuid, ini, colName) {
-				if (colName == undefined) colName = "Children";
-				var col = this.getObj().getCol(colName);
-				if (col == undefined) return undefined;
-				col._add(
-			},*/
 
             getControlMgr: function() {
                 return this.pvt.controlMgr;
@@ -218,22 +168,17 @@ define(
             // метаинформация (properties)
 			// TODOR2 убрать двойственность
             countProps: function() {
-                //return this.pvt.obj.countFields();
 				return this.countFields();
             },
 			// TODOR2 убрать двойственность
             getPropName: function(i) {
                 if (i>=0 && i<this.countFields())
 					return this.getFieldName(i);
-				//if (i>=0 && i<this.pvt.obj.countFields())
-                    //return this.pvt.obj.getFieldName(i);
             },
 			// TODOR2 убрать двойственность
             getPropType: function(i) {
                 if (i>=0 && i<this.countFields())
 					return this.getFieldType(i);
-				//if (i>=0 && i<this.pvt.obj.countFields())
-                    //return this.pvt.obj.getFieldType(i);
             },
 			
 			isModule: function() { 
