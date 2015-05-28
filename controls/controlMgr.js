@@ -4,8 +4,8 @@
 }
 
 define(
-	['../memDB/memDataBase', './viewset'],
-	function(MemDataBase, ViewSet) {
+	['../memDB/memDataBase', './viewset','../system/Utils'],
+	function(MemDataBase, ViewSet,Utils) {
 		var ControlMgr = MemDataBase.extend({
 
             /**
