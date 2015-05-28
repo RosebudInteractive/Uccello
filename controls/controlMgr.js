@@ -217,14 +217,7 @@ define(
 					this.setToRendered(col.get(i),val);
 
             },
-				//this.getDB().resetModifLog();
-				/*for (var g in this.pvt.compByGuid) { //TODO нужно это делать не для всех компонентов или рендерить всегда с рута
-					//this.pvt.compByGuid[g].getObj().resetModifFldLog();	// обнуляем "измененные" поля в объектах 
-					var rg = this.pvt.compByGuid[g].getRoot().getGuid();
-					if (("_isRendered" in this.pvt.compByGuid[g]) && ((component && component.getGuid() == rg) || (component === undefined)))
-						this.pvt.compByGuid[g]._isRendered(val);			// выставляем флаг рендеринга
-				}*/			
-			//},
+
 			
 			// переинициализация рендера
 			initRender: function(rootGuids) {
