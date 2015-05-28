@@ -43,7 +43,7 @@ define(
 				if (!params) return;
                 this.pvt.params = params;
 				this.pvt.dataObj = null;
-				this.pvt.dataVer = 0; // версия данных (локально)		
+				//this.pvt.dataVer = 0; // версия данных (локально)		
 
 				if (this.get("OnMoveCursor"))
 					this.onMoveCursor = new Function("newVal", this.get("OnMoveCursor"));
@@ -76,7 +76,7 @@ define(
 				if (this.isFldModified("Cursor")) 
 					this._setDataObj(this.cursor());
 
-				if (this.isDataSourceModified()) this.pvt.dataVer++;
+				//if (this.isDataSourceModified()) this.pvt.dataVer++;
 				/*
 				var r = this.root();
 				if (r) {
@@ -95,7 +95,7 @@ define(
 				if (!this.active()) return;
 				function icb(res) {		
 					function refrcb() {
-						this.pvt.dataVer++;
+						//this.pvt.dataVer++;
 						var dataRoot = this.getDB().getObj(res.guids[0]);
 						if (dataRoot)
 						    this.root(dataRoot);
@@ -188,9 +188,9 @@ define(
 				return obj;
 			},
 			
-			getDataVer: function() {
+			/*getDataVer: function() {
 				return this.pvt.dataVer;
-			},
+			},*/
 			
 			// были ли изменены данные датасета
 			isDataSourceModified: function() {
@@ -203,7 +203,7 @@ define(
 			},
 
 			initRender: function() {
-				this.pvt.dataVer = 0;
+				//this.pvt.dataVer = 0;
 			},
 
 			// Properties

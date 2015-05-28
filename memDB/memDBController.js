@@ -264,6 +264,7 @@ define(
                 // находим рутовый объект к которому должна быть применена дельта
                 var db  = this.getDB(dbGuid);
 				var clientInTran = (!db.isMaster() && delta.trGuid && db.getCurTranGuid()!=delta.trGuid);
+				var endOfTran = (delta.trGuid && delta.endTran) || (!delta.trGuid && ("last" in delta));
 				
 				var buf = this.pvt.bufdeltas;
 				
@@ -355,6 +356,7 @@ define(
                 this.event.fire({
                     type: 'endApplyDeltas',
                     target: this,
+					commit: endOfTran,
 					db: db
                 });
 

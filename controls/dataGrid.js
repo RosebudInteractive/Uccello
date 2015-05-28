@@ -58,9 +58,9 @@ define(
                 viewset.render.apply(this, [options]);
 
                 // доп. действия
-                if (this.dataset()) {
+                /*if (this.dataset()) {
                     this.pvt.renderDataVer = this.dataset().getDataVer();
-                }
+                }*/
             },
 
             /**
@@ -70,7 +70,7 @@ define(
             isOnlyCursor: function() {
                 if (this.dataset()) {
                     var ds = this.dataset();
-					if ((this.pvt.renderDataVer == ds.getDataVer()) && (!ds.isDataSourceModified()) && (ds.isFldModified("Cursor")) && (!this.isDataModified()))
+					if (/*(this.pvt.renderDataVer == ds.getDataVer()) &&*/ (!ds.isDataSourceModified()) && (ds.isFldModified("Cursor")) && (!this.isDataModified()))
                         return true;
                     else
                         return false;
@@ -79,7 +79,7 @@ define(
             },
 
 			initRender: function() {
-				this.pvt.renderDataVer = undefined;
+				//this.pvt.renderDataVer = undefined;
 			}
 
     });

@@ -91,7 +91,7 @@ define(
 								//console.log("%c RENDER END APPLY DELTAS ", 'color: red');
 								//console.log(args);
 								//console.log(context);
-                                context.renderAll(true);
+								if (args.commit) context.renderAll(true);
 							}
 							else {
 								//console.log("%c NORENDER END APPLY DELTAS ", 'color: red');
