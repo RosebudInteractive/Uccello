@@ -158,22 +158,6 @@ define(
 				this.pvt.cdb.setDefaultCompCallback(createCompCallback);
 			},
 
-			/**
-			 * Добавить ресурсы в контекст
-			 * @params resGuids - массив гуидов ресурсов (явный)
-			 * @callback cb
-			 */
-			 /* Пользуемся CreateRoot
-			addNewResRoots: function(resGuids, cb) {
-				function cbtest(res) { console.log(res); cb(res); }
-				if (!this.isOn()) return false;
-				if (this.getModule().isMaster())
-					this.loadNewRoots(resGuids, { rtype: "res", compcb: this.pvt.compCallback}, cb); 
-				else this.getContentDB().subscribeRoots(resGuids, cbtest, this.pvt.compCallback);
-				return true;
-			},
-			*/
-
 			// выключить контекст
 			// TODO пока работает только для SLAVE
 			off: function(cb) {
@@ -252,12 +236,6 @@ define(
 			createDb: function(dbc, params){
 				var cm = this.pvt.cm = new ControlMgr( { controller: dbc, dbparams: params },this,this.pvt.socket);
 				cm.buildMetaInfo('content');
-				/*var ctrls = UCCELLO_CONFIG.controls;
-				for (var i in ctrls) {
-					var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath;
-					var comp = require(path + ctrls[i].component);
-					new comp(cm);
-				}*/
 				return cm;
 			},
 
