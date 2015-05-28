@@ -11,10 +11,27 @@ define(
             className: "FContainer",
             classGuid: UCCELLO_CONFIG.classGuids.FContainer,
             metaCols: [{"cname": "Children", "ctype": "control"}],
-            metaFields: [],
+            metaFields: [
+                {fname:"HasGrid",ftype:"boolean"},
+                {fname:"ColumnsCount",ftype:"int"},
+                {fname:"MinColWidth",ftype:"int"},
+                {fname:"MaxColWidth",ftype:"boolean"},
+            ],
 
             init: function(cm,params){
                 this._super(cm,params);
+            },
+            hasGrid: function(value) {
+                return this._genericSetter("HasGrid", value);
+            },
+            columnsCount: function(value) {
+                return this._genericSetter("ColumnsCount", value);
+            },
+            minColWidth: function(value) {
+                return this._genericSetter("MinColWidth", value);
+            },
+            maxColWidth: function(value) {
+                return this._genericSetter("MaxColWidth", value);
             }
         });
         return FContainer;
