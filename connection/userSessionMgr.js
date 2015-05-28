@@ -157,6 +157,8 @@ define(
 				var cm = this.cmsys; //vc.getContextCM(rootObj.getGuid());				
 				var uobj = cm.get(data.args.objGuid);
 				data.args.aparams.push(done);
+				if (data.args.trGuid)
+					uobj.getContentDB().tranSet(data.args.trGuid); // getContentDB = это ВРЕМЕННО!!!! 
 				uobj[data.args.func].apply(uobj,data.args.aparams);
 			},
 

@@ -259,9 +259,11 @@ define(
 
 				console.log("incoming delta: ");
 				console.log(delta);
+				
+				
                 // находим рутовый объект к которому должна быть применена дельта
                 var db  = this.getDB(dbGuid);
-                //var root = db.getRoot(delta.rootGuid);
+				var clientInTran = (!db.isMaster() && delta.trGuid && db.getCurTranGuid()!=delta.trGuid);
 				
 				var buf = this.pvt.bufdeltas;
 				
@@ -269,11 +271,20 @@ define(
 				if (!(dbGuid in buf[srcDbGuid])) buf[srcDbGuid][dbGuid] = {};
 				var cur = buf[srcDbGuid][dbGuid];
 				//var tr = delta.tran.toString();
-				var tr = delta.dbVersion.toString();
+				
+				if (clientInTran) {
+				   var tr = delta.trGuid;
+				   var endOfStory = "endTran";
+				  }
+				else {
+				   tr = delta.dbVersion.toString();
+				    var endOfStory = "last";
+				}
 				if (!(tr in cur)) cur[tr] = [];
 				cur[tr].push(delta);
 				
-				if (!("last" in delta)) return; // буферизовали и ждем последнюю, чтобы применить все сразу
+				if (!(endOfStory in delta)) return; // буферизовали и ждем последнюю, чтобы применить все сразу
+				
 				
 				// TODO ничто не гарантирует, что транзакция закроется и что она будет выполняться в правильном порядке
 				// если мы хотим это контролировать нужно немного иначе организовать хранилище незавершенных транзакций (дельт)
@@ -310,9 +321,10 @@ define(
 
 				}
 	*/			
+				console.log("APPLY DELTAS "+tr);
 				for (var i=0; i<cur[tr].length; i++) {
 					var cdelta = cur[tr][i];
-					if ("last" in cdelta) { // последняя дельта транзакции
+					if (endOfStory in cdelta) { // последняя дельта транзакции
 						if ((db.isMaster() == false) && (srcDbGuid == db.getProxyMaster().guid)) { // пришло с мастера
 						
 							db.setVersion("valid",cdelta.dbVersion);
@@ -325,15 +337,17 @@ define(
 						}
 						break; 
 					}
-					var root = db.getRoot(cdelta.rootGuid);
-					//if (!root) - 19/1 (это условие уже не актуально, так как могут прийти новые данные для замены старых
-					if (cdelta.items[0].newRoot)
-						var rootObj=db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback()); //TODO добавить коллбэк!!!
-					else
-						rootObj = root.obj;
-					
-					rootObj.getLog().applyDelta(cdelta);
-					if (DEBUG) console.log("VALID:"+db.getVersion("valid")+"draft:"+db.getVersion()+"sent:"+db.getVersion("sent"));
+					if (("items" in cdelta) && cdelta.items.length>0) {
+						var root = db.getRoot(cdelta.rootGuid);
+						//if (!root) - 19/1 (это условие уже не актуально, так как могут прийти новые данные для замены старых
+						if (cdelta.items[0].newRoot)
+							var rootObj=db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback()); //TODO добавить коллбэк!!!
+						else
+							rootObj = root.obj;
+						
+						rootObj.getLog().applyDelta(cdelta);
+						if (DEBUG) console.log("VALID:"+db.getVersion("valid")+"draft:"+db.getVersion()+"sent:"+db.getVersion("sent"));
+					}
 				}
 				this.propagateDeltas(dbGuid,srcDbGuid,cur[tr]);
 				delete cur[tr];
@@ -352,9 +366,9 @@ define(
              * Сгенерировать и разослать "дельты" 
              * @param dbGuid - гуид базы данных, для которой генерим дельты
              */
-			genDeltas: function(dbGuid) {
+			genDeltas: function(dbGuid, commit) {
 				var db  = this.getDB(dbGuid);
-				var deltas = db.genDeltas();
+				var deltas = db.genDeltas(commit);
 				if (deltas.length>0) {
 					this.propagateDeltas(dbGuid,null,deltas);
 					if (db.getVersion("sent")<db.getVersion()) db.setVersion("sent",db.getVersion());
@@ -379,9 +393,10 @@ define(
 					}
 					*/
 				}
-				//var db = this.getDB(dbGuid);
-				//var deltas = db.genDeltas();
+
 				var db  = this.getDB(dbGuid);
+				//endOfStory = (!db.isMaster() && delta.trGuid) ? "endTran" : "last"; 
+
 				for (var i=0; i<deltas.length; i++) {
 								
 					var delta = deltas[i];
@@ -398,7 +413,7 @@ define(
 								//var cb = this._receiveResponse; //function(result) { if (db.getVersion("valid")<result.data.dbVersion) db.newVersion("valid", result.data.dbVersion - db.getVersion("valid")); };
 								if (DEBUG) console.log("sending delta db: "+db.getGuid());
 								if (DEBUG) console.log(delta);
-								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid()},cb);
+								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), trGuid: db.getCurTranGuid()},cb);
 								}
 						}
 					}

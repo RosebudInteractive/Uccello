@@ -261,7 +261,7 @@ define(
              * @param args {object} Аргументы функции
              */
             userEventHandler: function(context, f, args) {
-				var transactionGuid = Utils.guid(); // TODO присвоить гуид
+
                 var nargs = [];
 				var vc = this.getContext();
                 if (args) nargs = [args];

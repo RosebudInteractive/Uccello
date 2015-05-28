@@ -313,7 +313,8 @@ define(
 				else { // slave
 					// вызываем загрузку нового рута у мастера
 					params.subDbGuid = this.getContentDB().getGuid();
-					this.remoteCall('loadNewRoots', [rootGuids, params],cb);
+					//var tg = this.getContentDB().tranStart(); // R2805 проверить на запущенную транзакцию
+					this.remoteCall('loadNewRoots', [rootGuids, params],cb, this.getContentDB().getCurTranGuid());
 				}
 			},
 

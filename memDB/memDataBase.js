@@ -8,8 +8,8 @@
  * @module MemDataBase
  */
 define(
-	["../system/event","./memCol", "./memObj", "./memMetaRoot", "./memMetaObj", "./memMetaObjFields", "./memMetaObjCols"],
-	function(Event,MemCollection,MemObj,MemMetaRoot,MemMetaObj,MemMetaObjFields,MemMetaObjCols) {
+	["../system/event","../system/utils", "./memCol", "./memObj", "./memMetaRoot", "./memMetaObj", "./memMetaObjFields", "./memMetaObjCols"],
+	function(Event,Utils, MemCollection,MemObj,MemMetaRoot,MemMetaObj,MemMetaObjFields,MemMetaObjCols) {
 
 
 		var metaObjFieldsGuid =  UCCELLO_CONFIG.guids.metaObjFieldsGuid;
@@ -47,7 +47,7 @@ define(
 		        pvt.$idCnt = 0;
 		        pvt.$maxRootId = -1;        // максимальный номер корневого объекта
 		        pvt.subscribers = {}; 		// все базы-подписчики
-		        //pvt.tranCounter = 0;		// счетчик транзакции
+		        
 		        pvt.inTran = false;
 		        if ("guid" in params)
 		            pvt.guid = params.guid;
@@ -63,6 +63,10 @@ define(
 		        pvt.sentVersion = 0;
 		        // TODOX END
 		        this.event = new Event();
+				// транзакции
+				pvt.curTranGuid = undefined; // гуид текущей транзакции БД
+				pvt.tranCounter = 0;		// счетчик транзакции
+				pvt.commitFlag = false;
 
 		        if (params.kind != "master") {
 		            var db=this;
@@ -1049,7 +1053,7 @@ define(
              * (для сервера нужно будет передавать ИД подписчика)
              * @returns {Array}
              */
-			genDeltas: function() {
+			genDeltas: function(commit) {
 				var allDeltas = [];
 				for (var i=0; i<this.countRoot(); i++) {
 					var d=this.getRoot(i).obj.getLog().genDelta();
@@ -1062,7 +1066,13 @@ define(
 				// вторая часть условия - чтобы разослать на клиенты "правильную" версию
 				if ((allDeltas.length>0) || (this.isMaster() && this.getVersion("valid")!=this.getVersion("sent"))) {
 					//this.pvt.tranCounter++;
-					allDeltas.push( { last: 1, dbVersion:this.getVersion()  });
+					var o = { last: 1, dbVersion:this.getVersion() };
+					if (this.getCurTranGuid()) 
+						o.trGuid = this.getCurTranGuid();
+						 //o.endTran = 1; 
+					if (commit) o.endTran = 1;
+					
+					allDeltas.push(o);
 					//allDeltas[allDeltas.length-1].last = 1; // признак конца транзакции
 				}
 
@@ -1092,16 +1102,43 @@ define(
 					this.getObj(g).resetModifFldLog();
 			},
 			
-			tranStart: function() {
+			tranSet: function(guid) {
+				 this.pvt.curTranGuid = guid;
+				 this.pvt.tranCounter=1;
+			},
 			
+			tranStart: function() {
+				//if (this.pvt.curTranGuid) return undefined;
+				//if (guid) this.pvt.curTranGuid = guid;
+				//else 
+				if (this.pvt.curTranGuid) this.pvt.tranCounter++;
+				else {
+					this.pvt.curTranGuid = Utils.guid();
+					this.pvt.tranCounter=1;
+				}
+				//this.pvt.commitFlag = false;
+				console.log("TRANSTART "+this.pvt.tranCounter);
+				return this.pvt.curTranGuid;
+				
 			},
 			
 			tranCommit: function() {
-			
+				if (this.pvt.tranCounter==1) {
+					this.getController().genDeltas(this.getGuid(), true);
+					this.pvt.curTranGuid = undefined;
+					this.pvt.tranCounter = 0;
+				}
+				else this.pvt.tranCounter--;
+				console.log("COMMIT "+this.pvt.tranCounter);
+				
 			},
 			
 			tranRollback: function() {
 			
+			},
+			
+			getCurTranGuid: function() {
+				return this.pvt.curTranGuid;
 			}
 
         });

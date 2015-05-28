@@ -506,7 +506,7 @@ define(
                     inp = inp[0];
                 //if (DEBUG) console.log("###io Input msg: " + JSON.stringify(inp));
                 for (var i = 0; i < inp.length; i++) {
-                    try {
+                    //try {
                         if (typeof (inp[i]._cmd_) !== "undefined")
                             this._processLowLevelCmd(inp[i], chStateData);
                         else {
@@ -515,9 +515,9 @@ define(
                             else
                                 chStateData.inpQueue.push(inp[i]);
                         };
-                    } catch (err) {
+                    /*} catch (err) {
                         if (DEBUG) console.log("###Error in _processMsg {name: \"" + err.name + "\", message: \"" + err.message + "\").");
-                    };
+                    };*/
                 };
             },
                         

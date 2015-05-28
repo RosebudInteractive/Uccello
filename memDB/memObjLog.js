@@ -129,6 +129,7 @@ define(
 				}
 				delta.rootGuid = this.getObj().getRoot().getGuid();
 				delta.dbVersion = this.getObj().getDB().getVersion();
+				if (this.getObj().getDB().getCurTranGuid()) delta.trGuid = this.getObj().getDB().getCurTranGuid();
 				//this.truncate();
 				return delta;
 			},

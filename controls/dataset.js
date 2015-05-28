@@ -100,6 +100,7 @@ define(
 						if (dataRoot)
 						    this.root(dataRoot);
 						this._initCursor(true);
+						this.getDB().tranCommit();
 					}
 					
 					that.getControlMgr().userEventHandler(that, refrcb );
@@ -125,6 +126,7 @@ define(
 						  var rgp = rgi;
 						else rgp = rg;
 						//console.log("%cCALL LOADNEWROOTS "+rgp+" Params: "+params.expr, 'color: red');
+						this.getDB().tranStart();
 						this.getControlMgr().getContext().loadNewRoots([rgp],params, icb);
 
 					}
