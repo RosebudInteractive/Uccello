@@ -4,8 +4,8 @@
 }
 
 define(
-	['../memDB/memDataBase', './viewset','../system/utils'],
-	function(MemDataBase, ViewSet, Utils) {
+	['../memDB/memDataBase', './viewset'],
+	function(MemDataBase, ViewSet) {
 		var ControlMgr = MemDataBase.extend({
 
             /**
@@ -257,10 +257,11 @@ define(
 				//  стартовать транзакцию
 				if (vc) vc.tranStart();
 				
-				
+				//var trGuid = Utils.guid();
 				
                 if (f) f.apply(context, nargs);
                 if (this.autoSendDeltas())
+					this.getController().genDeltas(this.getGuid());
 
 				if (vc) vc.renderAll();
 				//  закрыть транзакцию
