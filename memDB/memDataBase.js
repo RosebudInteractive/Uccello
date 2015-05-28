@@ -400,7 +400,7 @@ define(
 				var metacol = this.getMeta().getCol("MetaObjects");
 				for (var i=0; i<metacol.count(); i++) {
 					var o = metacol.get(i);
-					if (o.pvt.fieldsTable == undefined)
+					if ((o.pvt.fieldsTable == undefined) || (o.pvt.colsTable == undefined))
 						o._bldElemTable();
 				}
 			},

@@ -84,26 +84,60 @@ define(
             },
 
             /**
-             * Cоздает метаинформацию своего класса в базе данных db
-             * @param db
+             * Creates class meta-info (including all parents) in memDB
+             *
+             * @param {Object} db memDB
+             * @private
              */
-            _buildMetaInfo: function(db){
-                if (!db.getObj(this.classGuid)) {
-                    var obj = Object.getPrototypeOf(this), gobj="";
-                    if (obj.className != "UObject")
-                        gobj = db.getObj(Object.getPrototypeOf(obj).classGuid).getGuid();
+            _buildMetaInfo: function (db) {
+                var parents = [];
+                var obj = Object.getPrototypeOf(this);
+                while ((obj !== null) && obj.hasOwnProperty("className")
+                                    && obj.hasOwnProperty("classGuid")) {
+                    parents.unshift(obj);
+                    obj = Object.getPrototypeOf(obj);
+                };
+
+                if ((parents.length == 0) || parents[0].className != "UObject")
+                    throw Error("Incorrect inheritance chain in the class \"" + this.className + "\".");
+
+                var is_base = true;
+                while (parents.length > 0) {
+                    this._buildClassMetaInfo(db, parents.shift(), is_base);
+                    is_base = false;
+                };
+            },
+
+            /**
+             * Creates only [class_info] class meta-info in memDB
+             *
+             * @param {Object}  db memDB
+             * @param {Object}  class_info class definition
+             * @param {Boolean} is_base indicates if [class_info] is base class
+             * @private
+             */
+            _buildClassMetaInfo: function (db, class_info, is_base) {
+                if (!db.getObj(class_info.classGuid)) {
+                    var gobj = "";
+                    if (!is_base)
+                        gobj = db.getObj(Object.getPrototypeOf(class_info).classGuid).getGuid();
                     //var obj2 = Object.getPrototypeOf(obj);
                     // TODO parentClass передавать гуидом либо именем.
-                    var c =  new MemMetaObj({db: db}, {fields: {typeName: this.className, parentClass: gobj},$sys: {guid: this.classGuid}});
-                    for (var i=0; i<this.metaFields.length; i++)
-                        new MemMetaObjFields({"obj": c}, {fields: this.metaFields[i]});
-                    for (i=0; i<this.metaCols.length; i++)
-                        new MemMetaObjCols({"obj": c}, {fields: this.metaCols[i]});
+                    var c = new MemMetaObj({ db: db }, { fields: { typeName: class_info.className, parentClass: gobj }, $sys: { guid: class_info.classGuid } });
+
+                    if (class_info.hasOwnProperty("metaFields"))
+                        for (var i = 0; i < class_info.metaFields.length; i++)
+                            new MemMetaObjFields({ "obj": c }, { fields: class_info.metaFields[i] });
+
+                    if (class_info.hasOwnProperty("metaCols"))
+                        for (i = 0; i < class_info.metaCols.length; i++)
+                            new MemMetaObjCols({ "obj": c }, { fields: class_info.metaCols[i] });
+
                     db._buildMetaTables();
                 }
             },
 
-            getClassGuid: function() {
+            getClassGuid: function () {
                 return this.classGuid;
             },
 

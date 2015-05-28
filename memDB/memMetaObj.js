@@ -47,18 +47,38 @@ define(
 				pvt.fieldsTable = {};
 				pvt.fieldsArr = [];
 				pvt.fieldsTypes = [];
+
+				pvt.colsTable = {};
+				pvt.colsTypes = [];
 				var n = this.countParentClass();
 				var k=0;
-				for (var i=0; i<n; i++) {
-					var c = this.getParentClass(n-i-1);
-					for (var j=0; j<c.getCol("fields").count(); j++) {
-						var name = c.getCol("fields").get(j).get("fname");
-						var typ = c.getCol("fields").get(j).get("ftype");
-						pvt.fieldsTable[name]= { obj: c, idx: j, cidx:k++, ftype: typ };
-						pvt.fieldsArr.push(name);
-						pvt.fieldsTypes.push({ type: typ, is_complex: typ.isComplex() });
-                    }
-				}
+				for (var i = 0; i < n; i++) {
+				    var c = this.getParentClass(n - i - 1);
+				    for (var j = 0; j < c.getCol("fields").count() ; j++) {
+				        var name = c.getCol("fields").get(j).get("fname");
+				        var typ = c.getCol("fields").get(j).get("ftype");
+				        if (pvt.fieldsTable[name] === undefined) {
+				            pvt.fieldsTable[name] = { obj: c, idx: j, cidx: k++, ftype: typ };
+				            pvt.fieldsArr.push(name);
+				            pvt.fieldsTypes.push({ type: typ, is_complex: typ.isComplex(), orig: c });
+				        } else {
+				            throw new Error("Field \"" + name + "\" in class \"" +
+                                c.get("typeName") + "\" has been already defined in parent class.");
+				        };
+                    };
+				    for (j = 0; j < c.getCol("cols").count() ; j++) {
+				        var name = c.getCol("cols").get(j).get("cname");
+				        var typ = c.getCol("cols").get(j).get("ctype");
+				        if (pvt.colsTable[name] === undefined) {
+				            pvt.colsTable[name] = pvt.colsTypes.length;
+				            pvt.colsTypes.push({ name: name, typeName: typ, typeObj: null, orig: c });
+				        } else {
+				            throw new Error("Collection \"" + name + "\" in class \"" +
+                                c.get("typeName") + "\" has been already defined in parent class \"" +
+                                pvt.colsTypes[pvt.colsTable[name]].orig.get("typeName") + "\".");
+				        };
+				    }
+				};
 			},
 			
 			// получить класс-предок 
@@ -107,7 +127,31 @@ define(
 					
 			// КОЛЛЕКЦИИ
 					
-			// получить коллекцию по имени или по индексу
+		    /**
+             * Returns the collection list (if it doesn't exist then we'll build it).
+             * 
+             * @return {Array} The collection list
+             */
+			getColList: function () {
+			    if (this.pvt.colsTypes === undefined)
+			        this._bldElemTable();
+			    return this.pvt.colsTypes;
+			},
+
+		    /**
+             * Returns the index of "colName" collection in collection list
+             *  (if it doesn't exist then we'll build it).
+             * 
+             * @param {String}   colName Collection name
+             * @return {Integer} The collection list
+             */
+			getColIdx: function (colName) {
+			    if (this.pvt.colsTypes === undefined)
+			        this._bldElemTable();
+			    return this.pvt.colsTable[colName];
+			},
+
+		    // получить коллекцию по имени или по индексу
 			getCol: function(col) {
 				if (typeof col == "string") {
 					if (col == "fields")

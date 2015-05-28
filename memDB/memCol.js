@@ -10,7 +10,6 @@ define(
 		
 			init: function(name,obj){
 				this._elems = [];			// массив элементов коллекции
-				this._elemsByName = {};
 				this._name = name;
 				this._obj = obj;
 				this._db = obj.getDB();
@@ -23,15 +22,8 @@ define(
 			_add: function(obj) {
 				// TODO проверить корректность типа
 				this._elems.push(obj);
-				// TODO ВРЕМЕННО
-				var cname = obj.get("cname");
-				if (cname!==undefined)
-					this._elemsByName[cname]=this._elems.length-1;
-				var fname = obj.get("fname");
-				if (fname!==undefined)
-					this._elemsByName[fname]=this._elems.length-1;				
-				// ВРЕМЕННО КОНЕЦ
-				if (this._obj.getLog().getActive()) { 
+
+				if (this._obj.getLog().getActive()) {
 						var mg = (obj.getParent() ? obj.getParent().getGuid() : ""); 
 						var newObj=this._obj.getDB().serialize(obj);
 						var o = { adObj: newObj, obj:obj, colName: this._name, guid: mg, type:"add"};
@@ -80,10 +72,6 @@ define(
 			
 			get: function(i) {
 				return this._elems[i]; // TODO проверить диапазон
-			},
-			
-			getIdxByName: function(name) {
-				return this._elemsByName[name];
 			},
 			
 			getDB: function() {

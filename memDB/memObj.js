@@ -52,10 +52,14 @@ define(
 				}
 				
 				// создать пустые коллекции по типу
-				var ccol = objType.getCol("cols");
-				for (var i=0; i<ccol.count(); i++)
-					new MemCol(ccol.get(i).get("cname"),this);
+				//var ccol = objType.getCol("cols");
+				//for (var i=0; i<ccol.count(); i++)
+				//	new MemCol(ccol.get(i).get("cname"),this);
 				
+				var colList = objType.getColList();
+				for (var i = 0; i < colList.length ; i++)
+				    new MemCol(colList[i].name, this);
+
 				this.finit();
 
 				if (!parent.obj) { // TODO возможно потребуется сделать подобное собыие для метаинформации
@@ -113,9 +117,10 @@ define(
 			// получить коллекцию по имени или по индексу
 			getCol: function(col) {
 				if (typeof col == "string") {
-					var i=this.pvt.objType.getCol("cols").getIdxByName(col);
-					return this.pvt.collections[i];
-				}
+					var i = this.pvt.objType.getColIdx(col);
+					if (typeof (i) == "number")
+					    return this.pvt.collections[i];
+                }
 				if (typeof col == "number") 
 					return this.getCol2(col);
 				return null;

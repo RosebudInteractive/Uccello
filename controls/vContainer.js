@@ -10,7 +10,6 @@ define(
 
             className: "VContainer",
             classGuid: UCCELLO_CONFIG.classGuids.VContainer,
-            metaCols: [{"cname": "Children", "ctype": "control"}],
             metaFields: [],
 
             init: function(cm,params){
