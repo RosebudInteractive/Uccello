@@ -1090,7 +1090,18 @@ define(
 			resetModifLog: function() {
 				for (var g in this.pvt.objs)
 					this.getObj(g).resetModifFldLog();
+			},
+			
+			tranStart: function(guid) {
+			},
+			
+			tranCommit: function() {
+			},
+			
+			tranRollback: function() {
 			}
+			
+			
 
         });
 		return MemDataBase;

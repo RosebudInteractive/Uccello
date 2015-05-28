@@ -358,7 +358,7 @@ define(
 					var root = this.pvt.cm.get(roots[i]);
 					this.pvt.cm.render(root, this.pvt.renderRoot(roots[i]), pd);
 				}
-				this.getContentDB().resetModifLog();
+				this.getContentDB().resetModifLog(); // TODO 
 			},
 
 			getContentDB: function() {

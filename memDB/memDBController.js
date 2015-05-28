@@ -352,18 +352,18 @@ define(
              * Сгенерировать и разослать "дельты" 
              * @param dbGuid - гуид базы данных, для которой генерим дельты
              */
-			genDeltas: function(dbGuid) {
+			genDeltas: function(dbGuid, trGuid) {
 				var db  = this.getDB(dbGuid);
-				var deltas = db.genDeltas();
+				var deltas = db.genDeltas(trGuid);
 				if (deltas.length>0) {
-					this.propagateDeltas(dbGuid,null,deltas);
+					this.propagateDeltas(dbGuid,null,deltas,trGuid);
 					if (db.getVersion("sent")<db.getVersion()) db.setVersion("sent",db.getVersion());
 				}
 			},
 			
 			
 			// послать подписчикам и мастеру дельты которые либо сгенерированы локально либо пришли снизу либо сверху
-			propagateDeltas: function(dbGuid, srcDbGuid, deltas) {
+			propagateDeltas: function(dbGuid, srcDbGuid, deltas,trGuid) {
 
 				function cb(result) {
 					// TODOX ОТКЛЮЧИЛИ ВРЕМЕННО СТАРЫЕ ПРОВЕРКИ, НАДО НАПИСАТЬ НОВЫЕ
@@ -398,7 +398,7 @@ define(
 								//var cb = this._receiveResponse; //function(result) { if (db.getVersion("valid")<result.data.dbVersion) db.newVersion("valid", result.data.dbVersion - db.getVersion("valid")); };
 								if (DEBUG) console.log("sending delta db: "+db.getGuid());
 								if (DEBUG) console.log(delta);
-								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid()},cb);
+								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), trGuid: trGuid},cb);
 								}
 						}
 					}
@@ -409,7 +409,7 @@ define(
 						for (var guid in allSubs) {
 							var subscriber = allSubs[guid];
 							if (subscriber.kind == 'remote' && srcDbGuid != guid) {
-								subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid()});
+								subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid(), trGuid: trGuid });
 								if (DEBUG) console.log("sent last to DB : "+subscriber.guid);
 								}							
 						}
@@ -422,7 +422,7 @@ define(
 							//console.log('subscriber', subscriber);
 							// удаленные
 							if (subscriber.kind == 'remote' && srcDbGuid != guid) {
-								subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid()});
+								subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid(), trGuid: trGuid});
 								if (DEBUG) console.log("sent to DB : "+subscriber.guid);
 								}
 						}

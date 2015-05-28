@@ -4,8 +4,8 @@
 }
 
 define(
-	['../memDB/memDataBase', './viewset'],
-	function(MemDataBase, ViewSet) {
+	['../memDB/memDataBase', './viewset','../system/utils'],
+	function(MemDataBase, ViewSet, Utils) {
 		var ControlMgr = MemDataBase.extend({
 
             /**
@@ -42,16 +42,7 @@ define(
 					subscriber: this,
 					callback: this.onNewRoot
 				});
-                    
-/*                } else { // MemObj
-                    this.pvt.root = dbOrRoot;
-					// подписаться на удаление объектов
-                    dbOrRoot.getDB().getRoot(dbOrRoot.getRoot().getGuid()).event.on({
-                        type: "delObj",
-                        subscriber: this,
-                        callback: this.onDeleteComponent
-                    });
-                }*/
+
 			},
 
            /**
@@ -217,15 +208,7 @@ define(
 					this.setToRendered(col.get(i),val);
 
             },
-				//this.getDB().resetModifLog();
-				/*for (var g in this.pvt.compByGuid) { //TODO нужно это делать не для всех компонентов или рендерить всегда с рута
-					//this.pvt.compByGuid[g].getObj().resetModifFldLog();	// обнуляем "измененные" поля в объектах 
-					var rg = this.pvt.compByGuid[g].getRoot().getGuid();
-					if (("_isRendered" in this.pvt.compByGuid[g]) && ((component && component.getGuid() == rg) || (component === undefined)))
-						this.pvt.compByGuid[g]._isRendered(val);			// выставляем флаг рендеринга
-				}*/			
-			//},
-			
+
 			// переинициализация рендера
 			initRender: function(rootGuids) {
 				
@@ -273,10 +256,12 @@ define(
                 if (args) nargs = [args];
 				//  стартовать транзакцию
 				if (vc) vc.tranStart();
+				
+				
+				
                 if (f) f.apply(context, nargs);
                 if (this.autoSendDeltas())
-					this.getController().genDeltas(this.getGuid());
-                //this.render(undefined); // TODO - на сервере это не вызывать
+
 				if (vc) vc.renderAll();
 				//  закрыть транзакцию
 				if (vc) vc.tranCommit();

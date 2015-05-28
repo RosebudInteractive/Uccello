@@ -69,7 +69,7 @@ define(
              */
             isOnlyCursor: function() {
                 if (this.dataset()) {
-                    var ds = this.dataset();
+                    var ds = this.dataset();n
 					if ((this.pvt.renderDataVer == ds.getDataVer()) && (!ds.isDataSourceModified()) && (ds.isFldModified("Cursor")) && (!this.isDataModified()))
                         return true;
                     else

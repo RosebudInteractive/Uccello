@@ -203,17 +203,15 @@ define(
              * @param aparams - массив параметров удаленной функции
 			 * @callback cb - коллбэк
              */			
-			remoteCall: function(func, aparams, cb) {
+			remoteCall: function(func, aparams, cb, trGuid) {
 				if (this.getModule().isMaster()) {
 					// TODO кинуть исключение
 					return;
 				}
 				var socket = this.getControlMgr().getSocket();
-				//var pg = this.getObj().getDB().getProxyMaster().guid;
 				var pg = this.getControlMgr().getProxyMaster().guid;
-				//var pg = this.getProxyMaster().guid;
 							
-				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func };
+				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func, trGuid: trGuid };
 				var args={action:"remoteCall2",type:"method",args: myargs};
 				socket.send(args,cb);
 			},
