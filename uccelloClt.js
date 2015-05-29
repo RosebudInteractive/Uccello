@@ -85,19 +85,7 @@ define(
                     that.pvt.controller.event.on({
                         type: 'endApplyDeltas',
                         subscriber: this,
-                        callback: function(args){
-                            var context = that.getContext();
-                            if (context) {
-								//console.log("%c RENDER END APPLY DELTAS ", 'color: red');
-								//console.log(args);
-								//console.log(context);
-								if (args.commit) context.renderAll(true);
-							}
-							else {
-								//console.log("%c NORENDER END APPLY DELTAS ", 'color: red');
-								//console.log(args);
-							}
-                        }
+                        callback: function(args) { if ( that.getContext() && args.commit) that.getContext().renderAll(true); }
                     });
 
                     // создаем системную бд
@@ -135,7 +123,6 @@ define(
 			},
 			
 			getContextCM: function(rootGuid) {
-				//return this.pvt.vc.getContextCM(rootGuid);
 				return this.pvt.vc.getContextCM();
 			},
 			

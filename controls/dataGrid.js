@@ -56,11 +56,6 @@ define(
 
                 // рендерим DOM
                 viewset.render.apply(this, [options]);
-
-                // доп. действия
-                /*if (this.dataset()) {
-                    this.pvt.renderDataVer = this.dataset().getDataVer();
-                }*/
             },
 
             /**
@@ -70,17 +65,13 @@ define(
             isOnlyCursor: function() {
                 if (this.dataset()) {
                     var ds = this.dataset();
-					if (/*(this.pvt.renderDataVer == ds.getDataVer()) &&*/ (!ds.isDataSourceModified()) && (ds.isFldModified("Cursor")) && (!this.isDataModified()))
+					if  ((!ds.isDataSourceModified()) && (ds.isFldModified("Cursor")) && (!this.isDataModified()))
                         return true;
                     else
                         return false;
                 }
                 else return false;
-            },
-
-			initRender: function() {
-				//this.pvt.renderDataVer = undefined;
-			}
+            }
 
     });
         return DataGrid;

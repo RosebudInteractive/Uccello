@@ -42,8 +42,7 @@ define(
                 UccelloClass.super.apply(this, [cm, params]);
 				if (!params) return;
                 this.pvt.params = params;
-				this.pvt.dataObj = null;
-				//this.pvt.dataVer = 0; // версия данных (локально)		
+				this.pvt.dataObj = null;	
 
 				if (this.get("OnMoveCursor"))
 					this.onMoveCursor = new Function("newVal", this.get("OnMoveCursor"));
@@ -73,18 +72,7 @@ define(
 			
 			processDelta: function() {
 
-				if (this.isFldModified("Cursor")) 
-					this._setDataObj(this.cursor());
-
-				//if (this.isDataSourceModified()) this.pvt.dataVer++;
-				/*
-				var r = this.root();
-				if (r) {
-					if (r.isDataModified()) {
-						// данные поменялись - увеличиваем версию набора данных
-						this.pvt.dataVer++;
-					}
-				}*/
+				if (this.isFldModified("Cursor")) this._setDataObj(this.cursor());
 				
 				this._isProcessed(true);
 	
@@ -95,7 +83,6 @@ define(
 				if (!this.active()) return;
 				function icb(res) {		
 					function refrcb() {
-						//this.pvt.dataVer++;
 						var dataRoot = this.getDB().getObj(res.guids[0]);
 						if (dataRoot)
 						    this.root(dataRoot);
@@ -188,22 +175,11 @@ define(
 				return obj;
 			},
 			
-			/*getDataVer: function() {
-				return this.pvt.dataVer;
-			},*/
-			
 			// были ли изменены данные датасета
 			isDataSourceModified: function() {
 				var rootObj = this.root();
-				if (rootObj)
-				    return (rootObj.isDataModified());
-                       // || this.isFldModified("Root"));
-				else
-					return true; // TODO можно оптимизировать - если хотим не перерисовывать пустой грид
-			},
-
-			initRender: function() {
-				//this.pvt.dataVer = 0;
+				if (rootObj)  return (rootObj.isDataModified());
+				else return true; // TODO можно оптимизировать - если хотим не перерисовывать пустой грид
 			},
 
 			// Properties
@@ -211,16 +187,7 @@ define(
             root: function (value) {
 			
 				var oldVal = this._genericSetter("Root");
-				var newVal = this._genericSetter("Root", value);
-				/*
-				if (newVal!=oldVal) {
-					//console.log("refreshData in root() "+this.id());
-					/*this.event.fire({
-						type: 'refreshData',
-						target: this				
-						});					
-				}*/
-			
+				var newVal = this._genericSetter("Root", value);			
                 return newVal;
             },
 			

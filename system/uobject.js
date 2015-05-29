@@ -44,7 +44,7 @@ define(
                 UccelloClass.super.apply(this, [cm.getObj(this.classGuid),parent,params.ini]);
                 //this.pvt = {};
                 this.pvt.controlMgr = cm;
-                this.pvt.isProcessed = true; // признак обработки входящей дельты
+                this.pvt.isProcessed = false; // признак обработки входящей дельты
 
             },
 
