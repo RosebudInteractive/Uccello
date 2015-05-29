@@ -257,8 +257,10 @@ define(
 			// пока только 1 дельта!!!! НО с буферизацией
             applyDeltas: function(dbGuid, srcDbGuid, delta) {
 
-				console.log("incoming delta: ");
-				console.log(delta);
+				if (DEBUG) {
+					console.log("incoming delta: ");
+					console.log(delta);
+				}
                 // находим рутовый объект к которому должна быть применена дельта
                 var db  = this.getDB(dbGuid);
                 //var root = db.getRoot(delta.rootGuid);

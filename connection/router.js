@@ -52,7 +52,8 @@ define(['../system/event'], function(event) {
                         log[1] = log[1]+':'+data.args.func; //JSON.stringify(data.args);
                     }
 
-                    logger.info(log.join(';'));
+                    if (data.action != 'sendDelta')
+                        logger.info(log.join(';'));
                     done.apply(this, arguments);
                 }
                 return this._actions[data.action](data, doneTime);
