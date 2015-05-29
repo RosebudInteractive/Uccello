@@ -36,14 +36,15 @@ define (
                     if (!this._eventHandlers[eventName])
                         this._eventHandlers[eventName] = [];
 
-                    if (!handler.subscriber || !handler.callback){
+                    if (!handler.subscriber || !handler.callback) {
                         return;
                     }
                     if (!this._eventHandlerExists(handler)) {
                         //handler.id = calypso1.database.getNewLid();
                         this._eventHandlers[eventName].push(handler);
                     }
-                }
+                };
+                return this;
             },
 
             off: function (handlers) {
@@ -57,7 +58,7 @@ define (
                     if (!this._eventHandlers[eventName]) return;
                     else {
                         var typeHandlers = this._eventHandlers[eventName];
-                        for (var j= 0, len2 = typeHandlers.length; j < len2; j++ ) {
+                        for (var j = 0, len2 = typeHandlers.length; j < len2; j++) {
                             if (typeHandlers[j].subscriber === handler.subscriber &&
                                 typeHandlers[j].callback === handler.callback) {
                                 typeHandlers.splice(j, 1);
@@ -65,7 +66,8 @@ define (
                             }
                         }
                     }
-                }
+                };
+                return this;
             },
 
             /**

@@ -9,7 +9,7 @@ define(
 
             className: "DataRoot",
             classGuid: UCCELLO_CONFIG.classGuids.DataRoot,
-            metaCols: [ {"cname": "DataElements", "ctype": "data"} ],
+            metaCols: [ {"cname": "DataElements", "ctype": "UObject"} ],
             metaFields: [],
 
             init: function(cm,params){

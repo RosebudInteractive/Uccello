@@ -58,7 +58,11 @@ define(
 				
 				var colList = objType.getColList();
 				for (var i = 0; i < colList.length ; i++)
-				    new MemCol(colList[i].name, this);
+				    (new MemCol(colList[i].name, this)).event.on({
+				        type: 'add',
+				        subscriber: this,
+				        callback: this.getCheckColElemType(i)
+				    });
 
 				this.finit();
 
@@ -113,7 +117,29 @@ define(
 				}
 			},*/
 
-			
+
+		    /**
+             * Returns a function which verifies the type of object which is being added to the collection.
+             * 
+             * @param {Integer} colIdx Collection index
+             * @return {Function}
+             */
+			getCheckColElemType: function (colIdx) {
+			    return function (args) {
+			        var colType = this.pvt.objType.getColTypeByIdx(colIdx);
+			        if (colType.typeObj) {
+			            if (!args.obj.isInstanceOf(colType.typeObj.getGuid(), colType.typeDef.strict)) {
+			                throw new Error("Invalid object type \"" + args.obj.getObjType().get("typeName") +
+                                "\" in collection \"" + colType.name + "\" of type \"" + this.getObjType().get("typeName") +
+                                "\". Required type is \"" + colType.typeObj.get("typeName") + "\".");
+			            }
+			        } else {
+			            throw new Error("Unknown collection type \"" + colType.typeDef.type +
+                            "\" in collection \"" + colType.name + "\" of type \"" + this.getObjType().get("typeName") + "\".");
+			        };
+			    };
+			},
+
 			// получить коллекцию по имени или по индексу
 			getCol: function(col) {
 				if (typeof col == "string") {

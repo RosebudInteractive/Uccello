@@ -24,7 +24,7 @@ define(
             {fname:"CountConnect", ftype:"int"},
             {fname:"SessionGuid", ftype:"string"}
         ],
-        metaCols: [ {"cname": "Connects", "ctype": "control"} ],
+        metaCols: [ {"cname": "Connects", "ctype": "UObject"} ],
 
         /**
          * Инициализация объекта

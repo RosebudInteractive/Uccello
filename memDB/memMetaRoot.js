@@ -6,19 +6,47 @@
 define(
 	['./memProtoObj','./memCol'],
 	function(MemProtoObj,MemCol) {
-		var MemMetaRoot = MemProtoObj.extend({
+	    var MemMetaRoot = MemProtoObj.extend({
 		
-			init: function(parent, flds){
+	        init: function(parent, flds){
 				
-			    flds.$sys = { guid: UCCELLO_CONFIG.guids.metaRootGuid, keep_guid: (flds) && (flds.$sys) && (flds.$sys.keep_guid) };
+	            this._types = {};
+	            flds.$sys = { guid: UCCELLO_CONFIG.guids.metaRootGuid, keep_guid: (flds) && (flds.$sys) && (flds.$sys.keep_guid) };
 
-				UccelloClass.super.apply(this, [null,{ db: parent.db },flds]);// Корневой метаобъект в БД - является корнем всех остальных метаобъектов
-				this.pvt.typeGuid = UCCELLO_CONFIG.guids.metaRootGuid;
-				// инициализируем коллекции для метаинфо - описание вложенных метаобъектов
-				new MemCol("MetaObjects",this);
+	            UccelloClass.super.apply(this, [null,{ db: parent.db },flds]);// Корневой метаобъект в БД - является корнем всех остальных метаобъектов
+	            this.pvt.typeGuid = UCCELLO_CONFIG.guids.metaRootGuid;
+	            // инициализируем коллекции для метаинфо - описание вложенных метаобъектов
+	            (new MemCol("MetaObjects", this)).event.on({
+	                type: 'add',
+	                subscriber: this,
+	                callback: function (args) {
+	                    var name = args.obj.get("typeName");
+	                    if (this._types[name] === undefined)
+	                        this._types[name] = args.obj;
+	                    else
+	                        throw new Error("Type \"" + name + "\" is already defined.");
+
+	                }
+	            }).on({
+	                type: 'del',
+	                subscriber: this,
+	                callback: function (args) {
+	                    delete this._types[args.obj.get("typeName")];
+	                }
+	            });
 				
-				this.finit();
-			},
+	            this.finit();
+	        },
+
+	        /**
+             * Returns type object given by it's name
+             * 
+             * @param {String} tpName Type name
+             * @return {Object}
+             */
+	        getTypeByName: function (tpName) {
+	            return this._types[tpName];
+	        },
 
 			// ПОЛЯ
 			
@@ -40,9 +68,6 @@ define(
 					return UccelloClass.super.apply(this, [col]);
 				return null;
 			}
-
-			
-
 		});
 		return MemMetaRoot;
 	}

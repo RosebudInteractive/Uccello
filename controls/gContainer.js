@@ -11,9 +11,9 @@ define(
             className: "GContainer",
             classGuid: UCCELLO_CONFIG.classGuids.GContainer,
             metaCols: [
-                {"cname": "Rows", "ctype": "control"},
-                {"cname": "Columns", "ctype": "control"},
-                {"cname": "Cells", "ctype": "control"}
+                {"cname": "Rows", "ctype": "UObject"},
+                {"cname": "Columns", "ctype": "UObject"},
+                {"cname": "Cells", "ctype": "UObject"}
             ],
             metaFields: [],
 

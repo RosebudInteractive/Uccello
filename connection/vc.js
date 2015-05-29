@@ -20,7 +20,7 @@ define(
 				{fname: "Kind", ftype: "string"}, // , fdefault: "master" enum (master,slave
 				{fname: "ContextGuid", ftype: "string"} // GUID контекста - можно будет удалить
 			],
-			metaCols: [{cname: "Resources", ctype: "control"}],
+			metaCols: [{cname: "Resources", ctype: "UObject"}],
 
 			/**
 			 * Инициализация объекта

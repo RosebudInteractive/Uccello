@@ -39,8 +39,9 @@ define(
 					pvt.root = pvt.parent.pvt.root;
                 }
 
-				if (this.getDB() == undefined) if (DEBUG) console.log(parent.obj);
-				pvt.$id = this.getDB().getNewLid();		// локальный идентификатор
+				if (this.getDB() == undefined)
+				    if (DEBUG) console.log(parent.obj);
+			    pvt.$id = this.getDB().getNewLid();		// локальный идентификатор
 				if ((flds) && (flds.$sys) && (flds.$sys.guid))	// если гуид пришел в системных полях, то используем его
 					pvt.guid = flds.$sys.guid;
 				else 											// если нет - генерируем динамически
@@ -240,7 +241,7 @@ define(
 			        var ancestors = this.pvt.objType.pvt.ancestors;
 			        var depth = -1;
 			        if (ancestors) {
-			            for (var i = 0; i < ancestors.length - 1; i++) {
+			            for (var i = 0; i < ancestors.length; i++) {
 			                if (ancestors[i].getGuid() === typeGuid) {
 			                    depth = i;
 			                    break;

@@ -11,7 +11,7 @@ define(
             className: "UModule",
             classGuid: UCCELLO_CONFIG.classGuids.UModule,
             metaFields: [ {fname:"Id",ftype:"int"}, {fname:"Name",ftype:"string"}, {fname:"Mode",ftype:"string"}], // Srv, CltSrv, Clt, CltRep
-            //metaCols: [{"cname": "Resources", "ctype": "control"}],
+            //metaCols: [{"cname": "Resources", "ctype": "UObject"}],
 
             /**
              * @constructs

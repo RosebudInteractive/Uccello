@@ -4,8 +4,8 @@
 }
 
 define(
-	[],
-	function() {
+	["../system/event"],
+	function (Event) {
 		var MemCol = UccelloClass.extend({
 		
 			init: function(name,obj){
@@ -13,7 +13,8 @@ define(
 				this._name = name;
 				this._obj = obj;
 				this._db = obj.getDB();
-				//this.event = new Event();
+				this.event = new Event();
+			    //this.event = new Event();
 				obj._addCol(this);
 			},
 			
@@ -30,7 +31,13 @@ define(
 						this._obj.getLog().add(o);
 					}
 				var p = this.getParent();
-				p.logColModif("add",this._name,obj);
+				p.logColModif("add", this._name, obj);
+
+				this.event.fire({
+				    type: "add",
+				    target: this,
+                    obj: obj
+				});
 			},
 			
 			_del: function(obj) {
@@ -46,6 +53,12 @@ define(
 						this.getDB().onDeleteObject(obj);  // уведомить свою базу данных
 						var p = this.getParent();
 						p.logColModif("del",this._name,obj);
+
+						this.event.fire({
+						    type: "del",
+						    target: this,
+						    obj: obj
+						});
 						return;
 					}
 				}

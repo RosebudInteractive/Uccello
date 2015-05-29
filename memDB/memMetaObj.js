@@ -71,7 +71,7 @@ define(
 				        var typ = c.getCol("cols").get(j).get("ctype");
 				        if (pvt.colsTable[name] === undefined) {
 				            pvt.colsTable[name] = pvt.colsTypes.length;
-				            pvt.colsTypes.push({ name: name, typeName: typ, typeObj: null, orig: c });
+				            pvt.colsTypes.push({name: name, typeDef: typ, typeObj: null, orig: c });
 				        } else {
 				            throw new Error("Collection \"" + name + "\" in class \"" +
                                 c.get("typeName") + "\" has been already defined in parent class \"" +
@@ -130,7 +130,7 @@ define(
 		    /**
              * Returns the collection list (if it doesn't exist then we'll build it).
              * 
-             * @return {Array} The collection list
+             * @return {Array}
              */
 			getColList: function () {
 			    if (this.pvt.colsTypes === undefined)
@@ -143,12 +143,55 @@ define(
              *  (if it doesn't exist then we'll build it).
              * 
              * @param {String}   colName Collection name
-             * @return {Integer} The collection list
+             * @return {Integer}
              */
 			getColIdx: function (colName) {
 			    if (this.pvt.colsTypes === undefined)
 			        this._bldElemTable();
 			    return this.pvt.colsTable[colName];
+			},
+
+		    /**
+             * Returns the collection type definition
+             * 
+             * @param {String|Integer} col Collection name or index
+             * @return {Object}
+             */
+			getColType: function (col) {
+			    var res;
+			    if (this.pvt.colsTypes === undefined)
+			        this._bldElemTable();
+
+			    var idx = col;
+			    if (typeof col === "string") {
+			        if (this.pvt.colsTable[colName] !== undefined)
+			            idx = this.pvt.colsTable[colName];
+			    };
+
+			    if (typeof (idx) === "number")
+			        res = this.getColTypeByIdx(idx);
+
+			    return res;
+			},
+
+		    /**
+             * Returns the collection type definition using collection index
+             * 
+             * @param {Integer} idx Collection index
+             * @return {Object}
+             */
+			getColTypeByIdx: function (idx) {
+			    var res;
+			    if (this.pvt.colsTypes === undefined)
+			        this._bldElemTable();
+			    if (idx < this.pvt.colsTypes.length) {
+			        res = this.pvt.colsTypes[idx];
+			        if (res.typeObj === null) {
+			            var typeObj = this.getRoot().getTypeByName(res.typeDef.type);
+			            res.typeObj = typeObj ? typeObj : null;
+			        };
+			    }
+			    return res;
 			},
 
 		    // получить коллекцию по имени или по индексу

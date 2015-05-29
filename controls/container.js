@@ -10,7 +10,7 @@ define(
 
             className: "Container",
             classGuid: UCCELLO_CONFIG.classGuids.Container,
-            metaCols: [ {"cname": "Children", "ctype": "control"} ],
+            metaCols: [ {"cname": "Children", "ctype": "UObject"} ],
             metaFields: [],
 
             init: function(cm, params) {
