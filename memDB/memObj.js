@@ -58,7 +58,7 @@ define(
 				
 				var colList = objType.getColList();
 				for (var i = 0; i < colList.length ; i++)
-				    (new MemCol(colList[i].name, this)).event.on({
+				    (new MemCol(colList[i].name, this)).on({
 				        type: 'add',
 				        subscriber: this,
 				        callback: this.getCheckColElemType(i)

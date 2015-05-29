@@ -16,7 +16,7 @@ define(
 	            UccelloClass.super.apply(this, [null,{ db: parent.db },flds]);// Корневой метаобъект в БД - является корнем всех остальных метаобъектов
 	            this.pvt.typeGuid = UCCELLO_CONFIG.guids.metaRootGuid;
 	            // инициализируем коллекции для метаинфо - описание вложенных метаобъектов
-	            (new MemCol("MetaObjects", this)).event.on({
+	            (new MemCol("MetaObjects", this)).on({
 	                type: 'add',
 	                subscriber: this,
 	                callback: function (args) {
