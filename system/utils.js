@@ -18,6 +18,8 @@ Utils.guid = function () {
         s4() +'-'+ s4() + s4() + s4();
 }
 
-if (module) {
+
+if (typeof(module) === 'undefined')
+    define([], function(){return Utils;});
+else
     module.exports = Utils;
-}
