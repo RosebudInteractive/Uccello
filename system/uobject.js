@@ -44,31 +44,9 @@ define(
                 UccelloClass.super.apply(this, [cm.getObj(this.classGuid),parent,params.ini]);
                 //this.pvt = {};
                 this.pvt.controlMgr = cm;
-                this.pvt.isProcessed = true; // признак обработки входящей дельты
+                this.pvt.isProcessed = false; // признак обработки входящей дельты
 
             },
-			/*
-			uobjectInit: function(cm, params){
-			
-				if (!("pvt" in this)) this.pvt = {};
-			
-				this._buildMetaInfo(cm);
-                if (params==undefined) return; // в этом режиме только создаем метаинфо			
-
-				params.ini = params.ini ? params.ini : {};
-				if (!("colName" in params))
-					var col = "Children";
-				else col = params.colName;
-				// если рутовый то указываем db
-				if (params.parent===undefined)
-					var parent = {db: cm, mode: "RW"};
-				else
-					parent = {obj: params.parent, "colName": col};
-
-				this.memobjInit(cm.getObj(this.classGuid),parent,params.ini);
-                this.pvt.controlMgr = cm;
-                this.pvt.isProcessed = true; // признак обработки входящей дельты
-			},*/
 
             // no op function - имплементируется в наследниках для подписки
             // порядок вызова: 1) init (конструктор), 2) subsInit (подписка), 3) dataInit (дальнейшая инициализация, в основном данные)
@@ -165,14 +143,6 @@ define(
 					return undefined;
 			},
 
-			 /*
-            getParent: function() {
-                if (this.getObj().getParent() == null)
-                    return null
-                else
-                    return this.pvt.controlMgr.getByGuid(this.getObj().getParent().getGuid());
-            },*/
-			
 			countChild: function(colName) {
 				if (colName == undefined) colName = "Children";
 				//var col = this.getObj().getCol(colName);
@@ -237,7 +207,7 @@ define(
              * @param aparams - массив параметров удаленной функции
 			 * @callback cb - коллбэк
              */			
-			remoteCall: function(func, aparams, cb) {
+			remoteCall: function(func, aparams, cb, trGuid) {
 				if (this.getModule().isMaster()) {
 					// TODO кинуть исключение
 					return;
@@ -247,7 +217,7 @@ define(
 				var pg = this.getControlMgr().getProxyMaster().guid;
 				//var pg = this.getProxyMaster().guid;
 							
-				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func };
+				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func, trGuid:trGuid };
 				var args={action:"remoteCall2",type:"method",args: myargs};
 				socket.send(args,cb);
 			},

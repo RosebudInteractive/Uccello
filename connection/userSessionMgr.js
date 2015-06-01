@@ -23,6 +23,7 @@ define(
                 this.options = options;
 				this.rpc = options.rpc;
 				this.proxyServer =  options.proxyServer;
+				this.execQ = {};
 
                 // системные объекты
                 this.dbcsys = new MemDBController(router);
@@ -147,17 +148,53 @@ define(
                 done(result);
             },
 			
-			routerRemoteCall: function(data,done) {
+			// Добавить в очередь выполнение
+			addToQueue: function(db, func) {
+				var guid = db.getGuid();
+				if (!this.execQ[guid]) this.execQ[guid] = [];
+				var q = this.execQ[guid];
+				function execMethod() {		
+					if (!db.getCurTranGuid()) {
+						var f=q[0];
+						q.splice(0,1);
+						f();
+					}
+					if (q.length>0) setTimeout(execMethod,100);
+	
+				}
+				q.push(func);
+				if (q.length==1) setTimeout(execMethod,100);
+			},
+			
+			routerRemoteCall: function(data,done) {				
+				//var controller = this.getController();
+				//var masterdb = controller.getDB(data.args.masterGuid);
+				//var obj = masterdb.getObj(data.args.objGuid);
+				//var rootObj = obj.getRoot();				
+				//var cm = ; //vc.getContextCM(rootObj.getGuid());	
+				var args = data.args;
+				var uobj = this.cmsys.get(args.objGuid);
+				var db = uobj.getContentDB();
+				args.aparams.push(done);
+				/*
+				if (args.trGuid)
+					db.tranSet(args.trGuid); // getContentDB = это ВРЕМЕННО!!!! 
+				uobj[args.func].apply(uobj,args.aparams);
+				*/
+				function exec1() {
+					if (args.trGuid) db.tranSet(args.trGuid);
+					uobj[args.func].apply(uobj,args.aparams);
+					db.tranSet();					
+				}
+				/*
+				if (db.getCurTranGuid()) { // если ДБ в транзакции
+					this.addToQueue( db, function() { exec1(); } );
+				}
+				else exec1(args.trGuid);
+				*/
+				this.addToQueue( db, function() { exec1(); } );
+
 				
-				var controller = this.getController();
-				var masterdb = controller.getDB(data.args.masterGuid);
-				var obj = masterdb.getObj(data.args.objGuid);
-				var rootObj = obj.getRoot();				
-				//var vc = this.cmsys.get(data.args.contextGuid);
-				var cm = this.cmsys; //vc.getContextCM(rootObj.getGuid());				
-				var uobj = cm.get(data.args.objGuid);
-				data.args.aparams.push(done);
-				uobj[data.args.func].apply(uobj,data.args.aparams);
 			},
 
             /**
