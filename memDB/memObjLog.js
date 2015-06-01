@@ -65,7 +65,14 @@ define(
 							par.getCol(c.colName)._del(c.obj);
 							break;
 						case "del":
-							break;
+						    var o = db.getObj(c.guid);
+						    var cb = db._cbGetNewObject(db.getObj(c.guid).getRoot().getGuid());
+						    if (cb)
+						        db.deserialize(c.delObj, { obj: o, colName: c.colName }, cb);
+						    else
+						        if (DEBUG) console.error("Can't restore object \"" + c.delObj.$sys.guid+
+                                    "\" because callback function doesn't exist.");
+						    break;
 					}						
 				}
 				this.setActive(true);				
@@ -121,7 +128,8 @@ define(
 							break;
 						// удаление объекта из иерархии
 						case "del":
-							curd.parentGuid = c.guid;
+						    curd.del = c.delObj;
+						    curd.parentGuid = c.guid;
 							curd.parentColName = c.colName;
 							curd.deleted = 1;
 							break;
