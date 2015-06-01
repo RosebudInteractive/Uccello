@@ -10,7 +10,7 @@ define(
 
             className: "ADataModel",
             classGuid: UCCELLO_CONFIG.classGuids.ADataModel,
-            metaCols: [ {"cname": "Datasets", "ctype": "data"} ],
+            metaCols: [ {"cname": "Datasets", "ctype": "Dataset"} ],
             metaFields: [],
 
             init: function(cm,params){

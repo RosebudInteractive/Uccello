@@ -14,7 +14,7 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
         className: "ClientConnection",
         classGuid: UCCELLO_CONFIG.classGuids.ClientConnection,
         metaFields: [],
-        metaCols: [ {cname: "VisualContext", ctype: "control"} ],
+        metaCols: [ {cname: "VisualContext", ctype: "UObject"} ],
 
         /**
          * Инициализация объекта

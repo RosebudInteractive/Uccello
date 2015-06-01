@@ -11,7 +11,7 @@ define(
             className: "Form",
             classGuid: UCCELLO_CONFIG.classGuids.Form,
             metaFields: [{fname:"Title", ftype:"string"}],
-            metaCols: [ {"cname": "Params", "ctype": "control"},{"cname": "SubForms", "ctype": "control"} ],
+            metaCols: [{ "cname": "Params", "ctype": "UObject" }, { "cname": "SubForms", "ctype": "UObject" }],
 
             init: function(cm,params){
                 UccelloClass.super.apply(this, [cm, params]);
