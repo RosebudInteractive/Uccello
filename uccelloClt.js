@@ -203,10 +203,10 @@ define(
 
                 if (params.side == 'client') {
                     this.pvt.vc = this.pvt.cmclient.get(params.vc);
-                    this.pvt.vc.on(this.pvt.cmclient, p, cbfinal2, renderRoot);
+                    if (this.pvt.vc) this.pvt.vc.on(this.pvt.cmclient, p, cbfinal2, renderRoot);
                 } else {
                     this.pvt.vc = this.pvt.cmsys.get(params.vc);
-                    this.pvt.vc.on(this.pvt.cmsys, p, cbfinal2, renderRoot);
+                    if (this.pvt.vc) this.pvt.vc.on(this.pvt.cmsys, p, cbfinal2, renderRoot);
                 }
 			},
 
