@@ -104,7 +104,12 @@ define(
              */
             routerCreateContext: function(data, done) {
                 var that = this;
-                var user = this.getConnect(data.$sys.socket.getConnectId()).getSession().getUser();
+                var connect = this.getConnect(data.$sys.socket.getConnectId());
+                if (!connect) {
+                    done({});
+                    return false;
+                }
+                var user = connect.getSession().getUser();
                 var controller = this.getController();
 				var contextId = this.getNewContextId();
 				var params = {
@@ -159,11 +164,11 @@ define(
 						q.splice(0,1);
 						f();
 					}
-					if (q.length>0) setTimeout(execMethod,100);
-	
+					if (q.length>0) setTimeout(execMethod,1);
+
 				}
 				q.push(func);
-				if (q.length==1) setTimeout(execMethod,100);
+				if (q.length==1) setTimeout(execMethod,1);
 			},
 			
 			routerRemoteCall: function(data,done) {				
