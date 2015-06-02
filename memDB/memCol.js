@@ -46,7 +46,8 @@ define(
 	                    this._elems.splice(i, 1);
 
 	                    if (this._obj.getLog().getActive()) { // записать в лог если активен
-	                        var o = { obj: obj, colName: this._name, guid: obj.getParent().getGuid(), type: "del" };
+	                        var oldObj = this._obj.getDB().serialize(obj);
+	                        var o = { delObj: oldObj, obj: obj, colName: this._name, guid: obj.getParent().getGuid(), type: "del" };
 	                        this._obj.getLog().add(o);
 	                    }
 	                    this.getDB().onDeleteObject(obj);  // уведомить свою базу данных

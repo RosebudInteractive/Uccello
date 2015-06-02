@@ -63,9 +63,12 @@ define(
 				        this.getDB().setMaxRootId(fullGuid.rootId);
 				    else {
 				        var rootId = pvt.root.getRootId();
-				        if (rootId != fullGuid.rootId)
-				            throw new Error("Root (\"" + pvt.root.getGuid() +
-                                "\") and object (\"" + pvt.guid + "\") GUIDs are inconsistent.");
+				        if (rootId != fullGuid.rootId) {
+				            //throw new Error("Root (\"" + pvt.root.getGuid() +
+				            //    "\") and object (\"" + pvt.guid + "\") GUIDs are inconsistent.");
+				            if (DEBUG) console.warn("### Root (\"" + pvt.root.getGuid() +
+				                "\") and object (\"" + pvt.guid + "\") GUIDs are inconsistent.");
+				        };
 				    };
 				};
 
