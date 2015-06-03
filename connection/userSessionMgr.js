@@ -172,31 +172,18 @@ define(
 			},
 			
 			routerRemoteCall: function(data,done) {				
-				//var controller = this.getController();
-				//var masterdb = controller.getDB(data.args.masterGuid);
-				//var obj = masterdb.getObj(data.args.objGuid);
-				//var rootObj = obj.getRoot();				
-				//var cm = ; //vc.getContextCM(rootObj.getGuid());	
+
 				var args = data.args;
 				var uobj = this.cmsys.get(args.objGuid);
 				var db = uobj.getContentDB();
 				args.aparams.push(done);
-				/*
-				if (args.trGuid)
-					db.tranSet(args.trGuid); // getContentDB = это ВРЕМЕННО!!!! 
-				uobj[args.func].apply(uobj,args.aparams);
-				*/
+
 				function exec1() {
 					if (args.trGuid) db.tranSet(args.trGuid);
 					uobj[args.func].apply(uobj,args.aparams);
 					db.tranSet();					
 				}
-				/*
-				if (db.getCurTranGuid()) { // если ДБ в транзакции
-					this.addToQueue( db, function() { exec1(); } );
-				}
-				else exec1(args.trGuid);
-				*/
+
 				this.addToQueue( db, function() { exec1(); } );
 
 				

@@ -78,18 +78,21 @@ define(
 				this.setActive(true);				
 			},
 			
-			// сгенерировать "дельту" изменений по логу объекта
+            /**
+             * сгенерировать "дельту" изменений по логу объекта
+             */	
 			genDelta: function() {
 				var delta = {};
 				var deltaIdx = {};
 				delta.items = [];
-				//delta.rtype = this.getObj()
 				
 				var log = this.pvt.log;
 				//if (log.length == 0) return null;
 				var db = this.getObj().getDB();
-				var sver = db.getVersion("sent");
-				var ver = db.getVersion();
+				
+
+				var sver = this.getObj().getRootVersion("sent"); // VER определяем с какой по какую версию делать лог
+				var ver = this.getObj().getRootVersion();
 				if (ver==sver) return null;
 				var k=1;
 				while ((this.pvt.versions[sver+k]==undefined) && (sver+k<=ver)) k++;
@@ -136,7 +139,11 @@ define(
 					}
 				}
 				delta.rootGuid = this.getObj().getRoot().getGuid();
+				
+				// VER записываем версии в дельту
 				delta.dbVersion = this.getObj().getDB().getVersion();
+				delta.ver = this.getObj().getRootVersion();
+						
 				if (this.getObj().getDB().getCurTranGuid()) delta.trGuid = this.getObj().getDB().getCurTranGuid();
 				//this.truncate();
 				return delta;
@@ -180,11 +187,12 @@ define(
 			
 
 			
-			add: function(item) {
-			
+			add: function(item) {			
+				
 				var db = this.getObj().getDB();
-				// инкрементируем версию если нужно
-				var ver = db.getCurrentVersion();
+				var xver = db.getCurrentVersion(); // инкрементируем версии если нужно
+				var ver = this.getObj().getCurVersion();
+
 
 				if (!(ver.toString() in this.pvt.versions))
 					this.pvt.versions[ver] = this.pvt.log.length; // отмечаем место в логе, соответствующее началу этой версии
