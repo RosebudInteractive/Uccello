@@ -57,11 +57,11 @@ define(
 		        pvt.controller = controller; //TODO  если контроллер не передан, то ДБ может быть неактивна
 		        pvt.controller.createLocalProxy(this);
 		        pvt.defaultCompCallback = null; // коллбэк по умолчанию для создания компонентов
-		        // TODOX УБРАТЬ
+
 		        pvt.version = 0;
 		        pvt.validVersion = 0;
 		        pvt.sentVersion = 0;
-		        // TODOX END
+
 		        this.event = new Event();
 				// транзакции
 				pvt.curTranGuid = undefined; // гуид текущей транзакции БД
@@ -555,15 +555,11 @@ define(
 					else
 						rg.push(rootGuids);
 				}
-				//var obj = null;
 
 				for (var i=0; i<rg.length; i++) {
 					if (this.pvt.robjs.length > 0) {
 						var ro = this.pvt.rcoll[rg[i]];
 						if (ro) {
-							//obj = ro.obj; // ВРЕМЕННО
-							//if (!obj) return null;
-
 							// добавляем подписчика
 							var subProxy = this.pvt.subscribers[dbGuid];
 							if (subProxy) {
@@ -610,10 +606,7 @@ define(
 				    newObj.$sys.guid = obj.getGuid();
 
 				newObj.ver = obj.getRootVersion();
-				/*if (obj.getObjType()) // obj
-					newObj.$sys.typeGuid = obj.getObjType().getGuid();
-				else // meta obj
-					newObj.$sys.typeGuid = "12345";*/
+
 				newObj.$sys.typeGuid = obj.getTypeGuid();
 				// поля объекта TODO? можно сделать сериализацию в более "компактном" формате, то есть "массивом" и без названий полей
 				newObj.fields = {};
@@ -738,8 +731,6 @@ define(
 				};
 				// TODO пока предполагаем что такого объекта нет, но если он есть что делаем?
 
-				//this.getCurrentVersion(); // пока из-за этого не работает!
-
 			    if ("obj" in parent) parent.obj.getLog().setActive(false); // отключить лог на время десериализации
 
 				// заменить гуид ресурса на гуид экземпляра
@@ -757,18 +748,17 @@ define(
 
 				var res = ideser(this, sobj, parent);
 				var rholder = this.getRoot(res.getGuid());
-				if (rholder) { // TODO Сергей: поставил проверку иначе при создании контекста ошибки
-					if (!("ver" in sobj)) {
-						rholder.vver = 0; // Если в сериализованном представлении нет номера версии, полагаем =0
-						rholder.sver = 0;
-						rholder.dver = 0;
-						}
-					else {
+				
+
+				if (rholder) {  // VER инициализация номеров версий рута
+					if (("ver" in sobj)) {
 						rholder.vver = sobj.ver; // TODOХ не до конца ясно как поступать с версиями в случае частичной сериализации - продумать
-						rholder.sver = sobj.ver;
-						rholder.dver = sobj.ver;
+						rholder.sver = sobj.ver; // НАЗНАЧЕНИЕ ВЕРСИЙ ВЫНЕСТИ ЗА ПРЕДЕЛЫ ДЕСЕРИАЛАЙЗА
+						rholder.dver = sobj.ver;						
 					}
+
 				}
+
 				this.resolveAllRefs();
 				res.getLog().setActive(true);
 				// TODO - запомнить "сериализованный" объект (или еще раз запустить сериализацию?)
@@ -798,13 +788,14 @@ define(
 				
 				var res = [];
 
+				// VER если нужно инкрементируем драфт-версию
 				this.getCurrentVersion();
 
 				if (!cb) cb = this.getDefaultCompCallback();
 
 				for (var i=0; i<rg.length; i++) {
 					var root = null;
-					if (rg[i].length>36) root = this.getRoot(rg[i]); //sobjs[i].$sys.guid);
+					if (rg[i].length>36) root = this.getRoot(rg[i]);
 					if (!root || override) {
 						var time = Date.now();
 						if (rg[i].length>36)
@@ -823,6 +814,7 @@ define(
 						
 					}
 					else croot = root.obj;
+					croot.getCurVersion();
 					var allSubs = this.getSubscribers();
 
 					// возвращаем гуид если рута не было, или был, но не были подписаны, или в режиме оверрайд
@@ -845,8 +837,10 @@ define(
 					if (params.expr) {
 						root = this.getRoot(croot.getGuid()); 
 						root.hash = params.expr;
-						}
-					}					
+					}
+					// VER подтверждаем версию на сервере
+					croot.setRootVersion("valid",croot.getRootVersion());
+				}					
 
 				if (!this.inTran()) { // автоматом "закрыть" транзакцию (VALID VERSION = DRAFT VERSION)
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
@@ -876,7 +870,7 @@ define(
 			getName: function() {
 				return this.pvt.name;
 			},
-
+			
             /**
              * Вернуть версию БД - УСТАРЕЛО
              */
@@ -922,6 +916,7 @@ define(
 			},
 
 			// вернуть "текущую" версию, которой маркируются изменения в логах
+			
 			getCurrentVersion: function() {
 
 				var sver = this.getVersion("sent");
@@ -1018,21 +1013,6 @@ define(
 			},
 
             /**
-             * добавить новый корневой объект в мастер-базу
-             * @param {object} objType
-             * @param {object} flds
-             * @returns {*}
-             */
-			newRootObj: function(objType,flds) {
-				if (this.isMaster()) {
-					var obj = new MemObj( objType,{"db":this, "mode":"RW"},flds);
-					return obj;
-				}
-				else
-					return null;
-			},
-
-            /**
              * Проиграть назад изменения по логам базы данных
 			 * @param {number} version - номер версии, до которого нужно откатить
              */
@@ -1057,8 +1037,11 @@ define(
 				var allDeltas = [];
 				for (var i=0; i<this.countRoot(); i++) {
 					var d=this.getRoot(i).obj.getLog().genDelta();
-					if (d!=null)
+					if (d!=null) {
 						allDeltas.push(d);
+						// VER если в мастере, то сразу и подтверждаем 
+						if (this.isMaster()) this.getRoot(i).obj.setRootVersion("valid",this.getRoot(i).obj.getRootVersion());
+					}
 				}
 				if (this.isMaster())		// TODO закрывать транзакцию?
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
@@ -1069,7 +1052,6 @@ define(
 					var o = { last: 1, dbVersion:this.getVersion() };
 					if (this.getCurTranGuid()) 
 						o.trGuid = this.getCurTranGuid();
-						 //o.endTran = 1; 
 					if (commit) o.endTran = 1;
 					
 					allDeltas.push(o);
@@ -1077,14 +1059,6 @@ define(
 				}
 
 				return allDeltas;
-
-			},
-
-            /**
-             * применить дельты к БД для синхронизации
-             * @param data
-             */
-			applyDeltas:function(data) {
 
 			},
 
