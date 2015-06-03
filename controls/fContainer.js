@@ -15,10 +15,12 @@ define(
                 {fname:"ColumnsCount",ftype:"int"},
                 {fname:"MinColWidth",ftype:"int"},
                 {fname:"MaxColWidth",ftype:"boolean"},
+                {fname:"Title",ftype:"string"},
+                {fname:"Padding",ftype:"int"}
             ],
 
             init: function(cm,params){
-                this._super(cm,params);
+                UccelloClass.super.apply(this, [cm, params]);
             },
             hasGrid: function(value) {
                 return this._genericSetter("HasGrid", value);
@@ -31,6 +33,12 @@ define(
             },
             maxColWidth: function(value) {
                 return this._genericSetter("MaxColWidth", value);
+            },
+            title: function(value) {
+                return this._genericSetter("Title", value);
+            },
+            padding: function(value) {
+                return this._genericSetter("Padding", value);
             }
         });
         return FContainer;
