@@ -323,7 +323,7 @@ define(
 
 				}
 	*/			
-				console.log("APPLY DELTAS "+tr);
+				//console.log("APPLY DELTAS "+tr);
 				for (var i=0; i<cur[tr].length; i++) {
 					var cdelta = cur[tr][i];
 					if (endOfStory in cdelta) { // последняя дельта транзакции
