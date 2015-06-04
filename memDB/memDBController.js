@@ -80,7 +80,7 @@ define(
 				if (DEBUG) console.time('applyDeltas');
                 this.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
 				if (DEBUG) console.timeEnd('applyDeltas');
-				if (DEBUG) console.log("VALID:"+this.getDB(data.dbGuid).getVersion("valid")+"draft:"+this.getDB(data.dbGuid).getVersion()+"sent:"+this.getDB(data.dbGuid).getVersion("sent"));
+
                 done({data: {dbVersion: this.getDB(data.dbGuid).getVersion() }});
 				
 				this.event.fire({
@@ -173,27 +173,27 @@ define(
 				var p = db.getProxyMaster();
 				if (p.kind == "local") { // мастер-база доступна локально
 					var newObjs = p.db.onSubscribeRoots(db.getGuid(),rootGuids);
-					var rootGuids = [];
+					var rgNew = [];
 					for (var i=0; i<newObjs.length; i++) {
 						var o=db.deserialize(newObjs[i],{ mode:"RW"},cb2);
-						rootGuids.push(o.getGuid());
+						rgNew.push(o.getGuid());
 						if (cb2!==undefined)  // запомнить коллбэк
 							db._cbSetNewObject(o.getGuid(),cb2);
 						
 					}
-					if (cb !== undefined && (typeof cb == "function")) cb(rootGuids);
+					if (cb !== undefined && (typeof cb == "function")) cb(rgNew);
 					//if (cbfinal !== undefined && (typeof cbfinal == "function")) cbfinal();
 				}
 				else { // мастер-база доступна удаленно
 					callback2 = function(obj) {
-						var rootGuids = [];
+						var rgNew = [];
 						for (var i=0; i<obj.data.length; i++) {
 							o=db.deserialize(obj.data[i],{ mode:"RW"},cb2);
-							rootGuids.push(o.getGuid());
+							rgNew.push(o.getGuid());
 							if (cb2!==undefined)  // запомнить коллбэк
 								db._cbSetNewObject(o.getGuid(),cb2);						
 						}
-						if (cb !== undefined && (typeof cb == "function")) cb(rootGuids);
+						if (cb !== undefined && (typeof cb == "function")) cb(rgNew);
 						//if (cbfinal !== undefined && (typeof cbfinal == "function")) cbfinal();
 					}
 					p.connect.send({action:'subscribeManyRoots', type:'method', slaveGuid:db.getGuid(), masterGuid: p.guid, objGuids:rootGuids},callback2);
@@ -286,58 +286,51 @@ define(
 				cur[tr].push(delta);
 				
 				if (!(endOfStory in delta)) return; // буферизовали и ждем последнюю, чтобы применить все сразу
-				
-				
-				// TODO ничто не гарантирует, что транзакция закроется и что она будет выполняться в правильном порядке
-				// если мы хотим это контролировать нужно немного иначе организовать хранилище незавершенных транзакций (дельт)
 
-				// TODOX временно убрали все проверки на версии
-/*				
-				var lval = db.getVersion("valid");
-				var ldraft = db.getVersion();
-				var dver = delta.dbVersion;
-				
-
-				if (db.isMaster()) {
-					if (lval == dver - 1) {
-						//  на сервере сразу валидируется версия при изменениях.
-					}
-					else {
-						console.log("cannot sync server -  valid version:"+lval+"delta version:"+dver);
-						console.log("VALID:"+db.getVersion("valid")+"draft:"+db.getVersion()+"sent:"+db.getVersion("sent"));
-						return;				
-					}				
-				}
-				else { 
-					if (lval == dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
-						// если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
-						if (ldraft>lval) db.undo(lval); 
-					}
-					else { // ошибка синхронизации - ненормальная ситуация, в будущем надо придумать как это обработать
-						console.log("cannot sync client -  valid version:"+lval+"delta version:"+dver);
-						console.log("VALID:"+db.getVersion("valid")+"draft:"+db.getVersion()+"sent:"+db.getVersion("sent"));
-						return;
-					}
-
-					// TODO подписчикам передать если  делать тему с N базами
-
-				}
-	*/			
+								
 				//console.log("APPLY DELTAS "+tr);
+
 				for (var i=0; i<cur[tr].length; i++) {
 					var cdelta = cur[tr][i];
-					if (endOfStory in cdelta) { // последняя дельта транзакции
-						if ((db.isMaster() == false) && (srcDbGuid == db.getProxyMaster().guid)) { // пришло с мастера
-						
-							db.setVersion("valid",cdelta.dbVersion);
-							//db.setVersion("draft",cdelta.dbVersion);
-							db.setVersion("sent",cdelta.dbVersion);							
-						}
-						else { // Master DataBase
-							db.setVersion("valid",cdelta.dbVersion);	
-							db.setVersion("sent",cdelta.dbVersion);							
+					if (endOfStory in cdelta) { // VER последняя дельта транзакции (для клиента и сервера)
+
+						db.setVersion("valid",cdelta.dbVersion);	
+						db.setVersion("sent",cdelta.dbVersion);
+						for (var j=0; j<cur[tr].length; j++) { // маркируем версии рутов версиями дельт
+							var d = cur[tr][j];
+							if (d.rootGuid) {
+								db.getObj(d.rootGuid).setRootVersion("valid",d.ver);
+								db.getObj(d.rootGuid).setRootVersion("sent",d.ver);
+							}
 						}
 						break; 
+					}
+					else
+					{
+						// VER проверка на применимость дельт
+						var ro = db.getObj(cdelta.rootGuid);
+						if (ro) {
+							var lval = ro.getRootVersion("valid");
+							var ldraft = ro.getRootVersion();
+							var dver = cdelta.ver;
+							if (db.isMaster()) { // мы в мастер-базе (на сервере или на клиенте в клиентском контексте)
+								if (lval > dver) { // на сервере подтвержденная версия не может быть больше пришедшей
+									console.log("cannot sync server -  valid version:"+lval+"delta version:"+dver);
+									return;				
+								}				
+							}
+							else { // на клиенте (slave)
+								if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
+									// если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
+									if (ldraft>lval) db.undo(lval); 
+								}
+								else { // ошибка синхронизации - ненормальная ситуация, в будущем надо придумать как это обработать
+									console.log("cannot sync client -  valid version:"+lval+"delta version:"+dver);
+									return;
+								}
+							}
+						}
+
 					}
 					if (("items" in cdelta) && cdelta.items.length>0) {
 						var root = db.getRoot(cdelta.rootGuid);
@@ -348,7 +341,8 @@ define(
 							rootObj = root.obj;
 						
 						rootObj.getLog().applyDelta(cdelta);
-						if (DEBUG) console.log("VALID:"+db.getVersion("valid")+"draft:"+db.getVersion()+"sent:"+db.getVersion("sent"));
+						if (DEBUG) 
+						console.log("VALID:"+rootObj.getRootVersion("valid")+"draft:"+rootObj.getRootVersion()+"sent:"+rootObj.getRootVersion("sent"));
 					}
 				}
 				this.propagateDeltas(dbGuid,srcDbGuid,cur[tr]);
@@ -375,6 +369,13 @@ define(
 				if (deltas.length>0) {
 					this.propagateDeltas(dbGuid,null,deltas);
 					if (db.getVersion("sent")<db.getVersion()) db.setVersion("sent",db.getVersion());
+					for (var i=0; i<deltas.length; i++) {
+						if (deltas[i].rootGuid) {
+							var obj = db.getRoot(deltas[i].rootGuid).obj;
+							obj.setRootVersion("sent",obj.getRootVersion());
+						}
+						
+					}
 				}
 			},
 			
@@ -382,10 +383,16 @@ define(
 			// послать подписчикам и мастеру дельты которые либо сгенерированы локально либо пришли снизу либо сверху
 			propagateDeltas: function(dbGuid, srcDbGuid, deltas) {
 
-				function cb(result) {
-					// TODOX ОТКЛЮЧИЛИ ВРЕМЕННО СТАРЫЕ ПРОВЕРКИ, НАДО НАПИСАТЬ НОВЫЕ
+				function cb(result) { // VER обработка ответа от сервера по итогам отсылки дельт
+
 					if (DEBUG) console.log("CALLBACK PROPAGATE DELTAS");
 					if (DEBUG) console.log(result);
+					for (var guid in rootv) // апдейтим подтвержденные версии рутов после того, как успешно применили их на сервере
+						if (db.getObj(guid).getRootVersion("valid")<rootv[guid])
+							db.getObj(guid).setRootVersion("valid",rootv[guid]);
+						else 
+						 console.log("SYNC VERS CB PROBLEM: "+rootv[guid]+"Clt Ver:"+db.getObj(guid).getRootVersion("valid")+"Cb Ver:"+rootv[guid]);
+					
 					/*
 					if (db.getVersion("valid")<result.data.dbVersion) 
 						db.setVersion("valid", result.data.dbVersion); 
@@ -398,11 +405,12 @@ define(
 				}
 
 				var db  = this.getDB(dbGuid);
-				//endOfStory = (!db.isMaster() && delta.trGuid) ? "endTran" : "last"; 
+				var rootv = {};
 
 				for (var i=0; i<deltas.length; i++) {
 								
 					var delta = deltas[i];
+
 					if (srcDbGuid != db.getGuid()) {
 						// послать в мастер
 						var proxy = db.getProxyMaster();
@@ -413,10 +421,12 @@ define(
 								// TODO валидировать версию
 								}
 							else {
-								//var cb = this._receiveResponse; //function(result) { if (db.getVersion("valid")<result.data.dbVersion) db.newVersion("valid", result.data.dbVersion - db.getVersion("valid")); };
+
 								if (DEBUG) console.log("sending delta db: "+db.getGuid());
 								if (DEBUG) console.log(delta);
-								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), trGuid: db.getCurTranGuid()},cb);
+								var cbp = null;
+								if ("last" in delta) cbp = cb;
+								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), trGuid: db.getCurTranGuid()},cbp);
 								}
 						}
 					}
@@ -444,6 +454,8 @@ define(
 								if (DEBUG) console.log("sent to DB : "+subscriber.guid);
 								}
 						}
+						
+
 					}
 					// TODO разобраться потом с локальными
 					/*
@@ -453,8 +465,9 @@ define(
 						if (subscriber.kind == 'local' && srcDbGuid != guid)
 							//subscriber.db.getObj(delta.rootGuid).getLog().applyDelta(delta); //TODO допилить с учетом .last
 							// TODO валидировать версию
-					}*/
-					
+					}*/		
+					if (delta.rootGuid) // запоминаем версии рутов, чтобы проапдейтить их в колбэке
+						rootv[delta.rootGuid] = db.getObj(delta.rootGuid).getRootVersion();
 					
 				}
 			}

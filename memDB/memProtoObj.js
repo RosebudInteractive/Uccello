@@ -91,76 +91,6 @@ define(
 				this.getDB()._addObj(this);
 
 			},
-/*
-			protoobjInit: function(objType, parent,flds){
-			
-				var pvt = this.pvt = {}; // приватные члены
-				 
-				pvt.objType = objType;
-				pvt.fields = [];				// значения полей объекта
-				pvt.collections = [];			// массив дочерних коллекций
-				pvt.log = null; 
-				//pvt.state = 0;
-				pvt.fldLog = {};
-				pvt.colLog = {};				// лог изменений в дочерних коллекциях
-				pvt.isModified = false;
-				pvt.cntFldModif=0;
-				pvt.cntColModif=0;
-				
-				if (!parent.obj) {	// корневой объект
-					pvt.col = null;
-					pvt.db = parent.db;
-					pvt.parent = null;
-					pvt.root = this;
-				}
-				else {				// объект в коллекции (не корневой)
-					pvt.col = parent.obj.getCol(parent.colName);
-					pvt.parent = parent.obj;	
-					pvt.colName = parent.colName;
-					pvt.root = pvt.parent.pvt.root;
-				}
-
-				pvt.$id = this.getDB().getNewLid();		// локальный идентификатор
-				if ((flds) && (flds.$sys) && (flds.$sys.guid))	// если гуид пришел в системных полях, то используем его
-					pvt.guid = flds.$sys.guid;
-				else 											// если нет - генерируем динамически
-					pvt.guid =  this.getDB().getController().guid();  // TODO перенести в UTILS?
-
-				var fullGuid = this.parseGuid(pvt.guid);
-				var keep_guid = (flds) && (flds.$sys) && (flds.$sys.keep_guid);
-
-				pvt.$rootId = fullGuid.rootId;
-				if (fullGuid.rootId == -1) {
-				    if (!keep_guid) {
-				        if (!pvt.parent)
-				            pvt.$rootId = this.getDB().getNextRootId();
-				        else
-				            pvt.$rootId = pvt.root.getRootId();
-				    };
-				} else {
-				    if (!pvt.parent)
-				        this.getDB().setMaxRootId(fullGuid.rootId);
-				    else {
-				        var rootId = pvt.root.getRootId();
-				        if (rootId != fullGuid.rootId)
-				            throw new Error("Root (\"" + pvt.root.getGuid() +
-                                "\") and object (\"" + pvt.guid + "\") GUIDs are inconsistent.");
-				    };
-				};
-				pvt.guid = fullGuid.guid + ((pvt.$rootId > 0) ? csFullGuidDelimiter + pvt.$rootId : "");
-
-				if (!parent.obj) {	// корневой объект				
-					pvt.log = new MemObjLog(this);	// создать лог записи изменений
-					if (!objType || this.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot))
-						pvt.db._addRoot(this,{ type: "data", mode: parent.mode});
-					else 
-						pvt.db._addRoot(this,{ type: "res", mode: parent.mode});
-				}
-
-				this.getDB()._addObj(this);
-										
-			},
-*/
 			
 		    // вернуть корневой элемент объекта
 			_getRoot: function () {
@@ -279,6 +209,27 @@ define(
 					default: return rholder.dver;
 				}					
 			},		
+			
+			setRootVersion: function(verType, n) {
+				var robj = this.getRoot();
+				var rholder = this.getDB().getRoot(robj.getGuid());
+				switch (verType) {
+					case "sent": return rholder.sver=n; //TODOХ 2 - добавить проверки
+					case "valid":  	rholder.vver = n;
+									if (rholder.dver<n) rholder.dver=n;
+									return rholder.vver;
+					default: return rholder.dver=n;
+				}					
+			},	
+			
+			// вернуть "текущую" версию, которой маркируются изменения в логах
+			getCurVersion: function() {
+
+				var sver = this.getRootVersion("sent");
+				var ver = this.getRootVersion();
+				if (ver==sver) this.setRootVersion("draft",this.getRootVersion()+1);
+				return this.getRootVersion();
+			},
 			
 			getLog: function() {
 				var p = this;

@@ -23,7 +23,7 @@ define(['../system/event'], function(event) {
             this.testTime = 0;
             var that = this;
             setInterval(function(){
-                console.log('<LOADNEWROOTS></LOADNEWROOTS>: '+ that.testCount + 'items, time:'+ that.testTime + 'мс');
+                console.log('LOADNEWROOTS: '+ that.testCount + 'items, time:'+ that.testTime + 'мс');
                 that.testCount = 0;
                 that.testTime = 0;
             }, 60000);
