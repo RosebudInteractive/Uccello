@@ -93,6 +93,21 @@ define(
 
 	        getParent: function () {
 	            return this._obj;
+	        },
+
+	        /**
+             * Returns this collection type
+             * 
+             * @return {Object}
+             */
+	        getColType: function () {
+	            var res;
+	            if (this._obj && this._obj.getObjType()) {
+	                res = this._obj.getObjType().getColType(this._name);
+	                if (res)
+	                    res = res.typeObj;
+	            }
+	            return res;
 	        }
 
 

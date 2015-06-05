@@ -196,6 +196,71 @@ define(
 			        return undefined;
 			},
 
+		    /**
+             * Compares field values of this["field"] and otherObj["field"]
+             *   "this" and "otherObj" should be the instances of the compatible types
+             *   but this fact is not being verified here (be careful)
+             * 
+             * @param {String}       field Field name
+             * @param {Object}       otherObj Another object of the type compatible with "this"
+             * @throws               Will throw an error if the "field" doesn't exist
+             * @return {Integer}
+             *                       0 - this["field"] = otherObj["field"]
+             *                       1 - this["field"] > otherObj["field"]
+             *                     (-1) - this["field"] < otherObj["field"]
+             */
+			cmpFldVals: function (field, otherObj) {
+			    var objType = this.pvt.objType.pvt;
+			    if (objType.fieldsTable[field] === undefined)
+			        throw new Error("cmpFldVals: Field \"" + field + "\" doesn't exist in the object \"" + this.pvt.guid + "\".");
+			    var i = objType.fieldsTable[field].cidx;
+			    var fldType = objType.fieldsTypes[i].type;
+			    var Value = this.pvt.fields[i];
+
+			    var otherType = otherObj.pvt.objType.pvt;
+			    if (otherType.fieldsTable[field] === undefined)
+			        throw new Error("cmpFldVals: Field \"" + field + "\" doesn't exist in the OTHER object \"" + otherObj.pvt.guid + "\".");
+			    i = otherType.fieldsTable[field].cidx;
+			    var otherFldType = otherType.fieldsTypes[i];
+			    var otherValue = otherObj.pvt.fields[i];
+
+			    return fldType.compare(Value, otherValue);
+			},
+
+		    /**
+             * Subscribes on event of ["field"] modification
+             * 
+             * @param {String}       field Field name
+             * @param {Object}       handler Event handler (unlike "event object" handler it doesn't have "type" property)
+             */
+			onFieldModif: function (field, handler) {
+			    if (handler) {
+			        var _handler = {
+			            type: "mod%" + field,
+			            subscriber: handler.subscriber,
+			            callback: handler.callback
+			        };
+			        this.event.on(_handler);
+			    }
+			},
+
+		    /**
+             * Unsubscribes on event of ["field"] modification
+             * 
+             * @param {String}       field Field name
+             * @param {Object}       handler Event handler (unlike "event object" handler it doesn't have "type" property)
+             */
+			offFieldModif: function (field, handler) {
+			    if (handler) {
+			        var _handler = {
+			            type: "mod%" + field,
+			            subscriber: handler.subscriber,
+			            callback: handler.callback
+			        };
+			        this.event.off(_handler);
+			    }
+			},
+
 			set: function (field, value, withCheckVal) {
 			    var objType = this.pvt.objType.pvt;
 
@@ -245,6 +310,11 @@ define(
 					field: field
 				});	
 				
+				this.event.fire({
+				    type: "mod%" + field,
+				    target: this,
+				});
+
 			},
 
 			// получить имя поля по индексу

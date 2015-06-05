@@ -164,8 +164,8 @@ define(
 
 			    var idx = col;
 			    if (typeof col === "string") {
-			        if (this.pvt.colsTable[colName] !== undefined)
-			            idx = this.pvt.colsTable[colName];
+			        if (this.pvt.colsTable[col] !== undefined)
+			            idx = this.pvt.colsTable[col];
 			    };
 
 			    if (typeof (idx) === "number")
