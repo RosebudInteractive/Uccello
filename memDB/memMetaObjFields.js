@@ -19,7 +19,7 @@ define(
 
 			},
 			
-			// ПОЛЯ
+		    // ПОЛЯ
 			
 			get: function(field) {
 
@@ -62,6 +62,53 @@ define(
 				if (i==2) return "fdefault";
 			},
 			
+
+		    /**
+             * Sets field value.
+             * 
+             * @param {String} field Field name
+             * @param {Object} value Field value
+             * @throws Will throw an error if field doesn't exist
+             */
+			set: function (field, value) {
+
+			    var oldVal, newVal;
+			    var is_modified = false;
+
+			    switch (field) {
+			        case "fname":
+			            oldVal = this.pvt.fields[0];
+			            newVal = String(value);
+			            if (oldVal !== newVal) {
+			                is_modified = true;
+			                this.pvt.fields[0] = newVal;
+			            };
+			            break;
+
+			        case "ftype":
+			            oldVal = this.pvt.fields[1];
+			            newVal = value;
+			            if (!(newVal instanceof MemMetaType.BaseType))
+			                newVal = MemMetaType.createTypeObject(value, this.getDB()); // Convert serialized type to type object
+			            if (oldVal.hash() !== newVal.hash()) {
+			                is_modified = true;
+			                this.pvt.fields[1] = newVal;
+			                oldVal = oldVal.serialize();
+			                newVal = newVal.serialize();
+                        };
+			            break;
+
+			        case "fdefault":
+			            break;
+
+			        default:
+			            throw new Error("MemMetaObjFields.set: Undefined field name \"" + field + "\".");
+			            break;
+			    };
+
+			    if (is_modified)
+			        this._finalizeModif(field, oldVal, newVal);
+			}
 
 		});
 		return MemMetaObjFields;

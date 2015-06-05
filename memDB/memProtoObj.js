@@ -186,6 +186,38 @@ define(
 			    return result;
 			},
 
+	        /**
+             * Finalizes field modification: writes to log and fires events.
+             * 
+             * @param {String} field Field name
+             * @param {Object} oldVal Old field value
+             * @param {Object} newVal New field value
+             * @private
+             */
+			_finalizeModif: function (field, oldVal, newVal) {
+			    if (this.getLog().getActive()) {
+			        var o = { flds: {}, obj: this, type: "mp" };
+			        o.flds[field] = { old: oldVal, new: newVal };
+			        this.getLog().add(o);
+			    }
+
+			    if (!this.isFldModified(field)) { // запоминаем измененные свойства
+			        this._setModified(field, oldVal);
+			    }
+			    if (this.getParent()) this.getParent().logColModif("mod", this.getColName(), this);
+
+			    this.event.fire({
+			        type: "mod",
+			        target: this,
+			        field: field
+			    });
+
+			    this.event.fire({
+			        type: "mod%" + field,
+			        target: this,
+			    });
+			},
+
 			getParent: function () {
 				return this.pvt.parent;
 			},

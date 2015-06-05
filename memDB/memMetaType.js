@@ -662,7 +662,8 @@ define(
 
 
         var MetaTypes = {
-            createTypeObject: GetFldTypeUniq
+            createTypeObject: GetFldTypeUniq,
+            BaseType: BaseType
         };
         
         return MetaTypes;

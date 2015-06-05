@@ -245,7 +245,7 @@ define(
 			},
 
 		    /**
-             * Unsubscribes on event of ["field"] modification
+             * Unsubscribes from event of ["field"] modification
              * 
              * @param {String}       field Field name
              * @param {Object}       handler Event handler (unlike "event object" handler it doesn't have "type" property)
@@ -287,34 +287,7 @@ define(
 				    newSerialized = fldType.getSerializedValue(newValue);
 				}
 
-				if (this.getLog().getActive()) {
-					var o = { flds: {}, obj:this, type:"mp"};
-					o.flds[field] = { old: oldSerialized, new: newSerialized };
-					this.getLog().add(o);
-				}
-				//else { // запоминаем свойства только если ЛОГ выключен - это соответствует режиму применения дельты
-					/*if (field == "Cursor") {
-						console.log("MEMCURSOR " +value);
-					}*/
-					if (!this.isFldModified(field)) { // запоминаем измененные свойства
-					    this._setModified(field, oldSerialized);
-						//this.pvt.fldLog[field] = oldValue;
-					}
-					if (this.getParent()) this.getParent().logColModif("mod",this.getColName(),this);
-					
-				//}
-				
-				this.event.fire({
-                    type: "mod",
-                    target: this,
-					field: field
-				});	
-				
-				this.event.fire({
-				    type: "mod%" + field,
-				    target: this,
-				});
-
+				this._finalizeModif(field, oldSerialized, newSerialized);
 			},
 
 			// получить имя поля по индексу
