@@ -5,14 +5,13 @@
 
 // memobj
 define(
-	['./memProtoObj','./memCol','../system/event'],
-	function(MemProtoObj,MemCol,Event) {
+	['./memProtoObj','./memCol'],
+	function(MemProtoObj,MemCol) {
 		var MemObj = MemProtoObj.extend({
 
 			init: function(objType, parent, flds){
 				UccelloClass.super.apply(this, [objType, parent, flds]);
 
-				this.event = new Event();
 /*
 				var ot = this.pvt.objType.pvt;
 				for (var i=0; i<ot.fieldsArr.length; i++) {
@@ -225,40 +224,6 @@ define(
 			    var otherValue = otherObj.pvt.fields[i];
 
 			    return fldType.compare(Value, otherValue);
-			},
-
-		    /**
-             * Subscribes on event of ["field"] modification
-             * 
-             * @param {String}       field Field name
-             * @param {Object}       handler Event handler (unlike "event object" handler it doesn't have "type" property)
-             */
-			onFieldModif: function (field, handler) {
-			    if (handler) {
-			        var _handler = {
-			            type: "mod%" + field,
-			            subscriber: handler.subscriber,
-			            callback: handler.callback
-			        };
-			        this.event.on(_handler);
-			    }
-			},
-
-		    /**
-             * Unsubscribes from event of ["field"] modification
-             * 
-             * @param {String}       field Field name
-             * @param {Object}       handler Event handler (unlike "event object" handler it doesn't have "type" property)
-             */
-			offFieldModif: function (field, handler) {
-			    if (handler) {
-			        var _handler = {
-			            type: "mod%" + field,
-			            subscriber: handler.subscriber,
-			            callback: handler.callback
-			        };
-			        this.event.off(_handler);
-			    }
 			},
 
 			set: function (field, value, withCheckVal) {
