@@ -67,6 +67,14 @@ define(
                 
                 this._channells = [];
                 this._currChId = 0;
+                this._isNode = typeof exports !== 'undefined' && this.exports !== exports;
+
+                if (this._clientType == CommunicationClient.WEB_SOCKET) {
+                    if(this._isNode)
+                        this._WebSocket = require("ws");
+                    else
+                        this._WebSocket = WebSocket;
+                };
 
             },
             
@@ -137,7 +145,7 @@ define(
                         try {
                             self._ws_close_silent(old_stream, false);
 
-                            ws = new WebSocket(chStateData.url);
+                            ws = new self._WebSocket(chStateData.url);
                             chStateData.stream = ws;
 
                             ws.onerror = self._getErrorProcessor(chStateData);

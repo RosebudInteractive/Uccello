@@ -38,7 +38,7 @@ define(
                     that.pvt.sessionGuid = null;
 
                 this.pvt.constructHolder = new ConstructHolder();
-                this.pvt.constructHolder.loadControls('client', function(){
+                this.pvt.constructHolder.loadControls(function(){
                     that.getClient().connect("ws://"+url('hostname')+":"+UCCELLO_CONFIG.webSocketServer.port, {guid:that.getSessionGuid()},  function(result){
                         $.cookie('sid', result.session.guid);
                         that.pvt.sessionId = result.session.id;
@@ -95,7 +95,7 @@ define(
                     // создаем мастер базу для clientConnection
                     dbp = {name:"MasterClient", kind: "master"};
                     that.pvt.cmclient = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket);
-                    that.pvt.cmclient.buildMetaInfo('client', 'client', function(){
+                    that.pvt.cmclient.buildMetaInfo('client', function(){
                         that.pvt.clientConnection.init(that.pvt.cmclient, {});
                     });
 
