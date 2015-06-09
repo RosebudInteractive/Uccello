@@ -43,15 +43,6 @@ define(
 					callback: this.onNewRoot
 				});
                     
-/*                } else { // MemObj
-                    this.pvt.root = dbOrRoot;
-					// подписаться на удаление объектов
-                    dbOrRoot.getDB().getRoot(dbOrRoot.getRoot().getGuid()).event.on({
-                        type: "delObj",
-                        subscriber: this,
-                        callback: this.onDeleteComponent
-                    });
-                }*/
 			},
 
            /**

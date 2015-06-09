@@ -14,7 +14,7 @@ define(
 				this.pvt.log = [];
 				this.pvt.versions = {};
 				this.pvt.active = false;
-				this.pvt.actver = -1;
+
 				this.pvt.newlog = true;  // новый корневой лог - до первой генерации дельты
 				
 			},
@@ -26,7 +26,6 @@ define(
 			setActive: function(active) {
 				if (active) {
 					this.pvt.active = true;
-					//this.pvt.actver=this.getDB().getCurrentVersion();
 				}
 				else {
 					//this.truncate();
@@ -88,11 +87,15 @@ define(
 				
 				var log = this.pvt.log;
 				//if (log.length == 0) return null;
-				var db = this.getObj().getDB();
+				var obj = this.getObj();
+				var db = obj.getDB();
 				
-
+				// FINALTR
+				//var sver = db.getVersion("sent"); // VER определяем с какой по какую версию делать лог
+				//var ver = db.getVersion();
 				var sver = this.getObj().getRootVersion("sent"); // VER определяем с какой по какую версию делать лог
 				var ver = this.getObj().getRootVersion();
+				
 				if (ver==sver) return null;
 				var k=1;
 				while ((this.pvt.versions[sver+k]==undefined) && (sver+k<=ver)) k++;
@@ -126,8 +129,17 @@ define(
 							curd.parentColName = c.colName; 
 							break;
 						// добавление самого корневого элемента
+						/*
 						case "newRoot":
 							curd.newRoot = c.adObj;
+							break;
+						*/
+						// подписка на корневой элемент
+						case "subscribe":
+						// DELTA-G
+							if (!curd.newRoot) curd.newRoot = db.serialize(obj);
+							if (!("subscribers" in curd)) curd.subscribers={};
+							if (c.subscriber) curd.subscribers[c.subscriber] = 1;
 							break;
 						// удаление объекта из иерархии
 						case "del":
@@ -138,13 +150,12 @@ define(
 							break;
 					}
 				}
-				delta.rootGuid = this.getObj().getRoot().getGuid();
+				delta.rootGuid = obj.getRoot().getGuid();
 				
-				// VER записываем версии в дельту
-				delta.dbVersion = this.getObj().getDB().getVersion();
-				delta.ver = this.getObj().getRootVersion();
-						
-				if (this.getObj().getDB().getCurTranGuid()) delta.trGuid = this.getObj().getDB().getCurTranGuid();
+				// FINALTR записывем версию текущей транзакции в дельту
+				delta.dbVersion = db.getVersion(); //TODO а есть ли уверенность, что на момент генерации дельты версия еще не поменялась?
+				delta.ver = obj.getRootVersion();						
+				if (db.inTran()) delta.trGuid = db.getCurTranGuid();
 				//this.truncate();
 				return delta;
 			},
@@ -190,9 +201,11 @@ define(
 			add: function(item) {			
 				
 				var db = this.getObj().getDB();
-				var xver = db.getCurrentVersion(); // инкрементируем версии если нужно
+				// FINALTR
+				//if (!db.inTran()) db.tranStart(); 
+				var dbver = db.getCurrentVersion(); // инкрементируем версии если нужно
 				var ver = this.getObj().getCurVersion();
-
+				//ver = db.getVersion();
 
 				if (!(ver.toString() in this.pvt.versions))
 					this.pvt.versions[ver] = this.pvt.log.length; // отмечаем место в логе, соответствующее началу этой версии
@@ -200,6 +213,7 @@ define(
 				
 				if (this.getActive()) {
 					item.idx = this.getObj().getDB().getNewCounter();
+					
 					this.pvt.log.push(item);				// добавить в лог корневого объекта
 				}
 

@@ -73,49 +73,6 @@ define(
 					});
 				}
 			},
-			/*
-			memobjInit: function(objType, parent, flds) {
-
-				this.protoobjInit(objType, parent, flds);
-				
-				//this.event = new Event();
-				
-				var otp = this.pvt.objType.pvt;
-				var ot = otp.fieldsArr;
-				this.pvt.fields = new Array(ot.length);
-				var cf = this.pvt.fields;
-				if ((flds!=undefined) && ("fields" in flds)) {
-					for (var i=0; i<ot.length; i++) {
-							//var f = ;
-					    var ft = otp.fieldsTypes[i];
-					    var is_complex = ft.is_complex;
-					    ft = ft.type;
-					    if (ot[i] in flds.fields) {
-					        if (is_complex) {
-					            var val = ft.setValue(flds.fields[ot[i]], ot[i], this, false);
-					            cf[i] = val;
-					        } else
-					            cf[i] = flds.fields[ot[i]]; // TODO проверять типы?
-					    } else
-					        cf[i] = undefined;
-					}
-				}
-				
-				// создать пустые коллекции по типу
-				var ccol = objType.getCol("cols");
-				for (var i=0; i<ccol.count(); i++) 
-					new MemCol(ccol.get(i).get("cname"),this);
-
-				this.finit();
-
-				if (!parent.obj) { // TODO возможно потребуется сделать подобное собыие для метаинформации
-					this.event = new Event();
-					this.getDB().event.fire({
-						type: 'newRoot',
-						target: this
-					});
-				}
-			},*/
 
 
 		    /**

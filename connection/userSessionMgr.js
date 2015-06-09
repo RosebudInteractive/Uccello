@@ -176,12 +176,15 @@ define(
 				var args = data.args;
 				var uobj = this.cmsys.get(args.objGuid);
 				var db = uobj.getContentDB();
-				args.aparams.push(done);
+				function done2(result) {
+					db.tranCommit();
+					done(result);
+				};
+				args.aparams.push(done2);
 
 				function exec1() {
-					if (args.trGuid) db.tranSet(args.trGuid);
-					uobj[args.func].apply(uobj,args.aparams);
-					db.tranSet();					
+					if (args.trGuid) db.tranStart(args.trGuid);
+					uobj[args.func].apply(uobj,args.aparams);									
 				}
 
 				this.addToQueue( db, function() { exec1(); } );

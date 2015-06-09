@@ -301,11 +301,13 @@ define(
 								db.getObj(d.rootGuid).setRootVersion("sent",d.ver);
 							}
 						}
-						break; 
+						break;
+					
 					}
 					else
 					{
 						// VER проверка на применимость дельт
+						
 						var ro = db.getObj(cdelta.rootGuid);
 						if (ro) {
 							var lval = ro.getRootVersion("valid");
@@ -313,6 +315,7 @@ define(
 							var dver = cdelta.ver;
 							if (db.isMaster()) { // мы в мастер-базе (на сервере или на клиенте в клиентском контексте)
 								if (lval > dver) { // на сервере подтвержденная версия не может быть больше пришедшей
+									
 									console.log("cannot sync server -  valid version:"+lval+"delta version:"+dver);
 									return;				
 								}				
@@ -320,6 +323,7 @@ define(
 							else { // на клиенте (slave)
 								if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
 									// если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
+									console.log("UNDO?? if (ldraft>lval) : "+ro.getGuid()+"valid version: "+lval+" delta version:"+dver);
 									if (ldraft>lval) db.undo(lval); 
 								}
 								else { // ошибка синхронизации - ненормальная ситуация, в будущем надо придумать как это обработать
@@ -328,19 +332,41 @@ define(
 								}
 							}
 						}
-
+						
+						/*
+						var lval = db.getVersion("valid");
+						var ldraft = db.getVersion();
+						var dver = cdelta.dbVersion;
+						if (db.isMaster()) { // мы в мастер-базе (на сервере или на клиенте в клиентском контексте)
+							if (lval > dver) { // на сервере подтвержденная версия не может быть больше пришедшей
+								console.log("cannot sync server -  valid version:"+lval+"delta version:"+dver);
+								return;				
+							}				
+						}
+						else { // на клиенте (slave)
+						
+							if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
+								// если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
+								console.log("UNDO : "+" "+lval+" delta version:"+dver);
+								if (ldraft>lval) db.undo(lval); 
+							}
+							else { // ошибка синхронизации - ненормальная ситуация, в будущем надо придумать как это обработать
+								console.log("cannot sync client -  valid version:"+lval+" delta version:"+dver);
+								return;
+							}
+							
+						}*/
+		
 					}
 					if (("items" in cdelta) && cdelta.items.length>0) {
 						var root = db.getRoot(cdelta.rootGuid);
-						//if (!root) - 19/1 (это условие уже не актуально, так как могут прийти новые данные для замены старых
+
 						if (cdelta.items[0].newRoot)
 							var rootObj=db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback()); //TODO добавить коллбэк!!!
 						else
 							rootObj = root.obj;
 						
 						rootObj.getLog().applyDelta(cdelta);
-						if (DEBUG) 
-						console.log("VALID:"+rootObj.getRootVersion("valid")+"draft:"+rootObj.getRootVersion()+"sent:"+rootObj.getRootVersion("sent"));
 					}
 				}
 				this.propagateDeltas(dbGuid,srcDbGuid,cur[tr]);
@@ -367,6 +393,7 @@ define(
 				if (deltas.length>0) {
 					this.propagateDeltas(dbGuid,null,deltas);
 					if (db.getVersion("sent")<db.getVersion()) db.setVersion("sent",db.getVersion());
+					
 					for (var i=0; i<deltas.length; i++) {
 						if (deltas[i].rootGuid) {
 							var obj = db.getRoot(deltas[i].rootGuid).obj;
@@ -374,6 +401,7 @@ define(
 						}
 						
 					}
+					
 				}
 			},
 			
@@ -385,21 +413,23 @@ define(
 
 					if (DEBUG) console.log("CALLBACK PROPAGATE DELTAS");
 					if (DEBUG) console.log(result);
+					
 					for (var guid in rootv) // апдейтим подтвержденные версии рутов после того, как успешно применили их на сервере
 						if (db.getObj(guid).getRootVersion("valid")<rootv[guid])
 							db.getObj(guid).setRootVersion("valid",rootv[guid]);
 						else 
 						 console.log("SYNC VERS CB PROBLEM: "+rootv[guid]+"Clt Ver:"+db.getObj(guid).getRootVersion("valid")+"Cb Ver:"+rootv[guid]);
 					
-					/*
+					
 					if (db.getVersion("valid")<result.data.dbVersion) 
 						db.setVersion("valid", result.data.dbVersion); 
 						
-					if (db.getVersion("valid")>result.data.dbVersion) { // TODO? - по идее откатить нужно все версии, не только валидные
+					if (db.getVersion("valid")>result.data.dbVersion) { 
 						// откатить до версии сервера
-						db.undo(result.data.dbVersion);
+						//db.undo(result.data.dbVersion);
+						console.log("SYNC VERS CBDB PROBLEM - Clt Ver:"+db.getVersion("valid")+"Cb Ver:"+result.data.dbVersion);
 					}
-					*/
+					
 				}
 
 				var db  = this.getDB(dbGuid);
@@ -424,7 +454,7 @@ define(
 								if (DEBUG) console.log(delta);
 								var cbp = null;
 								if ("last" in delta) cbp = cb;
-								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), trGuid: db.getCurTranGuid()},cbp);
+								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), tranGuid: db.getCurTranGuid()},cbp);
 								}
 						}
 					}
@@ -441,13 +471,13 @@ define(
 						}
 					}
 					else {
-						var root = db.getRoot(delta.rootGuid);
-												
+						var root = db.getRoot(delta.rootGuid);												
 						for(guid in root.subscribers) {
 							subscriber = root.subscribers[guid];
 							//console.log('subscriber', subscriber);
 							// удаленные
-							if (subscriber.kind == 'remote' && srcDbGuid != guid) {
+							// DELTA-G добавил кусок условия:  && (!delta.subscribers || (delta.subscribers[dbGuid]))
+							if (subscriber.kind == 'remote' && srcDbGuid != guid && (!delta.subscribers || (delta.subscribers && delta.subscribers[dbGuid]))) {
 								subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid()});
 								if (DEBUG) console.log("sent to DB : "+subscriber.guid);
 								}
