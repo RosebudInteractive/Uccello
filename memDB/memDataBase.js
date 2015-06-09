@@ -819,16 +819,25 @@ define(
 					// если добавляются новые ДАННЫЕ, то все подписчики этого корня также будут на них подписаны
 					// Альтернатива: можно запрашивать их с клиента при изменении rootInstance, несколько проще, но придется посылать их много раз
 					// что хуже с точки зрения нагрузки на сервер и трафика
-
-					var o = { obj:croot, type:"subscribe"};
-				
+			
 					for (var guid in allSubs) {
 						var subscriber = allSubs[guid];
 						if (subscriber.kind == 'remote') {
+						/*
+							var subs2 = this.pvt.rcoll[croot.getGuid()].subscribers; //[subscriber.guid]
+							if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) && !(subs2[subscriber.guid])) {
+							  subs2[subscriber.guid] = subscriber;
+							  // DELTA-G
+							  o.subscriber = subscriber.guid;
+							  croot.getLog().add(o);
+							}*/
+						
+						
 							// Подписываем либо данные (тогда всех) либо подписчика
 							if (croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) {
 							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber;
 							  // DELTA-G
+							  var o = { obj:croot, type:"subscribe"};
 							  o.subscriber = subscriber.guid;
 							  croot.getLog().add(o);
 							 }
@@ -848,7 +857,7 @@ define(
 					root = db.getRoot(rgsubs[i]);
 					if (root) {
 						croot = root.obj;
-						var o = { obj:croot, type:"subscribe"};
+						
 						// возвращаем гуид если рута не было, или был, но не были подписаны
 						if (!(root.subscribers[subDbGuid]))  res.push(croot.getGuid());	 // ЭТО НУЖНО???	
 
@@ -860,6 +869,7 @@ define(
 								if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) && !(subs2[subscriber.guid])) {
 								  subs2[subscriber.guid] = subscriber;
 								  // DELTA-G
+								  var o = { obj:croot, type:"subscribe"};
 								  o.subscriber = subscriber.guid;
 								  croot.getLog().add(o);
 								}
