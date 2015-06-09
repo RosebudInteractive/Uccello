@@ -138,8 +138,12 @@ define(
 						case "subscribe":
 						// DELTA-G
 							if (!curd.newRoot) curd.newRoot = db.serialize(obj);
+							/*
 							if (!("subscribers" in curd)) curd.subscribers={};
 							if (c.subscriber) curd.subscribers[c.subscriber] = 1;
+							*/
+							if (!("subscribers" in delta)) delta.subscribers={};
+							if (c.subscriber) delta.subscribers[c.subscriber] = 1;
 							break;
 						// удаление объекта из иерархии
 						case "del":

@@ -479,7 +479,7 @@ define(
 							//console.log('subscriber', subscriber);
 							// удаленные
 							// DELTA-G добавил кусок условия:  && (!delta.subscribers || (delta.subscribers[dbGuid]))
-							if (subscriber.kind == 'remote' && srcDbGuid != guid && (!delta.subscribers || (delta.subscribers && delta.subscribers[dbGuid]))) {
+							if (subscriber.kind == 'remote' && srcDbGuid != guid && (!delta.subscribers || (delta.subscribers && delta.subscribers[subscriber.guid]))) {
 								subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid()});
 								if (DEBUG) console.log("sent to DB : "+subscriber.guid);
 								}

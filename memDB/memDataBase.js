@@ -850,14 +850,15 @@ define(
 						croot = root.obj;
 						var o = { obj:croot, type:"subscribe"};
 						// возвращаем гуид если рута не было, или был, но не были подписаны
-						if (!(root.subscribers[subDbGuid]))  res.push(croot.getGuid());		
+						if (!(root.subscribers[subDbGuid]))  res.push(croot.getGuid());	 // ЭТО НУЖНО???	
 
 						for (guid in allSubs) { // то же , что и выше TODO отрефакторить
 							subscriber = allSubs[guid];
 							if (subscriber.kind == 'remote') {
-								// Подписываем либо данные (тогда всех) либо подписчика
-								if (croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) {
-								  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber;
+								// Подписываем либо данные (тогда всех) либо подписчика (если ресурс), но только если еще не подписан!
+								var subs2 = this.pvt.rcoll[croot.getGuid()].subscribers; //[subscriber.guid]
+								if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) && !(subs2[subscriber.guid])) {
+								  subs2[subscriber.guid] = subscriber;
 								  // DELTA-G
 								  o.subscriber = subscriber.guid;
 								  croot.getLog().add(o);
