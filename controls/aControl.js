@@ -47,6 +47,10 @@ define(
 
             height: function(value) {
                 return this._genericSetter("Height", value);
+            },
+
+            layoutProp: function(value) {
+                return this._genericSetter("LayoutProp", value);
             }
 
 

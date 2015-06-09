@@ -4,8 +4,8 @@
 }
 
 define(
-	['./memObjLog'],
-	function(MemObjLog) {
+	['./memObjLog', '../system/event'],
+	function (MemObjLog, Event) {
 
 	    var MemProtoObj = UccelloClass.extend({
 				
@@ -13,7 +13,8 @@ define(
 			// parent - ссылка на объект и имя коллекции либо db, null для корневых  (obj и colname)
 			init: function(objType, parent,flds){
 
-				var pvt = this.pvt = {}; // приватные члены
+			    this.event = new Event();
+			    var pvt = this.pvt = {}; // приватные члены
 				 
 				pvt.objType = objType;
 				pvt.fields = [];				// значения полей объекта
@@ -184,6 +185,72 @@ define(
 			        };
 			    };
 			    return result;
+			},
+
+	        /**
+             * Finalizes field modification: writes to log and fires events.
+             * 
+             * @param {String} field Field name
+             * @param {Object} oldVal Old field value
+             * @param {Object} newVal New field value
+             * @private
+             */
+			_finalizeModif: function (field, oldVal, newVal) {
+			    if (this.getLog().getActive()) {
+			        var o = { flds: {}, obj: this, type: "mp" };
+			        o.flds[field] = { old: oldVal, new: newVal };
+			        this.getLog().add(o);
+			    }
+
+			    if (!this.isFldModified(field)) { // запоминаем измененные свойства
+			        this._setModified(field, oldVal);
+			    }
+			    if (this.getParent()) this.getParent().logColModif("mod", this.getColName(), this);
+
+			    this.event.fire({
+			        type: "mod",
+			        target: this,
+			        field: field
+			    });
+
+			    this.event.fire({
+			        type: "mod%" + field,
+			        target: this,
+			    });
+			},
+
+	        /**
+             * Subscribes on event of ["field"] modification
+             * 
+             * @param {String}       field Field name
+             * @param {Object}       handler Event handler (unlike "event object" handler it doesn't have "type" property)
+             */
+			onFieldModif: function (field, handler) {
+			    if (handler) {
+			        var _handler = {
+			            type: "mod%" + field,
+			            subscriber: handler.subscriber,
+			            callback: handler.callback
+			        };
+			        this.event.on(_handler);
+			    }
+			},
+
+	        /**
+             * Unsubscribes from event of ["field"] modification
+             * 
+             * @param {String}       field Field name
+             * @param {Object}       handler Event handler (unlike "event object" handler it doesn't have "type" property)
+             */
+			offFieldModif: function (field, handler) {
+			    if (handler) {
+			        var _handler = {
+			            type: "mod%" + field,
+			            subscriber: handler.subscriber,
+			            callback: handler.callback
+			        };
+			        this.event.off(_handler);
+			    }
 			},
 
 			getParent: function () {

@@ -332,7 +332,7 @@ define(
 			},
 
 			renderForms: function(roots, pd) {
-				console.log("%c RENDER FORMS "+pd, 'color: green');
+			    if (DEBUG) console.log("%c RENDER FORMS " + pd, 'color: green');
 				for (var i=0; i<roots.length; i++) {
 					var root = this.pvt.cm.get(roots[i]);
 					this.pvt.cm.render(root, this.pvt.renderRoot(roots[i]), pd);

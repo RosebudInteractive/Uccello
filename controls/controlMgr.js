@@ -27,7 +27,8 @@ define(
 				this.pvt.dataInitFlag = {};
 				this.pvt.rootGuids = {};
 				this.pvt.vc = vc;
-				
+				this._isNode = typeof exports !== 'undefined' && this.exports !== exports;
+
 				if (socket)
 					this.pvt.socket = socket;
 				else
@@ -279,17 +280,20 @@ define(
                 return this.pvt.asd;
             },
 
-			buildMetaInfo: function(type, side, done){
+			buildMetaInfo: function(type, done){
 				var ctrls = UCCELLO_CONFIG.controls;
 
-				if (!side || side == 'server') {
-					for (var i in ctrls) {
-						if ((!ctrls[i].metaType && type=='content') || (ctrls[i].metaType && ctrls[i].metaType.indexOf(type)!=-1)) {
-							var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath;
-							var comp = require(path + ctrls[i].component);
-							new comp(this);
-						}
-					}
+				//if (!side || side == 'server') {
+				if (this._isNode) {
+				    for (var i in ctrls) {
+				        if ((!ctrls[i].metaType && type == 'content') || (ctrls[i].metaType && ctrls[i].metaType.indexOf(type) != -1)) {
+				            var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath : UCCELLO_CONFIG.controlsPath;
+				            var comp = require(path + ctrls[i].component);
+				            new comp(this);
+				        }
+				    };
+				    if (done)
+				        done();
 				} else {
 					var that = this;
 					var scripts = [];

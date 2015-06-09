@@ -39,18 +39,61 @@ define(
              * Converts the internal representation of the collection type
              * to the serialized one
              *
+             * @param {Object} val Internal representation of the collection type
              * @return {String|Object} Serialized representation
              */
-			_serializeType: function () {
-			    var res = this.pvt.fields[1].type;
-			    if (this.pvt.fields[1].strict)
-			        res = { type: this.pvt.fields[1].type, strict: true };
+			_serializeType: function (val) {
+			    var res = val.type;
+			    if (val.strict)
+			        res = { type: val.type, strict: true };
 			    return res;
 			},
 
 			// ПОЛЯ
 			
-			get: function(field) {
+		    /**
+             * Sets field value.
+             * 
+             * @param {String} field Field name
+             * @param {Object} value Field value
+             * @throws Will throw an error if field doesn't exist
+             */
+			set: function (field, value) {
+
+			    var oldVal, newVal;
+			    var is_modified = false;
+
+			    switch (field) {
+			        case "cname":
+			            oldVal = this.pvt.fields[0];
+			            newVal = String(value);
+			            if (oldVal !== newVal) {
+			                is_modified = true;
+			                this.pvt.fields[0] = newVal;
+			            };
+			            break;
+
+			        case "ctype":
+			            oldVal = this.pvt.fields[1];
+			            newVal = this._deserializeType(value);
+			            if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+			                is_modified = true;
+			                this.pvt.fields[1] = newVal;
+			                oldVal = this._serializeType(oldVal);
+			                newVal = this._serializeType(newVal);
+			            };
+			            break;
+
+			        default:
+			            throw new Error("MemMetaObjFields.set: Undefined field name \"" + field + "\".");
+			            break;
+			    };
+
+			    if (is_modified)
+			        this._finalizeModif(field, oldVal, newVal);
+			},
+
+		    get: function(field) {
 
 				if (typeof field == "string") { // ищем по имени			
 					if (field=="cname") return this.pvt.fields[0];
@@ -73,7 +116,7 @@ define(
 			            res = this.pvt.fields[0];
 			            break;
 			        case 1:
-			            res = this._serializeType();
+			            res = this._serializeType(this.pvt.fields[1]);
 			            break;
 			    };
 			    return res;

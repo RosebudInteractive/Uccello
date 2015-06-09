@@ -286,8 +286,10 @@ define(
 				cur[tr].push(delta);
 				
 				if (!(endOfStory in delta)) return; // буферизовали и ждем последнюю, чтобы применить все сразу
+
 								
-				console.log("APPLY DELTAS "+tr);
+				//console.log("APPLY DELTAS "+tr);
+
 				for (var i=0; i<cur[tr].length; i++) {
 					var cdelta = cur[tr][i];
 					if (endOfStory in cdelta) { // VER последняя дельта транзакции (для клиента и сервера)

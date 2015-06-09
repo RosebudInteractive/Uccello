@@ -791,9 +791,23 @@ define(
 					var root = null;
 					if (rg[i].length>36) root = this.getRoot(rg[i]);
 
-					if (rg[i].length>36)
-						var croot = this.deserialize(sobjs[i], { }, cb, false, rg[i]);
-					else croot = this.deserialize(sobjs[i], { }, cb);
+					if (!root) {
+						var time = Date.now();
+						if (rg[i].length>36)
+							var croot = this.deserialize(sobjs[i], { }, cb, false, rg[i]);
+						else croot = this.deserialize(sobjs[i], { }, cb);
+						
+						var timeEnd = Date.now();
+						//logger.info((new Date()).toISOString()+';deserialize;'+(timeEnd-time));
+						// добавить в лог новый корневой объект, который можно вернуть в виде дельты
+						var time = Date.now();
+						var serializedObj=this.serialize(croot); // TODO по идее можно взять sobjs[i], но при десериализации могут добавляться гуиды
+						var timeEnd = Date.now();
+						//logger.info((new Date()).toISOString()+';serialize;'+(timeEnd-time));
+						var o = { adObj: serializedObj, obj:croot, type:"newRoot"};
+						croot.getLog().add(o);
+					}
+					else croot = root.obj;
 						
 					croot.getCurVersion();
 					
