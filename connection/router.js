@@ -20,11 +20,18 @@ define(['../system/event'], function(event) {
             this._actions = {};
 
             this.testCount = 0;
+            this.testCountDelta = 0;
             this.testTime = 0;
+            this.testTimeDelta = new Date();
             var that = this;
-            setInterval(function(){
-                console.log('LOADNEWROOTS: '+ that.testCount + 'items, time:'+ that.testTime + 'мс');
+            setInterval(function () {
+                var endTime = new Date();
+                console.log('LOADNEWROOTS: ' + that.testCount + 'items, time:' + that.testTime + 'мс');
+                console.log('SEND DELTA: ' + that.testCountDelta + ' items, time:' + (endTime - that.testTimeDelta) + 'мс, ' +
+                    (that.testCountDelta * 1000 / (endTime - that.testTimeDelta)).toFixed(2) + ' op/sec.');
                 that.testCount = 0;
+                that.testCountDelta = 0;
+                that.testTimeDelta = endTime;
                 that.testTime = 0;
             }, 60000);
         },
@@ -66,10 +73,10 @@ define(['../system/event'], function(event) {
                         log[1] = log[1] + ':' + data.args.func; //JSON.stringify(data.args);
                     }
 
-                    /*if (data.action == 'sendDelta') {
-                    that.testCount++;
-                    that.testTime += log[2];
-                }*/
+                    if (data.action == 'sendDelta') {
+                        that.testCountDelta++;
+                        //that.testTime += log[2];
+                    };
                    /* if (data.action != 'sendDelta')
                       logger.info(log.join(';'));*/
                     done.apply(this, arguments);

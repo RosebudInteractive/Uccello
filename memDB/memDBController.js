@@ -389,27 +389,28 @@ define(
              * Сгенерировать и разослать "дельты" 
              * @param dbGuid - гуид базы данных, для которой генерим дельты
              */
-			genDeltas: function(dbGuid, commit) {
+			genDeltas: function(dbGuid, commit, callback) {
 				var db  = this.getDB(dbGuid);
 				var deltas = db.genDeltas(commit);
-				if (deltas.length>0) {
-					this.propagateDeltas(dbGuid,null,deltas);
-					if (db.getVersion("sent")<db.getVersion()) db.setVersion("sent",db.getVersion());
-					
-					for (var i=0; i<deltas.length; i++) {
-						if (deltas[i].rootGuid) {
-							var obj = db.getRoot(deltas[i].rootGuid).obj;
-							obj.setRootVersion("sent",obj.getRootVersion());
-						}
-						
-					}
-					
+				if (deltas.length > 0) {
+				    this.propagateDeltas(dbGuid, null, deltas, callback);
+				    if (db.getVersion("sent") < db.getVersion()) db.setVersion("sent", db.getVersion());
+
+				    for (var i = 0; i < deltas.length; i++) {
+				        if (deltas[i].rootGuid) {
+				            var obj = db.getRoot(deltas[i].rootGuid).obj;
+				            obj.setRootVersion("sent", obj.getRootVersion());
+				        }
+				    }
 				}
+				else
+				    if (callback)
+				        setTimeout(callback, 0);
 			},
 			
 			
 			// послать подписчикам и мастеру дельты которые либо сгенерированы локально либо пришли снизу либо сверху
-			propagateDeltas: function(dbGuid, srcDbGuid, deltas) {
+			propagateDeltas: function(dbGuid, srcDbGuid, deltas, callback) {
 
 				function cb(result) { // VER обработка ответа от сервера по итогам отсылки дельт
 
@@ -431,7 +432,9 @@ define(
 						//db.undo(result.data.dbVersion);
 						console.log("SYNC VERS CBDB PROBLEM - Clt Ver:"+db.getVersion("valid")+"Cb Ver:"+result.data.dbVersion);
 					}
-					
+
+					if (callback)
+					    callback(result);
 				}
 
 				var db  = this.getDB(dbGuid);
