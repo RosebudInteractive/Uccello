@@ -174,8 +174,14 @@ define(
 			routerRemoteCall: function(data,done) {				
 
 				var args = data.args;
-				var uobj = this.cmsys.get(args.objGuid);
-				var db = uobj.getContentDB();
+				var trGuid = data.trGuid;
+				//var uobj = this.cmsys.get(args.objGuid);
+				//var db = uobj.getContentDB();
+				var context = this.cmsys.get(args.contextGuid);
+				var db = context.getContentDB();
+				// поискать объект в VC, а если нет то в контентной базе
+				// в будущем найти более единообразное решение и сделать рефакторинг
+				var uobj =  (this.cmsys.get(args.objGuid)) ? this.cmsys.get(args.objGuid) : db.get(args.objGuid);
 				function done2(result) {
 					db.tranCommit();
 					done(result);
@@ -183,7 +189,7 @@ define(
 				args.aparams.push(done2);
 
 				function exec1() {
-					if (args.trGuid) db.tranStart(args.trGuid);
+					if (trGuid) db.tranStart(trGuid);
 					uobj[args.func].apply(uobj,args.aparams);									
 				}
 

@@ -48,8 +48,7 @@ define(
 					return;
 				}
 				this.pvt.cdb = null;
-				this.pvt.tranQueue = null; // очередь выполнения методов если в транзакции
-				this.pvt.inTran = false; // признак транзакции
+
 
 				if (params == undefined) return;
 
@@ -124,7 +123,7 @@ define(
 					}
 				this.pvt.compCallback = createCompCallback;
 
-				if (this.getModule().isMaster()) { // главная (master) TODO разобраться с KIND
+				if (this.isMaster()) { // главная (master) TODO разобраться с KIND
 					this.pvt.cdb = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
 					// подписываемся на добавление нового рута
 					this.pvt.cdb.event.on( {
@@ -176,7 +175,7 @@ define(
 			 * @callback cb - коллбэк для вызова после отработки отписки
 			 */
 			_dispose: function(cb) {
-				if (!this.getModule().isMaster()) {
+				if (!this.isMaster()) {
 					var controller = this.getControlMgr().getController();
 					controller.delDataBase(this.getContentDB().getGuid(), cb);
 				}
@@ -240,34 +239,6 @@ define(
 			},
 
 
-			// "транзакции" для буферизации вызовов методов
-			tranStart: function() {
-				if (this.pvt.inTran) return;
-				this.pvt.inTran = true;
-				this.pvt.tranQueue = [];
-			},
-
-			tranCommit: function() {
-				if (this.pvt.inTran) {
-					for (var i=0; i<this.pvt.tranQueue.length; i++) {
-						var mc = this.pvt.tranQueue[i];
-						mc.method.apply(mc.context,mc.args);
-					}
-					this.pvt.tranQueue = null;
-					this.pvt.inTran = false;
-				}
-			},
-
-			inTran:function() {
-				return this.pvt.inTran;
-			},
-
-			//
-			execMethod: function(context, method,args) {
-				if (this.inTran())
-					this.pvt.tranQueue.push({context:context, method:method, args: args});
-				else method.apply(context,args);
-			},
 
 			// добавляем новый набор данных - мастер-слейв варианты
 			// params.rtype = "res" | "data"
@@ -275,7 +246,7 @@ define(
 			// params.expr - выражение для данных
 			loadNewRoots: function(rootGuids,params, cb) {
 				var that = this;
-				if (this.getModule().isMaster()) {
+				if (this.isMaster()) {
 					//var override = true;
 
 					function icb(r) {
@@ -291,7 +262,7 @@ define(
 					// Всегда добавляем новые - проверка существования не имеет смысла, мы говорим о гуидах прототипов
 					for (var i=0; i<rootGuids.length; i++) {
 					    if (rootGuids[i].length > 36) { // instance Guid
-							var cr = this.getRoot(rootGuids[i]);
+							var cr = this.getContextCM().getRoot(rootGuids[i]); 
 							if (cr && (params.expr &&  params.expr!=cr.hash) /*|| !params.expr*/) 
 									rg.push(rootGuids[i]);
 							else rgsubs.push(rootGuids[i]);
@@ -314,7 +285,7 @@ define(
 				else { // slave
 					// вызываем загрузку нового рута у мастера
 					params.subDbGuid = this.getContentDB().getGuid();
-					this.remoteCall('loadNewRoots', [rootGuids, params],cb, this.getContentDB().getCurTranGuid());
+					this.remoteCall('loadNewRoots', [rootGuids, params],cb /*, this.getContentDB().getCurTranGuid()*/);
 				}
 			},
 
