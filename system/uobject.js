@@ -207,19 +207,23 @@ define(
              * @param aparams - массив параметров удаленной функции
 			 * @callback cb - коллбэк
              */			
-			remoteCall: function(func, aparams, cb, trGuid) {
+			remoteCall: function(func, aparams, cb) {
 				if (this.getModule().isMaster()) {
 					// TODO кинуть исключение
 					return;
 				}
-				var socket = this.getControlMgr().getSocket();
-				//var pg = this.getObj().getDB().getProxyMaster().guid;
-				var pg = this.getControlMgr().getProxyMaster().guid;
-				//var pg = this.getProxyMaster().guid;
-							
-				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func, trGuid:trGuid };
-				var args={action:"remoteCall2",type:"method",args: myargs};
-				socket.send(args,cb);
+				var cm = this.getControlMgr();
+				var socket = cm.getSocket();
+				var pg = cm.getProxyMaster().guid;
+				
+				
+				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func /*, trGuid:trGuid*/ };
+				myargs.contextGuid = cm.getContext() ? cm.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
+				var args={action:"remoteCall2",type:"method",args: myargs };
+				if (cm.getCurTranGuid()) 
+					args.trGuid = cm.getCurTranGuid();
+				 cm._execMethod(socket,socket.send,[args,cb]);
+				//  socket.send(args,cb);
 			},
 
 

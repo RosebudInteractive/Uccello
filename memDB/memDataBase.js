@@ -1119,16 +1119,7 @@ define(
 			// - только 1 транзакция в единицу времени на memDB
 			
 			tranStart: function(guid) {
-/*
-				if (this.pvt.tranCounter>0)
-					this.pvt.tranCounter++;
-				else {
-					this.pvt.tranId++;
-					this.pvt.tranCounter=1;
-					this.getCurrentVersion();
-				}
-				return this.getVersion();
-	*/							
+						
 				if (this.pvt.curTranGuid) 
 					if ((this.pvt.curTranGuid == guid) || (!guid)) 
 						this.pvt.tranCounter++;
@@ -1148,16 +1139,7 @@ define(
 			},
 			
 			tranCommit: function() {
-			/*
-				if (this.pvt.tranCounter<=0) 
-					return;
-				if (this.pvt.tranCounter==1) {
-					this.getController().genDeltas(this.getGuid());
-					this.pvt.tranCounter=0;
-					// TODOFT валидация версий на сервере?
-				}
-				else this.pvt.tranCounter--;
-			*/
+
 				var memTran = this.pvt.curTranGuid;
 				if (this.pvt.tranCounter==1) {
 			
