@@ -92,6 +92,23 @@ define(
             },
 
             /**
+             * Compares val1 and val2.
+             * 
+             * @param {Any}       val1 First value
+             * @param {Any}       val2 Second value
+             * @return {Integer} 0 - [val1===val2], 1- [val1 > val2], (-1) - [val1 < val2]
+             */
+            compare: function (val1, val2) {
+                var res = 0;
+                if (val1 !== val2)
+                    if (val1 > val2)
+                        res = 1;
+                    else
+                        res = -1;
+                return res;
+            },
+
+            /**
              * Returns a serialized representation of the data type
              * 
              * @return {Object} Serialized representation
@@ -416,6 +433,35 @@ define(
             },
 
             /**
+             * Compares val1 and val2.
+             * 
+             * @param {Any}       val1 First value
+             * @param {Any}       val2 Second value
+             * @return {Integer} 0 - [val1===val2], 1- [val1 > val2], (-1) - [val1 < val2]
+             */
+            compare: function (val1, val2) {
+                var res = 0;
+                if (!this.isEqual(val1, val2)) {
+                    if (val1 && val2) {
+                        if (val1.objRef && val2.objRef)
+                            return UccelloClass.super.apply(this, [val1.objRef, val2.objRef]);
+                        else {
+                            var str1 = val1.objRef ? "" : String(val1.guidElem) + "|" + String(val1.guidInstanceElem);
+                            var str2 = val2.objRef ? "" : String(val2.guidElem) + "|" + String(val2.guidInstanceElem);
+                            if (this._external) {
+                                str1 = (val1.objRef ? "" : String(val1.guidRes) + "|" + String(val1.guidInstanceRes) + "|") + str1;
+                                str2 = (val2.objRef ? "" : String(val2.guidRes) + "|" + String(val2.guidInstanceRes) + "|") + str2;
+                            };
+                            return UccelloClass.super.apply(this, [str1, str2]);
+                        };
+                    }
+                    else
+                        return UccelloClass.super.apply(this, [String(val1), String(val1)]);
+                };
+                return res;
+            },
+
+            /**
              * Checks if value is correct.
              * 
              * @param {Any}       val A value to be checked (could be MemProtoObj or serialized reference)
@@ -616,7 +662,8 @@ define(
 
 
         var MetaTypes = {
-            createTypeObject: GetFldTypeUniq
+            createTypeObject: GetFldTypeUniq,
+            BaseType: BaseType
         };
         
         return MetaTypes;

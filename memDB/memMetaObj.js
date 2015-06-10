@@ -124,7 +124,45 @@ define(
 				if (i==1) return "parentClass";
 			},
 			
-					
+		    /**
+             * Sets field value.
+             * 
+             * @param {String} field Field name
+             * @param {Object} value Field value
+             * @throws Will throw an error if field doesn't exist
+             */
+			set: function (field, value) {
+
+			    var oldVal, newVal;
+			    var is_modified = false;
+			    var idx = -1;
+
+			    switch (field) {
+			        case "typeName":
+			            idx = 0;
+			            break;
+
+			        case "parentClass":
+			            idx = 1;
+			            break;
+
+			        default:
+			            throw new Error("MemMetaObjFields.set: Undefined field name \"" + field + "\".");
+			            break;
+			    };
+
+			    oldVal = this.pvt.fields[idx];
+			    newVal = String(value);
+			    if (oldVal !== newVal) {
+			        is_modified = true;
+			        this.pvt.fields[idx] = newVal;
+			    };
+
+			    if (is_modified)
+			        this._finalizeModif(field, oldVal, newVal);
+			},
+
+
 			// КОЛЛЕКЦИИ
 					
 		    /**
@@ -164,8 +202,8 @@ define(
 
 			    var idx = col;
 			    if (typeof col === "string") {
-			        if (this.pvt.colsTable[colName] !== undefined)
-			            idx = this.pvt.colsTable[colName];
+			        if (this.pvt.colsTable[col] !== undefined)
+			            idx = this.pvt.colsTable[col];
 			    };
 
 			    if (typeof (idx) === "number")

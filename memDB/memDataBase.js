@@ -47,8 +47,7 @@ define(
 		        pvt.$idCnt = 0;
 		        pvt.$maxRootId = -1;        // максимальный номер корневого объекта
 		        pvt.subscribers = {}; 		// все базы-подписчики
-		        
-		        pvt.inTran = false;
+
 		        if ("guid" in params)
 		            pvt.guid = params.guid;
 		        else
@@ -64,7 +63,8 @@ define(
 
 		        this.event = new Event();
 				// транзакции
-				pvt.curTranGuid = undefined; // гуид текущей транзакции БД
+				pvt.curTranGuid = undefined; // верси текущей транзакции БД
+				//pvt.tranId = 0;				// номер версии транзакции
 				pvt.tranCounter = 0;		// счетчик транзакции
 				pvt.commitFlag = false;
 
@@ -72,6 +72,7 @@ define(
 		            var db=this;
 		            controller._subscribe(this,params.proxyMaster, function(result) {
 		                pvt.proxyMaster = controller.getProxy(params.proxyMaster.guid);
+						// DBVER
 		                pvt.version = result.data.dbVersion; // устанавливаем номер версии базы по версии мастера
 		                pvt.validVersion = pvt.version;
 		                pvt.sentVersion = pvt.version;
@@ -116,12 +117,6 @@ define(
 		            this.pvt.robjs.push(root);
 		            this.pvt.rcoll[obj.getGuid()] = root;
 		        }
-		        /*  --- Перенесено в memObj
-				this.event.fire({
-                    type: 'newRoot',
-                    target: obj,
-					options:opt
-				});*/
 
 		    },
 
@@ -750,14 +745,12 @@ define(
 				var rholder = this.getRoot(res.getGuid());
 				
 
-				if (rholder) {  // VER инициализация номеров версий рута
+				if (rholder)   // VER инициализация номеров версий рута
 					if (("ver" in sobj)) {
 						rholder.vver = sobj.ver; // TODOХ не до конца ясно как поступать с версиями в случае частичной сериализации - продумать
 						rholder.sver = sobj.ver; // НАЗНАЧЕНИЕ ВЕРСИЙ ВЫНЕСТИ ЗА ПРЕДЕЛЫ ДЕСЕРИАЛАЙЗА
 						rholder.dver = sobj.ver;						
 					}
-
-				}
 
 				this.resolveAllRefs();
 				res.getLog().setActive(true);
@@ -782,7 +775,7 @@ define(
              * @returns {*} - возвращает массив корневых гуидов - либо созданных рутов либо уже существующих но на которые не были подписаны
              */
 			// ДОЛЖНА РАБОТАТЬ ТОЛЬКО ДЛЯ МАСТЕР БАЗЫ - СЛЕЙВ НЕ МОЖЕТ ДОБАВИТЬ В СЕБЯ РУТ, МОЖЕТ ТОЛЬКО ПОДПИСАТЬСЯ НА РУТ МАСТЕРА!
-			addRoots: function(sobjs, params, rg, override) {
+			addRoots: function(sobjs, params, rg, rgsubs) {
 				var subDbGuid = params.subDbGuid;
 				var cb = params.compcb;
 				
@@ -792,45 +785,62 @@ define(
 				this.getCurrentVersion();
 
 				if (!cb) cb = this.getDefaultCompCallback();
+				var allSubs = this.getSubscribers();
 
 				for (var i=0; i<rg.length; i++) {
 					var root = null;
 					if (rg[i].length>36) root = this.getRoot(rg[i]);
-					if (!root || override) {
-						var time = Date.now();
-						if (rg[i].length>36)
-							var croot = this.deserialize(sobjs[i], { }, cb, false, rg[i]);
-						else croot = this.deserialize(sobjs[i], { }, cb);
-						
-						var timeEnd = Date.now();
-						logger.info((new Date()).toISOString()+';deserialize;'+(timeEnd-time));
-						// добавить в лог новый корневой объект, который можно вернуть в виде дельты
-						var time = Date.now();
-						var serializedObj=this.serialize(croot); // TODO по идее можно взять sobjs[i], но при десериализации могут добавляться гуиды
-						var timeEnd = Date.now();
-						logger.info((new Date()).toISOString()+';serialize;'+(timeEnd-time));
-						var o = { adObj: serializedObj, obj:croot, type:"newRoot"};
-						croot.getLog().add(o);
-						
-					}
-					else croot = root.obj;
-					croot.getCurVersion();
-					var allSubs = this.getSubscribers();
 
-					// возвращаем гуид если рута не было, или был, но не были подписаны, или в режиме оверрайд
-					// TODO RFDS проверить нужно ли условие с  "|| override"
-					if (!root || (root && !(root.subscribers[subDbGuid])) || override) res.push(croot.getGuid());		
+					//if (!root) {
+						//var time = Date.now();
+					if (rg[i].length>36)
+						var croot = this.deserialize(sobjs[i], { }, cb, false, rg[i]);
+					else croot = this.deserialize(sobjs[i], { }, cb);
+						
+						//var timeEnd = Date.now();
+						//logger.info((new Date()).toISOString()+';deserialize;'+(timeEnd-time));
+						// добавить в лог новый корневой объект, который можно вернуть в виде дельты
+						//var time = Date.now();
+					var serializedObj=this.serialize(croot);
+						//var timeEnd = Date.now();
+						//logger.info((new Date()).toISOString()+';serialize;'+(timeEnd-time));
+					var o = { adObj: serializedObj, obj:croot, type:"newRoot"};
+					croot.getLog().add(o);
+					//}
+					//else croot = root.obj;
+						
+					croot.getCurVersion();
+					
+
+					// возвращаем гуид если рута не было, или был, но не были подписаны
+					if (!root || (root && !(root.subscribers[subDbGuid])) ) res.push(croot.getGuid());		
 
 					// форсированная подписка для данных (не для ресурсов) - в будущем скорее всего понадобится управлять этим
 					// если добавляются новые ДАННЫЕ, то все подписчики этого корня также будут на них подписаны
 					// Альтернатива: можно запрашивать их с клиента при изменении rootInstance, несколько проще, но придется посылать их много раз
 					// что хуже с точки зрения нагрузки на сервер и трафика
+			
 					for (var guid in allSubs) {
 						var subscriber = allSubs[guid];
 						if (subscriber.kind == 'remote') {
+						/*
+							var subs2 = this.pvt.rcoll[croot.getGuid()].subscribers; //[subscriber.guid]
+							if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) && !(subs2[subscriber.guid])) {
+							  subs2[subscriber.guid] = subscriber;
+							  // DELTA-G
+							  o.subscriber = subscriber.guid;
+							  croot.getLog().add(o);
+							}*/
+						
+						
 							// Подписываем либо данные (тогда всех) либо подписчика
-							if (croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid)
+							if (croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) {
 							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber;
+							  // DELTA-G
+							  var o = { obj:croot, type:"subscribe"};
+							  o.subscriber = subscriber.guid;
+							  croot.getLog().add(o);
+							 }
 						}
 					}			
 
@@ -840,15 +850,46 @@ define(
 					}
 					// VER подтверждаем версию на сервере
 					croot.setRootVersion("valid",croot.getRootVersion());
-				}					
+				}	
+				
+				// просто подписать остальные руты
+				for (i=0; i<rgsubs.length; i++) {
+					root = db.getRoot(rgsubs[i]);
+					if (root) {
+						croot = root.obj;
+						
+						// возвращаем гуид если рута не было, или был, но не были подписаны
+						if (!(root.subscribers[subDbGuid]))  res.push(croot.getGuid());	 // ЭТО НУЖНО???	
 
-				if (!this.inTran()) { // автоматом "закрыть" транзакцию (VALID VERSION = DRAFT VERSION)
+						for (guid in allSubs) { // то же , что и выше TODO отрефакторить
+							subscriber = allSubs[guid];
+							if (subscriber.kind == 'remote') {
+								// Подписываем либо данные (тогда всех) либо подписчика (если ресурс), но только если еще не подписан!
+								var subs2 = this.pvt.rcoll[croot.getGuid()].subscribers; //[subscriber.guid]
+								if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) && !(subs2[subscriber.guid])) {
+								  subs2[subscriber.guid] = subscriber;
+								  // DELTA-G
+								  var o = { obj:croot, type:"subscribe"};
+								  o.subscriber = subscriber.guid;
+								  croot.getLog().add(o);
+								}
+							}
+						}			
+					}
+					
+				}
+
+				if (!this.getCurTranGuid()) {
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
 					this.getController().genDeltas(this.getGuid());		// рассылаем дельты
 				}
+				//}
 				if (DEBUG) console.log("SERVER VERSION " + this.getVersion());
 
 				return res;
+			},
+			
+			_addToSubs: function(rg) {
 			},
 			
 			addObj: function(objType, parent, flds) {
@@ -872,7 +913,7 @@ define(
 			},
 			
             /**
-             * Вернуть версию БД - УСТАРЕЛО
+             * Вернуть версию БД
              */
 			getVersion: function(verType) {
 				switch (verType) {
@@ -897,12 +938,6 @@ define(
 					case "valid":
 						this.pvt.validVersion=val;
 						if (DEBUG) console.log("*** valid setversion "+val);
-						/*if ((val<=this.pvt.sentVersion) && (val<=this.pvt.version)) this.pvt.validVersion=val;
-						else {
-							console.log("*** valid setversion error");
-							console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
-						}*/
-						//if (this.pvt.sentVersion<this.pvt.validVersion) this.pvt.sentVersion = this.pvt.validVersion; - на сервере может быть <
 						if (this.pvt.version<this.pvt.validVersion) this.pvt.version = this.pvt.validVersion;
 						break;
 					default:
@@ -925,9 +960,6 @@ define(
 				return this.getVersion();
 			},
 
-			inTran: function() {
-				return this.pvt.inTran;
-			},
 
             /**
              * countRoot
@@ -1039,21 +1071,28 @@ define(
 					var d=this.getRoot(i).obj.getLog().genDelta();
 					if (d!=null) {
 						allDeltas.push(d);
-						// VER если в мастере, то сразу и подтверждаем 
-						if (this.isMaster()) this.getRoot(i).obj.setRootVersion("valid",this.getRoot(i).obj.getRootVersion());
+						// VER если в мастере, то сразу и подтверждаем 					
+						if (this.isMaster() && !this.getCurTranGuid()) 
+							this.getRoot(i).obj.setRootVersion("valid",this.getRoot(i).obj.getRootVersion());
+						
 					}
 				}
-				if (this.isMaster())		// TODO закрывать транзакцию?
-					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
-
+				// DBVER если в мастере и вне транзакции, то автоматом поднимаем валидную версию				
+				if (this.isMaster() && !this.getCurTranGuid())	
+					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (если вне транзакции)
+				
 				// вторая часть условия - чтобы разослать на клиенты "правильную" версию
 				if ((allDeltas.length>0) || (this.isMaster() && this.getVersion("valid")!=this.getVersion("sent"))) {
-					//this.pvt.tranCounter++;
+					// FINALTR
 					var o = { last: 1, dbVersion:this.getVersion() };
+					
 					if (this.getCurTranGuid()) 
 						o.trGuid = this.getCurTranGuid();
-					if (commit) o.endTran = 1;
-					
+					if (commit) {
+						o.endTran = 1;
+						//o.trGuid = commit;
+					}
+										
 					allDeltas.push(o);
 					//allDeltas[allDeltas.length-1].last = 1; // признак конца транзакции
 				}
@@ -1075,42 +1114,75 @@ define(
 				for (var g in this.pvt.objs)
 					this.getObj(g).resetModifFldLog();
 			},
+
+			// Транзакции
+			// - только 1 транзакция в единицу времени на memDB
 			
-			tranSet: function(guid) {
-				 this.pvt.curTranGuid = guid;
-				 this.pvt.tranCounter=1;
-			},
-			
-			tranStart: function() {
-				//if (this.pvt.curTranGuid) return undefined;
-				//if (guid) this.pvt.curTranGuid = guid;
-				//else 
-				if (this.pvt.curTranGuid) this.pvt.tranCounter++;
+			tranStart: function(guid) {
+/*
+				if (this.pvt.tranCounter>0)
+					this.pvt.tranCounter++;
 				else {
-					this.pvt.curTranGuid = Utils.guid();
+					this.pvt.tranId++;
+					this.pvt.tranCounter=1;
+					this.getCurrentVersion();
+				}
+				return this.getVersion();
+	*/							
+				if (this.pvt.curTranGuid) 
+					if ((this.pvt.curTranGuid == guid) || (!guid)) 
+						this.pvt.tranCounter++;
+					else return;
+				else {
+					if (guid) {
+						this.pvt.curTranGuid = guid;
+						this.pvt.externalTran = true;
+					}
+					else
+						this.pvt.curTranGuid = Utils.guid();
 					this.pvt.tranCounter=1;
 				}
-				//this.pvt.commitFlag = false;
 				console.log("TRANSTART "+this.pvt.tranCounter);
 				return this.pvt.curTranGuid;
 				
 			},
 			
 			tranCommit: function() {
+			/*
+				if (this.pvt.tranCounter<=0) 
+					return;
 				if (this.pvt.tranCounter==1) {
-					this.getController().genDeltas(this.getGuid(), true);
-					this.pvt.curTranGuid = undefined;
-					this.pvt.tranCounter = 0;
+					this.getController().genDeltas(this.getGuid());
+					this.pvt.tranCounter=0;
+					// TODOFT валидация версий на сервере?
 				}
 				else this.pvt.tranCounter--;
-				console.log("COMMIT "+this.pvt.tranCounter);
+			*/
+				var memTran = this.pvt.curTranGuid;
+				if (this.pvt.tranCounter==1) {
+			
+					this.getController().genDeltas(this.getGuid(), (this.pvt.externalTran ? undefined : memTran)); //???
+					this.pvt.curTranGuid = undefined;
+					this.pvt.tranCounter = 0;	
+				}
+				else this.pvt.tranCounter--;
+				console.log("COMMIT "+memTran+" "+this.pvt.tranCounter);
+				
 				
 			},
+
+
+			inTran: function() {
+				if (this.pvt.tranCounter>0) return true;
+				else return false;
+			},
+			
 			
 			tranRollback: function() {
 			
 			},
 			
+
 			getCurTranGuid: function() {
 				return this.pvt.curTranGuid;
 			}

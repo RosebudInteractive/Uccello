@@ -10,20 +10,22 @@ define(
 
             init: function(){
                 this.pvt = {};
+                this._isNode = typeof exports !== 'undefined' && this.exports !== exports;
             },
 
             /**
              * Загрузить контролы
              * @param callback
              */
-            loadControls: function(side, callback){
+            loadControls: function(callback){
                 var that = this;
                 var scripts = [];
                 var ctrls = UCCELLO_CONFIG.controls;
                 that.pvt.components = {};
 
-                if (side == 'server') {
-                    for (var i = 0; i < ctrls.length; i++) {
+                //if (side == 'server') {
+                if (this._isNode) {
+                        for (var i = 0; i < ctrls.length; i++) {
                         var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath;
                         var constr = require(path+ctrls[i].component);
                         var className = ctrls[i].className;

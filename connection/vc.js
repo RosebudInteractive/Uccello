@@ -276,44 +276,44 @@ define(
 			loadNewRoots: function(rootGuids,params, cb) {
 				var that = this;
 				if (this.getModule().isMaster()) {
-					var override = true;
+					//var override = true;
 
 					function icb(r) {
-						var res = that.getContentDB().addRoots(r.datas, params, rg,/*params.compcb, params.subDbGuid,*/ override);
+						
+						var res = that.getContentDB().addRoots(r ? r.datas: null, params, rg, rgsubs/*params.compcb, params.subDbGuid, override*/);
 						if (cb) cb({guids:res});
 					}
-					// TODO RFDS Проверять, есть ли уже объект с таким гуидом и хэшем !!! (expression)
+					// Проверять, есть ли уже объект с таким гуидом и хэшем !!! (expression)
 					// если есть - то просто возвращать его, а не загружать заново. Если нет, тогда грузить.
-					var rg = [];
+					var rg = []; // эти загрузить
+					var rgsubs = []; // а на эти просто подписать
 					
 					// Всегда добавляем новые - проверка существования не имеет смысла, мы говорим о гуидах прототипов
 					for (var i=0; i<rootGuids.length; i++) {
 					    if (rootGuids[i].length > 36) { // instance Guid
 							var cr = this.getRoot(rootGuids[i]);
-							if (cr) {
-								if ((params.expr &&  params.expr!=cr.hash) || !params.expr) {
+							if (cr && (params.expr &&  params.expr!=cr.hash) /*|| !params.expr*/) 
 									rg.push(rootGuids[i]);
-								}
-							}
+							else rgsubs.push(rootGuids[i]);
 						}
-						else rg.push(rootGuids[i]); // если resourceGuid
-							
+						else rg.push(rootGuids[i]); // если resourceGuid			
 					}
 				
-					if (params.rtype == "res") {
-						override = false;
-						this.pvt.proxyServer.loadResources(rg, icb);
-						return "XXX";
+					if (rg.length>0) {
+						if (params.rtype == "res") {
+							this.pvt.proxyServer.loadResources(rg, icb);
+							return "XXX";
+						}
+						if (params.rtype == "data") {
+							this.pvt.proxyServer.queryDatas(rg, params.expr, icb);
+							return "XXX";
+						}
 					}
-					if (params.rtype == "data") {
-						this.pvt.proxyServer.queryDatas(rg, params.expr, icb);
-						return "XXX";
-					}
+					else icb();
 				}
 				else { // slave
 					// вызываем загрузку нового рута у мастера
 					params.subDbGuid = this.getContentDB().getGuid();
-					//var tg = this.getContentDB().tranStart(); // R2805 проверить на запущенную транзакцию
 					this.remoteCall('loadNewRoots', [rootGuids, params],cb, this.getContentDB().getCurTranGuid());
 				}
 			},
@@ -332,7 +332,7 @@ define(
 			},
 
 			renderForms: function(roots, pd) {
-				console.log("%c RENDER FORMS "+pd, 'color: green');
+			    if (DEBUG) console.log("%c RENDER FORMS " + pd, 'color: green');
 				for (var i=0; i<roots.length; i++) {
 					var root = this.pvt.cm.get(roots[i]);
 					this.pvt.cm.render(root, this.pvt.renderRoot(roots[i]), pd);

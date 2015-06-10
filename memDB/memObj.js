@@ -5,14 +5,13 @@
 
 // memobj
 define(
-	['./memProtoObj','./memCol','../system/event'],
-	function(MemProtoObj,MemCol,Event) {
+	['./memProtoObj','./memCol'],
+	function(MemProtoObj,MemCol) {
 		var MemObj = MemProtoObj.extend({
 
 			init: function(objType, parent, flds){
 				UccelloClass.super.apply(this, [objType, parent, flds]);
 
-				this.event = new Event();
 /*
 				var ot = this.pvt.objType.pvt;
 				for (var i=0; i<ot.fieldsArr.length; i++) {
@@ -73,49 +72,6 @@ define(
 					});
 				}
 			},
-			/*
-			memobjInit: function(objType, parent, flds) {
-
-				this.protoobjInit(objType, parent, flds);
-				
-				//this.event = new Event();
-				
-				var otp = this.pvt.objType.pvt;
-				var ot = otp.fieldsArr;
-				this.pvt.fields = new Array(ot.length);
-				var cf = this.pvt.fields;
-				if ((flds!=undefined) && ("fields" in flds)) {
-					for (var i=0; i<ot.length; i++) {
-							//var f = ;
-					    var ft = otp.fieldsTypes[i];
-					    var is_complex = ft.is_complex;
-					    ft = ft.type;
-					    if (ot[i] in flds.fields) {
-					        if (is_complex) {
-					            var val = ft.setValue(flds.fields[ot[i]], ot[i], this, false);
-					            cf[i] = val;
-					        } else
-					            cf[i] = flds.fields[ot[i]]; // TODO проверять типы?
-					    } else
-					        cf[i] = undefined;
-					}
-				}
-				
-				// создать пустые коллекции по типу
-				var ccol = objType.getCol("cols");
-				for (var i=0; i<ccol.count(); i++) 
-					new MemCol(ccol.get(i).get("cname"),this);
-
-				this.finit();
-
-				if (!parent.obj) { // TODO возможно потребуется сделать подобное собыие для метаинформации
-					this.event = new Event();
-					this.getDB().event.fire({
-						type: 'newRoot',
-						target: this
-					});
-				}
-			},*/
 
 
 		    /**
@@ -196,6 +152,37 @@ define(
 			        return undefined;
 			},
 
+		    /**
+             * Compares field values of this["field"] and otherObj["field"]
+             *   "this" and "otherObj" should be the instances of the compatible types
+             *   but this fact is not being verified here (be careful)
+             * 
+             * @param {String}       field Field name
+             * @param {Object}       otherObj Another object of the type compatible with "this"
+             * @throws               Will throw an error if the "field" doesn't exist
+             * @return {Integer}
+             *                       0 - this["field"] = otherObj["field"]
+             *                       1 - this["field"] > otherObj["field"]
+             *                     (-1) - this["field"] < otherObj["field"]
+             */
+			cmpFldVals: function (field, otherObj) {
+			    var objType = this.pvt.objType.pvt;
+			    if (objType.fieldsTable[field] === undefined)
+			        throw new Error("cmpFldVals: Field \"" + field + "\" doesn't exist in the object \"" + this.pvt.guid + "\".");
+			    var i = objType.fieldsTable[field].cidx;
+			    var fldType = objType.fieldsTypes[i].type;
+			    var Value = this.pvt.fields[i];
+
+			    var otherType = otherObj.pvt.objType.pvt;
+			    if (otherType.fieldsTable[field] === undefined)
+			        throw new Error("cmpFldVals: Field \"" + field + "\" doesn't exist in the OTHER object \"" + otherObj.pvt.guid + "\".");
+			    i = otherType.fieldsTable[field].cidx;
+			    var otherFldType = otherType.fieldsTypes[i];
+			    var otherValue = otherObj.pvt.fields[i];
+
+			    return fldType.compare(Value, otherValue);
+			},
+
 			set: function (field, value, withCheckVal) {
 			    var objType = this.pvt.objType.pvt;
 
@@ -222,29 +209,7 @@ define(
 				    newSerialized = fldType.getSerializedValue(newValue);
 				}
 
-				if (this.getLog().getActive()) {
-					var o = { flds: {}, obj:this, type:"mp"};
-					o.flds[field] = { old: oldSerialized, new: newSerialized };
-					this.getLog().add(o);
-				}
-				//else { // запоминаем свойства только если ЛОГ выключен - это соответствует режиму применения дельты
-					/*if (field == "Cursor") {
-						console.log("MEMCURSOR " +value);
-					}*/
-					if (!this.isFldModified(field)) { // запоминаем измененные свойства
-					    this._setModified(field, oldSerialized);
-						//this.pvt.fldLog[field] = oldValue;
-					}
-					if (this.getParent()) this.getParent().logColModif("mod",this.getColName(),this);
-					
-				//}
-				
-				this.event.fire({
-                    type: "mod",
-                    target: this,
-					field: field
-				});	
-				
+				this._finalizeModif(field, oldSerialized, newSerialized);
 			},
 
 			// получить имя поля по индексу
