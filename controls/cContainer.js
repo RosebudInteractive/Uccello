@@ -37,7 +37,7 @@ define(
                                 }
                             }
                     });
-                    cm.userEventHandler(obj, function () {});
+                    //cm.userEventHandler(obj, function () {});
                 }
 
             }
