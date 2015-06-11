@@ -154,11 +154,12 @@ define(
 
 		    /**
              * Compares field values of this["field"] and otherObj["field"]
-             *   "this" and "otherObj" should be the instances of the compatible types
-             *   but this fact is not being verified here (be careful)
+             *   If "otherObj" is instanceof MemObj then "this" and "otherObj" should be
+             *   of the compatible types, but this fact is not being verified here (be careful).
+             *   "otherObj" could be simply a Value of this["field"] type.
              * 
              * @param {String}       field Field name
-             * @param {Object}       otherObj Another object of the type compatible with "this"
+             * @param {Object}       otherObj Another object of the type compatible with "this" or Value
              * @throws               Will throw an error if the "field" doesn't exist
              * @return {Integer}
              *                       0 - this["field"] = otherObj["field"]
@@ -173,12 +174,15 @@ define(
 			    var fldType = objType.fieldsTypes[i].type;
 			    var Value = this.pvt.fields[i];
 
-			    var otherType = otherObj.pvt.objType.pvt;
-			    if (otherType.fieldsTable[field] === undefined)
-			        throw new Error("cmpFldVals: Field \"" + field + "\" doesn't exist in the OTHER object \"" + otherObj.pvt.guid + "\".");
-			    i = otherType.fieldsTable[field].cidx;
-			    var otherFldType = otherType.fieldsTypes[i];
-			    var otherValue = otherObj.pvt.fields[i];
+			    if (otherObj instanceof MemObj) {
+			        var otherType = otherObj.pvt.objType.pvt;
+			        if (otherType.fieldsTable[field] === undefined)
+			            throw new Error("cmpFldVals: Field \"" + field + "\" doesn't exist in the OTHER object \"" + otherObj.pvt.guid + "\".");
+			        i = otherType.fieldsTable[field].cidx;
+			        var otherValue = otherObj.pvt.fields[i];
+			    }
+			    else
+			        otherValue = otherObj;
 
 			    return fldType.compare(Value, otherValue);
 			},

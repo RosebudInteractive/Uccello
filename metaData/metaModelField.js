@@ -10,7 +10,10 @@ define(
             className: "MetaModelField",
             classGuid: UCCELLO_CONFIG.classGuids.MetaModelField,
             metaCols: [],
-            metaFields: [],
+            metaFields: [
+                { fname: "Name", ftype: "string" },
+                { fname: "FieldType", ftype: "fieldType" }
+            ],
 
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
