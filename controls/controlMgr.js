@@ -249,6 +249,7 @@ define(
 				if (this.pvt.inTran) return;
 				this.pvt.inTran = true;
 				this.pvt.tranQueue = [];
+				this.tranStart();
 			},
 
 			_tranCommit: function() {
@@ -259,6 +260,7 @@ define(
 					}
 					this.pvt.tranQueue = null;
 					this.pvt.inTran = false;
+					this.tranCommit();
 				}
 			},
 
@@ -283,7 +285,7 @@ define(
 
                 var nargs = [];
                 if (args) nargs = [args];
-				//  стартовать транзакцию
+				//  стартовать _транзакцию
 				this._tranStart();
                 if (f) f.apply(context, nargs);
                 if (this.autoSendDeltas())
@@ -291,7 +293,7 @@ define(
 
 				var vc = this.getContext();
 				if (vc) vc.renderAll();
-				//  закрыть транзакцию
+				//  закрыть _транзакцию
 				this._tranCommit();
             },
 
