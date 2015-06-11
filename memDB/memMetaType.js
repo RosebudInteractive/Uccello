@@ -657,7 +657,7 @@ define(
             "date": { code: 9, constructor: DateTimeType },
             "time": { code: 10, constructor: DateTimeType },
             "timestamp": { code: 11, constructor: DateTimeType }
-    };
+        };
 
 
 
