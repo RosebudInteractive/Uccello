@@ -66,6 +66,7 @@ define(
 						case "del":
 						    var o = db.getObj(c.guid);
 						    var cb = db._cbGetNewObject(db.getObj(c.guid).getRoot().getGuid());
+							if (!cb) cb = db.getDefaultCompCallback();
 						    if (cb)
 						        db.deserialize(c.delObj, { obj: o, colName: c.colName }, cb);
 						    else
@@ -182,6 +183,7 @@ define(
 						if ("add" in c) {							
 							var o = db.getObj(c.parentGuid);
 							var cb = db._cbGetNewObject(db.getObj(c.parentGuid).getRoot().getGuid());
+							if (!cb) cb = db.getDefaultCompCallback();
 							db.deserialize(c.add, { obj: o, colName: c.parentColName }, cb );
 							//o.getDB().deserialize(c.add, { obj: o, colName: c.parentColName }, cb ); 
 							

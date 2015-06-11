@@ -168,7 +168,7 @@ define(
              */
 			subscribeRoots: function(db,rootGuids, cb, cb2) {
 			
-				if (!cb2) cb2 = db.getDefaultCompCallback(); //cb2 = this.pvt.defaultCompCallback;
+				if (!cb2) cb2 = db.getDefaultCompCallback(); 
 					
 				var p = db.getProxyMaster();
 				if (p.kind == "local") { // мастер-база доступна локально
