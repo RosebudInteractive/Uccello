@@ -12,7 +12,7 @@ define(
             metaCols: [],
             metaFields: [
                 { fname: "Name", ftype: "string" },
-                { fname: "FieldType", ftype: "fieldType" }
+                { fname: "FieldType", ftype: "string"/*"fieldType"*/ }
             ],
 
             init: function (cm, params) {

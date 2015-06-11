@@ -133,9 +133,9 @@ define(
 
 		    /**
              * Compares field values of this["field"] and otherObj["field"]
-             *   If "otherObj" is instanceof MemObj then "this" and "otherObj" should be
+             *   If "otherObj" is instance of MemObj then "this" and "otherObj" should be
              *   of the compatible types, but this fact is not being verified here (be careful).
-             *   "otherObj" could be simply a Value of this["field"] type.
+             *   Also "otherObj" could be simply a Value of this["field"] type.
              * 
              * @param {String}       field Field name
              * @param {Object}       otherObj Another object of the type compatible with "this" or Value
