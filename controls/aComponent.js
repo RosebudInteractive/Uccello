@@ -23,12 +23,18 @@ define(
 				this.pvt.isRendered = false;
 
 				if (params==undefined) return; // в этом режиме только создаем метаинфо
-				//this.pvt.obj.event.on({
 				this.event.on({ // подписка на изменение объекта свойств, чтобы сбрасывать флаг рендеринга (TODO коллекции тоже)
 						type: "mod", // TODO не забыть про отписку
 						subscriber: this,
 						callback: this._onDirtyRender
 				});
+				
+				if (this.getCol("Children"))   // перенести в контейнер?
+				  this.getCol("Children").on({
+					type: "add",
+					subscriber: this,
+					callback: this._onDirtyRender
+					});
 				
 				cm.add(this); // данные регистрируются в ControlMgr если они компоненты!
 

@@ -12,30 +12,12 @@ define(
 			init: function(objType, parent, flds){
 				UccelloClass.super.apply(this, [objType, parent, flds]);
 
-/*
-				var ot = this.pvt.objType.pvt;
-				for (var i=0; i<ot.fieldsArr.length; i++) {
-				    var f = ot.fieldsArr[i];
-				    var ft = ot.fieldsTypes[i];
-				    var is_complex = ft.is_complex;
-				    ft = ft.type;
-				    if ((flds != undefined) && ("fields" in flds) && (f in flds.fields)) {
-				        if (is_complex) {
-				            var val = ft.setValue(flds.fields[f], f, this, false);
-				            this.pvt.fields[i] = val;
-				        } else
-				            this.pvt.fields[i] = flds.fields[f]; // TODO проверять типы?
-				    } else
-				        this.pvt.fields[i] = undefined;						
-				}
-*/
 				var otp = this.pvt.objType.pvt;
 				var ot = otp.fieldsArr;
 				this.pvt.fields = new Array(ot.length);
 				var cf = this.pvt.fields;
 				if ((flds!=undefined) && ("fields" in flds)) {
 					for (var i=0; i<ot.length; i++) {
-							//var f = ;
 					    var ft = otp.fieldsTypes[i];
 					    var is_complex = ft.is_complex;
 					    ft = ft.type;
@@ -51,10 +33,7 @@ define(
 				}
 				
 				// создать пустые коллекции по типу
-				//var ccol = objType.getCol("cols");
-				//for (var i=0; i<ccol.count(); i++)
-				//	new MemCol(ccol.get(i).get("cname"),this);
-				
+
 				var colList = objType.getColList();
 				for (var i = 0; i < colList.length ; i++)
 				    (new MemCol(colList[i].name, this)).on({
@@ -65,7 +44,7 @@ define(
 
 				this.finit();
 
-				if (!parent.obj) { // TODO возможно потребуется сделать подобное собыие для метаинформации
+				if (!parent.obj) { // TODO возможно потребуется сделать подобное событие для метаинформации
 					this.getDB().event.fire({
 						type: 'newRoot',
 						target: this

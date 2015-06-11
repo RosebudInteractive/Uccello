@@ -258,8 +258,8 @@ define(
             applyDeltas: function(dbGuid, srcDbGuid, delta) {
 
 				if (DEBUG) {
-					console.log("incoming delta: ");
-					console.log(delta);
+					console.log("incoming delta: ", delta);
+					//console.log(delta);
 				}
 
                 // находим рутовый объект к которому должна быть применена дельта
@@ -431,8 +431,8 @@ define(
 								}
 							else {
 
-								if (DEBUG) console.log("sending delta db: "+db.getGuid());
-								if (DEBUG) console.log(delta);
+								if (DEBUG) console.log("sending delta db: "+db.getGuid(), delta);
+								//if (DEBUG) console.log(delta);
 								var cbp = null;
 								if ("last" in delta) cbp = cb;
 								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), tranGuid: db.getCurTranGuid()},cbp);
