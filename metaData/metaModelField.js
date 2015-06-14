@@ -12,7 +12,8 @@ define(
             metaCols: [],
             metaFields: [
                 { fname: "Name", ftype: "string" },
-                { fname: "FieldType", ftype: "string"/*"fieldType"*/ }
+                { fname: "FieldType", ftype: "datatype" },
+                { fname: "Order", ftype: "int" }
             ],
 
             init: function (cm, params) {

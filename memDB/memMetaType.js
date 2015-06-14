@@ -467,6 +467,7 @@ define(
              * @param {Any}       val A value to be checked (could be MemProtoObj or serialized reference)
              * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
              * @param {String}    errObj.errMsg Error message
+             * @param {Object}    obj A MemProtoObject which [val] belongs to 
              * @return {Boolean} True if value is corect
              */
             checkVal: function (val, errObj, obj) {
@@ -603,6 +604,173 @@ define(
             }
         });
 
+        datafieldTypeCodes = {
+            "int": { code: 0, constructor: IntegerType },
+            "string": { code: 1, constructor: StringType },
+            "float": { code: 2, constructor: FloatType },
+            "datetime": { code: 3, constructor: DateTimeType },
+            "decimal": { code: 5, constructor: DecimalType },
+            "boolean": { code: 6, constructor: BooleanType },
+            "integer": { code: 8, constructor: IntegerType },
+            "date": { code: 9, constructor: DateTimeType },
+            "time": { code: 10, constructor: DateTimeType },
+            "timestamp": { code: 11, constructor: DateTimeType }
+        };
+
+        var DataFieldType = BaseType.extend({
+            /**
+             * The DataField Type
+             *  represents type of data-object field.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends BaseType
+             * @constructor
+             */
+            init: function (typeObj, refResolver) {
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
+                this._is_complex = true;
+            },
+
+            /**
+             * Converts a Value of this data type from the internal representation
+             * to the serialized one.
+             *
+             * @param {Any}     val An internal value
+             * @return {Object} Serialized representation of the value
+             */
+            getSerializedValue: function (val) {
+                return val.serialize();
+            },
+
+            /**
+             * Checks if val1 is equal to val2.
+             * 
+             * @param {Any}       val1 First value (could be BaseType or serialized type)
+             * @param {Any}       val2 Second value (could be BaseType or serialized type)
+             * @return {Boolean} True if values are equal
+             */
+            isEqual: function (val1, val2) {
+
+                if (val1 && val2) {
+                    var _val1 = val1;
+                    var _val2 = val2;
+                    var is_correct_val = true;
+                    if (!_val1 instanceof BaseType)
+                        try {
+                            _val1 = MetaTypes.createTypeObject(_val1, this._refResolver, datafieldTypeCodes);
+                        } catch (err) {
+                            is_correct_val = false;
+                        };
+
+                    if (is_correct_val && (!_val2 instanceof BaseType))
+                        try {
+                            _val2 = MetaTypes.createTypeObject(_val2, this._refResolver, datafieldTypeCodes);
+                        } catch (err) {
+                            is_correct_val = false;
+                        };
+
+                    if (is_correct_val)
+                        return _val1.hash() === _val2.hash()
+                    else
+                        return String(_val1) === String(_val2);
+                }
+                else
+                    return (!val1) && (!val2);
+                return false;
+            },
+
+            /**
+             * Compares val1 and val2.
+             * 
+             * @param {Any}       val1 First value
+             * @param {Any}       val2 Second value
+             * @return {Integer} 0 - [val1===val2], 1- [val1 > val2], (-1) - [val1 < val2]
+             */
+            compare: function (val1, val2) {
+                var res = 0;
+                if (!this.isEqual(val1, val2)) {
+                    if (val1 && val2) {
+                        var _val1 = val1;
+                        var _val2 = val2;
+                        var is_correct_val = true;
+                        if (!(_val1 instanceof BaseType))
+                            try {
+                                _val1 = MetaTypes.createTypeObject(_val1, this._refResolver, datafieldTypeCodes);
+                            } catch (err) {
+                                is_correct_val = false;
+                            };
+
+                        if (is_correct_val && (!(_val2 instanceof BaseType)))
+                            try {
+                                _val2 = MetaTypes.createTypeObject(_val2, this._refResolver, datafieldTypeCodes);
+                            } catch (err) {
+                                is_correct_val = false;
+                            };
+
+                        if (is_correct_val)
+                            return UccelloClass.super.apply(this, [_val1.hash(), val2.hash()]);
+                        else
+                            return UccelloClass.super.apply(this, [String(_val1), String(_val2)]);
+                    }
+                    else
+                        return UccelloClass.super.apply(this, [String(val1), String(val1)]);
+                };
+                return res;
+            },
+
+            /**
+             * Checks if value is correct.
+             * 
+             * @param {Any}       val A value to be checked (could be BaseType or serialized type)
+             * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
+             * @param {String}    errObj.errMsg Error message
+             * @param {Object}    obj A MemProtoObject which [val] belongs to 
+             * @return {Boolean} True if value is corect
+             */
+            checkVal: function (val, errObj, obj) {
+                var result = true;
+                var msg;
+
+                if (val) {
+                    var _val = val;
+                    if (!(_val instanceof BaseType))
+                        try {
+                            _val = MetaTypes.createTypeObject(_val, this._refResolver, datafieldTypeCodes);
+                        } catch (err) {
+                            result = false;
+                            msg = err.message;
+                        };
+                } else {
+                    result = false;
+                    msg = "Empty value is invalid.";
+                };
+
+                if ((!result) && errObj)
+                    errObj.errMsg = msg;
+                return result;
+            },
+
+            /**
+             * Converts a Value of this data type from the serialized
+             * or "end-user" representation to the internal one.
+             * 
+             * @param {Any}     val A value of this data type (could be BaseType or serialized type)
+             * @param {String}  fldName A field name of the value
+             * @param {Object}  obj A MemProtoObject which [fldName] belongs to 
+             * @param {Boolean} withCheckVal True if the value needs to be checked
+             * @throws          Will throw an error if the value isn't correct
+             * @return {Object} Internal representation of the value
+             */
+            setValue: function (val, fldName, obj, withCheckVal) {
+
+                var result = val;
+                if (!(result instanceof BaseType))
+                    result = MetaTypes.createTypeObject(result, this._refResolver, datafieldTypeCodes);
+                return result;
+            }
+        });
+
         var typeObjects = {};
 
         /**
@@ -612,10 +780,13 @@ define(
          * 
          * @param {String|Object} typeObj Serialized data type representation
          * @param {Object}        refResolver An Object which implements link resolver interface
+         * @param {Object}        typeTable Table of allowed types (default: fldTypeCode)
          * @return {Object}       Data type object
          * @constructor
          */
-        function GetFldTypeUniq(typeObj, refResolver) {
+        function GetFldTypeUniq(typeObj, refResolver, typeTable) {
+
+            var _fldTypeCodes = typeTable ? typeTable : fldTypeCodes;
 
             var result = null;
             var key = "unknown";
@@ -629,10 +800,10 @@ define(
                 };
             };
 
-            if (! fldTypeCodes[key])
+            if (!_fldTypeCodes[key])
                 throw new Error("Unknown type: \"" + JSON.stringify(typeObj) + "\".");
 
-            result = new fldTypeCodes[key].constructor(typeObj, refResolver);
+            result = new _fldTypeCodes[key].constructor(typeObj, refResolver);
             var hash = result.hash();
 
             if (! typeObjects[hash]) {
@@ -656,10 +827,9 @@ define(
             "integer": { code: 8, constructor: IntegerType },
             "date": { code: 9, constructor: DateTimeType },
             "time": { code: 10, constructor: DateTimeType },
-            "timestamp": { code: 11, constructor: DateTimeType }
+            "timestamp": { code: 11, constructor: DateTimeType },
+            "datatype": { code: 12, constructor: DataFieldType },
         };
-
-
 
         var MetaTypes = {
             createTypeObject: GetFldTypeUniq,
