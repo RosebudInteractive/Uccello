@@ -28,6 +28,11 @@ define(
                 this._isSortedSearch = false;
                 this._searchKeys = {};
             },
+            /**
+             * Свойства
+             * @param value
+             * @returns {*}
+             */
             name: function(value) {
                 return this._genericSetter("Name", value);
             },
@@ -38,6 +43,9 @@ define(
                 return this._genericSetter("KeepUpdated", value);
             },
 
+            /**
+             * Построение индекса
+             */
             build: function() {
                 this._checkFields();
 
@@ -65,6 +73,11 @@ define(
                 }
             },
 
+            /**
+             * Обработчик изменения коллекции
+             * @param eventArgs
+             * @private
+             */
             _onCollectionChanged: function(eventArgs) {
                 if (eventArgs.type == "add") {
                     this._addToSortedArray(eventArgs.obj);
@@ -117,6 +130,10 @@ define(
                 this._rebuildElIdx();
             },
 
+            /**
+             * Перестраивает индекс по Lid
+             * @private
+             */
             _rebuildElIdx: function() {
                 this._elidx = {};
                 for (var i = 0; i < this._index.length; i++) {
@@ -125,6 +142,11 @@ define(
                 }
             },
 
+            /**
+             * Копирует элементы коллекции в массив индекса
+             * @returns {Array}
+             * @private
+             */
             _copyColElements: function() {
                 var result = [];
                 var col = this.getParent().getCol(this.collectionName());
@@ -135,15 +157,32 @@ define(
 
                 return result;
             },
+
+            /**
+             * Возвращает количество элементов
+             * @returns {Number}
+             */
             count: function() {
                 return this._index.length;
             },
+
+            /**
+             * Проверяет наличие полей индекса в коллекции массива
+             * @private
+             */
             _checkFields: function() {
                 var col = this.getParent().getCol(this.collectionName());
                 var colType = col.getColType();
                 // TODO проверить соответствие полей
             },
 
+            /**
+             * Функция сортировки
+             * @param a {MemObj} - первый элемент
+             * @param b {MemObj} - второй
+             * @returns {number} - > 0 если a > b, < 0 если a < b, 0 если a = b
+             * @private
+             */
             _sortFunc: function(a, b) {
                 var result = 0;
 
@@ -163,6 +202,10 @@ define(
                 return result;
             },
 
+            /**
+             * Возвращает первый элемент индекса
+             * @returns {MemObj}
+             */
             first: function() {
                 if (this._index.length == 0)
                     return null;
@@ -171,6 +214,10 @@ define(
                 return this._index[0];
             },
 
+            /**
+             * Возвращает следующий элемент индекса
+             * @returns {MemObj}
+             */
             next: function () {
                 if (!this._uptodate)
                     throw "Collection was changed. Itteration is not valid";
@@ -180,6 +227,10 @@ define(
                 return this._index[this._currentPos];
             },
 
+            /**
+             * Возвращает предыдущий элемент индекса
+             * @returns {MemObj}
+             */
             prev: function () {
                 if (!this._uptodate)
                     throw "Collection was changed. Itteration is not valid";
@@ -189,6 +240,10 @@ define(
                 return this._index[this._currentPos];
             },
 
+            /**
+             * Возвращает последний элемент индекса
+             * @returns {MemObj}
+             */
             last: function () {
                 if (!this._uptodate)
                     throw "Collection was changed. Itteration is not valid";
@@ -198,18 +253,31 @@ define(
                 return this._index[this._currentPos];
             },
 
+            /**
+             * Возвращает текущий элемент индекса
+             * @returns {MemObj}
+             */
             current: function () {
                 if (!this._uptodate)
                     throw "Collection was changed. Itteration is not valid";
                 return this._index[this._currentPos];
             },
 
+            /**
+             * Возвращает текущую позицию индекса
+             * @returns {MemObj}
+             */
             currIdx: function () {
                 if (!this._uptodate)
                     throw "Collection was changed. Itteration is not valid";
                 return this._currentPos;
             },
 
+            /**
+             * Возвращает элемент в указанной позиции индекса и устанавливает курсор на нее
+             * @param idx {int} - позиция
+             * @returns {MemObj}
+             */
             goto: function (idx) {
                 if (!this._uptodate)
                     throw "Collection was changed. Itteration is not valid";
@@ -219,6 +287,11 @@ define(
                 return this._index[this._currentPos];
             },
 
+            /**
+             * Возвращает первый элемент индекса, соответствующий параметрам поиска
+             * @param keys {*} - Параметры поиска в формате { key1: value1, key2: value2 }
+             * @returns {MemObj}
+             */
             findFirst: function(keys) {
                 this._searchKeys = keys;
                 this._currentFindPos = -1;
@@ -299,14 +372,26 @@ define(
                     return this._searchUnsorted(keys, 0, 1);
             },
 
+            /**
+             * Возвращает следующий элемент индекса, соответствующий параметрам поиска
+             * @returns {MemObj}
+             */
             findNext: function() {
                 return this._searchUnsorted(this._searchKeys, this._currentFindPos + 1, 1);
             },
 
+            /**
+             * Возвращает предыдущий элемент индекса, соответствующий параметрам поиска
+             * @returns {MemObj}
+             */
             findPrev: function() {
                 return this._searchUnsorted(keys, this._currentFindPos - 1, -1);
             },
 
+            /**
+             * Поиск без учета сортировки. применяется если в критериях поиска не заданы первые поля индекса
+             * @returns {MemObj}
+             */
             _searchUnsorted: function(keys, pos, direction) {
                 for (var i = pos; (direction > 0 ? (i < this._index.length) : i >= 0); i+= direction) {
                     var obj = this._index[i];
@@ -318,6 +403,10 @@ define(
                 return null;
             },
 
+            /**
+             * Функция сравнения объекта с критериями поиска
+             * @returns {number} - > 0 если a > b, < 0 если a < b, 0 если a = b
+             */
             _compareToKeys: function(obj, keys) {
                 for (var key in keys) {
                     if (key == "constructor") continue;
@@ -331,6 +420,12 @@ define(
                 return 0;
             },
 
+            /**
+             * Возвращает поле индекса по имени
+             * @param name {string} - имя ключевого поля
+             * @returns {IndexField} - поле индекса
+             * @private
+             */
             _getIndexField: function(name) {
                 var fieldsCol = this.getCol("IndexFields");
 
