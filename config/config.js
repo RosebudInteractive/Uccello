@@ -62,6 +62,9 @@ define([], function () {
             {className:'DataEdit', isUccello:true, component:'controls/dataEdit', viewset:false, metaType:['content']},
             {className:'Edit', isUccello:true, component:'controls/edit', viewset:false, metaType:['content']},
             {className:'Label', isUccello:true, component:'controls/label', viewset:false, metaType:['content']},
+            {className:'MetaDataMgr', isUccello:true, component:'metaData/metaDataMgr', metaType:['sys','client']},
+            {className:'MetaModel', isUccello:true, component: 'metaData/metaModel', metaType:['sys','client']},
+            {className:'MetaModelField', isUccello:true, component:'metaData/metaModelField', metaType:['sys','client']},
             {className:'CollectionIndex', isUccello:true, component:'memDB/collectionIndex', metaType:['sys','client']},
             {className:'IndexField', isUccello:true, component:'memDB/indexField', metaType:['sys','client']}
         ],
@@ -123,6 +126,9 @@ define([], function () {
             'GCell':"69087f9c-99ed-14f1-0fe7-05058a862af5",
             'FContainer':"902822d8-3079-f394-2eed-3ad9ac27b2f2",
             'DataObject':"edb1b63c-f72c-6f0a-b64c-3b34da7facdb",
+            'MetaDataMgr':"ec139e1e-39d7-4ddd-8e31-c5d644403f41",
+            'MetaModel':"183f6fb9-9f17-4955-a22c-4f03c4273413",
+            'MetaModelField':"0997ccff-09ec-4978-b120-3ef7d6668bc2",
             'CollectionIndex':"43626e45-cfeb-406a-aca8-122a8bcbd5aa",
             'IndexField':"7806a983-c946-438f-95a4-71ab08e38074"
         },

@@ -117,7 +117,9 @@ define(
 						else rgp = rg;
 						//console.log("%cCALL LOADNEWROOTS "+rgp+" Params: "+params.expr, 'color: red');
 						this.getDB().tranStart();
-						this.getControlMgr().getContext().loadNewRoots([rgp],params, icb);
+						//this.getControlMgr().getContext().loadNewRoots([rgp],params, icb);
+						//this.loadNewRoots3([rgp],params, icb);
+						this.dataLoad([rgp],params, icb);
 
 					}
 					else this._initCursor();
@@ -230,7 +232,17 @@ define(
 
 			objtype: function (value) {
                 return this._genericSetter("ObjType", value);
-            }
+            },
+			
+			dataLoad: function(rootGuids,params, cb) {
+				if (this.isMaster()) {
+					this.getControlMgr().getContext().loadNewRoots(rootGuids,params, cb);
+				}
+				else {
+					params.subDbGuid = this.getControlMgr().getGuid();
+					this.remoteCall('dataLoad', [rootGuids, params],cb, this.getControlMgr().getCurTranGuid());					
+				}
+			}
 
         });
         return Dataset;

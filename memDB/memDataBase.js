@@ -1082,7 +1082,8 @@ define(
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (если вне транзакции)
 				
 				// вторая часть условия - чтобы разослать на клиенты "правильную" версию
-				if ((allDeltas.length>0) || (this.isMaster() && this.getVersion("valid")!=this.getVersion("sent"))) {
+				// условие || commit - это всегда рассылать завершающую дельту если коммитим
+				if ((allDeltas.length>0) || commit || (this.isMaster() && this.getVersion("valid")!=this.getVersion("sent"))) {
 					// FINALTR
 					var o = { last: 1, dbVersion:this.getVersion() };
 					
@@ -1119,16 +1120,7 @@ define(
 			// - только 1 транзакция в единицу времени на memDB
 			
 			tranStart: function(guid) {
-/*
-				if (this.pvt.tranCounter>0)
-					this.pvt.tranCounter++;
-				else {
-					this.pvt.tranId++;
-					this.pvt.tranCounter=1;
-					this.getCurrentVersion();
-				}
-				return this.getVersion();
-	*/							
+						
 				if (this.pvt.curTranGuid) 
 					if ((this.pvt.curTranGuid == guid) || (!guid)) 
 						this.pvt.tranCounter++;
@@ -1148,20 +1140,11 @@ define(
 			},
 			
 			tranCommit: function() {
-			/*
-				if (this.pvt.tranCounter<=0) 
-					return;
-				if (this.pvt.tranCounter==1) {
-					this.getController().genDeltas(this.getGuid());
-					this.pvt.tranCounter=0;
-					// TODOFT валидация версий на сервере?
-				}
-				else this.pvt.tranCounter--;
-			*/
+
 				var memTran = this.pvt.curTranGuid;
 				if (this.pvt.tranCounter==1) {
 			
-					this.getController().genDeltas(this.getGuid(), (this.pvt.externalTran ? undefined : memTran)); //???
+					this.getController().genDeltas(this.getGuid(), (this.pvt.externalTran ? undefined : memTran)); 
 					this.pvt.curTranGuid = undefined;
 					this.pvt.tranCounter = 0;	
 				}

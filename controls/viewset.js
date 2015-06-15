@@ -40,14 +40,11 @@ define(
             render: function(component, options) {
 
                 var that = this;
-                //if (!component)
-                //    component = this.cm.getRoot();
 
 				if ("_isRendered" in component) {
 					if (!component._isRendered()) {
 						var viewsets = this.cm.getContext().getConstructorHolder().getComponent(component.classGuid).viewsets;
 						if (viewsets && viewsets[this.ini.name]) {
-							//console.log("Render component "+component.className+" "+component.id());
 							component.irender(viewsets[this.ini.name], options);
 						}
 					}
@@ -56,7 +53,6 @@ define(
 				var col=component.getCol("Children");
                 if (col == undefined) return;
                 for (var i=0; i<col.count(); i++) {
-                    //var co=col.get(i)   //this.cm.get(col.get(i).getGuid());
                     this.render(col.get(i), options);
                 }
             }

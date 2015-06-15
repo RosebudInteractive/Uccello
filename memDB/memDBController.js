@@ -168,7 +168,7 @@ define(
              */
 			subscribeRoots: function(db,rootGuids, cb, cb2) {
 			
-				if (!cb2) cb2 = db.getDefaultCompCallback(); //cb2 = this.pvt.defaultCompCallback;
+				if (!cb2) cb2 = db.getDefaultCompCallback(); 
 					
 				var p = db.getProxyMaster();
 				if (p.kind == "local") { // мастер-база доступна локально
@@ -258,13 +258,13 @@ define(
             applyDeltas: function(dbGuid, srcDbGuid, delta) {
 
 				if (DEBUG) {
-					console.log("incoming delta: ");
-					console.log(delta);
+					console.log("incoming delta: ", delta);
+					//console.log(delta);
 				}
 
                 // находим рутовый объект к которому должна быть применена дельта
                 var db  = this.getDB(dbGuid);
-				var clientInTran = (!db.isMaster() && delta.trGuid && db.getCurTranGuid()!=delta.trGuid);
+				var clientInTran = (!db.isMaster() && delta.trGuid && db.getCurTranGuid()!=delta.trGuid); // не факт что правильно (лучше придумать проверку на клиента-инициатора транзакции, так как транзакция к моменту прихода дельт может быть уже закрыта)
 				var endOfTran = (delta.trGuid && delta.endTran) || (!delta.trGuid && ("last" in delta));
 				
 				var buf = this.pvt.bufdeltas;
@@ -275,12 +275,12 @@ define(
 				//var tr = delta.tran.toString();
 				
 				if (clientInTran) {
-				   var tr = delta.trGuid;
+				   var tr = delta.trGuid;		// подписанный клиент, который ждет дельт, чтобы применить их по итогам транзакции
 				   var endOfStory = "endTran";
 				  }
 				else {
 				   tr = delta.dbVersion.toString();
-				    var endOfStory = "last";
+				   endOfStory = "last";
 				}
 				if (!(tr in cur)) cur[tr] = [];
 				cur[tr].push(delta);
@@ -334,30 +334,6 @@ define(
 								}
 							}
 						}
-						
-						/*
-						var lval = db.getVersion("valid");
-						var ldraft = db.getVersion();
-						var dver = cdelta.dbVersion;
-						if (db.isMaster()) { // мы в мастер-базе (на сервере или на клиенте в клиентском контексте)
-							if (lval > dver) { // на сервере подтвержденная версия не может быть больше пришедшей
-								console.log("cannot sync server -  valid version:"+lval+"delta version:"+dver);
-								return;				
-							}				
-						}
-						else { // на клиенте (slave)
-						
-							if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
-								// если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
-								console.log("UNDO : "+" "+lval+" delta version:"+dver);
-								if (ldraft>lval) db.undo(lval); 
-							}
-							else { // ошибка синхронизации - ненормальная ситуация, в будущем надо придумать как это обработать
-								console.log("cannot sync client -  valid version:"+lval+" delta version:"+dver);
-								return;
-							}
-							
-						}*/
 		
 					}
 					if (("items" in cdelta) && cdelta.items.length>0) {
@@ -389,27 +365,28 @@ define(
              * Сгенерировать и разослать "дельты" 
              * @param dbGuid - гуид базы данных, для которой генерим дельты
              */
-			genDeltas: function(dbGuid, commit) {
+			genDeltas: function(dbGuid, commit, callback) {
 				var db  = this.getDB(dbGuid);
 				var deltas = db.genDeltas(commit);
-				if (deltas.length>0) {
-					this.propagateDeltas(dbGuid,null,deltas);
-					if (db.getVersion("sent")<db.getVersion()) db.setVersion("sent",db.getVersion());
-					
-					for (var i=0; i<deltas.length; i++) {
-						if (deltas[i].rootGuid) {
-							var obj = db.getRoot(deltas[i].rootGuid).obj;
-							obj.setRootVersion("sent",obj.getRootVersion());
-						}
-						
-					}
-					
+				if (deltas.length > 0) {
+				    this.propagateDeltas(dbGuid, null, deltas, callback);
+				    if (db.getVersion("sent") < db.getVersion()) db.setVersion("sent", db.getVersion());
+
+				    for (var i = 0; i < deltas.length; i++) {
+				        if (deltas[i].rootGuid) {
+				            var obj = db.getRoot(deltas[i].rootGuid).obj;
+				            obj.setRootVersion("sent", obj.getRootVersion());
+				        }
+				    }
 				}
+				else
+				    if (callback)
+				        setTimeout(callback, 0);
 			},
 			
 			
 			// послать подписчикам и мастеру дельты которые либо сгенерированы локально либо пришли снизу либо сверху
-			propagateDeltas: function(dbGuid, srcDbGuid, deltas) {
+			propagateDeltas: function(dbGuid, srcDbGuid, deltas, callback) {
 
 				function cb(result) { // VER обработка ответа от сервера по итогам отсылки дельт
 
@@ -431,7 +408,9 @@ define(
 						//db.undo(result.data.dbVersion);
 						console.log("SYNC VERS CBDB PROBLEM - Clt Ver:"+db.getVersion("valid")+"Cb Ver:"+result.data.dbVersion);
 					}
-					
+
+					if (callback)
+					    callback(result);
 				}
 
 				var db  = this.getDB(dbGuid);
@@ -452,8 +431,8 @@ define(
 								}
 							else {
 
-								if (DEBUG) console.log("sending delta db: "+db.getGuid());
-								if (DEBUG) console.log(delta);
+								if (DEBUG) console.log("sending delta db: "+db.getGuid(), delta);
+								//if (DEBUG) console.log(delta);
 								var cbp = null;
 								if ("last" in delta) cbp = cb;
 								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), tranGuid: db.getCurTranGuid()},cbp);

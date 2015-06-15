@@ -29,6 +29,9 @@ define(
 				this.pvt.vc = vc;
 				this._isNode = typeof exports !== 'undefined' && this.exports !== exports;
 
+				this.pvt.tranQueue = null; // очередь выполнения методов если в транзакции
+				this.pvt.inTran = false; // признак транзакции
+
 				if (socket)
 					this.pvt.socket = socket;
 				else
@@ -177,8 +180,6 @@ define(
              */				
 			render: function(component, options, pd) {
 			
-				//console.log("RENDER RENDER RENDER: "+component.getGuid()+"  "+component.pvt.fields[7])
-			
 				if (!this.pvt.subsInitFlag[component.getGuid()]) {
 					this.subsInit(component);  // если не выполнена постинициализация, то запустить
 					this.pvt.subsInitFlag[component.getGuid()] = true;
@@ -190,8 +191,6 @@ define(
 				
 				if (pd) this.processDelta();
 			
-				//var c = (component === undefined) ? this.getRoot()  : component;
-
                 for(var i in this.pvt.viewSets)
 					if (this.pvt.viewSets[i].enable())
 						this.pvt.viewSets[i].render(component, options);
@@ -244,6 +243,36 @@ define(
                 return new ViewSet(this, ini);
             },
 
+
+			// "транзакции" для буферизации вызовов методов
+			_tranStart: function() {
+				if (this.pvt.inTran) return;
+				this.pvt.inTran = true;
+				this.pvt.tranQueue = [];
+				this.tranStart();
+			},
+
+			_tranCommit: function() {
+				if (this.pvt.inTran) {
+					for (var i=0; i<this.pvt.tranQueue.length; i++) {
+						var mc = this.pvt.tranQueue[i];
+						mc.method.apply(mc.context,mc.args);
+					}
+					this.pvt.tranQueue = null;
+					this.pvt.inTran = false;
+					this.tranCommit();
+				}
+			},
+
+			_inTran:function() {
+				return this.pvt.inTran;
+			},
+
+			_execMethod: function(context, method,args) {
+				if (this._inTran())
+					this.pvt.tranQueue.push({context:context, method:method, args: args});
+				else method.apply(context,args);
+			},
 			
             /**
              * Функция-оболочка в которой завернуты системные действия. Должна вызываться компонентами
@@ -255,17 +284,17 @@ define(
             userEventHandler: function(context, f, args) {
 
                 var nargs = [];
-				var vc = this.getContext();
                 if (args) nargs = [args];
-				//  стартовать транзакцию
-				if (vc) vc.tranStart();
+				//  стартовать _транзакцию
+				this._tranStart();
                 if (f) f.apply(context, nargs);
                 if (this.autoSendDeltas())
 					this.getController().genDeltas(this.getGuid());
-                //this.render(undefined); // TODO - на сервере это не вызывать
+
+				var vc = this.getContext();
 				if (vc) vc.renderAll();
-				//  закрыть транзакцию
-				if (vc) vc.tranCommit();
+				//  закрыть _транзакцию
+				this._tranCommit();
             },
 
 

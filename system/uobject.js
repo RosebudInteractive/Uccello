@@ -30,19 +30,13 @@ define(
 					var col = "Children";
 				else col = params.colName;
 				// если рутовый то указываем db
-				if (params.parent===undefined) {
-					// корневой компонент
-					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{db: cm.getDB(), mode: "RW"}, params.ini);
-					//var parent = {db: cm.getDB(), mode: "RW"};
+				if (params.parent===undefined)  // корневой объект
 					var parent = {db: cm, mode: "RW"};
-				}
-				else {
-					// компонент с парентом
-					//this.pvt.obj = new MemObj(cm.getDB().getObj(this.classGuid),{obj: params.parent.getObj(), "colName": col}, params.ini);
+				else // объект с парентом 
 					parent = {obj: params.parent, "colName": col};
-				}
+
                 UccelloClass.super.apply(this, [cm.getObj(this.classGuid),parent,params.ini]);
-                //this.pvt = {};
+
                 this.pvt.controlMgr = cm;
                 this.pvt.isProcessed = false; // признак обработки входящей дельты
 
@@ -207,19 +201,23 @@ define(
              * @param aparams - массив параметров удаленной функции
 			 * @callback cb - коллбэк
              */			
-			remoteCall: function(func, aparams, cb, trGuid) {
+			remoteCall: function(func, aparams, cb) {
 				if (this.getModule().isMaster()) {
 					// TODO кинуть исключение
 					return;
 				}
-				var socket = this.getControlMgr().getSocket();
-				//var pg = this.getObj().getDB().getProxyMaster().guid;
-				var pg = this.getControlMgr().getProxyMaster().guid;
-				//var pg = this.getProxyMaster().guid;
-							
-				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func, trGuid:trGuid };
-				var args={action:"remoteCall2",type:"method",args: myargs};
-				socket.send(args,cb);
+				var cm = this.getControlMgr();
+				var socket = cm.getSocket();
+				var pg = cm.getProxyMaster().guid;
+				
+				
+				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func /*, trGuid:trGuid*/ };
+				myargs.contextGuid = cm.getContext() ? cm.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
+				var args={action:"remoteCall2",type:"method",args: myargs };
+				if (cm.getCurTranGuid()) 
+					args.trGuid = cm.getCurTranGuid();
+				 cm._execMethod(socket,socket.send,[args,cb]);
+				//  socket.send(args,cb);
 			},
 
 
