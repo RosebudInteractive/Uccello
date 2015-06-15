@@ -61,7 +61,9 @@ define([], function () {
             {className:'DataGrid', isUccello:true, component:'controls/dataGrid', viewset:false, metaType:['content']},
             {className:'DataEdit', isUccello:true, component:'controls/dataEdit', viewset:false, metaType:['content']},
             {className:'Edit', isUccello:true, component:'controls/edit', viewset:false, metaType:['content']},
-            {className:'Label', isUccello:true, component:'controls/label', viewset:false, metaType:['content']}
+            {className:'Label', isUccello:true, component:'controls/label', viewset:false, metaType:['content']},
+            {className:'CollectionIndex', isUccello:true, component:'memDB/collectionIndex', metaType:['sys','client']},
+            {className:'IndexField', isUccello:true, component:'memDB/indexField', metaType:['sys','client']}
         ],
 
         // остальные гуиды

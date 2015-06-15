@@ -31,7 +31,10 @@ define(
 				{fname: "OnMoveCursor", ftype: "event"},
 				{fname: "ObjType", ftype: "string"}
             ],
-			metaCols: [ {"cname": "Fields", "ctype": "DataField"}],
+			metaCols: [
+				{"cname": "Fields", "ctype": "DataField"},
+				{"cname": "Indexes", "ctype": "CollectionIndex"}
+			],
 
             /**
              * Инициализация объекта

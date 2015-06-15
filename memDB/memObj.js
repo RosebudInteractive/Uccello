@@ -166,21 +166,24 @@ define(
              *                     (-1) - this["field"] < otherObj["field"]
              */
 			cmpFldVals: function (field, otherObj) {
-			    var objType = this.pvt.objType.pvt;
-			    if (objType.fieldsTable[field] === undefined)
-			        throw new Error("cmpFldVals: Field \"" + field + "\" doesn't exist in the object \"" + this.pvt.guid + "\".");
-			    var i = objType.fieldsTable[field].cidx;
-			    var fldType = objType.fieldsTypes[i].type;
-			    var Value = this.pvt.fields[i];
+				var objType = this.pvt.objType.pvt;
+				if (objType.fieldsTable[field] === undefined)
+					throw new Error("cmpFldVals: Field \"" + field + "\" doesn't exist in the object \"" + this.pvt.guid + "\".");
+				var i = objType.fieldsTable[field].cidx;
+				var fldType = objType.fieldsTypes[i].type;
+				var Value = this.pvt.fields[i];
 
-			    var otherType = otherObj.pvt.objType.pvt;
-			    if (otherType.fieldsTable[field] === undefined)
-			        throw new Error("cmpFldVals: Field \"" + field + "\" doesn't exist in the OTHER object \"" + otherObj.pvt.guid + "\".");
-			    i = otherType.fieldsTable[field].cidx;
-			    var otherFldType = otherType.fieldsTypes[i];
-			    var otherValue = otherObj.pvt.fields[i];
+				if (otherObj instanceof MemObj) {
+					var otherType = otherObj.pvt.objType.pvt;
+					if (otherType.fieldsTable[field] === undefined)
+						throw new Error("cmpFldVals: Field \"" + field + "\" doesn't exist in the OTHER object \"" + otherObj.pvt.guid + "\".");
+					i = otherType.fieldsTable[field].cidx;
+					var otherValue = otherObj.pvt.fields[i];
+				}
+				else
+					otherValue = otherObj;
 
-			    return fldType.compare(Value, otherValue);
+				return fldType.compare(Value, otherValue);
 			},
 
 			set: function (field, value, withCheckVal) {
