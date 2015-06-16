@@ -10,7 +10,7 @@ define(
 
             className: "Form",
             classGuid: UCCELLO_CONFIG.classGuids.Form,
-            metaFields: [{fname:"Title", ftype:"string"}],
+            metaFields: [{fname:"Title", ftype:"string"},{fname:"dbgName",ftype:"string"}],
             metaCols: [{ "cname": "Params", "ctype": "UObject" }, { "cname": "SubForms", "ctype": "UObject" }],
 
             init: function(cm,params){

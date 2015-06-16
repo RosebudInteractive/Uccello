@@ -10,7 +10,7 @@ define(
             className: "DataRoot",
             classGuid: UCCELLO_CONFIG.classGuids.DataRoot,
             metaCols: [ {"cname": "DataElements", "ctype": "UObject"} ],
-            metaFields: [],
+            metaFields: [{fname:"dbgName",ftype:"string"}],
 
             init: function(cm,params){
                 UccelloClass.super.apply(this, [cm, params]);
