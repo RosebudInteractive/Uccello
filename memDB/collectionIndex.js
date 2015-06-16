@@ -21,12 +21,13 @@ define(
                 UccelloClass.super.apply(this, [cm, params]);
 
                 this._index = [];
-                this._elidx = {};
+                //this._elidx = {};
                 this._currentPos = -1;
                 this._uptodate = false;
                 this._currentFindPos = -1;
                 this._isSortedSearch = false;
                 this._searchKeys = {};
+                this._fieldsIdx = {};
             },
             /**
              * Свойства
@@ -58,7 +59,15 @@ define(
                     return that._sortFunc(a, b);
                 });
 
-                this._rebuildElIdx();
+                // построим индех полей
+                var fieldsCol = this.getCol("IndexFields");
+                for (var i = 0; i < fieldsCol.count(); i++) {
+                    var idxField = fieldsCol.get(i);
+                    this._fieldsIdx[idxField.fieldName()] = i;
+                }
+
+
+                //this._rebuildElIdx();
 
                 if (this.keepUpdated()) {
                     col.on([{
@@ -96,7 +105,7 @@ define(
                 var idx = this._index.indexOf(rec);
                 if (idx === -1) return;
                 this._index.splice(idx, 1);
-                this._rebuildElIdx();
+                //this._rebuildElIdx();
             },
 
             /**
@@ -127,20 +136,20 @@ define(
                             }
                         }
                 }
-                this._rebuildElIdx();
+                //this._rebuildElIdx();
             },
 
             /**
              * Перестраивает индекс по Lid
              * @private
              */
-            _rebuildElIdx: function() {
+            /*_rebuildElIdx: function() {
                 this._elidx = {};
                 for (var i = 0; i < this._index.length; i++) {
                     var cur = this._index[i];
                     this._elidx[cur.getLid()] = i;
                 }
-            },
+            },*/
 
             /**
              * Копирует элементы коллекции в массив индекса
@@ -367,7 +376,7 @@ define(
                             return curRec;
                         }
                     }
-                    this._rebuildElIdx();
+                    //this._rebuildElIdx();
                 } else
                     return this._searchUnsorted(keys, 0, 1);
             },
@@ -408,14 +417,15 @@ define(
              * @returns {number} - > 0 если a > b, < 0 если a < b, 0 если a = b
              */
             _compareToKeys: function(obj, keys) {
-                for (var key in keys) {
-                    if (key == "constructor") continue;
-                    var idxField = this._getIndexField(key);
-
-                    var order = idxField == null ? 1 : (idxField.ascendant() ? 1 : -1)
-                    var res = obj.cmpFldVals(key, keys[key]);
-                    if (res == 0) continue;
-                    else return (order * res);
+                var fieldsCol = this.getCol("IndexFields");
+                for (var i = 0; i < fieldsCol.count(); i++) {
+                    var idxField = fieldsCol.get(0);
+                    if (idxField.fieldName() in keys) {
+                        var order =idxField.ascendant() ? 1 : -1;
+                        var res = obj.cmpFldVals(key, keys[key]);
+                        if (res == 0) continue;
+                        else return (order * res);
+                    }
                 }
                 return 0;
             },
@@ -427,13 +437,10 @@ define(
              * @private
              */
             _getIndexField: function(name) {
-                var fieldsCol = this.getCol("IndexFields");
-
-                for (var i = 0; i < fieldsCol.count(); i++) {
-                    var idxField = fieldsCol.get(i);
-                    if (idxField.fieldName() == name) {
-                        return idxField;
-                    }
+                if (name in this._fieldsIdx)
+                {
+                    var fieldsCol = this.getCol("IndexFields");
+                    return fieldsCol.get(this._fieldsIdx[name]);
                 }
                 return null;
             }
