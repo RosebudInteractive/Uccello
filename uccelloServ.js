@@ -83,8 +83,8 @@ define(
                                 console.log("отключился клиент: " + connectId);
                         },
                         router: function (data, connectId, socket, done) {
-                            if (DEBUG)
-                                console.log('сообщение с клиента ' + connectId + ':', data);
+                            //if (DEBUGMES)
+                            //    console.log('сообщение с клиента ' + connectId + ':', data);
 
                             // логирование входящих запросов
                             //that.pvt.logger.addLog(data);

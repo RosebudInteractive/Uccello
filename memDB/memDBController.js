@@ -257,10 +257,7 @@ define(
 			// пока только 1 дельта!!!! НО с буферизацией
             applyDeltas: function(dbGuid, srcDbGuid, delta) {
 
-				if (DEBUG) {
-					console.log("incoming delta: ", delta);
-					//console.log(delta);
-				}
+				if (DEBUG) console.log("incoming delta: ", delta);
 
                 // находим рутовый объект к которому должна быть применена дельта
                 var db  = this.getDB(dbGuid);
@@ -286,9 +283,6 @@ define(
 				cur[tr].push(delta);
 				
 				if (!(endOfStory in delta)) return; // буферизовали и ждем последнюю, чтобы применить все сразу
-
-								
-				//console.log("APPLY DELTAS "+tr);
 
 				for (var i=0; i<cur[tr].length; i++) {
 					var cdelta = cur[tr][i];
@@ -356,7 +350,6 @@ define(
 					commit: endOfTran,
 					db: db
                 });
-
             },
 
 
@@ -365,11 +358,11 @@ define(
              * Сгенерировать и разослать "дельты" 
              * @param dbGuid - гуид базы данных, для которой генерим дельты
              */
-			genDeltas: function(dbGuid, commit, callback) {
+			genDeltas: function(dbGuid, commit, callback, sendFunc) {
 				var db  = this.getDB(dbGuid);
 				var deltas = db.genDeltas(commit);
 				if (deltas.length > 0) {
-				    this.propagateDeltas(dbGuid, null, deltas, callback);
+				    this.propagateDeltas(dbGuid, null, deltas, callback, sendFunc);
 				    if (db.getVersion("sent") < db.getVersion()) db.setVersion("sent", db.getVersion());
 
 				    for (var i = 0; i < deltas.length; i++) {
@@ -386,12 +379,11 @@ define(
 			
 			
 			// послать подписчикам и мастеру дельты которые либо сгенерированы локально либо пришли снизу либо сверху
-			propagateDeltas: function(dbGuid, srcDbGuid, deltas, callback) {
+			propagateDeltas: function(dbGuid, srcDbGuid, deltas,callback, sendFunc) {
 
 				function cb(result) { // VER обработка ответа от сервера по итогам отсылки дельт
 
-					if (DEBUG) console.log("CALLBACK PROPAGATE DELTAS");
-					if (DEBUG) console.log(result);
+					if (DEBUG) console.log("CALLBACK PROPAGATE DELTAS",result,deltas);
 					
 					for (var guid in rootv) // апдейтим подтвержденные версии рутов после того, как успешно применили их на сервере
 						if (db.getObj(guid).getRootVersion("valid")<rootv[guid])
@@ -431,11 +423,15 @@ define(
 								}
 							else {
 
-								if (DEBUG) console.log("sending delta db: "+db.getGuid(), delta);
-								//if (DEBUG) console.log(delta);
+								//if (DEBUG) console.log("sending delta db: "+db.getGuid(), delta);
 								var cbp = null;
+								var data = {action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), trGuid: db.getCurTranGuid()};
 								if ("last" in delta) cbp = cb;
-								proxy.connect.send({action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), tranGuid: db.getCurTranGuid()},cbp);
+								
+								if (sendFunc)
+								  sendFunc(data,cbp);
+								else
+								  proxy.connect.send(data,cbp);
 								}
 						}
 					}

@@ -118,15 +118,6 @@ define(
             },
 
             /**
-             * Возвращает компонент того же контролМенеджера по его гуиду
-             */
-			 // TODOR2 удалить - дублирует getObj
-            getComp: function(guid) {
-				//return this.getObj(guid)
-                return this.pvt.controlMgr.get(guid);
-            },
-
-            /**
              * Возвращает объект-модуль текущего объекта или undefined если модуля нет 
              */			
 			getModule: function() {
@@ -206,6 +197,7 @@ define(
 					// TODO кинуть исключение
 					return;
 				}
+				console.log("REMOTE CALL "+func,aparams,cb);
 				var cm = this.getControlMgr();
 				var socket = cm.getSocket();
 				var pg = cm.getProxyMaster().guid;
@@ -213,10 +205,16 @@ define(
 				
 				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func /*, trGuid:trGuid*/ };
 				myargs.contextGuid = cm.getContext() ? cm.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
+				var contextCM = cm.getContext() ? cm : this.getContextCM();
 				var args={action:"remoteCall2",type:"method",args: myargs };
-				if (cm.getCurTranGuid()) 
-					args.trGuid = cm.getCurTranGuid();
-				 cm._execMethod(socket,socket.send,[args,cb]);
+				if (contextCM.getCurTranGuid()) {
+					args.trGuid = contextCM.getCurTranGuid();
+					args.rootv = {}; // добавить версии рутов
+					var guids = contextCM.getRootGuids();
+					for (var i=0; i<guids.length; i++)
+						args.rootv[guids[i]]=contextCM.getObj(guids[i]).getRootVersion();				
+				}
+				 contextCM._execMethod(socket,socket.send,[args,cb]);
 				//  socket.send(args,cb);
 			},
 

@@ -31,6 +31,10 @@ define(
 
 				this.pvt.tranQueue = null; // очередь выполнения методов если в транзакции
 				this.pvt.inTran = false; // признак транзакции
+				
+				this.pvt.execQ = [];
+				this.pvt.execTr = {};
+				this.pvt.memTranIdx = 0;
 
 				if (socket)
 					this.pvt.socket = socket;
@@ -138,7 +142,7 @@ define(
             /**
 			 * Вернуть массив рутовых гуидов
              */		
-			getRootGuids: function() {
+			getRootGuidsTmp: function() {
 				var guids = [];
 				for (var g in this.pvt.rootGuids)
 					guids.push(g);
@@ -245,22 +249,36 @@ define(
 
 
 			// "транзакции" для буферизации вызовов методов
-			_tranStart: function() {
+			_tranStart: function(dbTran) {
 				if (this.pvt.inTran) return;
 				this.pvt.inTran = true;
 				this.pvt.tranQueue = [];
-				this.tranStart();
+				if (dbTran)
+					this.tranStart();
 			},
 
 			_tranCommit: function() {
 				if (this.pvt.inTran) {
 					for (var i=0; i<this.pvt.tranQueue.length; i++) {
 						var mc = this.pvt.tranQueue[i];
+						this.tranStart(); // увеличиваем счетчик db-транзакции перед вызовом серверного метода
 						mc.method.apply(mc.context,mc.args);
+						
+						var ifcallback = mc.args[mc.args.length-1];
+						if (!(typeof ifcallback === 'function')) // последний параметр - колбэк (наверное есть лучший способ это проверить)
+						  this.tranCommit(); // если колбэка нет, то сразу закрываем транзакцию 
+						
 					}
 					this.pvt.tranQueue = null;
 					this.pvt.inTran = false;
+					//var memTran = this.getCurTranGuid();
+					if (this.pvt.tranCounter == 1)
+						this.getContext().remoteCall("endTran");
 					this.tranCommit();
+					/*if (!this.inTran() && memTran)  {
+						var that=this;
+					    this.getController().genDeltas(this.getGuid(),memTran,null, function(res,cb) { that.getContext().sendDataBaseDelta(res,cb); }); // пустую дельту для завершения транзакции		
+					}*/
 				}
 			},
 
@@ -269,9 +287,49 @@ define(
 			},
 
 			_execMethod: function(context, method,args) {
+			
+				var ucallback = args[args.length-1];
+				if (typeof ucallback === 'function') {
+					var that=this;
+					
+					/*
+					args[args.length-1] = function(res) { 
+						ucallback(res); //TODO если колбэк сам является асинхронным, то нужно все следующее в колбэк оформить
+						that.getController().genDeltas(that.getGuid(),undefined,null, function(res,cb) { that.getContext().sendDataBaseDelta(res,cb); });
+						
+						if (that.pvt.tranCounter == 1)
+							that.getContext().remoteCall("endTran");
+						that.tranCommit(); 
+						
+						if (!that.inTran()) { //см ремарку в аналогичном месте ниже
+							var vc = that.getContext();
+							if (vc) vc.renderAll();
+						}
+					}*/
+					
+					args[args.length-1] = function(res) {
+						that.userHandler2(ucallback,res);
+					}
+				}
+
 				if (this._inTran())
 					this.pvt.tranQueue.push({context:context, method:method, args: args});
 				else method.apply(context,args);
+			},
+		
+			userHandler2: function(func,res) {
+				this._tranStart(false);
+				
+				func(res);
+				
+				var that = this;
+				//var memTran =  (this.pvt.tranCounter == 1) ? this.getCurTranGuid() : undefined;
+				this.getController().genDeltas(this.getGuid(),undefined,null, function(res,cb) { that.getContext().sendDataBaseDelta(res,cb); });
+				this._tranCommit();				
+				if (!this.inTran()) {
+					var vc = this.getContext(); // ? рендерить можно и без завершения транзакции, подумать (если править, то и в колбэке выше!)
+					if (vc) vc.renderAll();
+				}				
 			},
 			
             /**
@@ -284,18 +342,100 @@ define(
             userEventHandler: function(context, f, args) {
 
                 var nargs = [];
+				var that = this;
                 if (args) nargs = [args];
-				//  стартовать _транзакцию
-				this._tranStart();
-                if (f) f.apply(context, nargs);
-                if (this.autoSendDeltas())
-					this.getController().genDeltas(this.getGuid());
-
-				var vc = this.getContext();
-				if (vc) vc.renderAll();
-				//  закрыть _транзакцию
-				this._tranCommit();
+				this._tranStart(true);
+				if (f) f.apply(context, nargs);
+				
+				
+				//var memTran =  (this.pvt.tranCounter == 1) ? this.getCurTranGuid() : undefined;
+				this.getController().genDeltas(this.getGuid(),undefined,null, function(res,cb) { that.getContext().sendDataBaseDelta(res,cb); });
+				this._tranCommit();				
+				if (!this.inTran()) {
+					var vc = this.getContext(); // ? рендерить можно и без завершения транзакции, подумать (если править, то и в колбэке выше!)
+					if (vc) vc.renderAll();
+				}
             },
+			
+			// выполнить вызов удаленного метода
+			remoteCallExec: function(uobj, args, trGuid, done) {
+				var db = this;
+				var trans = this.pvt.execTr;
+				var queue = this.pvt.execQ;
+				var auto = false;
+				if (!trGuid) {
+					trGuid = Utils.guid();
+					auto=true;
+				}
+				if (!trans[trGuid]) {
+					var qElem = {};
+					qElem.tr = trGuid;
+					qElem.q = [];
+					qElem.a = auto;
+					queue.push(qElem);
+					trans[trGuid] = this.pvt.memTranIdx+queue.length-1; // "индекс" для быстрого доступа в очередь
+				}
+				var tqueue = queue[trans[trGuid]-this.pvt.memTranIdx].q;
+							
+				function done2(res,memTranGuid) {
+
+					if (memTranGuid)
+						var tq = queue[trans[memTranGuid]-db.pvt.memTranIdx];
+					else
+						tq = queue[trans[db.getCurTranGuid()]-db.pvt.memTranIdx];
+					
+					if (tq.a) db.tranCommit(); // TODO убрать после рефакторинга
+					db.getController().genDeltas(db.getGuid());
+					done(res);
+						
+					tq.q.splice(0,1);				
+					if (tq.q.length>0) 
+						tq.q[0]();
+					else {
+						db.pvt.execFst = false;
+						if (tq.a && db.inTran()) { // если "автоматическая" транзакция, то закрыть ее принудительно
+							db.tranCommit();
+						}
+						if (!db.inTran()) { // если не в транзакции, значит предыдущая закончилась
+							
+							delete trans[memTranGuid];  // почистить ее
+							queue.splice(0,1);
+							db.pvt.memTranIdx++;
+							if (queue.length>0) {
+								db.tranStart(queue[0].tr);
+								db.pvt.execFst = queue[0];
+								queue[0].q[0](); 
+							}
+						}
+
+					}
+				}
+				var aparams = args.aparams || [];
+				aparams.push(done2); // добавить колбэк последним параметром
+
+				function exec1() {
+					if (args.func == "endTran") { // если получили маркер конца транзакции, то коммит
+						var memTran = db.getCurTranGuid()
+						db.tranCommit();
+						done2(null,memTran);
+						
+					}
+					else
+						uobj[args.func].apply(uobj,aparams);									
+				}	
+				// ставим в очередь
+				tqueue.push(function() { exec1(); });
+				
+				if (!db.getCurTranGuid()) db.tranStart(trGuid); // Если не в транзакции, то заходим в нее
+
+				if (trGuid == db.getCurTranGuid()) { // Если мемДБ в той же транзакции, что и метод, можем попробовать его выполнить, но только		
+					if (!this.pvt.execFst) { 		// если первый вызов не исполняется в данный момент
+						this.pvt.execFst = tqueue;
+						tqueue[0](); // выполнить первый в очереди метод
+					}				
+				}
+			},
+
 
 
             /**

@@ -930,14 +930,14 @@ define(
 					case "sent":
 						if (/*(val>=this.pvt.validVersion) && */(val<=this.pvt.version)) this.pvt.sentVersion=val;
 						else {
-							if (DEBUG) console.log("*** sent setversion error");
-							if (DEBUG) console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
+							//if (DEBUG) console.log("*** sent setversion error");
+							//if (DEBUG) console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
 						}
 
 						break;
 					case "valid":
 						this.pvt.validVersion=val;
-						if (DEBUG) console.log("*** valid setversion "+val);
+						//if (DEBUG) console.log("*** valid setversion "+val);
 						if (this.pvt.version<this.pvt.validVersion) this.pvt.version = this.pvt.validVersion;
 						break;
 					default:
@@ -1134,22 +1134,23 @@ define(
 						this.pvt.curTranGuid = Utils.guid();
 					this.pvt.tranCounter=1;
 				}
-				console.log("TRANSTART "+this.pvt.tranCounter);
+				console.log("TRAN|START "+this.pvt.tranCounter);
 				return this.pvt.curTranGuid;
 				
 			},
 			
 			tranCommit: function() {
 
-				var memTran = this.pvt.curTranGuid;
+				var memTran = this.pvt.curTranGuid; 
+				if (this.pvt.tranCounter==0) return;
 				if (this.pvt.tranCounter==1) {
 			
-					this.getController().genDeltas(this.getGuid(), (this.pvt.externalTran ? undefined : memTran)); 
+					//this.getController().genDeltas(this.getGuid(), (this.pvt.externalTran ? undefined : memTran)); 
 					this.pvt.curTranGuid = undefined;
 					this.pvt.tranCounter = 0;	
 				}
 				else this.pvt.tranCounter--;
-				console.log("COMMIT "+memTran+" "+this.pvt.tranCounter);
+				console.log("TRAN|COMMIT "+memTran+" "+this.pvt.tranCounter);
 				
 				
 			},

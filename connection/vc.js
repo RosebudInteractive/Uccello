@@ -285,7 +285,18 @@ define(
 				else { // slave
 					// вызываем загрузку нового рута у мастера
 					params.subDbGuid = this.getContentDB().getGuid();
-					this.remoteCall('loadNewRoots', [rootGuids, params],cb /*, this.getContentDB().getCurTranGuid()*/);
+					this.remoteCall('loadNewRoots', [rootGuids, params],cb);
+				}
+			},
+			
+			sendDataBaseDelta: function(data, cb) {
+				if (this.isMaster()) {	
+					var cm = this.getSysCM().getController();
+					var res=cm.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
+					if (cb) cb({data: {dbVersion: cm.getDB(data.dbGuid).getVersion() }});
+				}
+				else {
+					this.remoteCall('sendDataBaseDelta',[data],cb);
 				}
 			},
 
@@ -298,12 +309,12 @@ define(
 
 			renderAll: function(pd) {
 				
-				var ga = this.pvt.cm.getRootGuids();
+				var ga = this.pvt.cm.getRootGuids("res");
 				this.renderForms(ga,pd);
 			},
 
 			renderForms: function(roots, pd) {
-			    if (DEBUG) console.log("%c RENDER FORMS " + pd, 'color: green');
+			    //if (DEBUG) console.log("%c RENDER FORMS " + pd, 'color: green');
 				for (var i=0; i<roots.length; i++) {
 					var root = this.pvt.cm.get(roots[i]);
 					this.pvt.cm.render(root, this.pvt.renderRoot(roots[i]), pd);

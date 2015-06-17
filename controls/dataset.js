@@ -84,16 +84,23 @@ define(
 			_dataInit: function(onlyMaster) {
 				
 				if (!this.active()) return;
+				var that = this;
 				function icb(res) {		
+				/*
 					function refrcb() {
 						var dataRoot = this.getDB().getObj(res.guids[0]);
 						if (dataRoot)
 						    this.root(dataRoot);
 						this._initCursor(true);
-						this.getDB().tranCommit();
+						//this.getDB().tranCommit(); - перетащили в обертку
 					}
 					
 					that.getControlMgr().userEventHandler(that, refrcb );
+				*/
+					var dataRoot = that.getDB().getObj(res.guids[0]);
+					if (dataRoot)
+					  that.root(dataRoot);
+					that._initCursor(true);
 				}
 
 				var dataRoot = this.root();
@@ -115,10 +122,8 @@ define(
 						if (rgi)
 						  var rgp = rgi;
 						else rgp = rg;
-						//console.log("%cCALL LOADNEWROOTS "+rgp+" Params: "+params.expr, 'color: red');
-						this.getDB().tranStart();
+						// this.getDB().tranStart();  - перетащили в обертку
 						//this.getControlMgr().getContext().loadNewRoots([rgp],params, icb);
-						//this.loadNewRoots3([rgp],params, icb);
 						this.dataLoad([rgp],params, icb);
 
 					}
