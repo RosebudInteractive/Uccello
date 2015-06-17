@@ -209,36 +209,6 @@ define(
 				
 			},
 			*/
-			addToQueue: function(db, func, trGuid, endTran) {
-				var guid = db.getGuid();
-				if (!this.execQ[guid]) this.execQ[guid] = {};
-				var q = this.execQ[guid];
-				if (!q[trGuid]) q[trGuid]=[];
-					
-				function execMethod() {		
-					
-					if (!db.getCurTranGuid() || (db.getCurTranGuid() == trGuid)) { // либо не в транзакции либо в той же, что вызов
-						var f=q[trGuid][0];
-						q[trGuid].splice(0,1);
-						if (f=="endTran") {
-							db.tranCommit();
-							console.log("COMMIT DB SERVER "+db.getCurTranGuid()+" "+db.pvt.tranCounter);
-						}
-						else {
-							console.log("exec method : "+trGuid+" "+db.getCurTranGuid() );
-							f();
-						}
-						//db.getController().genDeltas(db.getGuid());
-					}
-					if (q[trGuid].length>0) setTimeout(execMethod,1);
-
-				}
-				if (endTran)
-					q[trGuid].push("endTran");
-				else
-					q[trGuid].push(func);
-				if (q[trGuid].length==1) setTimeout(execMethod,1);
-			},
 			
 			routerRemoteCall: function(data,done) {				
 				var args = data.args;
@@ -249,81 +219,8 @@ define(
 				// поискать объект в VC, а если нет то в контентной базе
 				// в будущем найти более единообразное решение и сделать рефакторинг
 				var uobj =  (this.cmsys.get(args.objGuid)) ? this.cmsys.get(args.objGuid) : cm.get(args.objGuid);
-				
 				cm.remoteCallExec(uobj, args, trGuid, done);
-				
-				return;
-				
-				/*
-				function done2(result) {
-					db.getController().genDeltas(db.getGuid());
-					if (data.xxxendTran) {
-						db.tranCommit();
-						console.log("COMMIT DB SERVER "+db.getCurTranGuid()+" "+db.pvt.tranCounter);
-					}
-					done(result);
-				};
-				if (args.aparams) 
-					args.aparams.push(done2);
-
-				function exec1() {
-					var confl = false;
-					for (var curGuid in args.rootv) {
-						if (!(db.getObj(curGuid).getRootVersion("valid") == (args.rootv[curGuid] - 1))) {
-							confl = true;
-							break;
-						}
-					}
-					if (confl) {
-						console.log("CONFLICT VERSIONS "+curGuid+" V: "+db.getObj(curGuid).getRootVersion("valid")+" D: "+args.rootv[curGuid]);
-					}
-					if (trGuid && !db.getCurTranGuid()) db.tranStart(trGuid);
-					uobj[args.func].apply(uobj,args.aparams);									
-				}				
-				var endTran = (args.func == "endTran") ? true : false;
-				this.addToQueue( db, function() { exec1(); }, trGuid, endTran );
-				*/
 			},
-			
-			
-			/*
-			routerRemoteCall: function(data,done) {				
-				var args = data.args;
-				var trGuid = data.trGuid;
-				var context = this.cmsys.get(args.contextGuid);
-				var db = context.getContentDB();
-				// поискать объект в VC, а если нет то в контентной базе
-				// в будущем найти более единообразное решение и сделать рефакторинг
-				var uobj =  (this.cmsys.get(args.objGuid)) ? this.cmsys.get(args.objGuid) : db.get(args.objGuid);
-				function done2(result) {
-					db.getController().genDeltas(db.getGuid());
-					if (data.xxxendTran) {
-						db.tranCommit();
-						console.log("COMMIT DB SERVER "+db.getCurTranGuid()+" "+db.pvt.tranCounter);
-					}
-					done(result);
-				};
-				if (args.aparams) 
-					args.aparams.push(done2);
-
-				function exec1() {
-					var confl = false;
-					for (var curGuid in args.rootv) {
-						if (!(db.getObj(curGuid).getRootVersion("valid") == (args.rootv[curGuid] - 1))) {
-							confl = true;
-							break;
-						}
-					}
-					if (confl) {
-						console.log("CONFLICT VERSIONS "+curGuid+" V: "+db.getObj(curGuid).getRootVersion("valid")+" D: "+args.rootv[curGuid]);
-					}
-					if (trGuid && !db.getCurTranGuid()) db.tranStart(trGuid);
-					uobj[args.func].apply(uobj,args.aparams);									
-				}				
-				var endTran = (args.func == "endTran") ? true : false;
-				this.addToQueue( db, function() { exec1(); }, trGuid, endTran );
-			},*/
-
 
             /**
              * Подключаемся к серверу с клиента

@@ -253,7 +253,7 @@ define(
                         this.pvt.dbCollection[i].db.onUnsubscribe(connectId);
                 }
             },
-
+/*
 			// пока только 1 дельта!!!! НО с буферизацией
             applyDeltas: function(dbGuid, srcDbGuid, delta) {
 
@@ -261,6 +261,7 @@ define(
 
                 // находим рутовый объект к которому должна быть применена дельта
                 var db  = this.getDB(dbGuid);
+				
 				var clientInTran = (!db.isMaster() && delta.trGuid && db.getCurTranGuid()!=delta.trGuid); // не факт что правильно (лучше придумать проверку на клиента-инициатора транзакции, так как транзакция к моменту прихода дельт может быть уже закрыта)
 				var endOfTran = (delta.trGuid && delta.endTran) || (!delta.trGuid && ("last" in delta));
 				
@@ -269,7 +270,8 @@ define(
 				if (!(srcDbGuid in buf)) buf[srcDbGuid] = {};
 				if (!(dbGuid in buf[srcDbGuid])) buf[srcDbGuid][dbGuid] = {};
 				var cur = buf[srcDbGuid][dbGuid];
-				//var tr = delta.tran.toString();
+				var tr = delta.tran.toString();
+				
 				
 				if (clientInTran) {
 				   var tr = delta.trGuid;		// подписанный клиент, который ждет дельт, чтобы применить их по итогам транзакции
@@ -282,7 +284,7 @@ define(
 				if (!(tr in cur)) cur[tr] = [];
 				cur[tr].push(delta);
 				
-				if (!(endOfStory in delta)) return; // буферизовали и ждем последнюю, чтобы применить все сразу
+				//if (!(endOfStory in delta)) return; // буферизовали и ждем последнюю, чтобы применить все сразу
 
 				for (var i=0; i<cur[tr].length; i++) {
 					var cdelta = cur[tr][i];
@@ -350,8 +352,78 @@ define(
 					commit: endOfTran,
 					db: db
                 });
-            },
+				
+				
+            },*/
+			
+            applyDeltas: function(dbGuid, srcDbGuid, delta, done) {
 
+				if (DEBUG) console.log("incoming delta: ", delta);
+
+                // находим рутовый объект к которому должна быть применена дельта
+                var db  = this.getDB(dbGuid);
+				var cdelta = delta;
+
+				// VER проверка на применимость дельт				
+				var ro = db.getObj(cdelta.rootGuid);
+				if (ro) {
+					var lval = ro.getRootVersion("valid");
+					var ldraft = ro.getRootVersion();
+					var dver = cdelta.ver;
+					if (db.isMaster()) { // мы в мастер-базе (на сервере или на клиенте в клиентском контексте)
+						if (lval > dver) { // на сервере подтвержденная версия не может быть больше пришедшей
+							
+							console.log("cannot sync server -  valid version:"+lval+"delta version:"+dver);
+							return;				
+						}				
+					}
+					else { // на клиенте (slave)
+						if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
+							// если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
+							console.log("UNDO?? if (ldraft>lval) : "+ro.getGuid()+"valid version: "+lval+" delta version:"+dver);
+							if (ldraft>lval) db.undo(lval); 
+						}
+						else { // ошибка синхронизации - ненормальная ситуация, в будущем надо придумать как это обработать
+							console.log("cannot sync client -  valid version:"+lval+"delta version:"+dver);
+							return;
+						}
+					}
+				}
+	
+
+				if (("items" in cdelta) && cdelta.items.length>0) {
+					var root = db.getRoot(cdelta.rootGuid);
+
+					if (cdelta.items[0].newRoot)
+						var rootObj=db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback()); //TODO добавить коллбэк!!!
+					else
+						rootObj = root.obj;
+					
+					rootObj.getLog().applyDelta(cdelta);
+				}
+
+				db.setVersion("valid",cdelta.dbVersion);	
+				db.setVersion("sent",cdelta.dbVersion);
+
+				if (cdelta.rootGuid) {
+					db.getObj(cdelta.rootGuid).setRootVersion("valid",cdelta.ver);
+					db.getObj(cdelta.rootGuid).setRootVersion("sent",cdelta.ver);	
+				}
+				
+				this.propagateDeltas(dbGuid,srcDbGuid,[cdelta]);
+
+// переносим в конец транзакции
+/*
+                this.event.fire({
+                    type: 'endApplyDeltas',
+                    target: this,
+					commit: false,
+					db: db
+                });
+	*/			
+				if (done) done();
+						
+            },
 
 			
             /**
@@ -377,7 +449,105 @@ define(
 				        setTimeout(callback, 0);
 			},
 			
-			
+			// послать подписчикам и мастеру дельты которые либо сгенерированы локально либо пришли снизу либо сверху
+			propagateDeltas: function(dbGuid, srcDbGuid, deltas,callback, sendFunc) {
+
+				function cb(result) { // VER обработка ответа от сервера по итогам отсылки дельт
+
+					if (DEBUG) console.log("CALLBACK PROPAGATE DELTAS",result,deltas);
+					
+					for (var guid in rootv) // апдейтим подтвержденные версии рутов после того, как успешно применили их на сервере
+						if (db.getObj(guid).getRootVersion("valid")<rootv[guid])
+							db.getObj(guid).setRootVersion("valid",rootv[guid]);
+						else 
+						 console.log("SYNC VERS CB PROBLEM: "+rootv[guid]+"Clt Ver:"+db.getObj(guid).getRootVersion("valid")+"Cb Ver:"+rootv[guid]);
+					
+					
+					if (db.getVersion("valid")<result.data.dbVersion) 
+						db.setVersion("valid", result.data.dbVersion); 
+						
+					if (db.getVersion("valid")>result.data.dbVersion) { 
+						// откатить до версии сервера
+						//db.undo(result.data.dbVersion);
+						console.log("SYNC VERS CBDB PROBLEM - Clt Ver:"+db.getVersion("valid")+"Cb Ver:"+result.data.dbVersion);
+					}
+
+					if (callback)
+					    callback(result);
+				}
+
+				var db  = this.getDB(dbGuid);
+				var rootv = {};
+
+				for (var i=0; i<deltas.length; i++) {
+								
+					var delta = deltas[i];
+
+					if (srcDbGuid != db.getGuid()) {
+						// послать в мастер
+						var proxy = db.getProxyMaster();
+						if (proxy != undefined && proxy.guid != srcDbGuid) {
+							if (proxy.kind == "local") {
+								//TODO
+								//db.getRoot(proxy.guid).obj.getLog().applyDelta(delta); 
+								// TODO валидировать версию
+								}
+							else {
+
+								//if (DEBUG) console.log("sending delta db: "+db.getGuid(), delta);
+								//var cbp = null;
+								var data = {action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), trGuid: db.getCurTranGuid()};
+								//if ("last" in delta) cbp = cb;
+								
+								if (sendFunc)
+								  sendFunc(data,cb);
+								else
+								  proxy.connect.send(data,cb);
+								}
+						}
+					}
+					
+					// распространить по подписчикам					
+					/*if ("last" in delta) { // закрывающую дельту транзакции посылаем всем подписчикам БД
+						var allSubs = db.getSubscribers();
+						for (var guid in allSubs) {
+							var subscriber = allSubs[guid];
+							if (subscriber.kind == 'remote' && srcDbGuid != guid) {
+								subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid()});
+								if (DEBUG) console.log("sent last to DB : "+subscriber.guid);
+								}							
+						}
+					}*/
+					//else {
+					var root = db.getRoot(delta.rootGuid);												
+					for(guid in root.subscribers) {
+						subscriber = root.subscribers[guid];
+						//console.log('subscriber', subscriber);
+						// удаленные
+						// DELTA-G добавил кусок условия:  && (!delta.subscribers || (delta.subscribers[dbGuid]))
+						if (subscriber.kind == 'remote' && srcDbGuid != guid && (!delta.subscribers || (delta.subscribers && delta.subscribers[subscriber.guid]))) {
+							subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid()});
+							if (DEBUG) console.log("sent to DB : "+subscriber.guid);
+							}
+					}
+						
+
+					//}
+					// TODO разобраться потом с локальными
+					
+					//for(var guid in root.subscribers) {
+					//	var subscriber = root.subscribers[guid];
+						// локальные
+					//	if (subscriber.kind == 'local' && srcDbGuid != guid)
+							//subscriber.db.getObj(delta.rootGuid).getLog().applyDelta(delta); //TODO допилить с учетом .last
+							// TODO валидировать версию
+					//}		
+					if (delta.rootGuid) // запоминаем версии рутов, чтобы проапдейтить их в колбэке
+						rootv[delta.rootGuid] = db.getObj(delta.rootGuid).getRootVersion();
+					
+				}
+			}			
+			/*
 			// послать подписчикам и мастеру дельты которые либо сгенерированы локально либо пришли снизу либо сверху
 			propagateDeltas: function(dbGuid, srcDbGuid, deltas,callback, sendFunc) {
 
@@ -463,19 +633,19 @@ define(
 
 					}
 					// TODO разобраться потом с локальными
-					/*
-					for(var guid in root.subscribers) {
-						var subscriber = root.subscribers[guid];
+					
+					//for(var guid in root.subscribers) {
+					//	var subscriber = root.subscribers[guid];
 						// локальные
-						if (subscriber.kind == 'local' && srcDbGuid != guid)
+					//	if (subscriber.kind == 'local' && srcDbGuid != guid)
 							//subscriber.db.getObj(delta.rootGuid).getLog().applyDelta(delta); //TODO допилить с учетом .last
 							// TODO валидировать версию
-					}*/		
+					//}		
 					if (delta.rootGuid) // запоминаем версии рутов, чтобы проапдейтить их в колбэке
 						rootv[delta.rootGuid] = db.getObj(delta.rootGuid).getRootVersion();
 					
 				}
-			}
+			}*/
 			
 			
         });

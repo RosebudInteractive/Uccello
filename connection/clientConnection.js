@@ -66,10 +66,18 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                                     console.log(data.args.error);
                                 break;
                             case 'sendDelta':
-                                if (DEBUG) console.timeEnd('applyDeltas');
-								that.getDB().getController().applyDeltas(data.args.dbGuid, data.args.srcDbGuid, data.args.delta);
-                                //that.getObj().getDB().getController().applyDeltas(data.args.dbGuid, data.args.srcDbGuid, data.args.delta);
+                                //if (DEBUG) console.timeEnd('applyDeltas');
+								//that.getDB().getController().applyDeltas(data.args.dbGuid, data.args.srcDbGuid, data.args.delta);
+								var args = {};
+								args.aparams = [data.args.dbGuid, data.args.srcDbGuid, data.args.delta];
+								args.func = "applyDeltas";
+								that.getDB().remoteCallExec(that.getDB().getController(),args, data.args.trGuid, null);
+								
                                 break;
+							case 'remoteCall':
+								
+								
+								break;
                             case 'newTab':
                                 if (that.newTabCallback)
                                     that.newTabCallback(data.args);

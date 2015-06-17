@@ -357,7 +357,7 @@ define(
 				}
             },
 			
-			// выполнить вызов удаленного метода
+			// ответ на вызов удаленного метода 
 			remoteCallExec: function(uobj, args, trGuid, done) {
 				var db = this;
 				var trans = this.pvt.execTr;
@@ -386,7 +386,8 @@ define(
 					
 					if (tq.a) db.tranCommit(); // TODO убрать после рефакторинга
 					db.getController().genDeltas(db.getGuid());
-					done(res);
+					
+					if (done) done(res);
 						
 					tq.q.splice(0,1);				
 					if (tq.q.length>0) 
@@ -417,8 +418,7 @@ define(
 					if (args.func == "endTran") { // если получили маркер конца транзакции, то коммит
 						var memTran = db.getCurTranGuid()
 						db.tranCommit();
-						done2(null,memTran);
-						
+						done2(null,memTran);		
 					}
 					else
 						uobj[args.func].apply(uobj,aparams);									

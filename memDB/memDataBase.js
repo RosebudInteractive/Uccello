@@ -823,16 +823,7 @@ define(
 					for (var guid in allSubs) {
 						var subscriber = allSubs[guid];
 						if (subscriber.kind == 'remote') {
-						/*
-							var subs2 = this.pvt.rcoll[croot.getGuid()].subscribers; //[subscriber.guid]
-							if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) && !(subs2[subscriber.guid])) {
-							  subs2[subscriber.guid] = subscriber;
-							  // DELTA-G
-							  o.subscriber = subscriber.guid;
-							  croot.getLog().add(o);
-							}*/
-						
-						
+
 							// Подписываем либо данные (тогда всех) либо подписчика
 							if (croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) {
 							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber;
@@ -922,8 +913,6 @@ define(
 					default: return this.pvt.version;
 				}
 			},
-
-
 
 			setVersion: function(verType,val) {
 				switch (verType) {
@@ -1080,9 +1069,10 @@ define(
 				// DBVER если в мастере и вне транзакции, то автоматом поднимаем валидную версию				
 				if (this.isMaster() && !this.getCurTranGuid())	
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (если вне транзакции)
-				
+
 				// вторая часть условия - чтобы разослать на клиенты "правильную" версию
 				// условие || commit - это всегда рассылать завершающую дельту если коммитим
+				/*
 				if ((allDeltas.length>0) || commit || (this.isMaster() && this.getVersion("valid")!=this.getVersion("sent"))) {
 					// FINALTR
 					var o = { last: 1, dbVersion:this.getVersion() };
@@ -1097,6 +1087,7 @@ define(
 					allDeltas.push(o);
 					//allDeltas[allDeltas.length-1].last = 1; // признак конца транзакции
 				}
+				*/
 
 				return allDeltas;
 
@@ -1117,8 +1108,7 @@ define(
 			},
 
 			// Транзакции
-			// - только 1 транзакция в единицу времени на memDB
-			
+			// - только 1 транзакция в единицу времени на memDB			
 			tranStart: function(guid) {
 						
 				if (this.pvt.curTranGuid) 
@@ -1140,19 +1130,14 @@ define(
 			},
 			
 			tranCommit: function() {
-
 				var memTran = this.pvt.curTranGuid; 
 				if (this.pvt.tranCounter==0) return;
 				if (this.pvt.tranCounter==1) {
-			
-					//this.getController().genDeltas(this.getGuid(), (this.pvt.externalTran ? undefined : memTran)); 
 					this.pvt.curTranGuid = undefined;
 					this.pvt.tranCounter = 0;	
 				}
 				else this.pvt.tranCounter--;
-				console.log("TRAN|COMMIT "+memTran+" "+this.pvt.tranCounter);
-				
-				
+				console.log("TRAN|COMMIT "+memTran+" "+this.pvt.tranCounter);	
 			},
 
 
@@ -1160,13 +1145,10 @@ define(
 				if (this.pvt.tranCounter>0) return true;
 				else return false;
 			},
-			
-			
+						
 			tranRollback: function() {
-			
 			},
 			
-
 			getCurTranGuid: function() {
 				return this.pvt.curTranGuid;
 			}

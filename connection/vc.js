@@ -153,6 +153,13 @@ define(
 						else if (forms == "") forms = [];
 						that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
 					});
+					if (cb) { // подписываемся только на клиенте
+						this.pvt.cm.event.on({
+							type: 'endTransaction',
+							subscriber: this,
+							callback: function(args) { that.renderAll(true); }
+						});
+					}
 				}
 				this.pvt.cdb.setDefaultCompCallback(createCompCallback);
 			},

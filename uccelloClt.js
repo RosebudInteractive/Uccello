@@ -82,17 +82,18 @@ define(
                     // создаем  контроллер и бд
                     that.pvt.controller = new MemDBController();
 
+/*
                     that.pvt.controller.event.on({
                         type: 'endApplyDeltas',
                         subscriber: this,
                         callback: function(args) { if ( that.getContext() && args.commit) that.getContext().renderAll(true); }
                     });
-
+*/
                     // создаем системную бд
 					var dbp = {name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}};
 					that.pvt.cmsys = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket, done);
 
-                    // создаем мастер базу для clientConnection
+                    // создаем мастер базу для клиентского контекста (является "держателем" клиентского контекста
                     dbp = {name:"MasterClient", kind: "master"};
                     that.pvt.cmclient = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket);
                     that.pvt.cmclient.buildMetaInfo('client', function(){
