@@ -187,13 +187,13 @@ define(
 			},
 			
             /**
-             * Удаленный вызов метода
+             * Удаленный вызов метода на сервере
 			 * @param func - имя удаленной функции
              * @param aparams - массив параметров удаленной функции
 			 * @callback cb - коллбэк
              */			
 			remoteCall: function(func, aparams, cb) {
-				if (this.getModule().isMaster()) {
+				if (this.isMaster()) {
 					// TODO кинуть исключение
 					return;
 				}
@@ -206,16 +206,16 @@ define(
 				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func /*, trGuid:trGuid*/ };
 				myargs.contextGuid = cm.getContext() ? cm.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
 				var contextCM = cm.getContext() ? cm : this.getContextCM();
-				var args={action:"remoteCall2",type:"method",args: myargs };
+				var data={action:"remoteCall2",type:"method",args: myargs };
 				if (contextCM.getCurTranGuid()) {
-					args.trGuid = contextCM.getCurTranGuid();
-					args.rootv = {}; // добавить версии рутов
+					data.trGuid = contextCM.getCurTranGuid();
+					data.rootv = {}; // добавить версии рутов
+					data.srcDbGuid = contextCM.getGuid();
 					var guids = contextCM.getRootGuids();
 					for (var i=0; i<guids.length; i++)
-						args.rootv[guids[i]]=contextCM.getObj(guids[i]).getRootVersion();				
+						data.rootv[guids[i]]=contextCM.getObj(guids[i]).getRootVersion();				
 				}
-				 contextCM._execMethod(socket,socket.send,[args,cb]);
-				//  socket.send(args,cb);
+				 contextCM._execMethod(socket,socket.send,[data,cb]);
 			},
 
 

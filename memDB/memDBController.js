@@ -521,12 +521,13 @@ define(
 					//else {
 					var root = db.getRoot(delta.rootGuid);												
 					for(guid in root.subscribers) {
-						subscriber = root.subscribers[guid];
+						var subscriber = root.subscribers[guid];
 						//console.log('subscriber', subscriber);
 						// удаленные
 						// DELTA-G добавил кусок условия:  && (!delta.subscribers || (delta.subscribers[dbGuid]))
 						if (subscriber.kind == 'remote' && srcDbGuid != guid && (!delta.subscribers || (delta.subscribers && delta.subscribers[subscriber.guid]))) {
-							subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid()});
+							var trGuid = db.getCurTranGuid();
+							subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid(), trGuid:trGuid});
 							if (DEBUG) console.log("sent to DB : "+subscriber.guid);
 							}
 					}

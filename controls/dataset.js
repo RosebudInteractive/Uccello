@@ -245,7 +245,7 @@ define(
 				}
 				else {
 					params.subDbGuid = this.getControlMgr().getGuid();
-					this.remoteCall('dataLoad', [rootGuids, params],cb, this.getControlMgr().getCurTranGuid());					
+					this.remoteCall('dataLoad', [rootGuids, params],cb);					
 				}
 			}
 

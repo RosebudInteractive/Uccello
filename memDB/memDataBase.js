@@ -1070,25 +1070,6 @@ define(
 				if (this.isMaster() && !this.getCurTranGuid())	
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (если вне транзакции)
 
-				// вторая часть условия - чтобы разослать на клиенты "правильную" версию
-				// условие || commit - это всегда рассылать завершающую дельту если коммитим
-				/*
-				if ((allDeltas.length>0) || commit || (this.isMaster() && this.getVersion("valid")!=this.getVersion("sent"))) {
-					// FINALTR
-					var o = { last: 1, dbVersion:this.getVersion() };
-					
-					if (this.getCurTranGuid()) 
-						o.trGuid = this.getCurTranGuid();
-					if (commit) {
-						o.endTran = 1;
-						//o.trGuid = commit;
-					}
-										
-					allDeltas.push(o);
-					//allDeltas[allDeltas.length-1].last = 1; // признак конца транзакции
-				}
-				*/
-
 				return allDeltas;
 
 			},
@@ -1110,6 +1091,7 @@ define(
 			// Транзакции
 			// - только 1 транзакция в единицу времени на memDB			
 			tranStart: function(guid) {
+				this.pvt.externalTran = false;
 						
 				if (this.pvt.curTranGuid) 
 					if ((this.pvt.curTranGuid == guid) || (!guid)) 
@@ -1135,6 +1117,7 @@ define(
 				if (this.pvt.tranCounter==1) {
 					this.pvt.curTranGuid = undefined;
 					this.pvt.tranCounter = 0;	
+					this.pvt.externalTran = false;
 				}
 				else this.pvt.tranCounter--;
 				console.log("TRAN|COMMIT "+memTran+" "+this.pvt.tranCounter);	
@@ -1144,6 +1127,10 @@ define(
 			inTran: function() {
 				if (this.pvt.tranCounter>0) return true;
 				else return false;
+			},
+			
+			isExternalTran: function() {
+				return (this.inTran() && this.pvt.externalTran);
 			},
 						
 			tranRollback: function() {

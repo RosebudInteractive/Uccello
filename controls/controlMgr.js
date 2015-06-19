@@ -189,7 +189,9 @@ define(
 					this.pvt.subsInitFlag[component.getGuid()] = true;
 				}
 				if (!this.pvt.dataInitFlag[component.getGuid()]) {
+					this._tranStart(true);
 					this.dataInit(component);
+					this._tranCommit();
 					this.pvt.dataInitFlag[component.getGuid()] = true;
 				}
 				
@@ -266,19 +268,20 @@ define(
 						
 						var ifcallback = mc.args[mc.args.length-1];
 						if (!(typeof ifcallback === 'function')) // последний параметр - колбэк (наверное есть лучший способ это проверить)
-						  this.tranCommit(); // если колбэка нет, то сразу закрываем транзакцию 
-						
+						  this.tranCommit(); // если колбэка нет, то сразу закрываем транзакцию 				
 					}
 					this.pvt.tranQueue = null;
 					this.pvt.inTran = false;
-					//var memTran = this.getCurTranGuid();
 					if (this.pvt.tranCounter == 1)
 						this.getContext().remoteCall("endTran");
+					var memGuid = this.getCurTranGuid();
 					this.tranCommit();
-					/*if (!this.inTran() && memTran)  {
-						var that=this;
-					    this.getController().genDeltas(this.getGuid(),memTran,null, function(res,cb) { that.getContext().sendDataBaseDelta(res,cb); }); // пустую дельту для завершения транзакции		
-					}*/
+					if (memGuid && !this.inTran()) {
+						delete this.pvt.execTr[memGuid]; // почистить транзакцию
+						this.pvt.execQ.splice(0,1);
+						this.pvt.memTranIdx++;			
+					}
+					
 				}
 			},
 
@@ -291,22 +294,7 @@ define(
 				var ucallback = args[args.length-1];
 				if (typeof ucallback === 'function') {
 					var that=this;
-					
-					/*
-					args[args.length-1] = function(res) { 
-						ucallback(res); //TODO если колбэк сам является асинхронным, то нужно все следующее в колбэк оформить
-						that.getController().genDeltas(that.getGuid(),undefined,null, function(res,cb) { that.getContext().sendDataBaseDelta(res,cb); });
-						
-						if (that.pvt.tranCounter == 1)
-							that.getContext().remoteCall("endTran");
-						that.tranCommit(); 
-						
-						if (!that.inTran()) { //см ремарку в аналогичном месте ниже
-							var vc = that.getContext();
-							if (vc) vc.renderAll();
-						}
-					}*/
-					
+
 					args[args.length-1] = function(res) {
 						that.userHandler2(ucallback,res);
 					}
@@ -356,18 +344,32 @@ define(
 					if (vc) vc.renderAll();
 				}
             },
+
+			
+			subsRemoteCall: function(func, aparams, excludeGuid) {		
+				var subs = this.getSubscribers();	
+				var trGuid = this.getCurTranGuid();
+				for(var guid in subs) {
+					var csub = subs[guid];
+					if (excludeGuid!=guid) // для всех ДБ кроме исключенной (та которая инициировала вызов)
+						csub.connect.send({action:func, trGuid: trGuid, dbGuid:guid }); //TODO TRANS2 сделать вызов любого метода
+				}
+			},
+			
 			
 			// ответ на вызов удаленного метода 
-			remoteCallExec: function(uobj, args, trGuid, done) {
+			remoteCallExec: function(uobj, args, srcDbGuid, trGuid, done) {
 				var db = this;
 				var trans = this.pvt.execTr;
 				var queue = this.pvt.execQ;
-				var auto = false;
-				if (!trGuid) {
+				var auto = false;				
+				// пропускаем "конец" транзакции если клиент был сам ее инициатором
+				if (trGuid && (db.getCurTranGuid() == trGuid) && !(db.isExternalTran()) && (args.func=="endTran")) return;
+				if (!trGuid) {	// "автоматическая" транзакция
 					trGuid = Utils.guid();
 					auto=true;
 				}
-				if (!trans[trGuid]) {
+				if (!(trGuid in trans)) { // создать новую транзакцию и поставить в очередь
 					var qElem = {};
 					qElem.tr = trGuid;
 					qElem.q = [];
@@ -376,16 +378,26 @@ define(
 					trans[trGuid] = this.pvt.memTranIdx+queue.length-1; // "индекс" для быстрого доступа в очередь
 				}
 				var tqueue = queue[trans[trGuid]-this.pvt.memTranIdx].q;
-							
-				function done2(res,memTranGuid) {
+				/*			
+				function done2(res,memTranGuid) { // коллбэк-обертка для завершения транзакции
 
+			
 					if (memTranGuid)
-						var tq = queue[trans[memTranGuid]-db.pvt.memTranIdx];
+						var memGuid = memTranGuid;
 					else
-						tq = queue[trans[db.getCurTranGuid()]-db.pvt.memTranIdx];
+						memGuid = db.getCurTranGuid();
 					
-					if (tq.a) db.tranCommit(); // TODO убрать после рефакторинга
-					db.getController().genDeltas(db.getGuid());
+					tq = queue[trans[memGuid]-db.pvt.memTranIdx];		
+					db.getController().genDeltas(db.getGuid());				
+					if (tq.a) {
+						db.subsRemoteCall("endTran",undefined, srcDbGuid);
+						if (db.isExternalTran()) // закрываем только "внешние" транзакции (созданные внутри remoteCallExec)
+							db.tranCommit(); 	
+						db.event.fire({
+							type: 'endTransaction',
+							target: this
+						});
+					}			
 					
 					if (done) done(res);
 						
@@ -394,38 +406,97 @@ define(
 						tq.q[0]();
 					else {
 						db.pvt.execFst = false;
-						if (tq.a && db.inTran()) { // если "автоматическая" транзакция, то закрыть ее принудительно
-							db.tranCommit();
-						}
-						if (!db.inTran()) { // если не в транзакции, значит предыдущая закончилась
-							
-							delete trans[memTranGuid];  // почистить ее
+
+						if (!db.inTran()) { // если не в транзакции, значит предыдущая закончилась						
+							delete trans[memGuid];  // почистить ее
 							queue.splice(0,1);
 							db.pvt.memTranIdx++;
 							if (queue.length>0) {
 								db.tranStart(queue[0].tr);
 								db.pvt.execFst = queue[0];
-								queue[0].q[0](); 
+								var f=queue[0].q[0];
+								f(); 
 							}
 						}
 
 					}
+				}
+				*/
+				
+				function done2(res,endTran) { // коллбэк-обертка для завершения транзакции
+					
+					var memTranGuid = db.getCurTranGuid();
+					tq = queue[trans[memTranGuid]-db.pvt.memTranIdx];		
+					db.getController().genDeltas(db.getGuid());
+					var commit = tq.a || endTran; // конец транзакции - либо автоматическая либо признак конца
+					if (commit) { 
+						db.subsRemoteCall("endTran",undefined, srcDbGuid);
+						if (db.isExternalTran()) // закрываем только "внешние" транзакции (созданные внутри remoteCallExec)
+							db.tranCommit(); 	
+						db.event.fire({
+							type: 'endTransaction',
+							target: this
+						});
+						
+						if (done) done(res);
+						
+						delete trans[memTranGuid];
+						queue.splice(0,1);
+						db.pvt.memTranIdx++;
+						db.pvt.execFst = false;
+						
+						if (queue.length>0) { // Если есть другие транзакции в очереди, то перейти к их выполнению
+							db.tranStart(queue[0].tr);
+							db.pvt.execFst = queue[0];
+							var f=queue[0].q[0];
+							f(); 
+						}										
+					}			
+					else {
+						if (done) done(res); // сейчас срабатывает только на сервере, чтобы вернуть ответ на клиент
+						
+						tq.q.splice(0,1);				
+						if (tq.q.length>0) 
+							tq.q[0]();
+						else 
+							db.pvt.execFst = false;
+/*
+						if (!db.inTran()) { // если не в транзакции, значит предыдущая закончилась						
+							delete trans[memGuid];  // почистить ее
+							queue.splice(0,1);
+							db.pvt.memTranIdx++;
+							if (queue.length>0) {
+								db.tranStart(queue[0].tr);
+								db.pvt.execFst = queue[0];
+								var f=queue[0].q[0];
+								f(); 
+							}
+						}*/
+
+					}
+					console.log("RCEXEC DONE ",args.func,args,trGuid,auto,commit, queue);
 				}
 				var aparams = args.aparams || [];
 				aparams.push(done2); // добавить колбэк последним параметром
 
 				function exec1() {
 					if (args.func == "endTran") { // если получили маркер конца транзакции, то коммит
-						var memTran = db.getCurTranGuid()
-						db.tranCommit();
-						done2(null,memTran);		
+						/*var memTran = db.getCurTranGuid();
+						db.getController().genDeltas(db.getGuid());
+						db.subsRemoteCall("endTran",undefined,srcDbGuid); // разослать удаленным подписчикам признак конца транзакции
+						if (db.isExternalTran())
+							db.tranCommit();
+						*/
+						done2(null,true);		
+						//db.event.fire({ type: 'endTransaction', target: this }); // событие о завершениии транзакции (подписка на клиенте для рендера)
 					}
 					else
-						uobj[args.func].apply(uobj,aparams);									
+						uobj[args.func].apply(uobj,aparams); // выполняем соответствующий метод: uobj.func(aparams)								
 				}	
 				// ставим в очередь
 				tqueue.push(function() { exec1(); });
-				
+				console.log("RCEXEC PUSH TO QUEUE ",args.func,args,trGuid,auto, queue);
+							
 				if (!db.getCurTranGuid()) db.tranStart(trGuid); // Если не в транзакции, то заходим в нее
 
 				if (trGuid == db.getCurTranGuid()) { // Если мемДБ в той же транзакции, что и метод, можем попробовать его выполнить, но только		
