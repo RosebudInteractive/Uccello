@@ -295,7 +295,12 @@ define(
 					this.remoteCall('loadNewRoots', [rootGuids, params],cb);
 				}
 			},
-			
+
+            /**
+             * Метод для отправки дельт
+             * @param data
+			 * @param cb
+             */			
 			sendDataBaseDelta: function(data, cb) {
 				if (this.isMaster()) {	
 					var cm = this.getSysCM().getController();

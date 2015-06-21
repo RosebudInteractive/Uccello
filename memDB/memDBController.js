@@ -380,8 +380,10 @@ define(
 					else { // на клиенте (slave)
 						if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
 							// если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
-							console.log("UNDO?? if (ldraft>lval) : "+ro.getGuid()+"valid version: "+lval+" delta version:"+dver);
-							if (ldraft>lval) db.undo(lval); 
+							if (ldraft>lval) {
+								console.log("UNDO if (ldraft>lval) : "+ro.getGuid()+"valid version: "+lval+" delta version:"+dver);
+								db.undo(lval); 
+							}
 						}
 						else { // ошибка синхронизации - ненормальная ситуация, в будущем надо придумать как это обработать
 							console.log("cannot sync client -  valid version:"+lval+"delta version:"+dver);
@@ -411,16 +413,7 @@ define(
 				}
 				
 				this.propagateDeltas(dbGuid,srcDbGuid,[cdelta]);
-
-// переносим в конец транзакции
-/*
-                this.event.fire({
-                    type: 'endApplyDeltas',
-                    target: this,
-					commit: false,
-					db: db
-                });
-	*/			
+		
 				if (done) done();
 						
             },
@@ -497,7 +490,6 @@ define(
 								//if (DEBUG) console.log("sending delta db: "+db.getGuid(), delta);
 								//var cbp = null;
 								var data = {action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), trGuid: db.getCurTranGuid()};
-								//if ("last" in delta) cbp = cb;
 								
 								if (sendFunc)
 								  sendFunc(data,cb);
@@ -506,19 +498,7 @@ define(
 								}
 						}
 					}
-					
-					// распространить по подписчикам					
-					/*if ("last" in delta) { // закрывающую дельту транзакции посылаем всем подписчикам БД
-						var allSubs = db.getSubscribers();
-						for (var guid in allSubs) {
-							var subscriber = allSubs[guid];
-							if (subscriber.kind == 'remote' && srcDbGuid != guid) {
-								subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid()});
-								if (DEBUG) console.log("sent last to DB : "+subscriber.guid);
-								}							
-						}
-					}*/
-					//else {
+
 					var root = db.getRoot(delta.rootGuid);												
 					for(guid in root.subscribers) {
 						var subscriber = root.subscribers[guid];

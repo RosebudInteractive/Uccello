@@ -152,63 +152,7 @@ define(
                 }
                 done(result);
             },
-			
-			// Добавить в очередь на выполнение
-			/*
-			addToQueue: function(db, func, trGuid) {
-				var guid = db.getGuid();
-				if (!this.execQ[guid]) this.execQ[guid] = [];
-				var q = this.execQ[guid];
-				function execMethod() {		
-					if (!db.getCurTranGuid()) {
-						var f=q[0];
-						q.splice(0,1);
-						f();
-					}
-					if (q.length>0) setTimeout(execMethod,1);
 
-				}
-				q.push(func);
-				if (q.length==1) setTimeout(execMethod,1);
-			},
-			
-			routerRemoteCall: function(data,done) {				
-
-				var args = data.args;
-				var trGuid = data.trGuid;
-				//var uobj = this.cmsys.get(args.objGuid);
-				//var db = uobj.getContentDB();
-				var context = this.cmsys.get(args.contextGuid);
-				var db = context.getContentDB();
-				// поискать объект в VC, а если нет то в контентной базе
-				// в будущем найти более единообразное решение и сделать рефакторинг
-				var uobj =  (this.cmsys.get(args.objGuid)) ? this.cmsys.get(args.objGuid) : db.get(args.objGuid);
-				function done2(result) {
-					db.tranCommit();
-					done(result);
-				};
-				args.aparams.push(done2);
-
-				function exec1() {
-					var confl = false;
-					for (var curGuid in args.rootv) {
-						if (!(db.getObj(curGuid).getRootVersion("valid") == (args.rootv[curGuid] - 1))) {
-							confl = true;
-							break;
-						}
-					}
-					if (confl) {
-						console.log("CONFLICT VERSIONS "+curGuid+" V: "+db.getObj(curGuid).getRootVersion("valid")+" D: "+args.rootv[curGuid]);
-					}
-					if (trGuid) db.tranStart(trGuid);
-					uobj[args.func].apply(uobj,args.aparams);									
-				}
-
-				this.addToQueue( db, function() { exec1(); }, trGuid );
-
-				
-			},
-			*/
 			
 			routerRemoteCall: function(data,done) {				
 				var args = data.args;

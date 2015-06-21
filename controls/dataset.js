@@ -86,17 +86,6 @@ define(
 				if (!this.active()) return;
 				var that = this;
 				function icb(res) {		
-				/*
-					function refrcb() {
-						var dataRoot = this.getDB().getObj(res.guids[0]);
-						if (dataRoot)
-						    this.root(dataRoot);
-						this._initCursor(true);
-						//this.getDB().tranCommit(); - перетащили в обертку
-					}
-					
-					that.getControlMgr().userEventHandler(that, refrcb );
-				*/
 					var dataRoot = that.getDB().getObj(res.guids[0]);
 					if (dataRoot)
 					  that.root(dataRoot);

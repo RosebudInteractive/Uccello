@@ -249,8 +249,10 @@ define(
                 return new ViewSet(this, ini);
             },
 
-
-			// "транзакции" для буферизации вызовов методов
+            /**
+             * Стартовать транзакцию контрол-менеджера - используется для буферизации удаленных вызовов
+             * @param dbTran - true|false - нужно ли открывать транзакцию БД
+             */
 			_tranStart: function(dbTran) {
 				if (this.pvt.inTran) return;
 				this.pvt.inTran = true;
@@ -296,7 +298,8 @@ define(
 					var that=this;
 
 					args[args.length-1] = function(res) {
-						that.userHandler2(ucallback,res);
+						//that.userHandler2(ucallback,res);
+						that.userEventHandler(context,ucallback,res, true);
 					}
 				}
 
@@ -304,14 +307,11 @@ define(
 					this.pvt.tranQueue.push({context:context, method:method, args: args});
 				else method.apply(context,args);
 			},
-		
+		/*
 			userHandler2: function(func,res) {
-				this._tranStart(false);
-				
+				this._tranStart(false);			
 				func(res);
-				
 				var that = this;
-				//var memTran =  (this.pvt.tranCounter == 1) ? this.getCurTranGuid() : undefined;
 				this.getController().genDeltas(this.getGuid(),undefined,null, function(res,cb) { that.getContext().sendDataBaseDelta(res,cb); });
 				this._tranCommit();				
 				if (!this.inTran()) {
@@ -319,6 +319,7 @@ define(
 					if (vc) vc.renderAll();
 				}				
 			},
+			*/
 			
             /**
              * Функция-оболочка в которой завернуты системные действия. Должна вызываться компонентами
@@ -326,17 +327,15 @@ define(
              * @param context Контекст в котором запускается прикладная функция
              * @param f {function} функция
              * @param args {object} Аргументы функции
+			 * @param nots {boolean) true - не стартовать транзакцию дб
              */
-            userEventHandler: function(context, f, args) {
+            userEventHandler: function(context, f, args, nots) {
 
                 var nargs = [];
 				var that = this;
                 if (args) nargs = [args];
-				this._tranStart(true);
-				if (f) f.apply(context, nargs);
-				
-				
-				//var memTran =  (this.pvt.tranCounter == 1) ? this.getCurTranGuid() : undefined;
+				this._tranStart(!nots);
+				if (f) f.apply(context, nargs);			
 				this.getController().genDeltas(this.getGuid(),undefined,null, function(res,cb) { that.getContext().sendDataBaseDelta(res,cb); });
 				this._tranCommit();				
 				if (!this.inTran()) {
@@ -344,8 +343,7 @@ define(
 					if (vc) vc.renderAll();
 				}
             },
-
-			
+	
 			subsRemoteCall: function(func, aparams, excludeGuid) {		
 				var subs = this.getSubscribers();	
 				var trGuid = this.getCurTranGuid();
@@ -357,7 +355,14 @@ define(
 			},
 			
 			
-			// ответ на вызов удаленного метода 
+            /**
+             * Ответ на вызов удаленного метода. Ставит вызовы в очередь по транзакциям
+             * @param uobj {object}
+             * @param args [array] 
+             * @param srcDbGuid - гуид БД-источника
+			 * @param trGuid - гуид транзакции (может быть null)
+			 * @callback done - колбэк
+             */
 			remoteCallExec: function(uobj, args, srcDbGuid, trGuid, done) {
 				var db = this;
 				var trans = this.pvt.execTr;
@@ -365,7 +370,7 @@ define(
 				var auto = false;				
 				// пропускаем "конец" транзакции если клиент был сам ее инициатором
 				if (trGuid && (db.getCurTranGuid() == trGuid) && !(db.isExternalTran()) && (args.func=="endTran")) return;
-				if (!trGuid) {	// "автоматическая" транзакция
+				if (!trGuid) {	// "автоматическая" транзакция, создается если нет гуида транзакции
 					trGuid = Utils.guid();
 					auto=true;
 				}
@@ -378,59 +383,15 @@ define(
 					trans[trGuid] = this.pvt.memTranIdx+queue.length-1; // "индекс" для быстрого доступа в очередь
 				}
 				var tqueue = queue[trans[trGuid]-this.pvt.memTranIdx].q;
-				/*			
-				function done2(res,memTranGuid) { // коллбэк-обертка для завершения транзакции
 
-			
-					if (memTranGuid)
-						var memGuid = memTranGuid;
-					else
-						memGuid = db.getCurTranGuid();
-					
-					tq = queue[trans[memGuid]-db.pvt.memTranIdx];		
-					db.getController().genDeltas(db.getGuid());				
-					if (tq.a) {
-						db.subsRemoteCall("endTran",undefined, srcDbGuid);
-						if (db.isExternalTran()) // закрываем только "внешние" транзакции (созданные внутри remoteCallExec)
-							db.tranCommit(); 	
-						db.event.fire({
-							type: 'endTransaction',
-							target: this
-						});
-					}			
-					
-					if (done) done(res);
-						
-					tq.q.splice(0,1);				
-					if (tq.q.length>0) 
-						tq.q[0]();
-					else {
-						db.pvt.execFst = false;
-
-						if (!db.inTran()) { // если не в транзакции, значит предыдущая закончилась						
-							delete trans[memGuid];  // почистить ее
-							queue.splice(0,1);
-							db.pvt.memTranIdx++;
-							if (queue.length>0) {
-								db.tranStart(queue[0].tr);
-								db.pvt.execFst = queue[0];
-								var f=queue[0].q[0];
-								f(); 
-							}
-						}
-
-					}
-				}
-				*/
-				
 				function done2(res,endTran) { // коллбэк-обертка для завершения транзакции
 					
 					var memTranGuid = db.getCurTranGuid();
 					tq = queue[trans[memTranGuid]-db.pvt.memTranIdx];		
-					db.getController().genDeltas(db.getGuid());
+					db.getController().genDeltas(db.getGuid()); // сгенерировать дельты и разослать подписчикам
 					var commit = tq.a || endTran; // конец транзакции - либо автоматическая либо признак конца
 					if (commit) { 
-						db.subsRemoteCall("endTran",undefined, srcDbGuid);
+						db.subsRemoteCall("endTran",undefined, srcDbGuid); // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid
 						if (db.isExternalTran()) // закрываем только "внешние" транзакции (созданные внутри remoteCallExec)
 							db.tranCommit(); 	
 						db.event.fire({
@@ -447,7 +408,7 @@ define(
 						
 						if (queue.length>0) { // Если есть другие транзакции в очереди, то перейти к их выполнению
 							db.tranStart(queue[0].tr);
-							db.pvt.execFst = queue[0];
+							db.pvt.execFst = true;
 							var f=queue[0].q[0];
 							f(); 
 						}										
@@ -460,19 +421,6 @@ define(
 							tq.q[0]();
 						else 
 							db.pvt.execFst = false;
-/*
-						if (!db.inTran()) { // если не в транзакции, значит предыдущая закончилась						
-							delete trans[memGuid];  // почистить ее
-							queue.splice(0,1);
-							db.pvt.memTranIdx++;
-							if (queue.length>0) {
-								db.tranStart(queue[0].tr);
-								db.pvt.execFst = queue[0];
-								var f=queue[0].q[0];
-								f(); 
-							}
-						}*/
-
 					}
 					console.log("RCEXEC DONE ",args.func,args,trGuid,auto,commit, queue);
 				}
@@ -480,18 +428,10 @@ define(
 				aparams.push(done2); // добавить колбэк последним параметром
 
 				function exec1() {
-					if (args.func == "endTran") { // если получили маркер конца транзакции, то коммит
-						/*var memTran = db.getCurTranGuid();
-						db.getController().genDeltas(db.getGuid());
-						db.subsRemoteCall("endTran",undefined,srcDbGuid); // разослать удаленным подписчикам признак конца транзакции
-						if (db.isExternalTran())
-							db.tranCommit();
-						*/
+					if (args.func == "endTran")  // если получили маркер конца транзакции, то коммит
 						done2(null,true);		
-						//db.event.fire({ type: 'endTransaction', target: this }); // событие о завершениии транзакции (подписка на клиенте для рендера)
-					}
 					else
-						uobj[args.func].apply(uobj,aparams); // выполняем соответствующий метод: uobj.func(aparams)								
+						uobj[args.func].apply(uobj,aparams); // выполняем соответствующий метод uobj.func(aparams)		
 				}	
 				// ставим в очередь
 				tqueue.push(function() { exec1(); });
@@ -501,13 +441,11 @@ define(
 
 				if (trGuid == db.getCurTranGuid()) { // Если мемДБ в той же транзакции, что и метод, можем попробовать его выполнить, но только		
 					if (!this.pvt.execFst) { 		// если первый вызов не исполняется в данный момент
-						this.pvt.execFst = tqueue;
+						this.pvt.execFst = true;
 						tqueue[0](); // выполнить первый в очереди метод
 					}				
 				}
 			},
-
-
 
             /**
              * Параметр автоотсылки дельт
