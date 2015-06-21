@@ -213,7 +213,7 @@ define(
 					data.srcDbGuid = contextCM.getGuid();
 					var guids = contextCM.getRootGuids();
 					for (var i=0; i<guids.length; i++)
-						data.rootv[guids[i]]=contextCM.getObj(guids[i]).getRootVersion();				
+						data.rootv[guids[i]]=contextCM.getObj(guids[i]).getRootVersion("valid");				
 				}
 				 contextCM._execMethod(socket,socket.send,[data,cb]);
 			},

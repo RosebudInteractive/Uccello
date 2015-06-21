@@ -282,8 +282,7 @@ define(
 						delete this.pvt.execTr[memGuid]; // почистить транзакцию
 						this.pvt.execQ.splice(0,1);
 						this.pvt.memTranIdx++;			
-					}
-					
+					}		
 				}
 			},
 
@@ -298,7 +297,6 @@ define(
 					var that=this;
 
 					args[args.length-1] = function(res) {
-						//that.userHandler2(ucallback,res);
 						that.userEventHandler(context,ucallback,res, true);
 					}
 				}
@@ -307,19 +305,6 @@ define(
 					this.pvt.tranQueue.push({context:context, method:method, args: args});
 				else method.apply(context,args);
 			},
-		/*
-			userHandler2: function(func,res) {
-				this._tranStart(false);			
-				func(res);
-				var that = this;
-				this.getController().genDeltas(this.getGuid(),undefined,null, function(res,cb) { that.getContext().sendDataBaseDelta(res,cb); });
-				this._tranCommit();				
-				if (!this.inTran()) {
-					var vc = this.getContext(); // ? рендерить можно и без завершения транзакции, подумать (если править, то и в колбэке выше!)
-					if (vc) vc.renderAll();
-				}				
-			},
-			*/
 			
             /**
              * Функция-оболочка в которой завернуты системные действия. Должна вызываться компонентами
@@ -343,17 +328,27 @@ define(
 					if (vc) vc.renderAll();
 				}
             },
-	
+			
+			
+			// временный вариант ф-ции для рассылки оповещений подписантам, используется для рассылки признака конца транзакции
 			subsRemoteCall: function(func, aparams, excludeGuid) {		
 				var subs = this.getSubscribers();	
 				var trGuid = this.getCurTranGuid();
 				for(var guid in subs) {
 					var csub = subs[guid];
-					if (excludeGuid!=guid) // для всех ДБ кроме исключенной (та которая инициировала вызов)
+					if (excludeGuid!=guid) // для всех ДБ кроме исключенной (та, которая инициировала вызов)
 						csub.connect.send({action:func, trGuid: trGuid, dbGuid:guid }); //TODO TRANS2 сделать вызов любого метода
 				}
 			},
 			
+			
+			_checkRootVer: function(rootv) {
+				console.log("CHECK ROOT VERSIONS");
+				for (var guid in rootv) console.log(guid, rootv[guid],this.getObj(guid).getRootVersion("valid"));
+				for (var guid in rootv) 
+					if (rootv[guid] != this.getObj(guid).getRootVersion("valid")) return false;
+				return true;
+			},
 			
             /**
              * Ответ на вызов удаленного метода. Ставит вызовы в очередь по транзакциям
@@ -361,9 +356,10 @@ define(
              * @param args [array] 
              * @param srcDbGuid - гуид БД-источника
 			 * @param trGuid - гуид транзакции (может быть null)
+			 * @param rootv {object} - версии рутов
 			 * @callback done - колбэк
              */
-			remoteCallExec: function(uobj, args, srcDbGuid, trGuid, done) {
+			remoteCallExec: function(uobj, args, srcDbGuid, trGuid, rootv, done) {
 				var db = this;
 				var trans = this.pvt.execTr;
 				var queue = this.pvt.execQ;
@@ -407,6 +403,7 @@ define(
 						db.pvt.execFst = false;
 						
 						if (queue.length>0) { // Если есть другие транзакции в очереди, то перейти к их выполнению
+							this._checkRootVer(rootv);
 							db.tranStart(queue[0].tr);
 							db.pvt.execFst = true;
 							var f=queue[0].q[0];
@@ -422,7 +419,7 @@ define(
 						else 
 							db.pvt.execFst = false;
 					}
-					console.log("RCEXEC DONE ",args.func,args,trGuid,auto,commit, queue);
+					//console.log("RCEXEC DONE ",args.func,args,trGuid,auto,commit, queue);
 				}
 				var aparams = args.aparams || [];
 				aparams.push(done2); // добавить колбэк последним параметром
@@ -435,9 +432,12 @@ define(
 				}	
 				// ставим в очередь
 				tqueue.push(function() { exec1(); });
-				console.log("RCEXEC PUSH TO QUEUE ",args.func,args,trGuid,auto, queue);
+				//console.log("RCEXEC PUSH TO QUEUE ",args.func,args,trGuid,auto, queue);
 							
-				if (!db.getCurTranGuid()) db.tranStart(trGuid); // Если не в транзакции, то заходим в нее
+				if (!db.getCurTranGuid()) {
+					this._checkRootVer(rootv);
+					db.tranStart(trGuid); // Если не в транзакции, то заходим в нее
+				}
 
 				if (trGuid == db.getCurTranGuid()) { // Если мемДБ в той же транзакции, что и метод, можем попробовать его выполнить, но только		
 					if (!this.pvt.execFst) { 		// если первый вызов не исполняется в данный момент

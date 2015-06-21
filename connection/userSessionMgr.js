@@ -40,7 +40,7 @@ define(
                 router.add('deauthenticate', function(){ return that.routerDeauthenticate.apply(that, arguments); });
                 router.add('createContext', function(){ return that.routerCreateContext.apply(that, arguments); });
                 router.add('newTab', function(){ return that.routerNewTab.apply(that, arguments); });
-				router.add('remoteCall2', function(){ return that.routerRemoteCall.apply(that, arguments); });
+				router.add('remoteCall2', function(){ return that.routerRemoteCallExec.apply(that, arguments); });
             },
 			
 			getController: function() {
@@ -154,15 +154,14 @@ define(
             },
 
 			
-			routerRemoteCall: function(data,done) {				
+			routerRemoteCallExec: function(data,done) {				
 				var args = data.args;
 				var context = this.cmsys.get(args.contextGuid);
-				//var db = context.getContentDB();
 				var cm = context.getContextCM();
 				// поискать объект в VC, а если нет то в контентной базе
 				// в будущем найти более единообразное решение и сделать рефакторинг
 				var uobj =  (this.cmsys.get(args.objGuid)) ? this.cmsys.get(args.objGuid) : cm.get(args.objGuid);
-				cm.remoteCallExec(uobj, args, data.srcDbGuid, data.trGuid, done);
+				cm.remoteCallExec(uobj, args, data.srcDbGuid, data.trGuid, data.rootv, done);
 			},
 
             /**
