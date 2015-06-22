@@ -17,6 +17,7 @@ define(
                 {fname:"MaxColWidth",ftype:"boolean"},
                 {fname:"Title",ftype:"string"},
                 {fname:"Padding",ftype:"int"}
+
             ],
 
             init: function(cm,params){
