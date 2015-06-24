@@ -16,6 +16,8 @@ define(
                 this._modelsByName = {};
                 this._modelsByGuid = {};
 
+                this._constrByName = {};
+
                 UccelloClass.super.apply(this, [cm, params]);
 
                 if (params) {
@@ -30,6 +32,35 @@ define(
                         callback: this._onDeleteModel
                     });
                 };
+            },
+
+            createObjByName: function (name, params) {
+                var obj = null;
+                var model = this._modelsByName[name];
+                if (model)
+                    obj = this._createObj(model, params, name);
+                return obj;
+            },
+
+            createObjByGuid: function (guid, params) {
+                var obj = null;
+                var model = this._modelsByGuid[guid];
+                if (model)
+                    obj = this._createObj(model, params, model.get("Name"));
+                return obj;
+            },
+
+            _createObj: function (model, params, name) {
+                var obj = null;
+                if (model) {
+                    var constr = null;
+                    if (!this._constrByName[name])
+                        constr = this._buildConstr(model);
+                    if (constr) {
+                        obj = new constr(this.getDB(), params);
+                    };
+                };
+                return obj;
             },
 
             addModel: function (name, guid) {
@@ -68,6 +99,49 @@ define(
 
             getModelByGuid: function (guid) {
                 return this._modelsByGuid[guid];
+            },
+
+            _buildConstr: function (model) {
+
+                var Constructor = null;
+                var header =
+                "if (typeof define !== 'function') {\n" +
+                 "\tvar define = require('amdefine')(module);\n" +
+                 "\tvar UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');\n" +
+                "};\n" +
+                "define([UCCELLO_CONFIG.uccelloPath + '/dataman/dataobject'], function (DataObject) {\n" +
+                 "\tConstructor = DataObject.extend({\n";
+
+                var footer = ",\n\n" +
+                    "\t\tinit: function(cm,params){\n" +
+                    "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n" +
+                    "\t\t}\n" +
+                    "\t});\n" +
+                    "});";
+
+                var constr = header +
+                    "\t\tclassName: \"" + model.get("Name") + "\",\n" +
+                    "\t\tclassGuid: \"" + model.get("DataObjectGuid") + "\",\n" +
+                    "\t\tmetaFields: [\n";
+
+                var fields = model.fields();
+                for (var i = 0; i < fields.length; i++) {
+                    if (i > 0)
+                        constr += ",\n";
+                    constr += "\t\t\t{fname: \"" + fields[i].get("Name") + "\", ftype: " +
+                        JSON.stringify(fields[i].get("FieldType").serialize()) + "}";
+                };
+                constr += "\n\t\t],\n";
+
+                for (var i = 0; i < fields.length; i++) {
+                    if (i > 0)
+                        constr += ",\n";
+                    constr += "\n\t\t_" + fields[i].get("Name") + ": function (value) {\n" +
+                        "\t\t\treturn this._genericSetter(\"" + fields[i].get("Name") + "\", value);\n\t\t}";
+                };
+
+                eval(constr + footer);
+                return Constructor;
             },
 
             _onAddModel: function (args) {
