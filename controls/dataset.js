@@ -19,7 +19,7 @@ define(
                         res_elem_type: UCCELLO_CONFIG.classGuids.DataRoot
                     }
                 },
-				{fname: "RootInstance", ftype: "string"},
+				/* {fname: "RootInstance", ftype: "string"}, */
                 {fname: "Cursor", ftype: "string"},
                 {fname: "Active", ftype: "boolean"},
                 {
@@ -156,23 +156,6 @@ define(
 				}
 			},
 			
-            /**
-             *  добавить новый объект в коллекцию
-             * @param flds - поля объекта для инициализации
-             */
-			addObject: function(flds) {
-				var db = this.getDB();
-				var dataRoot = db.getRoot(this.root()).obj;
-				var parent = {obj:dataRoot, colName: "DataElements"};
-
-				var obj=  db.addObj(db.getObj(this.objtype()),parent,flds);
-				
-				this.event.fire({ // TODO другое событие сделать
-							type: 'modFld',
-							target: this				
-						});
-				return obj;
-			},
 			
 			// были ли изменены данные датасета
 			isDataSourceModified: function() {
@@ -190,10 +173,12 @@ define(
                 return newVal;
             },
 			
+			/*
             rootInstance: function (value) {
                var val = this._genericSetter("RootInstance", value);
 			   return val;
             },
+			*/
 
             cursor: function (value) {
 				var oldVal = this._genericSetter("Cursor");
@@ -236,7 +221,36 @@ define(
 					params.subDbGuid = this.getControlMgr().getGuid();
 					this.remoteCall('dataLoad', [rootGuids, params],cb);					
 				}
-			}
+			},
+			
+            /**
+             *  добавить новый объект в коллекцию
+             * @param flds - поля объекта для инициализации
+             */
+			addObject: function(flds, cb) {
+				if (!this.isMaster()) {
+					this.remoteCall('addObject', [flds],cb);	
+					return;
+				}
+					
+				var db = this.getDB();
+				var dataRoot = this.root(); // db.getRoot(this.root()).obj;
+				var cm = this.getControlMgr();
+				var constr = cm.getContext().getConstructorHolder().getComponent(this.objtype()).constr;
+				
+				var params = {parent:dataRoot, colName: "DataElements", ini: flds};
+
+				var obj = new constr(cm, params); 
+				//db.addObj(db.getObj(this.objtype()),parent,flds);
+				
+				this.event.fire({ // TODO другое событие сделать
+							type: 'modFld',
+							target: this				
+						});
+				if (cb) cb();
+				return obj;
+			},
+			
 
         });
         return Dataset;

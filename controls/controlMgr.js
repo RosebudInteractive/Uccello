@@ -318,7 +318,11 @@ define(
 
                 var nargs = [];
 				var that = this;
-                if (args) nargs = [args];
+				if (args)
+				  if (Array.isArray(args))
+				    nargs = args
+				  else
+                    nargs = [args];
 				this._tranStart(!nots);
 				if (f) f.apply(context, nargs);			
 				this.getController().genDeltas(this.getGuid(),undefined,null, function(res,cb) { that.getContext().sendDataBaseDelta(res,cb); });
