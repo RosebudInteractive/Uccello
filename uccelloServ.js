@@ -33,7 +33,7 @@ define(
 				this.pvt.constructHolder = new ConstructHolder();
 				this.pvt.constructHolder.loadControls();
                 this.pvt.userSessionMgr = new UserSessionMgr(this.getRouter(), {authenticate:options.authenticate, rpc:this.pvt.rpc, proxyServer: this.pvt.proxyServer, constructHolder:this.pvt.constructHolder});
-                this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController());
+                this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder);
                 this.pvt.resman = new Resman(that.getUserMgr().getController());
                 this.pvt.commServer = options.commServer;
 

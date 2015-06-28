@@ -4,14 +4,44 @@
 }
 
 define(
-    [],
-    function()  {
-		var Dataman = UccelloClass.extend({
+    ['../controls/controlMgr', '../metaData/metaDataMgr', '../metaData/metaModel', '../metaData/metaModelField'],
+    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField) {
 
-			init: function(router, controller){
+        var DATAMAN_DB_NAME = "DatamanDB";
+        var DATAMAN_DB_GUID = "66d43749-223a-48cb-9143-122381b9ed3c";
+
+        var METADATA_FILE_NAME = UCCELLO_CONFIG.dataPath + "meta/metaTables.json";
+
+        var Dataman = UccelloClass.extend({
+
+		    init: function (router, controller, construct_holder) {
 				this.pvt = {};
 				this.pvt.router = router;
 				this.pvt.controller = controller;
+				this.pvt.constructHolder = construct_holder;
+
+				var that = this;
+				this.pvt.createComponent = function (typeObj, parent, sobj) {
+				    var newObj = null;
+				    var constr = that.pvt.constructHolder.getComponent(typeObj.getGuid())
+				    if (constr && constr.constr) {
+				        var params = { ini: sobj, parent: parent.obj, colName: parent.colName };
+				        newObj = new constr.constr(that.pvt.dataBase, params);
+				    };
+				    return newObj;
+				};
+
+				this.pvt.dataBase = new ControlMgr(
+                    {
+                        controller: controller,
+                        dbparams: {
+                            name: DATAMAN_DB_NAME,
+                            kind: "master",
+                            guid: DATAMAN_DB_GUID
+                        }
+                    });
+				this.pvt.metaDataMgr = this._loadMetaDataMgr();
+
 				this.pvt.dataSource = 'local'; // 'local' or 'mysql'
 				var that = this;
                 router.add('query', function(){ return that.query.apply(that, arguments); });
@@ -30,6 +60,10 @@ define(
                     });
                 }
 			},
+
+		    getDB: function () {
+		        return this.pvt.dataBase;
+		    },
 
             query: function(data, done) {
 				var result = {};
@@ -236,8 +270,22 @@ define(
                     });
                 } else
                     this.readTableFile('address-'+expression+'.json', guidRoot, UCCELLO_CONFIG.classGuids.DataAddress, expression, done);
-            }
+            },
 
+
+            _loadMetaDataMgr: function () {
+                var fs = require('fs');
+                var metaDataMgr = null;
+                if (this.pvt.dataBase) {
+                    new MetaDataMgr(this.pvt.dataBase);
+                    new MetaModel(this.pvt.dataBase);
+                    new MetaModelField(this.pvt.dataBase);
+                    metaDataMgr = this.pvt.dataBase
+                        .deserialize(JSON.parse(fs.readFileSync(METADATA_FILE_NAME, { encoding: "utf8" })),
+                            {}, this.pvt.createComponent);
+                };
+                return metaDataMgr;
+            }
         });
 		return Dataman;
 	}
