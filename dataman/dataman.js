@@ -277,9 +277,9 @@ define(
                 var fs = require('fs');
                 var metaDataMgr = null;
                 if (this.pvt.dataBase) {
-                    new MetaDataMgr(this.pvt.dataBase);
-                    new MetaModel(this.pvt.dataBase);
                     new MetaModelField(this.pvt.dataBase);
+                    new MetaModel(this.pvt.dataBase);
+                    new MetaDataMgr(this.pvt.dataBase);
                     metaDataMgr = this.pvt.dataBase
                         .deserialize(JSON.parse(fs.readFileSync(METADATA_FILE_NAME, { encoding: "utf8" })),
                             {}, this.pvt.createComponent);

@@ -65,23 +65,63 @@ define(
 				            throw new Error("Field \"" + name + "\" in class \"" +
                                 c.get("typeName") + "\" has been already defined in parent class.");
 				        };
-                    };
+				    };
+
 				    for (j = 0; j < c.getCol("cols").count() ; j++) {
 				        var name = c.getCol("cols").get(j).get("cname");
 				        var typ = c.getCol("cols").get(j).get("ctype");
-				        if (pvt.colsTable[name] === undefined) {
-				            pvt.colsTable[name] = pvt.colsTypes.length;
-				            pvt.colsTypes.push({name: name, typeDef: typ, typeObj: null, orig: c });
-				        } else {
+				        var typeCol = this.getRoot().getTypeByName(typ.type);
+
+				        if (! typeCol)
 				            throw new Error("Collection \"" + name + "\" in class \"" +
-                                c.get("typeName") + "\" has been already defined in parent class \"" +
-                                pvt.colsTypes[pvt.colsTable[name]].orig.get("typeName") + "\".");
+                                c.get("typeName") + "\" is of undefined type \"" + typ.type + "\".");
+
+                        var colIdx = pvt.colsTable[name];
+				        if (colIdx === undefined) {
+				            pvt.colsTable[name] = pvt.colsTypes.length;
+				            pvt.colsTypes.push({ name: name, typeDef: typ, typeObj: typeCol ? typeCol : null, orig: c });
+				        } else {
+				            var isError = (pvt.colsTypes[colIdx].typeObj === null) || (typeCol === null);
+				            if (! isError) {
+				                isError = ! typeCol.isDescendantOf(pvt.colsTypes[colIdx].typeObj, pvt.colsTypes[colIdx].typeDef.strict);
+				                pvt.colsTypes[colIdx].typeObj = typeCol;
+				                pvt.colsTypes[colIdx].typeDef = typ;
+				                pvt.colsTypes[colIdx].orig = c;
+                            };
+				            if (isError)
+				                throw new Error("Collection \"" + name + "\" in class \"" +
+                                    c.get("typeName") + "\" has been already defined in parent class \"" +
+                                        pvt.colsTypes[pvt.colsTable[name]].orig.get("typeName") + "\".");
 				        };
 				    }
 				};
 			},
 			
-			// получить класс-предок 
+		    /**
+             * Checks if this type is a descendant of "parentType" type
+             * 
+             * @param {String} parentType Base type
+             * @param {Boolean} isStrict If true then this type should be exactly "parentType"
+             * @return {Boolean}
+             */
+			isDescendantOf: function (parentType, isStrict) {
+			    var result = false;
+			    var typeGuid = parentType.getGuid();
+			    var ancestors = this.pvt.ancestors;
+			    var depth = -1;
+			    if (ancestors) {
+			        for (var i = 0; i < ancestors.length; i++) {
+			            if (ancestors[i].getGuid() === typeGuid) {
+			                depth = i;
+			                break;
+			            }
+			        };
+			        result = ((depth == 0) && isStrict) || ((depth != -1) && (!isStrict));
+			    };
+			    return result;
+			},
+
+		    // получить класс-предок 
 			// i=0 this, i=1 parent, i=2 parent+1
 			getParentClass: function(i) {
 				var i1 = 1;
