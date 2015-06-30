@@ -123,7 +123,7 @@ define(
 				return this.pvt.vc;
 			},
 			
-			getContextCM: function(rootGuid) {
+			getContextCM: function() {
 				return this.pvt.vc.getContextCM();
 			},
 			
