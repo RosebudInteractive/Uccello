@@ -50,6 +50,22 @@ define(
                 return obj;
             },
 
+            getObjConstrByName: function (name, params) {
+                var constr = null;
+                var model = this._modelsByName[name];
+                if (model)
+                    obj = this._getObjConstr(model);
+                return obj;
+            },
+
+            getObjConstrByGuid: function (guid, params) {
+                var constr = null;
+                var model = this._modelsByGuid[guid];
+                if (model)
+                    obj = this._getObjConstr(model);
+                return obj;
+            },
+
             _createObj: function (model, params, name) {
                 var obj = null;
                 if (model) {
@@ -101,9 +117,8 @@ define(
                 return this._modelsByGuid[guid];
             },
 
-            _buildConstr: function (model) {
+            _getObjConstr: function (model) {
 
-                var Constructor = null;
                 var header =
                 "if (typeof define !== 'function') {\n" +
                  "\tvar define = require('amdefine')(module);\n" +
@@ -140,7 +155,12 @@ define(
                         "\t\t\treturn this._genericSetter(\"" + fields[i].get("Name") + "\", value);\n\t\t}";
                 };
 
-                eval(constr + footer);
+                return constr + footer;
+            },
+
+            _buildConstr: function (model) {
+                var Constructor = null;
+                eval(this._getObjConstr(model));
                 return Constructor;
             },
 
