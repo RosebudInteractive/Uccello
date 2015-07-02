@@ -329,7 +329,7 @@ define(
 				this._tranCommit();				
 				if (!this.inTran()) {
 					var vc = this.getContext(); // ? рендерить можно и без завершения транзакции, подумать (если править, то и в колбэке выше!)
-					if (vc) vc.renderAll();
+					if (vc) vc.renderAll(true); // true? если мы на клиенте, то наверное да..
 				}
             },
 			
