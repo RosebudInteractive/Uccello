@@ -245,9 +245,21 @@ define(
 				return cm;
 			},
 
+			isWorkFlowMethod: function (action, args) {
+			    return false;
+			},
 
+			execWorkFlowMethod: function (action, local_context, local_method, args) {
+			    if (!isWorkFlowMethod(action, args))
+			        local_method.apply(local_context, args);
+			    else
+			        this._invokeWorkFlowMethod(action, args);
+			},
 
-			// добавляем новый набор данных - мастер-слейв варианты
+			_invokeWorkFlowMethod: function (action, args) {
+			},
+
+		    // добавляем новый набор данных - мастер-слейв варианты
 			// params.rtype = "res" | "data"
 			// params.compcb - только в случае ресурсов (может использоваться дефолтный)
 			// params.expr - выражение для данных
