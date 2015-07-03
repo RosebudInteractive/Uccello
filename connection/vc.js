@@ -250,7 +250,7 @@ define(
 			},
 
 			execWorkFlowMethod: function (action, local_context, local_method, args) {
-			    if (!isWorkFlowMethod(action, args))
+			    if (! this.isWorkFlowMethod(action, args))
 			        local_method.apply(local_context, args);
 			    else
 			        this._invokeWorkFlowMethod(action, args);
