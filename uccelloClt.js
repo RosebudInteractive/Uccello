@@ -68,6 +68,12 @@ define(
                             that.pvt.servInterface = result.intf;
                             that.pvt.proxyServer = rpc._publProxy(guidServer, clt.socket, result.intf); // публикуем прокси серверного интерфейса
                         });
+
+                        that.pvt.clientConnection.socket.send({ action: "wfeInterface", type: "method" }, function (result) {
+                            var guidWfe = "387e8d92-e2ca-4a94-9732-b4a479ff8bb8";
+                            that.pvt.wfeInterface = result.intf;
+                            that.pvt.proxyWfe = rpc._publProxy(guidWfe, clt.socket, result.intf); // публикуем прокси серверного интерфейса
+                        });
                     });
                 });
 
@@ -166,6 +172,7 @@ define(
                         formGuids:formGuids,
                         rpc: this.pvt.rpc,
                         proxyServer: this.pvt.proxyServer,
+                        proxyWfe: this.pvt.proxyWfe,
                         constructHolder: this.pvt.constructHolder
                     };
                     var context = new VisualContext(this.pvt.cmclient, params);
@@ -198,7 +205,7 @@ define(
                 }
 
                 var s = this.pvt.clientConnection.socket;
-                var p = {socket: s, proxyServer: this.pvt.proxyServer}
+                var p = { socket: s, proxyServer: this.pvt.proxyServer, proxyWfe: this.pvt.proxyWfe }
                 p.formGuids = params.formGuids;
                 p.constructHolder = this.pvt.constructHolder; //  ссылка на хранилище конструкторов
 

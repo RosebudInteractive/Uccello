@@ -22,7 +22,7 @@ define(
 				this.event = new Event();
                 this.options = options;
 				this.rpc = options.rpc;
-				this.proxyServer =  options.proxyServer;
+				this.proxyServer = options.proxyServer;
 				this.execQ = {};
 
                 // системные объекты
@@ -51,6 +51,12 @@ define(
 				return this.pvt.contextCounter++;
 			},
 			
+			proxyWfe: function (wfe) {
+			    if (wfe !== undefined)
+			        this.proxyWfe = wfe;
+			    return this.proxyWfe;
+			},
+
             /**
              * Подключение с клиента
              * @param data
@@ -113,14 +119,14 @@ define(
                 var controller = this.getController();
 				var contextId = this.getNewContextId();
 				var params = {
-                    parent: user,
-                    colName: "VisualContext",
-                    socket: this.getConnect(data.$sys.socket.getConnectId()).getConnection(),
-                    rpc: this.rpc, proxyServer: this.proxyServer,
-                    ini: {fields: {Id: contextId, Name: 'context'+contextId, Kind: "master"}},
-                    formGuids:data.formGuids,
-                    constructHolder: this.pvt.constructHolder
-                };
+				    parent: user,
+				    colName: "VisualContext",
+				    socket: this.getConnect(data.$sys.socket.getConnectId()).getConnection(),
+				    rpc: this.rpc, proxyServer: this.proxyServer, proxyWfe: this.proxyWfe,
+				    ini: { fields: { Id: contextId, Name: 'context' + contextId, Kind: "master" } },
+				    formGuids: data.formGuids,
+				    constructHolder: this.pvt.constructHolder
+				};
                 var context = new VisualContext(this.cmsys, params);
 				context.on(this.cmsys, params);
                 var result = {roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};

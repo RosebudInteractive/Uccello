@@ -54,6 +54,7 @@ define(
 
 				var controller = cm.getController();
 				this.pvt.proxyServer = params.proxyServer;
+				this.pvt.proxyWfe = params.proxyWfe;
 				this.pvt.constructHolder = params.constructHolder;
 				this.pvt.renderRoot = renderRoot;
 				this.pvt.formParams = {};

@@ -5,8 +5,9 @@ if (typeof define !== 'function') {
 
 define(
     ['./connection/socket', './system/logger', './dataman/dataman', 'ws', './connection/router', './connection/userSessionMgr',
-	'./system/rpc','./controls/controlMgr', './resman/resman', './system/constructHolder'],
-    function(Socket, Logger, Dataman, WebSocketServer, Router, UserSessionMgr, Rpc, ControlMgr, Resman, ConstructHolder) {
+	'./system/rpc', './controls/controlMgr', './resman/resman', './system/constructHolder', './system/constructHolder'],
+    function (Socket, Logger, Dataman, WebSocketServer, Router, UserSessionMgr,
+        Rpc, ControlMgr, Resman, ConstructHolder, EngineSingleton) {
 	
 		var guidServer = UCCELLO_CONFIG.guids.guidServer;
 	
@@ -30,10 +31,29 @@ define(
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
 				
 				this.pvt.proxyServer = rpc._publ(this, interface1); //
+
 				this.pvt.constructHolder = new ConstructHolder();
 				this.pvt.constructHolder.loadControls();
-                this.pvt.userSessionMgr = new UserSessionMgr(this.getRouter(), {authenticate:options.authenticate, rpc:this.pvt.rpc, proxyServer: this.pvt.proxyServer, constructHolder:this.pvt.constructHolder});
-                this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder);
+				this.pvt.userSessionMgr = new UserSessionMgr(this.getRouter(), {
+				    authenticate: options.authenticate,
+				    rpc: this.pvt.rpc,
+				    proxyServer: this.pvt.proxyServer,
+				    proxyWfe: this.pvt.proxyWfe,
+				    constructHolder: this.pvt.constructHolder
+				});
+
+				if (options && options.engineSingleton) {
+				    options.engineSingleton.initInstance({
+				        dbController: this.getUserMgr().getController(),
+				        constructHolder: this.pvt.constructHolder,
+				        router: this.pvt.router
+				    });
+				    this.pvt.wfe = options.engineSingleton.getInstance();
+				    this.pvt.proxyWfe = rpc._publ(this.pvt.wfe, this.pvt.wfe.getInterface());
+				    this.getUserMgr().proxyWfe(this.pvt.proxyWfe);
+				};
+
+				this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder);
                 this.pvt.resman = new Resman(that.getUserMgr().getController());
                 this.pvt.commServer = options.commServer;
 
