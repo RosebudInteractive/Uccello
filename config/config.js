@@ -79,6 +79,7 @@ define([], function () {
             'rootAddress': 'edca46bc-3389-99a2-32c0-a59665fcb6a7',
             'rootLead': 'c170c217-e519-7c23-2811-ff75cd4bfe81',
             'rootIncomeplan': '8770f400-fd42-217c-90f5-507ca52943c2',
+            'rootOpportunity': 'f988a1cb-4be0-06c3-4eaa-4ae8b554f6b3',
             'Interfsrv': 'ef9bfa83-8371-6aaa-b510-28cd83291ce9',
             'metaObjFieldsGuid': '0fa90328-4e86-eba7-b12b-4fff3a057533',
             'metaObjColsGuid': '99628583-1667-3341-78e0-fb2af29dbe8',

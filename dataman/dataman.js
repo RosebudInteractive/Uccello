@@ -87,28 +87,32 @@ define(
 				var gr = guidRoot.slice(0,36);
                 switch (gr) {
                     case UCCELLO_CONFIG.guids.rootCompany:
-                        var time = Date.now();
+                        /*var time = Date.now();
                         function ddd() {
                             var timeEnd = Date.now();
                             logger.info((new Date()).toISOString()+';readCompanyFile;'+(timeEnd-time));
                             done.apply(this, arguments)
                         }
-                        this.getCompany(gr, 10000, ddd);
+                        this.getCompany(gr, 10000, ddd);*/
+                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataCompany, 'company', done);
                         break;
                     case UCCELLO_CONFIG.guids.rootContact:
-                        this.getContact(gr, expression, done);
+                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataContact, 'contact', done, 'CompanyId=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootContract:
-                        this.getContract(gr, expression, done);
+                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataContract, 'contract', done, 'parent=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootAddress:
-                        this.getAddress(gr, expression, done);
+                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataCompany, 'address', done, 'parent=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootLead:
                         this.getList(gr, UCCELLO_CONFIG.classGuids.DataLead, 'lead', done);
                         break;
                     case UCCELLO_CONFIG.guids.rootIncomeplan:
                         this.getList(gr, UCCELLO_CONFIG.classGuids.DataIncomeplan, 'incomeplan', done, 'leadId=?', [expression]);
+                        break;
+                    case UCCELLO_CONFIG.guids.rootOpportunity:
+                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataOpportunity, 'opportunity', done);
                         break;
                 }
             },
@@ -192,13 +196,14 @@ define(
                         if (err) throw err;
                         var result = that.createResult(guidRoot, typeGuid, rows);
 
-                        /*if (table == 'incomeplan') {
+                        /*if (table == 'contact') {
                             var fs = require('fs');
-                            fs.writeFile(UCCELLO_CONFIG.dataPath + 'tables/incomeplan-'+whereParams[0]+'.json', JSON.stringify(result), function(err) {
+                            var fileName = UCCELLO_CONFIG.dataPath + 'tables/'+table+(whereParams && whereParams[0]? ('-'+whereParams[0]): '')+'.json';
+                            fs.writeFile(fileName, JSON.stringify(result), function(err) {
                                 if(err) {
                                     console.log(err);
                                 } else {
-                                    console.log("The file was saved!");
+                                    console.log("The file `"+fileName+"` was saved!");
                                 }
                             });
                         }*/
@@ -208,70 +213,6 @@ define(
                     this.readTableFile(table+(whereParams?'-'+whereParams[0]:'')+'.json', guidRoot, typeGuid, false, done);
                 return "XXX";
             },
-
-            getCompany: function(guidRoot, num, done) {
-                var source = this.getDataSource();
-                var that = this;
-                if (source == 'mysql') {
-                    var conn = this.getMysqlConnection();
-                    var time = Date.now();
-                    conn.query('SELECT * FROM company LIMIT ?', [num?num:0], function(err, rows) {
-                        var timeEnd = Date.now();
-                        logger.info((new Date()).toISOString()+';selectCompany;'+(timeEnd-time));
-                        if (err) throw err;
-                        time = Date.now();
-                        var result = that.createResult(guidRoot, UCCELLO_CONFIG.classGuids.DataCompany, rows);
-                        var timeEnd = Date.now();
-                        logger.info((new Date()).toISOString()+';createResult;'+(timeEnd-time));
-                        done(result);
-                    });
-                } else
-                    this.readTableFile('company.json', guidRoot, UCCELLO_CONFIG.classGuids.DataCompany, false, done);
-				return "XXX";
-            },
-
-            getContact: function(guidRoot, expression, done){
-                var source = this.getDataSource();
-                var that = this;
-                if (source == 'mysql') {
-                    var conn = this.getMysqlConnection();
-                    conn.query('SELECT * FROM contact WHERE parent=?', [expression], function(err, rows) {
-                        if (err) throw err;
-                        var result = that.createResult(guidRoot, UCCELLO_CONFIG.classGuids.DataContact, rows);
-                        done(result);
-                    });
-                } else
-                    this.readTableFile('contact-'+expression+'.json', guidRoot, UCCELLO_CONFIG.classGuids.DataContact, expression, done);
-            },
-
-            getContract: function(guidRoot, expression, done){
-                var source = this.getDataSource();
-                var that = this;
-                if (source == 'mysql') {
-                    var conn = this.getMysqlConnection();
-                    conn.query('SELECT * FROM contract WHERE parent=?', [expression], function(err, rows) {
-                        if (err) throw err;
-                        var result = that.createResult(guidRoot, UCCELLO_CONFIG.classGuids.DataContract, rows);
-                        done(result);
-                    });
-                } else
-                    this.readTableFile('contract-'+expression+'.json', guidRoot, UCCELLO_CONFIG.classGuids.DataContract, expression, done);
-            },
-
-            getAddress: function(guidRoot, expression, done){
-                var source = this.getDataSource();
-                var that = this;
-                if (source == 'mysql') {
-                    var conn = this.getMysqlConnection();
-                    conn.query('SELECT * FROM address WHERE parent=?', [expression], function(err, rows) {
-                        if (err) throw err;
-                        var result = that.createResult(guidRoot, UCCELLO_CONFIG.classGuids.DataAddress, rows);
-                        done(result);
-                    });
-                } else
-                    this.readTableFile('address-'+expression+'.json', guidRoot, UCCELLO_CONFIG.classGuids.DataAddress, expression, done);
-            },
-
 
             _loadMetaDataMgr: function () {
                 var fs = require('fs');

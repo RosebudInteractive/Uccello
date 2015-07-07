@@ -829,6 +829,7 @@ define(
             "time": { code: 10, constructor: DateTimeType },
             "timestamp": { code: 11, constructor: DateTimeType },
             "datatype": { code: 12, constructor: DataFieldType },
+            "money": { code: 13, constructor: FloatType }
         };
 
         var MetaTypes = {
