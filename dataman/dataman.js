@@ -96,14 +96,20 @@ define(
                         this.getCompany(gr, 10000, ddd);*/
                         this.getList(gr, UCCELLO_CONFIG.classGuids.DataCompany, 'company', done);
                         break;
+                    case UCCELLO_CONFIG.guids.rootTstCompany:
+                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataTstCompany, 'company_tst', done);
+                        break;
                     case UCCELLO_CONFIG.guids.rootContact:
                         this.getList(gr, UCCELLO_CONFIG.classGuids.DataContact, 'contact', done, 'CompanyId=?', [expression]);
+                        break;
+                    case UCCELLO_CONFIG.guids.rootTstContact:
+                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataTstContact, 'contact_tst', done, 'parent=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootContract:
                         this.getList(gr, UCCELLO_CONFIG.classGuids.DataContract, 'contract', done, 'parent=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootAddress:
-                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataCompany, 'address', done, 'parent=?', [expression]);
+                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataAddress, 'address', done, 'parent=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootLead:
                         this.getList(gr, UCCELLO_CONFIG.classGuids.DataLead, 'lead', done);
@@ -196,7 +202,8 @@ define(
                         if (err) throw err;
                         var result = that.createResult(guidRoot, typeGuid, rows);
 
-                        /*if (table == 'contact') {
+                        // сохранить в файлы
+                       /* if (source == 'mysql') {
                             var fs = require('fs');
                             var fileName = UCCELLO_CONFIG.dataPath + 'tables/'+table+(whereParams && whereParams[0]? ('-'+whereParams[0]): '')+'.json';
                             fs.writeFile(fileName, JSON.stringify(result), function(err) {
