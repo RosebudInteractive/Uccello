@@ -77,6 +77,47 @@ define(
                     });
                 });
 
+                this.pvt.dbgApi = {
+                    /**
+                     * добавить объект типа className с именем objName, в парент parName к коллекции colName
+                     * colName - если не указана, то "children"
+                     * fields - {Width: 50, Height: 100} - можно пропустить параметр, тогда будут вставляться параметры по умолчанию
+                     */
+                    add: function(className, objName, fields, parName, colName) {
+                        var cm = that.getContextCM();
+                        cm.userEventHandler(that, function () {
+                            var vc = that.getContext();
+                            var parObj = cm.getByName(parName);
+                            var id = Math.floor(Math.random() * 100000);
+
+                            colName = colName? colName: "Children";
+                            if (fields) {
+                                if (!fields['Id']) fields['Id'] = id;
+                                fields['Name'] = objName;
+                            } else
+                                fields = {Id:id, Name:objName, Width: 50, Height: 100};
+                            var obj = new (vc.getConstructorHolder().getComponent(UCCELLO_CONFIG.classGuids[className]).constr)(cm, {parent: parObj, colName: "Children", ini:{fields:fields} });
+                        });
+                    },
+
+                    /**
+                     * получить объект по имени
+                     * например можно сделать $u.get("Container1").width(100); - установить ширину контейнера с именем Container1 = 100
+                     */
+                    get: function(objName) {
+                        var cm = that.getContextCM();
+                        var obj = cm.getByName(objName);
+                        return obj;
+                    },
+
+                    /**
+                     *
+                     */
+                    send: function() {
+                        var cm = that.getContextCM();
+                        cm.userEventHandler(that, function () {});
+                    }
+                };
             },
 
             createController: function(done){
@@ -276,6 +317,10 @@ define(
                     that.pvt.guids.sysRootGuid = result.user.guid;
                     that.getSysCM().subscribeRoots(that.pvt.guids.sysRootGuid, callback);
                 });
+            },
+
+            getDebugApi: function(){
+                return this.pvt.dbgApi;
             }
 
 
