@@ -111,9 +111,9 @@ define(
                     },
 
                     /**
-                     *
+                     * вызов userEventHandler
                      */
-                    send: function() {
+                    r: function() {
                         var cm = that.getContextCM();
                         cm.userEventHandler(that, function () {});
                     }
