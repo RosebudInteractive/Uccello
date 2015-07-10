@@ -182,7 +182,7 @@ define(
 			 * Рендеринг компонентов интерфейса
 			 *  @param component - корневой (обязательно) элемент, с которого запускается рендеринг
              */				
-			render: function(component, options, pd) {
+			render: function(component, renderItem, pd) {
 			
 				if (!this.pvt.subsInitFlag[component.getGuid()]) {
 					this.subsInit(component);  // если не выполнена постинициализация, то запустить
@@ -197,9 +197,11 @@ define(
 				
 				if (pd) this.processDelta();
 			
-                for(var i in this.pvt.viewSets)
-					if (this.pvt.viewSets[i].enable())
-						this.pvt.viewSets[i].render(component, options);
+				if (renderItem) {
+					for(var i in this.pvt.viewSets)
+						if (this.pvt.viewSets[i].enable())
+							this.pvt.viewSets[i].render(component, renderItem);
+				}
 
 				this.setToRendered(component,true);
 			},

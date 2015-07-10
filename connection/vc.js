@@ -154,13 +154,14 @@ define(
 						else if (forms == "") forms = [];
 						that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
 					});
-					if (cb) { // подписываемся только на клиенте
-						this.pvt.cm.event.on({
-							type: 'endTransaction',
-							subscriber: this,
-							callback: function(args) { that.renderAll(true); }
-						});
-					}
+
+				}
+				if (true /*cb*/) { // подписываемся только на клиенте
+					this.pvt.cm.event.on({
+						type: 'endTransaction',
+						subscriber: this,
+						callback: function(args) { that.renderAll(true); }
+					});
 				}
 				this.pvt.cdb.setDefaultCompCallback(createCompCallback);
 			},
@@ -379,7 +380,9 @@ define(
 			    //if (DEBUG) console.log("%c RENDER FORMS " + pd, 'color: green');
 				for (var i=0; i<roots.length; i++) {
 					var root = this.pvt.cm.get(roots[i]);
-					var renderItem = this.pvt.renderRoot(roots[i]);
+					if (this.pvt.renderRoot)
+						var renderItem = this.pvt.renderRoot(roots[i]);
+					else renderItem = null;
 					if (root)
 						this.pvt.cm.render(root,renderItem, pd);
 				}
