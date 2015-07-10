@@ -38,6 +38,16 @@ define(
                     that.pvt.sessionGuid = null;
 
                 this.pvt.constructHolder = new ConstructHolder();
+                this.pvt.createComponent = function (typeObj, parent, sobj) {
+                    var newObj = null;
+                    var constr = that.pvt.constructHolder.getComponent(typeObj.getGuid())
+                    if (constr && constr.constr) {
+                        var params = { ini: sobj, parent: parent.obj, colName: parent.colName };
+                        newObj = new constr.constr(that.pvt.cmdataman, params);
+                    };
+                    return newObj;
+                };
+
                 this.pvt.constructHolder.loadControls(function(){
                     that.getClient().connect("ws://"+url('hostname')+":"+UCCELLO_CONFIG.webSocketServer.port, {guid:that.getSessionGuid()},  function(result){
                         $.cookie('sid', result.session.guid);
@@ -138,8 +148,14 @@ define(
                         callback: function(args) { if ( that.getContext() && args.commit) that.getContext().renderAll(true); }
                     });
 */
+                    // создаем бд менеджера метаинформации
+                    var dbp = {name:"DatamanDB", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: '66d43749-223a-48cb-9143-122381b9ed3c'}};
+                    that.pvt.cmdataman = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket, function(){
+                        that.pvt.cmdataman.subscribeRoots(['9b12c4b3-1b26-b107-d9c9-bbb1aa6a0be7@1'], null, that.pvt.createComponent);
+                    });
+
                     // создаем системную бд
-					var dbp = {name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}};
+                    var dbp = {name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}};
 					that.pvt.cmsys = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket, done);
 
                     // создаем мастер базу для клиентского контекста (является "держателем" клиентского контекста
@@ -167,7 +183,11 @@ define(
 			getSysCM: function() {
 				return this.pvt.cmsys;
 			},
-			
+
+			getDatamanCM: function() {
+				return this.pvt.cmdataman;
+			},
+
 			getContext: function() {
 				return this.pvt.vc;
 			},

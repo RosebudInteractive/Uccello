@@ -18,6 +18,13 @@ Utils.guid = function () {
         s4() +'-'+ s4() + s4() + s4();
 }
 
+/**
+ * Сгенерировать id
+ * @returns {int}
+ */
+Utils.id = function () {
+    return Math.floor(Math.random()*1000000);
+}
 
 if (typeof(module) === 'undefined')
     define([], function(){return Utils;});
