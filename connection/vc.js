@@ -247,7 +247,8 @@ define(
 			},
 
 			isWorkFlowMethod: function (action, args) {
-			    return false;
+			    //return false;
+			    return this.pvt.proxyWfe !== undefined;
 			},
 
 			execWorkFlowMethod: function (action, local_context, local_method, args) {
@@ -258,6 +259,42 @@ define(
 			},
 
 			_invokeWorkFlowMethod: function (action, args) {
+			    if (this.pvt.proxyWfe) {
+			        var self = this;
+			        this.pvt.proxyWfe.startProcessInstanceAndWait("8349600e-3d0e-4d4e-90c8-93d42c443ab3", "Request1", 100000, function (result) {
+			            console.log("Start Process [" + result.processID + "] result: " + result.result);
+			            if (result.result === "OK") {
+			                var responceObj = {
+			                    processID: result.requestInfo.processID,
+			                    requestID: result.requestInfo.requestID,
+			                    tokenID: result.requestInfo.tokenID,
+			                    response: {}
+			                };
+			                var fargs = args[0];
+			                var keys = Object.keys(fargs);
+			                keys.forEach(function (el) {
+			                    responceObj.response[el] = fargs[el];
+			                });
+			                self.pvt.proxyWfe.submitResponseAndWait(responceObj, "Request2", 1000000, function (result) {
+			                    console.log("Submit Response: " + result.result);
+
+			                    if (result.result === "OK") {
+			                        if (typeof args[args.length - 1] === "function")
+			                            args[args.length - 1]();
+			                        //var responceObj = {
+			                        //    processID: result.requestInfo.processID,
+			                        //    requestID: result.requestInfo.requestID,
+			                        //    tokenID: result.requestInfo.tokenID,
+			                        //    response: { result: true }
+			                        //};
+			                        //self.pvt.proxyWfe.submitResponse(responceObj, function (result) {
+			                        //    console.log("Submit Response 2: " + result.result);
+			                        //});
+			                    };
+			                });
+			            }
+			        });
+			    };
 			},
 
 		    // добавляем новый набор данных - мастер-слейв варианты

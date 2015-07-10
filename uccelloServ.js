@@ -51,6 +51,7 @@ define(
 				    this.pvt.wfe = options.engineSingleton.getInstance();
 				    this.pvt.proxyWfe = rpc._publ(this.pvt.wfe, this.pvt.wfe.getInterface());
 				    this.getUserMgr().proxyWfe(this.pvt.proxyWfe);
+				    this.createSimpleAddObjectProcessDef();
 				};
 
 				this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder);
@@ -146,7 +147,36 @@ define(
                 //    });
                 //});
             },
-			
+
+            createSimpleAddObjectProcessDef: function () {
+                if (this.pvt.wfe) {
+                    var wfe = this.pvt.wfe;
+                    var def = wfe.newDefinition();
+                    def.definitionID("8349600e-3d0e-4d4e-90c8-93d42c443ab3");
+                    var task = def.addUserTask("UserTask1");
+
+                    var req = task.addRequest("Request1");
+                    req.addParameter("dbGuid");
+                    req.addParameter("rootGuid");
+                    req.addParameter("objTypeGuid");
+                    req.addParameter("flds");
+
+                    var taskScript = def.addScriptTask({
+                        moduleName: 'scriptTask',
+                        methodName: 'execScript'
+                    }, "ScriptTask1");
+
+                    var taskFin = def.addUserTask("UserTask2");
+
+                    req = taskFin.addRequest("Request2");
+                    req.addParameter("result");
+
+                    def.connect(task, taskScript);
+                    def.connect(taskScript, taskFin);
+                    wfe.addProcessDefinition(def);
+                };
+            },
+
 			getUserMgr: function() {
 				return this.pvt.userSessionMgr;
 			},
