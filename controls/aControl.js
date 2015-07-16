@@ -17,7 +17,17 @@ define(
                 {fname:"Left", ftype:"int"},
                 {fname:"Width", ftype:"int"},
                 {fname:"Height", ftype:"int"},
-                {fname:"LayoutProp", ftype:"string"}
+                {fname:"LayoutProp", ftype:"string"},
+                {fname:"PadLeft", ftype:"string"},
+                {fname:"PadRight", ftype:"string"},
+                {fname:"PadTop", ftype:"string"},
+                {fname:"PadBottom", ftype:"string"},
+                {fname:"HorizontalAlign", ftype:"string"},
+                {fname:"VerticalAlign", ftype:"string"},
+                {fname:"MinWidth", ftype:"string"},
+                {fname:"MinHeight", ftype:"string"},
+                {fname:"MaxWidth", ftype:"string"},
+                {fname:"MaxHeight", ftype:"string"}
             ],
 				
 			init: function(cm,params){
@@ -51,6 +61,46 @@ define(
 
             layoutProp: function(value) {
                 return this._genericSetter("LayoutProp", value);
+            },
+
+            padLeft: function(value) {
+                return this._genericSetter("PadLeft", value);
+            },
+
+            padRight: function(value) {
+                return this._genericSetter("PadRight", value);
+            },
+
+            padTop: function(value) {
+                return this._genericSetter("PadTop", value);
+            },
+
+            padBottom: function(value) {
+                return this._genericSetter("PadBottom", value);
+            },
+
+            horizontalAlign: function(value) {
+                return this._genericSetter("HorizontalAlign", value);
+            },
+
+            verticalAlign: function(value) {
+                return this._genericSetter("VerticalAlign", value);
+            },
+
+            minWidth: function(value) {
+                return this._genericSetter("MinWidth", value);
+            },
+
+            maxWidth: function(value) {
+                return this._genericSetter("MaxWidth", value);
+            },
+
+            minHeight: function(value) {
+                return this._genericSetter("MinHeight", value);
+            },
+
+            maxHeight: function(value) {
+                return this._genericSetter("MaxHeight", value);
             }
 
 
