@@ -156,6 +156,7 @@ define(
 					});
 
 				}
+				// TODO!!! TEMPO
 				if (true /*cb*/) { // подписываемся только на клиенте
 					this.pvt.cm.event.on({
 						type: 'endTransaction',
