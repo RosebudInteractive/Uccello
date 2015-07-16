@@ -282,15 +282,15 @@ define(
 			                    if (result.result === "OK") {
 			                        if (typeof args[args.length - 1] === "function")
 			                            args[args.length - 1]();
-			                        //var responceObj = {
-			                        //    processID: result.requestInfo.processID,
-			                        //    requestID: result.requestInfo.requestID,
-			                        //    tokenID: result.requestInfo.tokenID,
-			                        //    response: { result: true }
-			                        //};
-			                        //self.pvt.proxyWfe.submitResponse(responceObj, function (result) {
-			                        //    console.log("Submit Response 2: " + result.result);
-			                        //});
+			                        var responceObj = {
+			                            processID: result.requestInfo.processID,
+			                            requestID: result.requestInfo.requestID,
+			                            tokenID: result.requestInfo.tokenID,
+			                            response: { result: true }
+			                        };
+			                        self.pvt.proxyWfe.submitResponse(responceObj, function (result) {
+			                            console.log("Submit Response 2: " + result.result);
+			                        });
 			                    };
 			                });
 			            }

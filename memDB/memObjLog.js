@@ -165,7 +165,16 @@ define(
 				return delta;
 			},
 			
-			// применить "дельту" изменений к объекту
+			getListOfTypes: function (delta, list) {
+			    var db = this.getObj().getDB();
+			    for (var i = 0; i < delta.items.length; i++) {
+			        var c = delta.items[i];
+			        if ("add" in c)
+			            db.getListOfTypes(c.add, list);
+			    };
+			},
+
+		    // применить "дельту" изменений к объекту
 			applyDelta: function(delta) {
 				this.setActive(false);
 				var db = this.getObj().getDB();
@@ -201,8 +210,6 @@ define(
 				}
 				this.setActive(true);
 			},
-			
-
 			
 			add: function(item) {			
 				

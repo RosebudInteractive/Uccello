@@ -675,6 +675,25 @@ define(
 			    this._clearSingleObjRefs(obj);
 			},
 
+			getListOfTypes: function (obj, list) {
+			    switch (obj.$sys.typeGuid) {
+			        case metaObjFieldsGuid:
+			            break;
+			        case metaObjColsGuid:
+			            break;
+			        case metaRootGuid:
+			            break;
+			        case metaObjGuid:
+			            break;
+			        default:
+			            list[obj.$sys.typeGuid] = true;
+			    }
+			    for (var cn in obj.collections) {
+			        for (var co in obj.collections[cn])
+			            this.getListOfTypes(obj.collections[cn][co], list);
+			    }
+			},
+
 		    /**
              * десериализация в объект
              * @param {object} sobj - объект который нужно десериализовать
@@ -776,7 +795,14 @@ define(
              */
 			// ДОЛЖНА РАБОТАТЬ ТОЛЬКО ДЛЯ МАСТЕР БАЗЫ - СЛЕЙВ НЕ МОЖЕТ ДОБАВИТЬ В СЕБЯ РУТ, МОЖЕТ ТОЛЬКО ПОДПИСАТЬСЯ НА РУТ МАСТЕРА!
 			addRoots: function(sobjs, params, rg, rgsubs) {
-				var subDbGuid = params.subDbGuid;
+
+			    // получение списка типов, десериализуемых объектов
+			    var listTypes = {};
+			    for (var i = 0; i < sobjs.length; i++) {
+			        this.getListOfTypes(sobjs[i], listTypes);
+			    };
+
+			    var subDbGuid = params.subDbGuid;
 				var cb = params.compcb;
 				
 				var res = [];

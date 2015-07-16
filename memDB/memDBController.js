@@ -396,6 +396,13 @@ define(
 				if (("items" in cdelta) && cdelta.items.length>0) {
 					var root = db.getRoot(cdelta.rootGuid);
 
+                    // получение списка типов, десериализуемых объектов
+					var listTypes = {};
+					if (cdelta.items[0].newRoot)
+					    db.getListOfTypes(cdelta.items[0].newRoot, listTypes);
+					else
+					    root.obj.getLog().getListOfTypes(cdelta, listTypes);
+
 					if (cdelta.items[0].newRoot)
 						var rootObj=db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback()); //TODO добавить коллбэк!!!
 					else
