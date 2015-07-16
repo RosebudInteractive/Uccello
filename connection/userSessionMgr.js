@@ -23,6 +23,7 @@ define(
                 this.options = options;
 				this.rpc = options.rpc;
 				this.proxyServer = options.proxyServer;
+				this._proxyWfe = options.proxyWfe;
 				this.execQ = {};
 
                 // системные объекты
@@ -53,8 +54,8 @@ define(
 			
 			proxyWfe: function (wfe) {
 			    if (wfe !== undefined)
-			        this.proxyWfe = wfe;
-			    return this.proxyWfe;
+			        this._proxyWfe = wfe;
+			    return this._proxyWfe;
 			},
 
             /**
@@ -122,7 +123,7 @@ define(
 				    parent: user,
 				    colName: "VisualContext",
 				    socket: this.getConnect(data.$sys.socket.getConnectId()).getConnection(),
-				    rpc: this.rpc, proxyServer: this.proxyServer, proxyWfe: this.proxyWfe,
+				    rpc: this.rpc, proxyServer: this.proxyServer, proxyWfe: this._proxyWfe,
 				    ini: { fields: { Id: contextId, Name: 'context' + contextId, Kind: "master" } },
 				    formGuids: data.formGuids,
 				    constructHolder: this.pvt.constructHolder
@@ -159,6 +160,90 @@ define(
                 done(result);
             },
 
+
+            methodCallViaProcess: function (args, callback) {
+                var result = {};
+
+                var self = this;
+
+                function sendResponse (result) {
+                    console.log("Start Process [" + result.processID + "] result: " + result.result);
+                    if (result.result === "OK") {
+                        var responceObj = {
+                            processID: result.requestInfo.processID,
+                            requestID: result.requestInfo.requestID,
+                            tokenID: result.requestInfo.tokenID,
+                            response: { objURI: args.objURI, args: args.nativeArgs.aparams }
+                        };
+
+                        self.proxyWfe().submitResponseAndWait(responceObj, "Request2", 1000000, function (result) {
+                            console.log("Submit Response: " + result.result);
+
+                            if (result.result === "OK") {
+
+                                var responceObj = {
+                                    processID: result.requestInfo.processID,
+                                    requestID: result.requestInfo.requestID,
+                                    tokenID: result.requestInfo.tokenID,
+                                    response: { result: true }
+                                };
+
+                                self.proxyWfe().submitResponse(responceObj, function (result) {
+                                    console.log("Submit Response 2: " + result.result);
+                                    if (callback)
+                                        setTimeout(function () {
+                                            callback(result);
+                                        }, 0);
+
+                                });
+                            };
+                        });
+                    }
+                };
+
+                if(args.procArgs.isNewProcess)
+                    this.proxyWfe().startProcessInstanceAndWait(args.procArgs.processDefGuid, args.procArgs.requestName, 100000, sendResponse);
+                else
+                    if (callback)
+                        setTimeout(function () {
+                            callback(result);
+                        }, 0);
+            },
+
+            methodCallResolver: function (uobj, args) {
+
+                var self = this;
+                function _genDispMethodCallTable() {
+                    self.dispMethodCallTable = {};
+                    self.dispMethodCallTable[UCCELLO_CONFIG.classGuids.Dataset] = {};
+                    self.dispMethodCallTable[UCCELLO_CONFIG.classGuids.Dataset]["_addObject"] = {
+                        isNewProcess: true,
+                        processDefGuid: "8349600e-3d0e-4d4e-90c8-93d42c443ab3",
+                        requestName: "Request1",
+                    };
+                };
+
+                var result = { uobj: uobj, args: args };
+                if (!this.dispMethodCallTable)
+                    _genDispMethodCallTable();
+
+                var objTypeGuid = uobj.getTypeGuid();
+                if (this._proxyWfe && this.dispMethodCallTable[objTypeGuid]
+                    && this.dispMethodCallTable[objTypeGuid][args.func]) {
+                    var newArgs = {
+                        func: "methodCallViaProcess",
+                        aparams: [{
+                            procArgs: this.dispMethodCallTable[objTypeGuid][args.func],
+                            objURI: "memdb://" + uobj.getDB().getGuid() + "." + uobj.getGuid(),
+                            nativeArgs: args
+                        }]
+                    };
+                    result.uobj = this;
+                    result.args = newArgs;
+                };
+
+                return result;
+            },
 			
 			routerRemoteCallExec: function(data,done) {				
 				var args = data.args;
@@ -166,8 +251,9 @@ define(
 				var cm = context.getContextCM();
 				// поискать объект в VC, а если нет то в контентной базе
 				// в будущем найти более единообразное решение и сделать рефакторинг
-				var uobj =  (this.cmsys.get(args.objGuid)) ? this.cmsys.get(args.objGuid) : cm.get(args.objGuid);
-				cm.remoteCallExec(uobj, args, data.srcDbGuid, data.trGuid, data.rootv, done);
+				var uobj = (this.cmsys.get(args.objGuid)) ? this.cmsys.get(args.objGuid) : cm.get(args.objGuid);
+				var dispObj = this.methodCallResolver(uobj, args);
+				cm.remoteCallExec(dispObj.uobj, dispObj.args, data.srcDbGuid, data.trGuid, data.rootv, done);
 			},
 
             /**

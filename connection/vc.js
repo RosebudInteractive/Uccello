@@ -249,8 +249,8 @@ define(
 			},
 
 			isWorkFlowMethod: function (action, args) {
-			    //return false;
-			    return this.pvt.proxyWfe !== undefined;
+			    return false;
+			    //return this.pvt.proxyWfe !== undefined;
 			},
 
 			execWorkFlowMethod: function (action, local_context, local_method, args) {

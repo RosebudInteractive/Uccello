@@ -156,14 +156,17 @@ define(
                     var task = def.addUserTask("UserTask1");
 
                     var req = task.addRequest("Request1");
-                    req.addParameter("dbGuid");
-                    req.addParameter("rootGuid");
-                    req.addParameter("objTypeGuid");
-                    req.addParameter("flds");
+                    req.addParameter("objURI");
+                    req.addParameter("args");
+                    //req.addParameter("dbGuid");
+                    //req.addParameter("rootGuid");
+                    //req.addParameter("objTypeGuid");
+                    //req.addParameter("flds");
 
                     var taskScript = def.addScriptTask({
                         moduleName: 'scriptTask',
-                        methodName: 'execScript'
+                        methodName: 'execObjMethod'
+                        //methodName: 'execScript'
                     }, "ScriptTask1");
 
                     var taskFin = def.addUserTask("UserTask2");
