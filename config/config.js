@@ -54,6 +54,7 @@ define([], function () {
             { className: 'VContainer', isUccello: true, component: 'controls/vContainer', viewset: false, metaType: ['content'] },
             { className: 'GContainer', isUccello: true, component: 'controls/gContainer', viewset: false, metaType: ['content'] },
             { className: 'FContainer', isUccello: true, component: 'controls/fContainer', viewset: false, metaType: ['content'] },
+            { className: 'TabContainer', isUccello: true, component: 'controls/tabContainer', viewset: false, metaType: ['content'] },
             { className: 'GColumn', isUccello: true, component: 'controls/gColumn', viewset: false, metaType: ['content'] },
             { className: 'GRow', isUccello: true, component: 'controls/gRow', viewset: false, metaType: ['content'] },
             { className: 'GCell', isUccello: true, component: 'controls/gCell', viewset: false, metaType: ['content'] },
@@ -133,7 +134,8 @@ define([], function () {
             'MetaModel':"183f6fb9-9f17-4955-a22c-4f03c4273413",
             'MetaModelField':"0997ccff-09ec-4978-b120-3ef7d6668bc2",
             'CollectionIndex':"43626e45-cfeb-406a-aca8-122a8bcbd5aa",
-            'IndexField':"7806a983-c946-438f-95a4-71ab08e38074"
+            'IndexField':"7806a983-c946-438f-95a4-71ab08e38074",
+            'TabContainer':"3fd621ab-4b0a-038f-b617-88dc28a05a67"
         },
 
         // изменяемые свойства

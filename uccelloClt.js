@@ -98,7 +98,7 @@ define(
                         var vc = that.getContext();
                         var parObj = cm.getByName(parName);
                         var id = Math.floor(Math.random() * 100000);
-
+                        var obj = null;
                         if (parObj) {
                             //cm.userEventHandler(that, function () {
                                 colName = colName? colName: "Children";
@@ -107,9 +107,10 @@ define(
                                     fields['Name'] = objName;
                                 } else
                                     fields = {Id:id, Name:objName, Width: 50, Height: 100};
-                                var obj = new (vc.getConstructorHolder().getComponent(UCCELLO_CONFIG.classGuids[className]).constr)(cm, {parent: parObj, colName: "Children", ini:{fields:fields} });
+                                obj = new (vc.getConstructorHolder().getComponent(UCCELLO_CONFIG.classGuids[className]).constr)(cm, {parent: parObj, colName: colName, ini:{fields:fields} });
                             //});
                         }
+                        return obj;
                     },
 
                     /**
