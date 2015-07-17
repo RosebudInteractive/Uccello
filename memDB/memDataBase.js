@@ -798,9 +798,10 @@ define(
 
 			    // получение списка типов, десериализуемых объектов
 			    var listTypes = {};
-			    for (var i = 0; i < sobjs.length; i++) {
-			        this.getListOfTypes(sobjs[i], listTypes);
-			    };
+				if (sobjs)
+				for (var i = 0; i < sobjs.length; i++) {
+					this.getListOfTypes(sobjs[i], listTypes);
+				};
 
 			    var subDbGuid = params.subDbGuid;
 				var cb = params.compcb;
