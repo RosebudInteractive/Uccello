@@ -151,7 +151,7 @@ define(
             createSimpleAddObjectProcessDef: function () {
                 if (this.pvt.wfe) {
                     var wfe = this.pvt.wfe;
-                    var def = wfe.newDefinition();
+                    var def = wfe.newProcessDefinition();
                     def.definitionID("8349600e-3d0e-4d4e-90c8-93d42c443ab3");
                     var task = def.addUserTask("UserTask1");
 
@@ -163,11 +163,11 @@ define(
                     //req.addParameter("objTypeGuid");
                     //req.addParameter("flds");
 
-                    var taskScript = def.addScriptTask({
+                    var taskScript = def.addScriptTask("ScriptTask1", {
                         moduleName: 'scriptTask',
                         methodName: 'execObjMethod'
                         //methodName: 'execScript'
-                    }, "ScriptTask1");
+                    });
 
                     var taskFin = def.addUserTask("UserTask2");
 
