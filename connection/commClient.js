@@ -171,8 +171,8 @@ define(
 
                                 ws = io(chStateData.url,
                                     {
-                                        reconnectionDelay: this._conn_try_interval,
-                                        reconnectionAttempts: this._conn_try_max
+                                        reconnectionDelay: self._conn_try_interval,
+                                        reconnectionAttempts: self._conn_try_max
                                     });
 
                                 chStateData.stream = ws;

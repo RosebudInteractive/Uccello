@@ -73,7 +73,19 @@ define(
              * @param obj
              */
             addComponent: function(obj, viewsets) {
-                this.pvt.components[obj.prototype.classGuid] = {constr:obj, viewsets:viewsets?viewsets:{}};
+                this.pvt.components[obj.prototype.classGuid] = { constr: obj, viewsets: viewsets ? viewsets : {}, code: null };
+            },
+
+            /**
+             * Добавить компонент, заданный кодом конструктора
+             * 
+             * @param {String}  classGuid Guid класса
+             * @param {Object}  code      Код конструктора
+             */
+            addCompByConstr: function (classGuid, code) {
+                var Constructor = null;
+                eval(code);
+                this.pvt.components[classGuid] = { constr: Constructor, viewsets: {}, code: code };
             }
         });
         return ConstructHolder;
