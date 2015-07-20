@@ -27,7 +27,8 @@ define(
                 {fname:"MinWidth", ftype:"string"},
                 {fname:"MinHeight", ftype:"string"},
                 {fname:"MaxWidth", ftype:"string"},
-                {fname:"MaxHeight", ftype:"string"}
+                {fname:"MaxHeight", ftype:"string"},
+                {fname:"Enabled", ftype:"boolean"}
             ],
 				
 			init: function(cm,params){
@@ -101,6 +102,10 @@ define(
 
             maxHeight: function(value) {
                 return this._genericSetter("MaxHeight", value);
+            },
+
+            enabled: function(value) {
+                return this._genericSetter("Enabled", value);
             }
 
 
