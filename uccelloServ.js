@@ -157,6 +157,7 @@ define(
 
                     var req = task.addRequest("Request1");
                     req.addParameter("objURI");
+                    req.addParameter("func");
                     req.addParameter("args");
                     //req.addParameter("dbGuid");
                     //req.addParameter("rootGuid");

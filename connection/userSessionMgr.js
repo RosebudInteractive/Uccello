@@ -173,7 +173,11 @@ define(
                             processID: result.requestInfo.processID,
                             requestID: result.requestInfo.requestID,
                             tokenID: result.requestInfo.tokenID,
-                            response: { objURI: args.objURI, args: args.nativeArgs.aparams }
+                            response: {
+                                objURI: args.objURI,
+                                func: args.nativeArgs.func,
+                                args: args.nativeArgs.aparams
+                            }
                         };
 
                         self.proxyWfe().submitResponseAndWait(responceObj, "Request2", 1000000, function (result) {
