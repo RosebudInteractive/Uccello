@@ -195,7 +195,42 @@ define(
 
 				return newVal;
             },
+
+			prev: function() {
+				var dataRoot = this.root();
+				if (dataRoot) {
+					var col = dataRoot.getCol("DataElements");
+					var index = this.getCursorIndex();
+					if (index > 0)
+						this.cursor(col.get(index-1).id());
+				}
+			},
 			
+			next: function() {
+				var dataRoot = this.root();
+				if (dataRoot) {
+					var col = dataRoot.getCol("DataElements");
+					var index = this.getCursorIndex();
+					if (index < col.count()-1)
+						this.cursor(col.get(index+1).id());
+				}
+			},
+
+			getCursorIndex: function() {
+				var dataRoot = this.root();
+				if (dataRoot) {
+					var col = dataRoot.getCol("DataElements");
+					var cursor = this.cursor();
+					if (cursor)
+						for (var i=0, len=col.count(); i<len; i++) {
+							if (cursor == col.get(i).id() ) {
+								return i;
+							}
+						}
+				}
+				return false;
+			},
+
 			// установить "курсор" на внутренний объект dataobj
 			_setDataObj: function(value) {
 			    this.pvt.dataObj = this.root().getCol("DataElements").getObjById(value); // TODO поменять потом
