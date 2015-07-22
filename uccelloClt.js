@@ -82,7 +82,12 @@ define(
                         that.pvt.clientConnection.socket.send({ action: "wfeInterface", type: "method" }, function (result) {
                             var guidWfe = "387e8d92-e2ca-4a94-9732-b4a479ff8bb8";
                             that.pvt.wfeInterface = result.intf;
-                            that.pvt.proxyWfe = rpc._publProxy(guidWfe, clt.socket, result.intf); // публикуем прокси серверного интерфейса
+                            that.pvt.proxyWfe = rpc._publProxy(guidWfe, clt.socket, result.intf); // публикуем прокси интерфейса движка процессов
+                        });
+
+                        that.pvt.clientConnection.socket.send({ action: "typeProviderInterface", type: "method" }, function (result) {
+                            var guidItf = "90122ac9-2d4a-493a-b6ac-8f5fe3c46590";
+                            that.pvt.constructHolder.addTypeProvider(rpc._publProxy(guidItf, clt.socket, result.intf)); // добавляем удаленный провайдер типов
                         });
                     });
                 });

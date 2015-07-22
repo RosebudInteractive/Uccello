@@ -5,6 +5,19 @@ if (typeof define !== 'function') {
 define(
     ['../system/uobject', './metaModel'],
     function (UObject, MetaModel) {
+
+        var REMOTE_RESULT = "XXX";
+
+        var typeProviderInterfaceGUID = "90122ac9-2d4a-493a-b6ac-8f5fe3c46590";
+
+        var typeProviderInterface = {
+
+            className: "TypeProviderInterf",
+            classGuid: typeProviderInterfaceGUID,
+
+            getConstructors: "function"
+        }
+
         var MetaDataMgr = UObject.extend({
 
             className: "MetaDataMgr",
@@ -17,6 +30,7 @@ define(
                 this._modelsByGuid = {};
 
                 this._constrByName = {};
+                this._router = null;
 
                 UccelloClass.super.apply(this, [cm, params]);
 
@@ -32,6 +46,21 @@ define(
                         callback: this._onDeleteModel
                     });
                 };
+            },
+
+            router: function (aRouter) {
+                if (aRouter) {
+                    this._router = aRouter;
+                    this._router.add('typeProviderInterf', function (data, done) {
+                        done({ intf: typeProviderInterface });
+                    });
+                };
+                return this._router;
+            },
+
+
+            getInterface: function () {
+                return typeProviderInterface;
             },
 
             createObjByName: function (name, params) {
@@ -50,7 +79,7 @@ define(
                 return obj;
             },
 
-            getObjConstrByName: function (name, params) {
+            getObjConstrByName: function (name) {
                 var constr = null;
                 var model = this._modelsByName[name];
                 if (model)
@@ -58,12 +87,29 @@ define(
                 return obj;
             },
 
-            getObjConstrByGuid: function (guid, params) {
+            getObjConstrByGuid: function (guid) {
                 var constr = null;
                 var model = this._modelsByGuid[guid];
                 if (model)
                     obj = this._getObjConstr(model);
                 return obj;
+            },
+
+            getConstructors: function (guids, callback) {
+                var constrArr = [];
+
+                for (var i = 0; i < guids.length; i++) {
+                    var code = this.getObjConstrByGuid(guids[i]);
+                    if (code)
+                        constrArr.push({ guid: guids[i], code: code });
+                };
+
+                if (callback)
+                    setTimeout(function () {
+                        callback(constrArr);
+                    }, 0);
+
+                return callback ? REMOTE_RESULT : constrArr;
             },
 
             _createObj: function (model, params, name) {

@@ -40,7 +40,11 @@ define(
                             guid: DATAMAN_DB_GUID
                         }
                     });
+
 				this.pvt.metaDataMgr = this._loadMetaDataMgr();
+				this.pvt.metaDataMgr.router(this.pvt.router);
+				this.pvt.constructHolder.addTypeProvider(this.pvt.metaDataMgr); // удаленный провайдер
+				this.pvt.constructHolder.addTypeProvider(this.pvt.metaDataMgr, true); // локальный провайдер
 
 				this.pvt.dataSource = 'local'; // 'local' or 'mysql'
 				var that = this;

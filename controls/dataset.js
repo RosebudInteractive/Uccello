@@ -227,37 +227,37 @@ define(
              *  добавить новый объект в коллекцию
              * @param flds - поля объекта для инициализации
              */
-			addObject: function (flds, cb) {
+			//addObject: function (flds, cb) {
 
-			    var args = {
-			        dbGuid: this.getDB().isMaster() ? this.getDB().getGuid() : this.getDB().getProxyMaster().guid,
-			        rootGuid: this.root() ? this.root().getGuid() : null,
-			        objTypeGuid: this.objtype(),
-			        flds: flds
-			    };
-			    this.getDB().getContext().execWorkFlowMethod("addObject", this, this._addObject, [args, cb]);
-			},
+			//    var args = {
+			//        dbGuid: this.getDB().isMaster() ? this.getDB().getGuid() : this.getDB().getProxyMaster().guid,
+			//        rootGuid: this.root() ? this.root().getGuid() : null,
+			//        objTypeGuid: this.objtype(),
+			//        flds: flds
+			//    };
+			//    this.getDB().getContext().execWorkFlowMethod("addObject", this, this._addObject, [args, cb]);
+			//},
 			
-			_addObject: function (args, cb) {
+			addObject: function (flds, cb) {
 			    if (!this.isMaster()) {
-			        this.remoteCall('_addObject', [args], cb);
+			        this.remoteCall('addObject', [flds], cb);
 			        return;
 			    }
 
-			    //var db = this.getDB();
-			    //var dataRoot = this.root(); // db.getRoot(this.root()).obj;
-			    //var cm = this.getControlMgr();
-			    //var constr = cm.getContext().getConstructorHolder().getComponent(this.objtype()).constr;
+			    var db = this.getDB();
+			    var dataRoot = this.root(); // db.getRoot(this.root()).obj;
+			    var cm = this.getControlMgr();
+			    var constr = cm.getContext().getConstructorHolder().getComponent(this.objtype()).constr;
+			    var params = { parent: dataRoot, colName: "DataElements", ini: flds };
+			    var obj = new constr(cm, params);
 
-			    var db = this.getDB().getController().getDB(args.dbGuid);
-			    var dataRoot = db.getRoot(args.rootGuid).obj;
-			    var constr = db.getContext().getConstructorHolder().getComponent(args.objTypeGuid).constr;
+			    //var db = this.getDB().getController().getDB(args.dbGuid);
+			    //var dataRoot = db.getRoot(args.rootGuid).obj;
+			    //var constr = db.getContext().getConstructorHolder().getComponent(args.objTypeGuid).constr;
+			    //var params = { parent: dataRoot, colName: "DataElements", ini: args.flds };
+			    //var obj = new constr(db, params);
 
-			    var params = { parent: dataRoot, colName: "DataElements", ini: args.flds };
-
-			    var obj = new constr(db, params);
-			    //var obj = new constr(cm, params);
-			    //db.addObj(db.getObj(this.objtype()),parent,flds);
+			    ////db.addObj(db.getObj(this.objtype()),parent,flds);
 
 			    this.event.fire({ // TODO другое событие сделать
 			        type: 'modFld',
