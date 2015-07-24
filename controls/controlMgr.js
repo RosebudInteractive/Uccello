@@ -492,7 +492,7 @@ define(
 					require(scripts, function(){
 						for(var i=0; i<scripts.length; i++)
 							new (arguments[i])(that);
-						done();
+						if (done) done();
 					});
 				}
 			}
