@@ -118,6 +118,9 @@ define(
                     case UCCELLO_CONFIG.guids.rootLead:
                         this.getList(gr, UCCELLO_CONFIG.classGuids.DataLead, 'lead', done);
                         break;
+                    case UCCELLO_CONFIG.guids.rootLeadLog:
+                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataLeadLog, 'lead_log', done, 'LeadId=?', [expression]);
+                        break;
                     case UCCELLO_CONFIG.guids.rootIncomeplan:
                         this.getList(gr, UCCELLO_CONFIG.classGuids.DataIncomeplan, 'incomeplan', done, 'leadId=?', [expression]);
                         break;
@@ -207,7 +210,7 @@ define(
                         var result = that.createResult(guidRoot, typeGuid, rows);
 
                         // сохранить в файлы
-                       /* if (source == 'mysql') {
+                        if (table == 'lead_log') {
                             var fs = require('fs');
                             var fileName = UCCELLO_CONFIG.dataPath + 'tables/'+table+(whereParams && whereParams[0]? ('-'+whereParams[0]): '')+'.json';
                             fs.writeFile(fileName, JSON.stringify(result), function(err) {
@@ -217,7 +220,7 @@ define(
                                     console.log("The file `"+fileName+"` was saved!");
                                 }
                             });
-                        }*/
+                        }
                         done(result);
                     });
                 } else
