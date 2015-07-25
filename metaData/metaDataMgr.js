@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../system/uobject', './metaModel'],
-    function (UObject, MetaModel) {
+    ['../system/uobject', './metaModel', '../dataman/dataobject', '../dataman/dataRoot'],
+    function (UObject, MetaModel, DataObject, DataRoot) {
 
         var REMOTE_RESULT = "XXX";
 
@@ -51,7 +51,9 @@ define(
             router: function (aRouter) {
                 if (aRouter) {
                     this._router = aRouter;
-                    this._router.add('typeProviderInterf', function (data, done) {
+                    var self = this;
+                    this._router.add('typeProviderInterface', function (data, done) {
+                        typeProviderInterface.classGuid = self.getGuid();
                         done({ intf: typeProviderInterface });
                     });
                 };
@@ -60,6 +62,7 @@ define(
 
 
             getInterface: function () {
+                typeProviderInterface.classGuid = this.getGuid();
                 return typeProviderInterface;
             },
 
@@ -80,7 +83,7 @@ define(
             },
 
             getObjConstrByName: function (name) {
-                var constr = null;
+                var obj = null;
                 var model = this._modelsByName[name];
                 if (model)
                     obj = this._getObjConstr(model);
@@ -88,7 +91,7 @@ define(
             },
 
             getObjConstrByGuid: function (guid) {
-                var constr = null;
+                var obj = null;
                 var model = this._modelsByGuid[guid];
                 if (model)
                     obj = this._getObjConstr(model);
@@ -163,22 +166,24 @@ define(
                 return this._modelsByGuid[guid];
             },
 
+            _genGetterName: function (fname) {
+                var res = fname;
+                if (fname.length > 0) {
+                    res = fname[0].toLowerCase() + fname.substring(1);
+                };
+                return res;
+            },
+
             _getObjConstr: function (model) {
 
                 var header =
-                "if (typeof define !== 'function') {\n" +
-                 "\tvar define = require('amdefine')(module);\n" +
-                 "\tvar UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');\n" +
-                "};\n" +
-                "define([UCCELLO_CONFIG.uccelloPath + '/dataman/dataobject'], function (DataObject) {\n" +
-                 "\tConstructor = DataObject.extend({\n";
+                 "return Parent.extend({\n";
 
                 var footer = ",\n\n" +
                     "\t\tinit: function(cm,params){\n" +
                     "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n" +
                     "\t\t}\n" +
-                    "\t});\n" +
-                    "});";
+                    "\t});";
 
                 var constr = header +
                     "\t\tclassName: \"" + model.get("Name") + "\",\n" +
@@ -197,16 +202,33 @@ define(
                 for (var i = 0; i < fields.length; i++) {
                     if (i > 0)
                         constr += ",\n";
-                    constr += "\n\t\t_" + fields[i].get("Name") + ": function (value) {\n" +
+                    constr += "\n\t\t" + this._genGetterName(fields[i].get("Name")) + ": function (value) {\n" +
                         "\t\t\treturn this._genericSetter(\"" + fields[i].get("Name") + "\", value);\n\t\t}";
                 };
 
-                return constr + footer;
+                return { parentGuid: UCCELLO_CONFIG.classGuids.DataObject, constrBody: constr + footer };
             },
 
             _buildConstr: function (model) {
                 var Constructor = null;
-                eval(this._getObjConstr(model));
+                var code = this._getObjConstr(model);
+                var parent = null;
+
+                switch (code.parentGuid) {
+
+                    case UCCELLO_CONFIG.classGuids.DataObject:
+                        parent = DataObject;
+                        break;
+
+                    case UCCELLO_CONFIG.classGuids.DataRoot:
+                        parent = DataRoot;
+                        break;
+                };
+
+                if (parent) {
+                    var constrFunc = new Function("Parent", code.constrBody);
+                    Constructor = constrFunc(parent);
+                }
                 return Constructor;
             },
 

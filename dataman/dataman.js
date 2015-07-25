@@ -14,7 +14,7 @@ define(
 
         var Dataman = UccelloClass.extend({
 
-		    init: function (router, controller, construct_holder) {
+		    init: function (router, controller, construct_holder, rpc) {
 				this.pvt = {};
 				this.pvt.router = router;
 				this.pvt.controller = controller;
@@ -43,7 +43,8 @@ define(
 
 				this.pvt.metaDataMgr = this._loadMetaDataMgr();
 				this.pvt.metaDataMgr.router(this.pvt.router);
-				this.pvt.constructHolder.addTypeProvider(this.pvt.metaDataMgr); // удаленный провайдер
+				var remote = rpc._publ(this.pvt.metaDataMgr, this.pvt.metaDataMgr.getInterface());
+				this.pvt.constructHolder.addTypeProvider(remote); // удаленный провайдер
 				this.pvt.constructHolder.addTypeProvider(this.pvt.metaDataMgr, true); // локальный провайдер
 
 				this.pvt.dataSource = 'local'; // 'local' or 'mysql'

@@ -220,7 +220,7 @@ define(
                 function _genDispMethodCallTable() {
                     self.dispMethodCallTable = {};
                     self.dispMethodCallTable[UCCELLO_CONFIG.classGuids.Dataset] = {};
-                    self.dispMethodCallTable[UCCELLO_CONFIG.classGuids.Dataset]["_addObject"] = {
+                    self.dispMethodCallTable[UCCELLO_CONFIG.classGuids.Dataset]["addObject"] = {
                         isNewProcess: true,
                         processDefGuid: "8349600e-3d0e-4d4e-90c8-93d42c443ab3",
                         requestName: "Request1",

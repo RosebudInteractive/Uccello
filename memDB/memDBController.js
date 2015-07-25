@@ -172,7 +172,11 @@ define(
 					
 				var p = db.getProxyMaster();
 				if (p.kind == "local") { // мастер-база доступна локально
-					var newObjs = p.db.onSubscribeRoots(db.getGuid(),rootGuids);
+				    var newObjs = p.db.onSubscribeRoots(db.getGuid(), rootGuids);
+
+				    // добавление недостающих конструкторов компонентов
+				    db.addLocalComps(newObjs);
+
 					var rgNew = [];
 					for (var i=0; i<newObjs.length; i++) {
 						var o=db.deserialize(newObjs[i],{ mode:"RW"},cb2);
@@ -186,15 +190,19 @@ define(
 				}
 				else { // мастер-база доступна удаленно
 					callback2 = function(obj) {
-						var rgNew = [];
-						for (var i=0; i<obj.data.length; i++) {
-							o=db.deserialize(obj.data[i],{ mode:"RW"},cb2);
-							rgNew.push(o.getGuid());
-							if (cb2!==undefined)  // запомнить коллбэк
-								db._cbSetNewObject(o.getGuid(),cb2);						
-						}
-						if (cb !== undefined && (typeof cb == "function")) cb(rgNew);
-						//if (cbfinal !== undefined && (typeof cbfinal == "function")) cbfinal();
+
+					    // добавление недостающих конструкторов компонентов
+					    db.addRemoteComps(obj.data, function () {
+					        var rgNew = [];
+					        for (var i = 0; i < obj.data.length; i++) {
+					            o = db.deserialize(obj.data[i], { mode: "RW" }, cb2);
+					            rgNew.push(o.getGuid());
+					            if (cb2 !== undefined)  // запомнить коллбэк
+					                db._cbSetNewObject(o.getGuid(), cb2);
+					        }
+					        if (cb !== undefined && (typeof cb == "function")) cb(rgNew);
+					        //if (cbfinal !== undefined && (typeof cbfinal == "function")) cbfinal();
+					    });
 					}
 					p.connect.send({action:'subscribeManyRoots', type:'method', slaveGuid:db.getGuid(), masterGuid: p.guid, objGuids:rootGuids},callback2);
 
@@ -364,61 +372,73 @@ define(
                 var db  = this.getDB(dbGuid);
 				var cdelta = delta;
 
-				// VER проверка на применимость дельт				
-				var ro = db.getObj(cdelta.rootGuid);
-				if (ro) {
-					var lval = ro.getRootVersion("valid");
-					var ldraft = ro.getRootVersion();
-					var dver = cdelta.ver;
-					if (db.isMaster()) { // мы в мастер-базе (на сервере или на клиенте в клиентском контексте)
-						if (lval > dver) { // на сервере подтвержденная версия не может быть больше пришедшей
-							
-							console.log("cannot sync server -  valid version:"+lval+"delta version:"+dver);
-							return;				
-						}				
-					}
-					else { // на клиенте (slave)
-						if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
-							// если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
-							if (ldraft>lval) {
-								console.log("UNDO if (ldraft>lval) : "+ro.getGuid()+"valid version: "+lval+" delta version:"+dver);
-								db.undo(lval); 
-							}
-						}
-						else { // ошибка синхронизации - ненормальная ситуация, в будущем надо придумать как это обработать
-							console.log("cannot sync client -  valid version:"+lval+"delta version:"+dver);
-							return;
-						}
-					}
-				}
-	
+				if (cdelta.constructors) {
+				    // Пришли конструкторы новых типов
 
-				if (("items" in cdelta) && cdelta.items.length>0) {
-					var root = db.getRoot(cdelta.rootGuid);
+				    console.log("Constructors have been received with DELTA!");
+				    var constr = cdelta.constructors;
+				    var constructHolder = (constr.length > 0) && db.getContext() ? db.getContext().getConstructorHolder() : null;
+				    if (constructHolder) {
+				        for (var i = 0; i < constr.length; i++) {
+				            constructHolder.addCompByConstr(constr[i].guid, constr[i].code);
+				        };
+				    };
 
-                    // получение списка типов, десериализуемых объектов
-					var listTypes = {};
-					if (cdelta.items[0].newRoot)
-					    db.getListOfTypes(cdelta.items[0].newRoot, listTypes);
-					else
-					    root.obj.getLog().getListOfTypes(cdelta, listTypes);
+				} else {
+				    // VER проверка на применимость дельт				
+				    var ro = db.getObj(cdelta.rootGuid);
+				    if (ro) {
+				        var lval = ro.getRootVersion("valid");
+				        var ldraft = ro.getRootVersion();
+				        var dver = cdelta.ver;
+				        if (db.isMaster()) { // мы в мастер-базе (на сервере или на клиенте в клиентском контексте)
+				            if (lval > dver) { // на сервере подтвержденная версия не может быть больше пришедшей
 
-					if (cdelta.items[0].newRoot)
-						var rootObj=db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback()); //TODO добавить коллбэк!!!
-					else
-						rootObj = root.obj;
-					
-					rootObj.getLog().applyDelta(cdelta);
-				}
+				                console.log("cannot sync server -  valid version:" + lval + "delta version:" + dver);
+				                return;
+				            }
+				        }
+				        else { // на клиенте (slave)
+				            if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
+				                // если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
+				                if (ldraft > lval) {
+				                    console.log("UNDO if (ldraft>lval) : " + ro.getGuid() + "valid version: " + lval + " delta version:" + dver);
+				                    db.undo(lval);
+				                }
+				            }
+				            else { // ошибка синхронизации - ненормальная ситуация, в будущем надо придумать как это обработать
+				                console.log("cannot sync client -  valid version:" + lval + "delta version:" + dver);
+				                return;
+				            }
+				        }
+				    }
 
-				db.setVersion("valid",cdelta.dbVersion);	
-				db.setVersion("sent",cdelta.dbVersion);
 
-				if (cdelta.rootGuid) {
-					db.getObj(cdelta.rootGuid).setRootVersion("valid",cdelta.ver);
-					db.getObj(cdelta.rootGuid).setRootVersion("sent",cdelta.ver);	
-				}
-				
+				    if (("items" in cdelta) && cdelta.items.length > 0) {
+				        var root = db.getRoot(cdelta.rootGuid);
+
+				        if (cdelta.items[0].newRoot)
+				            var rootObj = db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback()); //TODO добавить коллбэк!!!
+				        else
+				            rootObj = root.obj;
+
+				        rootObj.getLog().applyDelta(cdelta);
+
+				        // Если это мета-информация, то необходимо ее перестроить,
+                        //   поскольку могли добавиться новые типы
+				        if (cdelta.rootGuid === UCCELLO_CONFIG.guids.metaRootGuid)
+				            db._buildMetaTables();
+				    }
+
+				    db.setVersion("valid", cdelta.dbVersion);
+				    db.setVersion("sent", cdelta.dbVersion);
+
+				    if (cdelta.rootGuid) {
+				        db.getObj(cdelta.rootGuid).setRootVersion("valid", cdelta.ver);
+				        db.getObj(cdelta.rootGuid).setRootVersion("sent", cdelta.ver);
+				    }
+				};
+
 				this.propagateDeltas(dbGuid,srcDbGuid,[cdelta]);
 		
 				if (done) done();

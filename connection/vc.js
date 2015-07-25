@@ -310,8 +310,20 @@ define(
 
 					function icb(r) {
 						
-						var res = that.getContentDB().addRoots(r ? r.datas: null, params, rg, rgsubs/*params.compcb, params.subDbGuid, override*/);
-						if (cb) cb({guids:res});
+					    var db = that.getContentDB();
+					    var objArr = r ? r.datas : null;
+
+					    function localCallback() {
+					        var res = db.addRoots(objArr, params, rg, rgsubs/*params.compcb, params.subDbGuid, override*/);
+					        if (cb) cb({ guids: res });
+					    };
+
+					    if (cb)
+					        db.addRemoteComps(objArr, localCallback);
+					    else {
+					        db.addLocalComps(objArr);
+					        localCallback();
+					    };
 					}
 					// Проверять, есть ли уже объект с таким гуидом и хэшем !!! (expression)
 					// если есть - то просто возвращать его, а не загружать заново. Если нет, тогда грузить.

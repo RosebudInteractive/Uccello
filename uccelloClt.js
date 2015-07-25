@@ -87,7 +87,7 @@ define(
 
                         that.pvt.clientConnection.socket.send({ action: "typeProviderInterface", type: "method" }, function (result) {
                             var guidItf = "90122ac9-2d4a-493a-b6ac-8f5fe3c46590";
-                            that.pvt.constructHolder.addTypeProvider(rpc._publProxy(guidItf, clt.socket, result.intf)); // добавляем удаленный провайдер типов
+                            that.pvt.constructHolder.addTypeProvider(rpc._publProxy(result.intf.classGuid, clt.socket, result.intf)); // добавляем удаленный провайдер типов
                         });
                     });
                 });

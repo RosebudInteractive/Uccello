@@ -86,20 +86,22 @@ define(function () {
                     // если требуется возврат результата
                     if (event.type == 'method') {
                         if (DEBUG) console.log('result:', result);
-                        if (!result) result = {};
-                        result.msgId = event.msgId;
-                        that.send(result);
+                        var resMsg = { msgId: event.msgId, result$: result ? result : {} };
+                        that.send(resMsg);
+                        //if (!result) result = {};
+                        //result.msgId = event.msgId;
+                        //that.send(result);
                     }
                 });
             }
             
             // если есть такой ID вызываем сохраненный колбек
-            if (event.msgId && this.messages[event.msgId]) {
+            if (event.msgId && event.result$ && this.messages[event.msgId]) {
                 var msg = this.messages[event.msgId];
                 delete this.messages[event.msgId];
-                delete event.msgId;
+                //delete event.msgId;
                 if (msg.callback)
-                    msg.callback(event);
+                    msg.callback(event.result$);
             }
         },
         

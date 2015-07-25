@@ -675,23 +675,38 @@ define(
 			    this._clearSingleObjRefs(obj);
 			},
 
-			getListOfTypes: function (obj, list) {
+			getListOfTypes: function (obj, types, notCheck) {
+			    var objTypeGuid = null;
+			    if (!types.list)
+			        types.list = {};
 			    switch (obj.$sys.typeGuid) {
+
 			        case metaObjFieldsGuid:
 			            break;
-			        case metaObjColsGuid:
+
+                    case metaObjColsGuid:
 			            break;
-			        case metaRootGuid:
+
+                    case metaRootGuid:
 			            break;
-			        case metaObjGuid:
+
+                    case metaObjGuid:
+			            objTypeGuid = obj.$sys.guid;
 			            break;
+
 			        default:
-			            list[obj.$sys.typeGuid] = true;
+			            objTypeGuid = obj.$sys.typeGuid;
 			    }
 			    for (var cn in obj.collections) {
 			        for (var co in obj.collections[cn])
-			            this.getListOfTypes(obj.collections[cn][co], list);
-			    }
+			            this.getListOfTypes(obj.collections[cn][co], types, notCheck);
+			    };
+			    var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
+			    if (objTypeGuid && constructHolder && (!types.list[objTypeGuid])
+                    && ((!constructHolder.getComponent(objTypeGuid)) || notCheck)) {
+			        types.list[objTypeGuid] = true;
+			        types.arrTypes.push(objTypeGuid);
+			    };
 			},
 
 		    /**
@@ -785,7 +800,70 @@ define(
 				return this.pvt.defaultCompCallback;
 			},
 
-            /**
+		    /**
+             * Добавляет конструкторы компонентов от УДАЛЕННЫХ провайдеров,
+             *   если они отсутствуют в "constructHolder"
+             *   (вызывается перед десериализацией, если это не DELTA)
+             *
+             * @param  {Array}    objArr    Массив объектов, которые предстоит десериализовать
+             * @param  {Function} callback  Вызывается по завершении операции (аргумент: массив(Guid) типов, для которых конструкторы не найдены)
+             */
+			addRemoteComps: function (objArr, callback) {
+			    var callbackNow = callback ? true : false;
+			    var self = this;
+			    var types = { arrTypes: [] };
+
+			    function localCallback(missingTypes) {
+
+			        if (types.arrTypes.length > missingTypes.length)
+			            self._buildMetaTables();
+
+			        if (callback)
+			            setTimeout(callback, 0);
+			    };
+
+			    if (objArr) {
+			        for (var i = 0; i < objArr.length; i++) {
+			            this.getListOfTypes(objArr[i], types);
+			        };
+			        if (types.arrTypes.length > 0) {
+			            var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
+			            if (constructHolder) {
+			                callbackNow = false;
+			                constructHolder.addRemoteComps(types.arrTypes, this, localCallback);
+			            };
+			        };
+			    };
+			    if (callbackNow)
+			        setTimeout(callback, 0);
+
+			},
+
+		    /**
+             * Добавляет конструкторы компонентов от ЛОКАЛЬНЫХ провайдеров,
+             *   если они отсутствуют в "constructHolder"
+             *   (вызывается перед десериализацией, если это не DELTA)
+             *
+             * @param  {Array}  objArr    Массив объектов, которые предстоит десериализовать
+             */
+			addLocalComps: function (objArr) {
+			    if (objArr) {
+			        var types = { arrTypes: [] };
+			        for (var i = 0; i < objArr.length; i++) {
+			            this.getListOfTypes(objArr[i], types);
+			        };
+			        if (types.arrTypes.length > 0) {
+			            var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
+			            if (constructHolder) {
+			                var missingTypes = constructHolder.addLocalComps(types.arrTypes, this);
+			                if (types.arrTypes.length > missingTypes.length)
+			                    this._buildMetaTables();
+                        };
+			        };
+			    };
+			},
+
+		    /**
              * добавить корневые объекты путем десериализации
              * @param {array} sobjs - массив объектов которые нужно десериализовать
 			 * @callback params.comcb - вызов функции, которая выполняет доп.действия после создания каждого объекта
@@ -795,13 +873,6 @@ define(
              */
 			// ДОЛЖНА РАБОТАТЬ ТОЛЬКО ДЛЯ МАСТЕР БАЗЫ - СЛЕЙВ НЕ МОЖЕТ ДОБАВИТЬ В СЕБЯ РУТ, МОЖЕТ ТОЛЬКО ПОДПИСАТЬСЯ НА РУТ МАСТЕРА!
 			addRoots: function(sobjs, params, rg, rgsubs) {
-
-			    // получение списка типов, десериализуемых объектов
-			    var listTypes = {};
-				if (sobjs)
-				for (var i = 0; i < sobjs.length; i++) {
-					this.getListOfTypes(sobjs[i], listTypes);
-				};
 
 			    var subDbGuid = params.subDbGuid;
 				var cb = params.compcb;
@@ -1082,10 +1153,26 @@ define(
              * @returns {Array}
              */
 			genDeltas: function(commit) {
-				var allDeltas = [];
-				for (var i=0; i<this.countRoot(); i++) {
-					var d=this.getRoot(i).obj.getLog().genDelta();
-					if (d!=null) {
+			    var allDeltas = [];
+
+			    for (var i = 0; i < this.countRoot() ; i++) {
+			        var log = this.getRoot(i).obj.getLog();
+			        var d = log.genDelta();
+					if (d != null) {
+					    if (d.rootGuid === metaRootGuid) {
+					        /////////////////////////////////////////////////////////////////////////////////////////////////
+					        // Добавление кода конструкторов для новых типов из metaRoot
+					        //
+					        var constructorHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
+					        if (constructorHolder) {
+					            var types = log.getListOfTypes(d, types);
+				                if (types.arrTypes.length > 0) {
+				                    var res = constructorHolder.getLocalComps(types.arrTypes);
+				                    if (res.constr.length > 0)
+				                        allDeltas.unshift({ rootGuid: metaRootGuid, constructors: res.constr });
+				                };
+					        };
+					    };
 						allDeltas.push(d);
 						// VER если в мастере, то сразу и подтверждаем 					
 						if (this.isMaster() && !this.getCurTranGuid()) 
@@ -1098,7 +1185,6 @@ define(
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (если вне транзакции)
 
 				return allDeltas;
-
 			},
 
             /**

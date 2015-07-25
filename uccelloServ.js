@@ -54,7 +54,7 @@ define(
 				    this.createSimpleAddObjectProcessDef();
 				};
 
-				this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder);
+				this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder, rpc);
                 this.pvt.resman = new Resman(that.getUserMgr().getController());
                 this.pvt.commServer = options.commServer;
 

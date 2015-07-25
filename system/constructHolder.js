@@ -79,12 +79,13 @@ define(
             },
 
             /**
-             * Добавляет конструкторы компонентов от удаленных провайдеров
+             * Добавляет конструкторы компонентов от УДАЛЕННЫХ провайдеров
              * 
              * @param  {Array}    reqArr    Массив(Guid) типов требуемых конструкторов
+             * @param  {Object}   cm        Объект "controlMgr", если задан, то производится регистрация типа
              * @param  {Function} callback  Вызывается по завершении операции (аргумент: массив(Guid) типов, для которых конструкторы не найдены)
              */
-            addRemoteComps: function (reqArr, callback) {
+            addRemoteComps: function (reqArr, cm, callback) {
                 var reqRest = [];
 
                 for (var i = 0; i < reqArr.length; i++)
@@ -96,8 +97,9 @@ define(
 
                 function processProvider(constrArr) {
                     var isFinished = true;
-                    if (constrArr)
-                        reqRest = self._processConstrList(reqRest, constrArr);
+                    if (constrArr) {
+                        reqRest = self._processConstrList(reqRest, constrArr, false, cm);
+                    };
                     if ((reqRest.length > 0) && (curr_idx < providers.length)) {
                         isFinished = false;
                         providers[curr_idx++].getConstructors(reqRest, processProvider);
@@ -111,12 +113,13 @@ define(
             },
 
             /**
-             * Добавляет конструкторы компонентов от локальных провайдеров
+             * Добавляет конструкторы компонентов от ЛОКАЛЬНЫХ провайдеров
              * 
              * @param  {Array}  reqArr    Массив(Guid) типов требуемых конструкторов
+             * @param  {Object} cm        Объект "controlMgr", если задан, то производится регистрация типа
              * @return {Array}  Массив(Guid) типов, для которых конструкторы не найдены
              */
-            addLocalComps: function (reqArr) {
+            addLocalComps: function (reqArr, cm) {
                 var reqRest = [];
 
                 for (var i = 0; i < reqArr.length; i++)
@@ -125,16 +128,18 @@ define(
                 var providers = this.pvt.localTypeProviders;
                 for (var i = 0; i < providers.length; i++) {
                     var constrArr = providers[i].getConstructors(reqRest);
-                    if (constrArr.length > 0)
-                        reqRest = this._processConstrList(reqRest, constrArr);
+                    if (constrArr.length > 0) {
+                        reqRest = this._processConstrList(reqRest, constrArr, false, cm);
+                    };
                     if (reqRest.length > 0)
                         break;
                 };
+
                 return reqRest;
             },
 
             /**
-             * Возвращает конструкторы компонентов от локальных провайдеров,
+             * Возвращает конструкторы компонентов от ЛОКАЛЬНЫХ провайдеров,
              *  а также список не найденных конструкторов
              *
              * @param  {Array}  reqArr    Массив(Guid) типов требуемых конструкторов
@@ -165,12 +170,13 @@ define(
             /**
              * Обработка списка полученных от провайдера конструкторов
              * 
-             * @param  {Array}    reqArr    Массив(Guid) типов требуемых конструкторов
-             * @param  {Array}    constrArr Массив имеющихся конструкторов (элемент массива - пара Guid + Код конструктора)
+             * @param  {Array}    reqArr            Массив(Guid) типов требуемых конструкторов
+             * @param  {Array}    constrArr         Массив имеющихся конструкторов (элемент массива - пара Guid + Код конструктора)
              * @param  {Boolean}  [ignoreAdd=false] Если = true, то добавления конструктора не происходит
+             * @param  {Object}   cm                Объект "controlMgr", если задан, то производится регистрация типа
              * @return {Array}  Массив(Guid) типов, для которых пока еще не получены конструкторы
              */
-            _processConstrList: function (reqArr, constrArr, ignoreAdd) {
+            _processConstrList: function (reqArr, constrArr, ignoreAdd, cm) {
                 var reqObg = {};
 
                 for (var i = 0; i < reqArr.length; i++)
@@ -178,8 +184,12 @@ define(
 
                 for (var i = 0; i < constrArr.length ; i++) {
                     var guid = constrArr[i].guid;
-                    if (!ignoreAdd)
-                        this.addCompByConstr(guid, constrArr[i].code);
+                    if (!ignoreAdd) {
+                        var constr = this.addCompByConstr(guid, constrArr[i].code);
+                        if (constr && cm) {
+                            new constr(cm);
+                        };
+                    }
                     delete reqObg[guid];
                 };
                 return Object.keys(reqObg);
@@ -192,7 +202,7 @@ define(
              * @param {Bool}    [is_local=false] Признак локального провайдера (по умолчанию провайдер удаленный)
              */
             addTypeProvider: function (provider, is_local) {
-                var providers = is_local ? this.pvt.remoteTypeProviders : this.pvt.localTypeProviders;
+                var providers = is_local ? this.pvt.localTypeProviders : this.pvt.remoteTypeProviders;
                 var isExists = false;
                 for (var i = 0; (!isExists) && (i < providers.length) ; i++)
                     isExists = provider === providers[i];
@@ -205,11 +215,17 @@ define(
              * 
              * @param {String}  classGuid Guid класса
              * @param {Object}  code      Код конструктора
+             * @return {Function} Конструктор объекта
              */
             addCompByConstr: function (classGuid, code) {
                 var Constructor = null;
-                eval(code);
-                this.pvt.components[classGuid] = { constr: Constructor, viewsets: {}, code: code };
+                var parent = this.getComponent(code.parentGuid) ? this.getComponent(code.parentGuid).constr : null;
+                if (parent) {
+                    var constrFunc = new Function("Parent", code.constrBody);
+                    Constructor = constrFunc(parent);
+                    this.pvt.components[classGuid] = { constr: Constructor, viewsets: {}, code: code };
+                };
+                return Constructor;
             }
         });
         return ConstructHolder;

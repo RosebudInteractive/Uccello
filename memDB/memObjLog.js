@@ -167,11 +167,13 @@ define(
 			
 			getListOfTypes: function (delta, list) {
 			    var db = this.getObj().getDB();
+			    var result = list ? list : { arrTypes: [] };
 			    for (var i = 0; i < delta.items.length; i++) {
 			        var c = delta.items[i];
 			        if ("add" in c)
-			            db.getListOfTypes(c.add, list);
+			            db.getListOfTypes(c.add, result, true);
 			    };
+			    return result;
 			},
 
 		    // применить "дельту" изменений к объекту
