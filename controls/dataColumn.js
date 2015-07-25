@@ -11,7 +11,7 @@ define(
             className: "DataColumn",
             classGuid: UCCELLO_CONFIG.classGuids.DataColumn,
             metaCols: [],
-            metaFields: [{ fname: "Label", ftype: "string" }, { fname: "Width", ftype: "int" },
+            metaFields: [{ fname: "Label", ftype: "string" }, { fname: "Width", ftype: "int" }, { fname: "Values", ftype: "string" },
                 {
                     fname: "Field", ftype: {
                         type: "ref",
@@ -39,6 +39,9 @@ define(
             },
             field: function(value) {
                 return this._genericSetter("Field", value);
+            },
+            values: function(value) {
+                return this._genericSetter("Values", value);
             }
 
         });

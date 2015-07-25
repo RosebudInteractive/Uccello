@@ -81,6 +81,7 @@ define([], function () {
             'rootContract': '8583ee1d-6936-19da-5ef0-9025fb7d1d8d',
             'rootAddress': 'edca46bc-3389-99a2-32c0-a59665fcb6a7',
             'rootLead': 'c170c217-e519-7c23-2811-ff75cd4bfe81',
+            'rootLeadLog': 'bb48579c-808e-291e-0242-0facc4876051',
             'rootIncomeplan': '8770f400-fd42-217c-90f5-507ca52943c2',
             'rootOpportunity': 'f988a1cb-4be0-06c3-4eaa-4ae8b554f6b3',
             'Interfsrv': 'ef9bfa83-8371-6aaa-b510-28cd83291ce9',

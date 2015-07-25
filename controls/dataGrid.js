@@ -10,7 +10,7 @@ define(
 
             className: "DataGrid",
             classGuid: UCCELLO_CONFIG.classGuids.DataGrid,
-            metaFields: [ ],
+            metaFields: [ { fname: "Editable", ftype: "boolean" } ],
             metaCols: [ {"cname": "Columns", "ctype": "DataColumn"}],
 
             /**
@@ -20,8 +20,7 @@ define(
              */
             init: function(cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
-                this.params = params;
-				
+                this.pvt.editMode = false;
 				this.initRender();
             },
 
@@ -49,7 +48,7 @@ define(
                 }
 
                 // если надо лишь передвинуть курсор
-                if (this.isOnlyCursor()) {
+                if (this.isOnlyCursor() && !this.editable()) {
                     viewset.renderCursor.apply(this, [this.dataset().cursor()]);
                     return;
                 }
@@ -71,8 +70,11 @@ define(
                         return false;
                 }
                 else return false;
-            }
+            },
 
+            editable: function(value) {
+                return this._genericSetter("Editable", value);
+            }
     });
         return DataGrid;
     }

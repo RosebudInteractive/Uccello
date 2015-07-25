@@ -10,10 +10,14 @@ define(
 
             className: "TabContainer",
             classGuid: UCCELLO_CONFIG.classGuids.TabContainer,
-            metaFields: [],
+            metaFields: [{fname:"ActiveTab",ftype:"int"}],
 
             init: function(cm,params){
                 UccelloClass.super.apply(this, [cm, params]);
+            },
+
+            activeTab: function(value) {
+                return this._genericSetter("ActiveTab", value);
             }
         });
         return TabContainer;
