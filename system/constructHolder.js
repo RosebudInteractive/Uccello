@@ -179,18 +179,19 @@ define(
             _processConstrList: function (reqArr, constrArr, ignoreAdd, cm) {
                 var reqObg = {};
 
+                var addFlag = (!ignoreAdd) && ((!cm) || (cm && cm.getMeta()));
                 for (var i = 0; i < reqArr.length; i++)
                     reqObg[reqArr[i]] = true;
 
                 for (var i = 0; i < constrArr.length ; i++) {
                     var guid = constrArr[i].guid;
-                    if (!ignoreAdd) {
+                    if (addFlag) {
                         var constr = this.addCompByConstr(guid, constrArr[i].code);
                         if (constr && cm) {
                             new constr(cm);
                         };
+                        delete reqObg[guid];
                     }
-                    delete reqObg[guid];
                 };
                 return Object.keys(reqObg);
             },

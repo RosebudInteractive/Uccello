@@ -745,6 +745,17 @@ define(
 						default:
 						    var typeObj = that.getObj(sobj.$sys.typeGuid);
 
+						    if (!typeObj) {
+						        var constructHolder = that.getContext() ? that.getContext().getConstructorHolder() : null;
+						        if (constructHolder) {
+						            var missingTypes = constructHolder.addLocalComps([sobj.$sys.typeGuid], that);
+						            if (missingTypes.length == 0) {
+						                that._buildMetaTables();
+						                typeObj = that.getObj(sobj.$sys.typeGuid);
+						            }
+						        };
+						    };
+
 							if (typeObj) {
 								if (cb!=undefined) o = cb(typeObj, parent, sobj);
 								if (!o) 
