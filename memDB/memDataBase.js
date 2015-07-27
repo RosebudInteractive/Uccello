@@ -68,7 +68,7 @@ define(
 				pvt.tranCounter = 0;		// счетчик транзакции
 				pvt.commitFlag = false;
 
-		        if (params.kind != "master") {
+				if (params.kind != "master") {
 		            var db=this;
 		            controller._subscribe(this,params.proxyMaster, function(result) {
 		                pvt.proxyMaster = controller.getProxy(params.proxyMaster.guid);
@@ -1171,6 +1171,8 @@ define(
 			        var d = log.genDelta();
 					if (d != null) {
 					    if (d.rootGuid === metaRootGuid) {
+                            // Мета-данные д.б. впереди всех дельт
+					        allDeltas.unshift(d);
 					        /////////////////////////////////////////////////////////////////////////////////////////////////
 					        // Добавление кода конструкторов для новых типов из metaRoot
 					        //
@@ -1180,12 +1182,13 @@ define(
 				                if (types.arrTypes.length > 0) {
 				                    var res = constructorHolder.getLocalComps(types.arrTypes);
 				                    if (res.constr.length > 0)
-				                        allDeltas.unshift({ rootGuid: metaRootGuid, constructors: res.constr });
-				                };
+				                        // Конструкторы должны идти сразу за мета-данными
+				                        allDeltas.splice(1, 0, { rootGuid: metaRootGuid, constructors: res.constr });
+                                };
 					        };
-					    };
-						allDeltas.push(d);
-						// VER если в мастере, то сразу и подтверждаем 					
+					    } else
+					        allDeltas.push(d);
+					    // VER если в мастере, то сразу и подтверждаем 					
 						if (this.isMaster() && !this.getCurTranGuid()) 
 							this.getRoot(i).obj.setRootVersion("valid",this.getRoot(i).obj.getRootVersion());
 						
