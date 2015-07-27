@@ -157,7 +157,7 @@ define(
                     // создаем бд менеджера метаинформации
                     var dbp = {name:"DatamanDB", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: '66d43749-223a-48cb-9143-122381b9ed3c'}};
                     that.pvt.cmdataman = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket, function(){
-                        that.pvt.cmdataman.subscribeRoots(['9b12c4b3-1b26-b107-d9c9-bbb1aa6a0be7@1'], null, that.pvt.createComponent);
+                        that.pvt.cmdataman.subscribeRoots(['77153254-7f08-6810-017b-c99f7ea8cddf@2009'], null, that.pvt.createComponent);
                     });
 
                     // создаем системную бд
