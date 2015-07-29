@@ -195,7 +195,8 @@ define(
 		                } else
 		                    delete this.pvt.uLinks[guid + "_" + links[i]];
 		            };
-		        };
+		            delete this.pvt.refTo[guid];
+                };
 		        var refFrom = this.pvt.refFrom[guid];
 		        if (refFrom) {
 		            var links = Object.keys(refFrom);
@@ -280,7 +281,7 @@ define(
 		                    refFrom = {};
 		                    this.pvt.refFrom[refGuid] = refFrom;
 		                };
-		                refFrom[link.src.getGuid() + "_" + link.val.field] = link;
+		                refFrom[link.src.getGuid() + "_" + link.field] = link;
 
 		                delete uLinks[refs[i]];
 		            };
