@@ -181,8 +181,8 @@ define(
 					for (var i=0; i<newObjs.length; i++) {
 						var o=db.deserialize(newObjs[i],{ mode:"RW"},cb2);
 						rgNew.push(o.getGuid());
-						if (cb2!==undefined)  // запомнить коллбэк
-							db._cbSetNewObject(o.getGuid(),cb2);
+						//if (cb2!==undefined)  // запомнить коллбэк
+						//	db._cbSetNewObject(o.getGuid(),cb2);
 						
 					}
 					if (cb !== undefined && (typeof cb == "function")) cb(rgNew);
@@ -197,8 +197,8 @@ define(
 					        for (var i = 0; i < obj.data.length; i++) {
 					            o = db.deserialize(obj.data[i], { mode: "RW" }, cb2);
 					            rgNew.push(o.getGuid());
-					            if (cb2 !== undefined)  // запомнить коллбэк
-					                db._cbSetNewObject(o.getGuid(), cb2);
+					            //if (cb2 !== undefined)  // запомнить коллбэк
+					            //    db._cbSetNewObject(o.getGuid(), cb2);
 					        }
 					        if (cb !== undefined && (typeof cb == "function")) cb(rgNew);
 					        //if (cbfinal !== undefined && (typeof cbfinal == "function")) cbfinal();
