@@ -3,9 +3,9 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../system/uobject'],
-    function(UObject) {
-        var DataObject = UObject.extend({
+    ['../process/processObject'],
+    function (ProcessObject) {
+        var DataObject = ProcessObject.extend({
 
             className: "DataObject",
             classGuid: UCCELLO_CONFIG.classGuids.DataObject,

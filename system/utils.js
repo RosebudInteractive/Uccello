@@ -26,7 +26,17 @@ Utils.id = function () {
     return Math.floor(Math.random()*1000000);
 }
 
-if (typeof(module) === 'undefined')
+/**
+ * Определяет, работаем ли мы под Node.js
+ *
+ * @return {Boolean}
+ */
+Utils.isNode = function () {
+
+    return typeof exports !== 'undefined' && this.exports !== exports;
+}
+
+if (typeof (module) === 'undefined')
     define([], function(){return Utils;});
 else
     module.exports = Utils;

@@ -140,7 +140,8 @@ define([], function () {
             'MetaModelField':"0997ccff-09ec-4978-b120-3ef7d6668bc2",
             'CollectionIndex':"43626e45-cfeb-406a-aca8-122a8bcbd5aa",
             'IndexField':"7806a983-c946-438f-95a4-71ab08e38074",
-            'TabContainer':"3fd621ab-4b0a-038f-b617-88dc28a05a67"
+            'TabContainer':"3fd621ab-4b0a-038f-b617-88dc28a05a67",
+            'ProcessObject':"8b8d0990-543c-40b1-8f04-7b7235938f65"
         },
 
         // изменяемые свойства
