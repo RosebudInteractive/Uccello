@@ -122,8 +122,8 @@ define(
 						return comp;
 						// that.createComponent.apply(that, [obj, that.pvt.cm]);
 					}
-				this.pvt.compCallback = createCompCallback;
-
+				//this.pvt.compCallback = createCompCallback;
+				
 				if (this.isMaster()) { // главная (master) TODO разобраться с KIND
 					this.pvt.cdb = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
 					// подписываемся на добавление нового рута
@@ -132,8 +132,9 @@ define(
 						subscriber: this,
 						callback: this.onNewRoot
 					});
+					this.pvt.cdb.setDefaultCompCallback(createCompCallback);
 
-					this.loadNewRoots(params.formGuids, { rtype: "res", compcb: createCompCallback },cb);
+					this.loadNewRoots(params.formGuids, { rtype: "res" /* 1212, compcb: createCompCallback*/ },cb);
 					this.dataBase(this.pvt.cdb.getGuid());
 					this.contextGuid(this.getGuid());
 					this.pvt.isOn = true;
@@ -149,11 +150,12 @@ define(
 
 					var dbp = {name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}};
 					this.pvt.cdb = this.pvt.cm = new ControlMgr( { controller: controller, dbparams: dbp}, that,that.pvt.socket, function(){
+						that.pvt.cdb.setDefaultCompCallback(createCompCallback);
 						var forms = params.formGuids;
 						if (forms == null) forms = "all";
 						else if (forms == "") forms = [];
-						//that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
-						that.loadNewRoots(forms, { rtype: "res", compcb: createCompCallback },cb2);
+						// 1212 that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
+						that.loadNewRoots(forms, { rtype: "res" /* 1212 , compcb: createCompCallback*/ },cb2);
 					});
 
 				}
@@ -165,7 +167,7 @@ define(
 						callback: function(args) { that.renderAll(true); }
 					});
 				}
-				this.pvt.cdb.setDefaultCompCallback(createCompCallback);
+				
 			},
 
 			// выключить контекст
@@ -305,13 +307,13 @@ define(
 			// params.compcb - только в случае ресурсов (может использоваться дефолтный)
 			// params.expr - выражение для данных
 			loadNewRoots: function(rootGuids,params, cb) {
+				var db = this.getContentDB();
+				
 				var that = this;
 				if (this.isMaster()) {
-					//var override = true;
-
 					function icb(r) {
 						
-					    var db = that.getContentDB();
+					    //var db = that.getContentDB();
 					    var objArr = r ? r.datas : null;
 
 					    function localCallback() {
@@ -330,6 +332,7 @@ define(
 					// если есть - то просто возвращать его, а не загружать заново. Если нет, тогда грузить.
 					var rg = []; // эти загрузить
 					var rgsubs = []; // а на эти просто подписать
+					rootGuids = db.getRootGuids(rootGuids);
 					
 					// Всегда добавляем новые - проверка существования не имеет смысла, мы говорим о гуидах прототипов
 					for (var i=0; i<rootGuids.length; i++) {

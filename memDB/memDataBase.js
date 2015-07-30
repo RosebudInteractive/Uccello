@@ -112,7 +112,7 @@ define(
 		            root.dver = 0; 			// версии корневого объекта: draft / sent / valid
 		            root.sver = 0;
 		            root.vver = 0;
-		            root.callbackNewObject = undefined;
+		            //root.callbackNewObject = undefined;
 		            root.event = new Event();
 		            this.pvt.robjs.push(root);
 		            this.pvt.rcoll[obj.getGuid()] = root;
@@ -405,6 +405,7 @@ define(
 				}
 			},
 
+			/*
 			_cbSetNewObject: function(rootGuid,callback) {
 				this.getRoot(rootGuid).callbackNewObject = callback;
 			},
@@ -412,6 +413,7 @@ define(
 			_cbGetNewObject: function(rootGuid) {
 				return this.getRoot(rootGuid).callbackNewObject;
 			},
+			*/
 
             /**
              * вернуть список гуидов корневых объектов за исключением метаинфо
@@ -419,11 +421,21 @@ define(
              */
 			getRootGuids: function(rootKind) {
 				var guids = [];
-				var ro = this.pvt.robjs;
-				for (var i=0; i<ro.length; i++) {
-					var cguid = ro[i].obj.getGuid();
-					if ((cguid!=metaRootGuid) && ((ro[i].type==rootKind) || (rootKind===undefined) || (rootKind==="all"))) guids.push(cguid);
+				if (Array.isArray(rootKind))
+					var guids = rootKind;
+				else {
+					if ((rootKind == "res") || (rootKind == "data") || (rootKind == "all") || (!rootKind)) {
+						var ro = this.pvt.robjs;
+						for (var i=0; i<ro.length; i++) {
+							var cguid = ro[i].obj.getGuid();
+							if ((cguid!=metaRootGuid) && ((ro[i].type==rootKind) || (rootKind===undefined) || (rootKind==="all"))) 
+								guids.push(cguid);
+						}
+					}
+					else
+						guids.push(rootKind);
 				}
+
 				return guids;
 
 
@@ -543,6 +555,7 @@ define(
 				// TODO проверить что база подписана на базу
 				var rg = [];
 				var res = [];
+				/*
 				if (Array.isArray(rootGuids))
 					rg = rootGuids;
 				else {
@@ -550,7 +563,8 @@ define(
 						rg = this.getRootGuids(rootGuids);
 					else
 						rg.push(rootGuids);
-				}
+				}*/
+				rg  = this.getRootGuids(rootGuids);
 
 				for (var i=0; i<rg.length; i++) {
 					if (this.pvt.robjs.length > 0) {
@@ -878,7 +892,6 @@ define(
 		    /**
              * добавить корневые объекты путем десериализации
              * @param {array} sobjs - массив объектов которые нужно десериализовать
-			 * @callback params.comcb - вызов функции, которая выполняет доп.действия после создания каждого объекта
 			 * @param params.subDbGuid - гуид базы данных подписчика (для идентификации)
 			 * @param override - true - перезагрузить рут, false - только подписать
              * @returns {*} - возвращает массив корневых гуидов - либо созданных рутов либо уже существующих но на которые не были подписаны
@@ -887,14 +900,13 @@ define(
 			addRoots: function(sobjs, params, rg, rgsubs) {
 
 			    var subDbGuid = params.subDbGuid;
-				var cb = params.compcb;
+				var cb = this.getDefaultCompCallback(); // params.compcb;
 				
 				var res = [];
 
 				// VER если нужно инкрементируем драфт-версию
 				this.getCurrentVersion();
 
-				if (!cb) cb = this.getDefaultCompCallback();
 				var allSubs = this.getSubscribers();
 
 				for (var i=0; i<rg.length; i++) {
