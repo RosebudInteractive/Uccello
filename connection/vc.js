@@ -152,7 +152,8 @@ define(
 						var forms = params.formGuids;
 						if (forms == null) forms = "all";
 						else if (forms == "") forms = [];
-						that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
+						//that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
+						that.loadNewRoots(forms, { rtype: "res", compcb: createCompCallback },cb2);
 					});
 
 				}
