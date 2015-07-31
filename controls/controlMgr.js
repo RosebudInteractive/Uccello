@@ -398,7 +398,7 @@ define(
 							db.tranCommit(); 	
 						db.event.fire({
 							type: 'endTransaction',
-							target: this
+							target: db
 						});
 						
 						if (done) done(res);
@@ -409,7 +409,7 @@ define(
 						db.pvt.execFst = false;
 						
 						if (queue.length>0) { // Если есть другие транзакции в очереди, то перейти к их выполнению
-							this._checkRootVer(rootv);
+							db._checkRootVer(rootv);
 							db.tranStart(queue[0].tr);
 							db.pvt.execFst = true;
 							var f=queue[0].q[0];

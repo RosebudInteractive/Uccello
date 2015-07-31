@@ -923,8 +923,10 @@ define(
 					var serializedObj=this.serialize(croot);
 						//var timeEnd = Date.now();
 						//logger.info((new Date()).toISOString()+';serialize;'+(timeEnd-time));
+					/* 1212
 					var o = { adObj: serializedObj, obj:croot, type:"newRoot"};
 					croot.getLog().add(o);
+					*/
 					//}
 					//else croot = root.obj;
 						
