@@ -763,11 +763,13 @@ define(
 						    if (!typeObj) {
 						        var constructHolder = that.getContext() ? that.getContext().getConstructorHolder() : null;
 						        if (constructHolder) {
-						            var missingTypes = constructHolder.addLocalComps([sobj.$sys.typeGuid], that);
-						            if (missingTypes.length == 0) {
-						                that._buildMetaTables();
+						            var constr = constructHolder.getComponent(sobj.$sys.typeGuid);
+						            if (constr)
+						                constr = constr.constr;
+						            if (constr) {
+						                new constr(that);
 						                typeObj = that.getObj(sobj.$sys.typeGuid);
-						            }
+                                    }
 						        };
 						    };
 
@@ -841,9 +843,6 @@ define(
 
 			    function localCallback(missingTypes) {
 
-			        if (types.arrTypes.length > missingTypes.length)
-			            self._buildMetaTables();
-
 			        if (callback)
 			            setTimeout(callback, 0);
 			    };
@@ -882,8 +881,6 @@ define(
 			            var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
 			            if (constructHolder) {
 			                var missingTypes = constructHolder.addLocalComps(types.arrTypes, this);
-			                if (types.arrTypes.length > missingTypes.length)
-			                    this._buildMetaTables();
                         };
 			        };
 			    };

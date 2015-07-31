@@ -139,6 +139,7 @@ define(
                     chStateData.state.connected = false;
                     chStateData.state.connTimerId = null;
                     chStateData.state.getId_trials = 0;
+                    chStateData.isBlocked = false;
 
                     if (chStateData.chType == CommunicationClient.WEB_SOCKET) {
                         var ws = null;
@@ -293,11 +294,8 @@ define(
                     
                     if (can_send) {
                         
-                        if (chStateData.outQueue.length > 1) {
-                            msg_to_send = chStateData.outQueue;
-                            chStateData.outQueue = []; // clear output message queue
-                        } else
-                            msg_to_send = chStateData.outQueue.shift();
+                        msg_to_send = chStateData.outQueue;
+                        chStateData.outQueue = []; // clear output message queue
 
                         chStateData.state.lastMsg = msg_to_send;
                         
@@ -508,10 +506,12 @@ define(
 
             _processMsg: function (msg, chStateData){
                 var inp = []
-                inp.push(msg);
                 
-                if (inp[0] instanceof Array)
-                    inp = inp[0];
+                if (msg instanceof Array)
+                    inp = msg;
+                else
+                    throw new Error("CommServer::_processMsg: Input message should always be an ARRAY!");
+
                 //if (DEBUG) console.log("###io Input msg: " + JSON.stringify(inp));
                 for (var i = 0; i < inp.length; i++) {
                     //try {
@@ -614,6 +614,33 @@ define(
                             
                             if (chStateData.chType == CommunicationClient.AJAX)
                                 chStateData.stream.setPollingTimer();
+                        };
+                        break;
+
+                    case "refuseId":
+                        if (chStateData !== null) {
+
+                            chStateData.isBlocked = true;
+
+                            if (DEBUG) console.log("This client has been blocked by server (probably server has been restarted)!");
+
+                            if (chStateData.chType == CommunicationClient.AJAX)
+                                this._setStateConnected(chStateData);
+
+                            chStateData.state.clientId = cmd._data_;
+                            chStateData.state.prevClientId = cmd._data_;
+                            chStateData.state.getId_trials = 0;
+                            if (chStateData.state.getIdTimerId !== null) {
+                                clearTimeout(chStateData.state.getIdTimerId);
+                                chStateData.state.getIdTimerId = null;
+                            };
+
+                            if (chStateData.channel !== null) {
+                                setTimeout(function () {
+                                    chStateData.channel.reconnect();
+                                }, 0);
+                            };
+
                         };
                         break;
                 }

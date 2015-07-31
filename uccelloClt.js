@@ -48,8 +48,11 @@ define(
                     return newObj;
                 };
 
-                this.pvt.constructHolder.loadControls(function(){
-                    that.getClient().connect("ws://"+url('hostname')+":"+UCCELLO_CONFIG.webSocketServer.port, {guid:that.getSessionGuid()},  function(result){
+                this.pvt.constructHolder.loadControls(function () {
+                    var protocol = "ws";
+                    if (UCCELLO_CONFIG.webSocketClient.type == UCCELLO_CONFIG.commClientTypes.AJAX)
+                        protocol = "http";
+                    that.getClient().connect(protocol+"://"+url('hostname')+":"+UCCELLO_CONFIG.webSocketServer.port, {guid:that.getSessionGuid()},  function(result){
                         $.cookie('sid', result.session.guid);
                         that.pvt.sessionId = result.session.id;
                         that.pvt.sessionGuid = result.session.guid;

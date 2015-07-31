@@ -153,6 +153,10 @@ define([], function () {
         webServer: {
             port:1325
         },
+
+        commClientTypes: CommClientTypes,
+        commServerTypes: CommServerTypes,
+
         webSocketServer: {
             port: 8081,
             type: CommServerTypes.AJAX + CommServerTypes.WEB_SOCKET

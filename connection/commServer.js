@@ -168,10 +168,7 @@ define(
 
                         if (send_all) {
                             var msg_to_send;
-                            if (chStateData.outQueue.length > 1)
-                                msg_to_send = chStateData.outQueue;
-                            else
-                                msg_to_send = chStateData.outQueue.pop();
+                            msg_to_send = chStateData.outQueue;
 
                             chStateData.outQueue = []; // clear output message queue
                             chStateData.lastMsg = msg_to_send;
@@ -302,6 +299,7 @@ define(
                 chStateData.stream = null;
                 chStateData.isClosed = false;
                 chStateData.hasMsgs = false;
+                chStateData.isBlocked = false; // If TRUE then the messages won't be processed
 
                 chStateData.notConfirmedArr = [];
                 chStateData.notConfirmedObj = {};
@@ -347,10 +345,12 @@ define(
                 var inp = [];
                 var i;
                 if (msg !== null) {
-                    inp.push(msg);
                     
-                    if (inp[0] instanceof Array)
-                        inp = inp[0];
+                    if (msg instanceof Array)
+                        inp = msg;
+                    else
+                        throw new Error("CommServer::_processMsg: Input message should always be an ARRAY!");
+
                     for (i = 0; i < inp.length; i++)
                         chStateData.inpQueue.push(inp[i]);
                 };
@@ -361,7 +361,12 @@ define(
                         this._processLowLevelCmd(inp, chStateData);
                     else {
                         if (chStateData.channel !== null)
-                            chStateData.channel.receive(inp);
+                            if (chStateData.isBlocked) {
+                                if (DEBUG)
+                                    console.log("###MSG received: Message from the blocked account has been ignored !");
+                            } else {
+                                chStateData.channel.receive(inp);
+                            }
                         else
                             if (DEBUG) console.log("###MSG received: CHANNEL IS NULL !");
                     };
@@ -378,7 +383,7 @@ define(
                     } else {
                         // Wrong client ID !!!
                         chStateData = this._createNewClientRecod(CommunicationServer.AJAX);
-                        this._processMsg({ _cmd_: "getId" }, chStateData);
+                        this._processMsg([{ _cmd_: "currId", _data_: msg._id_ }], chStateData);
                     };
                     msg_to_process = msg.data;
                 } else {
@@ -392,14 +397,11 @@ define(
             },
             
             _sendAjaxMessages: function (chStateData, res){
-                var msg_to_send = { _cmd_: "dummy" };
+                var msg_to_send = [{ _cmd_: "dummy" }];
                 
                 if ((chStateData !== null) && (chStateData.outQueue.length > 0)) {
                     
-                    msg_to_send = chStateData.outQueue[0];
-                    if (chStateData.outQueue.length > 1)
-                        msg_to_send = chStateData.outQueue;
-                    
+                    msg_to_send = chStateData.outQueue;
                     chStateData.outQueue = []; // clear output message queue
                     chStateData.lastMsg = msg_to_send;
                 };
@@ -437,17 +439,24 @@ define(
 
                     case "currId":
                         var oldData = chStateData;
-                        if ((chStateData !== null) && (chStateData.clientId != cmd._data)) {
+                        if ((chStateData !== null) && (chStateData.clientId != cmd._data_)) {
                             if (typeof (this._channells[cmd._data_]) !== "undefined") {
                                 oldData = this._channells[cmd._data_];
                                 this._switchToOldConnection(oldData, chStateData);
                                 oldData.needToResend = true;
-                            };
+                                oldData.isBlocked = false;
+                            }
+                            else
+                                chStateData.isBlocked = true; // Cant't identify existing connection !
                         };
                         if (oldData !== null) {
-                            oldData.commObj.send({ _cmd_: "setId", _data_: oldData.clientId }, true);
-                            if (oldData.channel === null)
-                                oldData.channel = new Channel(oldData.connId, this._channellProps, oldData.commObj);
+                            if (oldData.isBlocked) {
+                                oldData.commObj.send({ _cmd_: "refuseId", _data_: oldData.clientId }, true);
+                            } else {
+                                oldData.commObj.send({ _cmd_: "setId", _data_: oldData.clientId }, true);
+                                if (oldData.channel === null)
+                                    oldData.channel = new Channel(oldData.connId, this._channellProps, oldData.commObj);
+                            };
                             this._processMsg(null, oldData);
                         };
                         break;
