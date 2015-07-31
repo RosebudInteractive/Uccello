@@ -154,8 +154,9 @@ define(
 						var forms = params.formGuids;
 						if (forms == null) forms = "all";
 						else if (forms == "") forms = [];
+						 that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
 						// 1212 that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
-						that.loadNewRoots(forms, { rtype: "res" /* 1212 , compcb: createCompCallback*/ },cb2);
+						//that.loadNewRoots(forms, { rtype: "res" /* 1212 , compcb: createCompCallback*/ },cb2);
 					});
 
 				}
