@@ -261,109 +261,7 @@ define(
                         this.pvt.dbCollection[i].db.onUnsubscribe(connectId);
                 }
             },
-/*
-			// пока только 1 дельта!!!! НО с буферизацией
-            applyDeltas: function(dbGuid, srcDbGuid, delta) {
 
-				if (DEBUG) console.log("incoming delta: ", delta);
-
-                // находим рутовый объект к которому должна быть применена дельта
-                var db  = this.getDB(dbGuid);
-				
-				var clientInTran = (!db.isMaster() && delta.trGuid && db.getCurTranGuid()!=delta.trGuid); // не факт что правильно (лучше придумать проверку на клиента-инициатора транзакции, так как транзакция к моменту прихода дельт может быть уже закрыта)
-				var endOfTran = (delta.trGuid && delta.endTran) || (!delta.trGuid && ("last" in delta));
-				
-				var buf = this.pvt.bufdeltas;
-				
-				if (!(srcDbGuid in buf)) buf[srcDbGuid] = {};
-				if (!(dbGuid in buf[srcDbGuid])) buf[srcDbGuid][dbGuid] = {};
-				var cur = buf[srcDbGuid][dbGuid];
-				var tr = delta.tran.toString();
-				
-				
-				if (clientInTran) {
-				   var tr = delta.trGuid;		// подписанный клиент, который ждет дельт, чтобы применить их по итогам транзакции
-				   var endOfStory = "endTran";
-				  }
-				else {
-				   tr = delta.dbVersion.toString();
-				   endOfStory = "last";
-				}
-				if (!(tr in cur)) cur[tr] = [];
-				cur[tr].push(delta);
-				
-				//if (!(endOfStory in delta)) return; // буферизовали и ждем последнюю, чтобы применить все сразу
-
-				for (var i=0; i<cur[tr].length; i++) {
-					var cdelta = cur[tr][i];
-					if (endOfStory in cdelta) { // VER последняя дельта транзакции (для клиента и сервера)
-
-						db.setVersion("valid",cdelta.dbVersion);	
-						db.setVersion("sent",cdelta.dbVersion);
-						for (var j=0; j<cur[tr].length; j++) { // маркируем версии рутов версиями дельт
-							var d = cur[tr][j];
-							if (d.rootGuid) {
-								db.getObj(d.rootGuid).setRootVersion("valid",d.ver);
-								db.getObj(d.rootGuid).setRootVersion("sent",d.ver);
-							}
-						}
-						break;
-					
-					}
-					else
-					{
-						// VER проверка на применимость дельт
-						
-						var ro = db.getObj(cdelta.rootGuid);
-						if (ro) {
-							var lval = ro.getRootVersion("valid");
-							var ldraft = ro.getRootVersion();
-							var dver = cdelta.ver;
-							if (db.isMaster()) { // мы в мастер-базе (на сервере или на клиенте в клиентском контексте)
-								if (lval > dver) { // на сервере подтвержденная версия не может быть больше пришедшей
-									
-									console.log("cannot sync server -  valid version:"+lval+"delta version:"+dver);
-									return;				
-								}				
-							}
-							else { // на клиенте (slave)
-								if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
-									// если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
-									console.log("UNDO?? if (ldraft>lval) : "+ro.getGuid()+"valid version: "+lval+" delta version:"+dver);
-									if (ldraft>lval) db.undo(lval); 
-								}
-								else { // ошибка синхронизации - ненормальная ситуация, в будущем надо придумать как это обработать
-									console.log("cannot sync client -  valid version:"+lval+"delta version:"+dver);
-									return;
-								}
-							}
-						}
-		
-					}
-					if (("items" in cdelta) && cdelta.items.length>0) {
-						var root = db.getRoot(cdelta.rootGuid);
-
-						if (cdelta.items[0].newRoot)
-							var rootObj=db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback()); //TODO добавить коллбэк!!!
-						else
-							rootObj = root.obj;
-						
-						rootObj.getLog().applyDelta(cdelta);
-					}
-				}
-				this.propagateDeltas(dbGuid,srcDbGuid,cur[tr]);
-				delete cur[tr];
-
-                this.event.fire({
-                    type: 'endApplyDeltas',
-                    target: this,
-					commit: endOfTran,
-					db: db
-                });
-				
-				
-            },*/
-			
             applyDeltas: function(dbGuid, srcDbGuid, delta, done) {
 
 				if (DEBUG) console.log("incoming delta: ", delta);
@@ -418,7 +316,7 @@ define(
 				        var root = db.getRoot(cdelta.rootGuid);
 
 				        if (cdelta.items[0].newRoot)
-				            var rootObj = db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback()); //TODO добавить коллбэк!!!
+				            var rootObj = db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback());
 				        else
 				            rootObj = root.obj;
 

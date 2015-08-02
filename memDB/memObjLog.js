@@ -130,15 +130,8 @@ define(
 							curd.parentGuid = c.guid;
 							curd.parentColName = c.colName; 
 							break;
-						// добавление самого корневого элемента
-						/*
-						case "newRoot":
-							curd.newRoot = c.adObj;
-							break;
-						*/
 						// подписка на корневой элемент
 						case "subscribe":
-						// DELTA-G
 							if (!curd.newRoot) curd.newRoot = db.serialize(obj);
 							/*
 							if (!("subscribers" in curd)) curd.subscribers={};
@@ -183,32 +176,23 @@ define(
 				var db = this.getObj().getDB();
 				for (var i=0; i<delta.items.length; i++) {
 					var c = delta.items[i];
+					if ("newRoot" in c) 
+						continue;
 					if ("deleted" in c) {
 						var o = db.getObj(c.parentGuid);
 						// TODO коллбэк на удаление 
 						o.getCol(c.parentColName)._del(db.getObj(c.guid));
 					}
 					else {
-						if ("newRoot" in c) {
-							//db.deserialize(c.newRoot, { } , cb );
-						}
 						if ("add" in c) {							
 							var o = db.getObj(c.parentGuid);
-							//var cb = db._cbGetNewObject(db.getObj(c.parentGuid).getRoot().getGuid());
-							//if (!cb) 
 							cb = db.getDefaultCompCallback();
 							db.deserialize(c.add, { obj: o, colName: c.parentColName }, cb );
 							
 						}
-						o2 = this.getObj().getDB().getObj(c.guid);
-						if (o2) {
-							for (var cf in c.fields) {
-								// TODO проверить наличие полей с таким именем в метаинфо
-								o2.set(cf,c.fields[cf]);
-								//console.log("apply to obj "+o2.getGuid());
-							}
-							
-						}
+						var o2 = db.getObj(c.guid);
+						if (o2) 
+							for (var cf in c.fields) o2.set(cf,c.fields[cf]);
 					}
 				}
 				this.setActive(true);
@@ -217,11 +201,8 @@ define(
 			add: function(item) {			
 				
 				var db = this.getObj().getDB();
-				// FINALTR
-				//if (!db.inTran()) db.tranStart(); 
 				var dbver = db.getCurrentVersion(); // инкрементируем версии если нужно
 				var ver = this.getObj().getCurVersion();
-				//ver = db.getVersion();
 
 				if (!(ver.toString() in this.pvt.versions))
 					this.pvt.versions[ver] = this.pvt.log.length; // отмечаем место в логе, соответствующее началу этой версии

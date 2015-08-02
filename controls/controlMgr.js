@@ -142,7 +142,7 @@ define(
             /**
 			 * Вернуть массив рутовых гуидов
              */		
-			getRootGuidsTmp: function() {
+			getRootGuidsComp: function() {
 				var guids = [];
 				for (var g in this.pvt.rootGuids)
 					guids.push(g);
