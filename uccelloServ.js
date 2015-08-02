@@ -5,9 +5,9 @@ if (typeof define !== 'function') {
 
 define(
     ['./connection/socket', './system/logger', './dataman/dataman', 'ws', './connection/router', './connection/userSessionMgr',
-	'./system/rpc', './controls/controlMgr', './resman/resman', './system/constructHolder', './system/constructHolder'],
+	'./system/rpc', './controls/controlMgr', './resman/resman', './system/constructHolder', './process/processDispatcher'],
     function (Socket, Logger, Dataman, WebSocketServer, Router, UserSessionMgr,
-        Rpc, ControlMgr, Resman, ConstructHolder, EngineSingleton) {
+        Rpc, ControlMgr, Resman, ConstructHolder, ProcessDispatcher) {
 	
 		var guidServer = UCCELLO_CONFIG.guids.guidServer;
 	
@@ -42,6 +42,7 @@ define(
 				    constructHolder: this.pvt.constructHolder
 				});
 
+				this.pvt.proxyWfe = null;
 				if (options && options.engineSingleton) {
 				    options.engineSingleton.initInstance({
 				        dbController: this.getUserMgr().getController(),
@@ -53,6 +54,8 @@ define(
 				    this.getUserMgr().proxyWfe(this.pvt.proxyWfe);
 				    this.createSimpleAddObjectProcessDef();
 				};
+
+				new ProcessDispatcher({ proxyWfe: this.pvt.proxyWfe });
 
 				this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder, rpc);
                 this.pvt.resman = new Resman(that.getUserMgr().getController());

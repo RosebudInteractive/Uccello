@@ -278,7 +278,22 @@ define(
 			        this.remoteCall('addObject', [flds], cb);
 			        return;
 			    }
+			    else {
+			        // Временное решение для отладки механизма вызова
+                    //   д.б. по-хорошему реализовано в processObject
+			        var args = [];
+			        for (var i = 0; i < arguments.length; i++)
+			            args[i] = arguments[i];
+			        if ($process && $process.processDispatcher) {
+			            $process.processDispatcher.methodCallResolver(this, "addObject", args);
+			        }
+			        else
+			            this._$local_addObject.apply(this, args);
+			    };
+			    return;
+			},
 
+			_$local_addObject: function (flds, cb) {
 			    var db = this.getDB();
 			    var dataRoot = this.root(); // db.getRoot(this.root()).obj;
 			    var cm = this.getControlMgr();
@@ -298,7 +313,7 @@ define(
 			        type: 'modFld',
 			        target: this
 			    });
-			    if (cb) cb();
+			    if (cb) cb(obj);
 			    return obj;
 			}
 
