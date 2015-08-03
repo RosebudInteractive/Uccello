@@ -897,7 +897,7 @@ define(
 			addRoots: function(sobjs, params, rg, rgsubs) {
 
 			    var subDbGuid = params.subDbGuid;
-				var cb = this.getDefaultCompCallback(); // params.compcb;
+				var cb = this.getDefaultCompCallback();
 				
 				var res = [];
 
@@ -910,28 +910,12 @@ define(
 					var root = null;
 					if (rg[i].length>36) root = this.getRoot(rg[i]);
 
-					//if (!root) {
-						//var time = Date.now();
 					if (rg[i].length>36)
 						var croot = this.deserialize(sobjs[i], { }, cb, false, rg[i]);
 					else croot = this.deserialize(sobjs[i], { }, cb);
 						
-						//var timeEnd = Date.now();
-						//logger.info((new Date()).toISOString()+';deserialize;'+(timeEnd-time));
-						// добавить в лог новый корневой объект, который можно вернуть в виде дельты
-						//var time = Date.now();
 					var serializedObj=this.serialize(croot);
-						//var timeEnd = Date.now();
-						//logger.info((new Date()).toISOString()+';serialize;'+(timeEnd-time));
-					/* 1212
-					var o = { adObj: serializedObj, obj:croot, type:"newRoot"};
-					croot.getLog().add(o);
-					*/
-					//}
-					//else croot = root.obj;
-						
-					croot.getCurVersion();
-					
+					croot.getCurVersion();					
 
 					// возвращаем гуид если рута не было, или был, но не были подписаны
 					if (!root || (root && !(root.subscribers[subDbGuid])) ) res.push(croot.getGuid());		
@@ -948,10 +932,7 @@ define(
 							// Подписываем либо данные (тогда всех) либо подписчика
 							if (croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) {
 							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber;
-							  // DELTA-G
-							  var o = { obj:croot, type:"subscribe"};
-							  o.subscriber = subscriber.guid;
-							  croot.getLog().add(o);
+							  croot.getLog().add({ obj:croot, type:"subscribe", subscriber: subscriber.guid });
 							 }
 						}
 					}			
@@ -971,19 +952,20 @@ define(
 						croot = root.obj;
 						
 						// возвращаем гуид если рута не было, или был, но не были подписаны
-						if (!(root.subscribers[subDbGuid]))  res.push(croot.getGuid());	 // ЭТО НУЖНО???	
+						if (!(root.subscribers[subDbGuid]))  res.push(croot.getGuid());	
 
-						for (guid in allSubs) { // то же , что и выше TODO отрефакторить
+						for (guid in allSubs) { // то же, что и выше TODO отрефакторить
 							subscriber = allSubs[guid];
 							if (subscriber.kind == 'remote') {
 								// Подписываем либо данные (тогда всех) либо подписчика (если ресурс), но только если еще не подписан!
-								var subs2 = this.pvt.rcoll[croot.getGuid()].subscribers; //[subscriber.guid]
+								var subs2 = this.pvt.rcoll[croot.getGuid()].subscribers;
 								if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) && !(subs2[subscriber.guid])) {
 								  subs2[subscriber.guid] = subscriber;
-								  // DELTA-G
+								  /*
 								  var o = { obj:croot, type:"subscribe"};
 								  o.subscriber = subscriber.guid;
-								  croot.getLog().add(o);
+								  croot.getLog().add(o);*/
+								  croot.getLog().add({ obj:croot, type:"subscribe", subscriber: subscriber.guid });
 								}
 							}
 						}			
@@ -995,15 +977,12 @@ define(
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
 					this.getController().genDeltas(this.getGuid());		// рассылаем дельты
 				}
-				//}
+
 				if (DEBUG) console.log("SERVER VERSION " + this.getVersion());
 
 				return res;
 			},
-			
-			_addToSubs: function(rg) {
-			},
-			
+
 			addObj: function(objType, parent, flds) {
 				return new MemObj(objType, parent, flds);
 			},
