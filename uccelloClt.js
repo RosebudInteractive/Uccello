@@ -300,7 +300,7 @@ define(
             createRoot: function(formGuids, rtype, callback, context) {
 
 				// F606 - предположительно - передача subDbGuid не требуется, так как назначается внутри VC
-                var subDbGuid = context? context.dataBase(): this.getContext().getContentDB().getGuid();
+                //var subDbGuid = context? context.dataBase(): this.getContext().getContentDB().getGuid();
                 context = context? context: this.getContext();
 				if (!context.isOn()) return false;
                 context.loadNewRoots(formGuids, {rtype:rtype /*, subDbGuid: subDbGuid*/ }, function(result){

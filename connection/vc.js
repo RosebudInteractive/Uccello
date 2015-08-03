@@ -120,9 +120,7 @@ define(
 						}
 
 						return comp;
-						// that.createComponent.apply(that, [obj, that.pvt.cm]);
 					}
-				//this.pvt.compCallback = createCompCallback;
 				
 				if (this.isMaster()) { // главная (master) TODO разобраться с KIND
 					this.pvt.cdb = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
@@ -133,8 +131,13 @@ define(
 						callback: this.onNewRoot
 					});
 					this.pvt.cdb.setDefaultCompCallback(createCompCallback);
+					
+					function icb() {
+						if (cb) cb();
+					}
 
-					this.loadNewRoots(params.formGuids, { rtype: "res" /* 1212, compcb: createCompCallback*/ },cb);
+					this.loadNewRoots(params.formGuids, { rtype: "res" },cb); // TODO поставить icb (сейчас почему-то не работает)
+					
 					this.dataBase(this.pvt.cdb.getGuid());
 					this.contextGuid(this.getGuid());
 					this.pvt.isOn = true;
@@ -312,8 +315,7 @@ define(
 				var that = this;
 				if (this.isMaster()) {
 					function icb(r) {
-						
-					    //var db = that.getContentDB();
+
 					    var objArr = r ? r.datas : null;
 
 					    function localCallback() {
