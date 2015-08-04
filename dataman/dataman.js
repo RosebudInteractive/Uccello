@@ -91,18 +91,7 @@ define(
                 var hehe = {};
 				var gr = guidRoot.slice(0,36);
                 switch (gr) {
-                    case UCCELLO_CONFIG.classGuids.DataCompany:
-                        this.getList(gr, 'company', done);
-                        break;
-                    case UCCELLO_CONFIG.classGuids.DataLead:
-                        this.getList(gr, 'lead', done);
-                        break;
-                    case UCCELLO_CONFIG.classGuids.DataLeadLog:
-                        this.getList(gr, 'lead_log', done, 'LeadId=?', [expression]);
-                        break;
-
-
-                   /* case UCCELLO_CONFIG.guids.rootCompany:
+                    case UCCELLO_CONFIG.guids.rootCompany:
                         this.getList(gr, 'company', done);
                         break;
                     case UCCELLO_CONFIG.guids.rootTstCompany:
@@ -131,7 +120,7 @@ define(
                         break;
                     case UCCELLO_CONFIG.guids.rootOpportunity:
                         this.getList(gr, 'opportunity', done);
-                        break;*/
+                        break;
                 }
             },
 
@@ -146,14 +135,21 @@ define(
             createResult: function(typeGuid, rows) {
 
                 var guidRoots = {
-                    '59583572-20fa-1f58-8d3f-5114af0f2c51':'446eb528-4392-5865-3697-bab515bc709b', // Company
-                    '86c611ee-ed58-10be-66f0-dfbb60ab8907':'c170c217-e519-7c23-2811-ff75cd4bfe81', // Lead
-                    'c4fa07b5-03f7-4041-6305-fbd301e7408a':'bb48579c-808e-291e-0242-0facc4876051' // LeadLog
+                    'ab573a02-b888-b3b4-36a7-38629a5fe6b7':'59583572-20fa-1f58-8d3f-5114af0f2c51', // DataCompany
+                    '5f9e649d-43c4-d1e6-2778-ff4f58cd7c53':'34c6f03d-f6ba-2203-b32b-c7d54cd0185a', // DataTstCompany
+                    'b49d39c9-b903-cccd-7d32-b84beb1b76dc':'73596fd8-6901-2f90-12d7-d1ba12bae8f4', // DataContact
+                    '3618f084-7f99-ebe9-3738-4af7cf53dc49':'27ce7537-7295-1a45-472c-a422e63035c7', // DataTstContact
+                    '8583ee1d-6936-19da-5ef0-9025fb7d1d8d':'08a0fad1-d788-3604-9a16-3544a6f97721', // DataContract
+                    'edca46bc-3389-99a2-32c0-a59665fcb6a7':'16ec0891-1144-4577-f437-f98699464948', // DataAddress
+                    'c170c217-e519-7c23-2811-ff75cd4bfe81':'86c611ee-ed58-10be-66f0-dfbb60ab8907', // DataLead
+                    'bb48579c-808e-291e-0242-0facc4876051':'c4fa07b5-03f7-4041-6305-fbd301e7408a', // DataLeadLog
+                    '8770f400-fd42-217c-90f5-507ca52943c2':'56cc264c-5489-d367-1783-2673fde2edaf', // DataIncomeplan
+                    'f988a1cb-4be0-06c3-4eaa-4ae8b554f6b3':'5b64caea-45b0-4973-1496-f0a9a44742b7'  // DataOpportunity
                 };
 
                 var result = {
                     "$sys": {
-                        "guid": guidRoots[typeGuid],
+                        "guid": typeGuid,
                         "typeGuid": UCCELLO_CONFIG.classGuids.DataRoot
                     },
                     "fields": {
@@ -169,7 +165,7 @@ define(
                     var dataElement = {
                         "$sys": {
                             "guid": this.pvt.controller.guid(),
-                            "typeGuid": typeGuid
+                            "typeGuid": guidRoots[typeGuid]
                         },
                         "fields": rows[i],
                         "collections": {}
