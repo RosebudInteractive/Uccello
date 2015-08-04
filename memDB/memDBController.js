@@ -13,8 +13,6 @@ define(
 				this.pvt.dbCollection = {};
 				this.pvt.bufdeltas = {};		// буферизация входящих дельт
                 this.event = new Event();
-				//this.pvt.defaultCompCallback = null; // коллбэк по умолчанию для создания компонентов
-
                 if (router) {
                     var that = this;
                     router.add('subscribe', function(){ return that.routerSubscribe.apply(that, arguments); });
@@ -408,18 +406,18 @@ define(
 							else {
 
 								//if (DEBUG) console.log("sending delta db: "+db.getGuid(), delta);
-								//var cbp = null;
 								var data = {action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), trGuid: db.getCurTranGuid()};
 								
 								if (sendFunc)
 								  sendFunc(data,cb);
 								else
 								  proxy.connect.send(data,cb);
-								}
+							}
 						}
 					}
 
-					var root = db.getRoot(delta.rootGuid);												
+					var root = db.getRoot(delta.rootGuid);	
+					var emptyDelta = null;
 					for(guid in root.subscribers) {
 						var subscriber = root.subscribers[guid];
 
@@ -428,6 +426,19 @@ define(
 							subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid(), trGuid:trGuid});
 							if (DEBUG) console.log("sent to DB : "+subscriber.guid);
 							}
+						else {
+							if (delta.subscribers && (!delta.subscribers[subscriber.guid])) { // послать пустую дельту с версией
+								if (!emptyDelta) { 
+									emptyDelta = {};
+									emptyDelta.ver = delta.ver;
+									emptyDelta.rootGuid = delta.rootGuid;
+									emptyDelta.trGuid = delta.trGruid;
+									emptyDelta.dbVersion = delta.dbVersion;
+								}
+								
+								subscriber.connect.send({action:"sendDelta", delta:emptyDelta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid(), trGuid:trGuid});
+							}
+						}
 					}
 						
 					if (delta.rootGuid) // запоминаем версии рутов, чтобы проапдейтить их в колбэке

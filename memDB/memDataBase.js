@@ -112,20 +112,12 @@ define(
 		            root.dver = 0; 			// версии корневого объекта: draft / sent / valid
 		            root.sver = 0;
 		            root.vver = 0;
-		            //root.callbackNewObject = undefined;
 		            root.event = new Event();
 		            this.pvt.robjs.push(root);
 		            this.pvt.rcoll[obj.getGuid()] = root;
 		        }
 
 		    },
-
-		    /*
-			_delRoot: function(obj) {
-				if (obj.getDB()!=this) return;
-				if (obj.getParent()) return
-
-			},*/
 
 		    /**
              * зарегистрировать объект в списке по гуидам
@@ -405,16 +397,6 @@ define(
 				}
 			},
 
-			/*
-			_cbSetNewObject: function(rootGuid,callback) {
-				this.getRoot(rootGuid).callbackNewObject = callback;
-			},
-
-			_cbGetNewObject: function(rootGuid) {
-				return this.getRoot(rootGuid).callbackNewObject;
-			},
-			*/
-
             /**
              * вернуть список гуидов корневых объектов за исключением метаинфо
 			 * @param rootKind - "res"|"data" - тип рута, если не передается или "all", то все
@@ -435,10 +417,7 @@ define(
 					else
 						guids.push(rootKind);
 				}
-
 				return guids;
-
-
 			},
 
 		    /**
@@ -568,23 +547,38 @@ define(
 
 				for (var i=0; i<rg.length; i++) {
 					if (this.pvt.robjs.length > 0) {
-						var ro = this.pvt.rcoll[rg[i]];
-						if (ro) {
-							// добавляем подписчика
-							var subProxy = this.pvt.subscribers[dbGuid];
-							if (subProxy) {
-								var clog = ro.obj.getLog();
-								if (!clog.getActive()) clog.setActive(true); // если лог неактивен, то активировать, чтобы записывать в него все изменения
-								//this.pvt.rcoll[rg[i]]
-								ro.subscribers[dbGuid] = subProxy;
-								res.push(this.serialize(ro.obj));
-							}
-						}
+						var ro = this._onSubscribeRoot(dbGuid,rg[i]);
+						res.push(this.serialize(ro.obj)); 
 					}
 				}
 				// TODO ВАЖНО! нужно сделать рассылку только для данного корневого объекта - оптимизировать потом!!!!
 				this.pvt.controller.genDeltas(this.getGuid());
 				return res;
+			},
+
+            /**
+             * Подписать клиента на рут
+             * @param dbGuid
+             * @param rootGuid - 1 гуид 
+             * @returns {*}
+             */			
+			_onSubscribeRoot: function(dbGuid, rootGuid, inLog) {
+				var ro = this.pvt.rcoll[rootGuid];
+				if (ro) {
+					// добавляем подписчика
+					var subProxy = this.pvt.subscribers[dbGuid];
+					if (subProxy) {
+						var clog = ro.obj.getLog();
+						if (!clog.getActive()) clog.setActive(true); // если лог неактивен, то активировать и записывать в него изменения
+						ro.subscribers[dbGuid] = subProxy;
+						if (inLog) { // запоминаем в sobj копию объекта на момент подписки
+							var sobj = this.serialize(ro.obj);
+							clog.add({ obj:ro.obj, sobj: sobj, type:"subscribe", subscriber: dbGuid });
+						}
+						return ro;
+					}
+				}			
+				return null;
 			},
 
 			prtSub: function(root) {
@@ -806,7 +800,6 @@ define(
 				var res = ideser(this, sobj, parent);
 				var rholder = this.getRoot(res.getGuid());
 				
-
 				if (rholder)   // VER инициализация номеров версий рута
 					if (("ver" in sobj)) {
 						rholder.vver = sobj.ver; // TODOХ не до конца ясно как поступать с версиями в случае частичной сериализации - продумать
@@ -893,8 +886,8 @@ define(
 			 * @param override - true - перезагрузить рут, false - только подписать
              * @returns {*} - возвращает массив корневых гуидов - либо созданных рутов либо уже существующих но на которые не были подписаны
              */
-			// ДОЛЖНА РАБОТАТЬ ТОЛЬКО ДЛЯ МАСТЕР БАЗЫ - СЛЕЙВ НЕ МОЖЕТ ДОБАВИТЬ В СЕБЯ РУТ, МОЖЕТ ТОЛЬКО ПОДПИСАТЬСЯ НА РУТ МАСТЕРА!
 			addRoots: function(sobjs, params, rg, rgsubs) {
+				if (!this.isMaster()) return null; // Работает только на мастер-базе. Слейв добавляет рут через мастер.
 
 			    var subDbGuid = params.subDbGuid;
 				var cb = this.getDefaultCompCallback();
@@ -908,13 +901,12 @@ define(
 
 				for (var i=0; i<rg.length; i++) {
 					var root = null;
-					if (rg[i].length>36) root = this.getRoot(rg[i]);
-
-					if (rg[i].length>36)
+					if (rg[i].length>36) {
+						root = this.getRoot(rg[i]);
 						var croot = this.deserialize(sobjs[i], { }, cb, false, rg[i]);
+					}
 					else croot = this.deserialize(sobjs[i], { }, cb);
 						
-					var serializedObj=this.serialize(croot);
 					croot.getCurVersion();					
 
 					// возвращаем гуид если рута не было, или был, но не были подписаны
@@ -928,12 +920,9 @@ define(
 					for (var guid in allSubs) {
 						var subscriber = allSubs[guid];
 						if (subscriber.kind == 'remote') {
-
 							// Подписываем либо данные (тогда всех) либо подписчика
-							if (croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) {
-							  this.pvt.rcoll[croot.getGuid()].subscribers[subscriber.guid] = subscriber;
-							  croot.getLog().add({ obj:croot, type:"subscribe", subscriber: subscriber.guid });
-							 }
+							if (croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid)
+								this._onSubscribeRoot(guid,croot.getGuid(),true);
 						}
 					}			
 
@@ -949,23 +938,22 @@ define(
 				for (i=0; i<rgsubs.length; i++) {
 					root = db.getRoot(rgsubs[i]);
 					if (root) {
-						croot = root.obj;
-						
-						// возвращаем гуид если рута не было, или был, но не были подписаны
+						croot = root.obj;		
+						// возвращаем гуид если не были подписаны
 						if (!(root.subscribers[subDbGuid]))  res.push(croot.getGuid());	
-
 						for (guid in allSubs) { // то же, что и выше TODO отрефакторить
 							subscriber = allSubs[guid];
 							if (subscriber.kind == 'remote') {
 								// Подписываем либо данные (тогда всех) либо подписчика (если ресурс), но только если еще не подписан!
 								var subs2 = this.pvt.rcoll[croot.getGuid()].subscribers;
 								if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) && !(subs2[subscriber.guid])) {
-								  subs2[subscriber.guid] = subscriber;
+									this._onSubscribeRoot(guid,croot.getGuid(),true);
+								  //subs2[subscriber.guid] = subscriber;
 								  /*
 								  var o = { obj:croot, type:"subscribe"};
 								  o.subscriber = subscriber.guid;
 								  croot.getLog().add(o);*/
-								  croot.getLog().add({ obj:croot, type:"subscribe", subscriber: subscriber.guid });
+								  //croot.getLog().add({ obj:croot, type:"subscribe", subscriber: subscriber.guid });
 								}
 							}
 						}			
@@ -977,9 +965,7 @@ define(
 					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
 					this.getController().genDeltas(this.getGuid());		// рассылаем дельты
 				}
-
 				if (DEBUG) console.log("SERVER VERSION " + this.getVersion());
-
 				return res;
 			},
 

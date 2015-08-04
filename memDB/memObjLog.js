@@ -132,11 +132,9 @@ define(
 							break;
 						// подписка на корневой элемент
 						case "subscribe":
-							if (!curd.newRoot) curd.newRoot = db.serialize(obj);
-							/*
-							if (!("subscribers" in curd)) curd.subscribers={};
-							if (c.subscriber) curd.subscribers[c.subscriber] = 1;
-							*/
+							if (!curd.newRoot) curd.newRoot = c.sobj; // сериализованное представление уже в логе, берем его
+							// db.serialize(obj);
+
 							if (!("subscribers" in delta)) delta.subscribers={};
 							if (c.subscriber) delta.subscribers[c.subscriber] = 1;
 							break;
@@ -198,7 +196,9 @@ define(
 				this.setActive(true);
 			},
 			
-			add: function(item) {			
+			add: function(item) {					
+				if (!(this.getActive()))
+					return;
 				
 				var db = this.getObj().getDB();
 				var dbver = db.getCurrentVersion(); // инкрементируем версии если нужно
@@ -206,14 +206,9 @@ define(
 
 				if (!(ver.toString() in this.pvt.versions))
 					this.pvt.versions[ver] = this.pvt.log.length; // отмечаем место в логе, соответствующее началу этой версии
-				
-				
-				if (this.getActive()) {
-					item.idx = this.getObj().getDB().getNewCounter();
-					
-					this.pvt.log.push(item);				// добавить в лог корневого объекта
-				}
 
+				item.idx = db.getNewCounter();
+				this.pvt.log.push(item);				// добавить в лог корневого объекта
 			}
 		});
 		return MemObjLog;
