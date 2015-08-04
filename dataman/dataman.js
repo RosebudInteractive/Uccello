@@ -91,43 +91,47 @@ define(
                 var hehe = {};
 				var gr = guidRoot.slice(0,36);
                 switch (gr) {
-                    case UCCELLO_CONFIG.guids.rootCompany:
-                        /*var time = Date.now();
-                        function ddd() {
-                            var timeEnd = Date.now();
-                            logger.info((new Date()).toISOString()+';readCompanyFile;'+(timeEnd-time));
-                            done.apply(this, arguments)
-                        }
-                        this.getCompany(gr, 10000, ddd);*/
-                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataCompany, 'company', done);
+                    case UCCELLO_CONFIG.classGuids.DataCompany:
+                        this.getList(gr, 'company', done);
+                        break;
+                    case UCCELLO_CONFIG.classGuids.DataLead:
+                        this.getList(gr, 'lead', done);
+                        break;
+                    case UCCELLO_CONFIG.classGuids.DataLeadLog:
+                        this.getList(gr, 'lead_log', done, 'LeadId=?', [expression]);
+                        break;
+
+
+                   /* case UCCELLO_CONFIG.guids.rootCompany:
+                        this.getList(gr, 'company', done);
                         break;
                     case UCCELLO_CONFIG.guids.rootTstCompany:
-                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataTstCompany, 'company_tst', done);
+                        this.getList(gr, 'company_tst', done);
                         break;
                     case UCCELLO_CONFIG.guids.rootContact:
-                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataContact, 'contact', done, 'CompanyId=?', [expression]);
+                        this.getList(gr, 'contact', done, 'CompanyId=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootTstContact:
-                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataTstContact, 'contact_tst', done, 'parent=?', [expression]);
+                        this.getList(gr, 'contact_tst', done, 'parent=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootContract:
-                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataContract, 'contract', done, 'parent=?', [expression]);
+                        this.getList(gr, 'contract', done, 'parent=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootAddress:
-                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataAddress, 'address', done, 'parent=?', [expression]);
+                        this.getList(gr, 'address', done, 'parent=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootLead:
-                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataLead, 'lead', done);
+                        this.getList(gr, 'lead', done);
                         break;
                     case UCCELLO_CONFIG.guids.rootLeadLog:
-                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataLeadLog, 'lead_log', done, 'LeadId=?', [expression]);
+                        this.getList(gr, 'lead_log', done, 'LeadId=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootIncomeplan:
-                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataIncomeplan, 'incomeplan', done, 'leadId=?', [expression]);
+                        this.getList(gr, 'incomeplan', done, 'leadId=?', [expression]);
                         break;
                     case UCCELLO_CONFIG.guids.rootOpportunity:
-                        this.getList(gr, UCCELLO_CONFIG.classGuids.DataOpportunity, 'opportunity', done);
-                        break;
+                        this.getList(gr, 'opportunity', done);
+                        break;*/
                 }
             },
 
@@ -139,10 +143,17 @@ define(
                 return this.pvt.mysqlConnection;
             },
 
-            createResult: function(guidRoot, typeGuid, rows) {
+            createResult: function(typeGuid, rows) {
+
+                var guidRoots = {
+                    '59583572-20fa-1f58-8d3f-5114af0f2c51':'446eb528-4392-5865-3697-bab515bc709b', // Company
+                    '86c611ee-ed58-10be-66f0-dfbb60ab8907':'c170c217-e519-7c23-2811-ff75cd4bfe81', // Lead
+                    'c4fa07b5-03f7-4041-6305-fbd301e7408a':'bb48579c-808e-291e-0242-0facc4876051' // LeadLog
+                };
+
                 var result = {
                     "$sys": {
-                        "guid": guidRoot,
+                        "guid": guidRoots[typeGuid],
                         "typeGuid": UCCELLO_CONFIG.classGuids.DataRoot
                     },
                     "fields": {
@@ -181,7 +192,7 @@ define(
                 return result;
             },
 
-            readTableFile: function(file, guidRoot, classGuid, expression, done) {
+            readTableFile: function(file, typeGuid, expression, done) {
                 var fs = require('fs');
                 var that = this;
                 fs.exists(UCCELLO_CONFIG.dataPath + 'tables/'+file, function(exists) {
@@ -191,12 +202,12 @@ define(
                             done(JSON.parse(data));
                         });
                     } else {
-                        done(that.createResult(guidRoot, classGuid, {}));
+                        done(that.createResult(typeGuid, {}));
                     }
                 });
             },
 
-            getList: function(guidRoot, typeGuid, table, done, where, whereParams, num) {
+            getList: function(typeGuid, table, done, where, whereParams, num) {
                 var source = this.getDataSource();
                 var that = this;
                 if (source == 'mysql') {
@@ -208,10 +219,10 @@ define(
 
                     conn.query('SELECT * FROM '+table+' '+where+' LIMIT '+num, whereParams, function(err, rows) {
                         if (err) throw err;
-                        var result = that.createResult(guidRoot, typeGuid, rows);
+                        var result = that.createResult(typeGuid, rows);
 
                         // сохранить в файлы
-                        if (table == 'lead_log') {
+                        /*if (table == 'lead_log') {
                             var fs = require('fs');
                             var fileName = UCCELLO_CONFIG.dataPath + 'tables/'+table+(whereParams && whereParams[0]? ('-'+whereParams[0]): '')+'.json';
                             fs.writeFile(fileName, JSON.stringify(result), function(err) {
@@ -221,11 +232,11 @@ define(
                                     console.log("The file `"+fileName+"` was saved!");
                                 }
                             });
-                        }
+                        }*/
                         done(result);
                     });
                 } else
-                    this.readTableFile(table+(whereParams?'-'+whereParams[0]:'')+'.json', guidRoot, typeGuid, false, done);
+                    this.readTableFile(table+(whereParams?'-'+whereParams[0]:'')+'.json', typeGuid, false, done);
                 return "XXX";
             },
 
