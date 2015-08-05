@@ -6,8 +6,6 @@ define(
     ["../system/utils", "./processObject"],
     function (Utils, ProcessObject) {
 
-        var csMethod_prefix = "_$local_";
-
         var ProcessDispatcher = UccelloClass.extend({
 
             init: function (params) {
@@ -44,7 +42,7 @@ define(
                     var procArgs = this.dispMethodCallTable[objTypeGuid][obj_method];
                     var objURI = "memdb://" + uobj.getDB().getGuid() + "." + uobj.getGuid();
 
-                    this._methodCallViaProcess(procArgs, objURI, csMethod_prefix + obj_method, args, callback);
+                    this._methodCallViaProcess(procArgs, objURI, ProcessObject._methodPrefix + obj_method, args, callback);
 
                 } else
                     uobj[obj_method].apply(uobj, args);
