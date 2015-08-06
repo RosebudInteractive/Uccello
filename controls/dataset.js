@@ -297,8 +297,9 @@ define(
 			_$local_addObject: function (flds, cb) {
 			    var db = this.getDB();
 			    var dataRoot = this.root(); // db.getRoot(this.root()).obj;
+			    var objGuid = dataRoot.getCol("DataElements").getColType().getGuid();
 			    var cm = this.getControlMgr();
-			    var constr = cm.getContext().getConstructorHolder().getComponent(this.objtype()).constr;
+			    var constr = cm.getContext().getConstructorHolder().getComponent(objGuid).constr;
 			    var params = { parent: dataRoot, colName: "DataElements", ini: flds };
 			    var obj = new constr(cm, params);
 
