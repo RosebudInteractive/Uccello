@@ -71,10 +71,17 @@ define(
 				        var name = c.getCol("cols").get(j).get("cname");
 				        var typ = c.getCol("cols").get(j).get("ctype");
 				        var typeCol = this.getRoot().getTypeByName(typ.type);
+				        typeCol = typeCol ? typeCol : null;
 
 				        if (! typeCol)
-				            throw new Error("Collection \"" + name + "\" in class \"" +
+				            if (DEBUG) console.warn("Collection \"" + name + "\" in class \"" +
                                 c.get("typeName") + "\" is of undefined type \"" + typ.type + "\".");
+                        //
+				        // Пока не будем делать проверку на наличие типа объекта, являющегося элементом
+				        //   коллекции.
+                        //
+                        //throw new Error("Collection \"" + name + "\" in class \"" +
+                        //        c.get("typeName") + "\" is of undefined type \"" + typ.type + "\".");
 
                         var colIdx = pvt.colsTable[name];
 				        if (colIdx === undefined) {
@@ -82,12 +89,14 @@ define(
 				            pvt.colsTypes.push({ name: name, typeDef: typ, typeObj: typeCol ? typeCol : null, orig: c });
 				        } else {
 				            var isError = (pvt.colsTypes[colIdx].typeObj === null) || (typeCol === null);
-				            if (! isError) {
-				                isError = ! typeCol.isDescendantOf(pvt.colsTypes[colIdx].typeObj, pvt.colsTypes[colIdx].typeDef.strict);
-				                pvt.colsTypes[colIdx].typeObj = typeCol;
-				                pvt.colsTypes[colIdx].typeDef = typ;
-				                pvt.colsTypes[colIdx].orig = c;
-                            };
+				            pvt.colsTypes[colIdx].typeDef = typ;
+				            pvt.colsTypes[colIdx].orig = c;
+				            pvt.colsTypes[colIdx].typeObj = typeCol;
+				            if (!isError) {
+				                isError = !typeCol.isDescendantOf(pvt.colsTypes[colIdx].typeObj, pvt.colsTypes[colIdx].typeDef.strict);
+				            }
+				            else
+				                isError = false;
 				            if (isError)
 				                throw new Error("Collection \"" + name + "\" in class \"" +
                                     c.get("typeName") + "\" has been already defined in parent class \"" +
