@@ -26,20 +26,33 @@ define(
             },
 
             _methodCall: function () {
+                var result;
                 var args = [];
                 if (arguments.length >= 2) {
                     // ƒолжно быть как минимум 2 аргумента: им€ ф-ции и callback
                     //
                     var fname = arguments[0]; // им€ ф-ции
-                    for (var i = 1; i < arguments.length; i++)
-                        args[i] = arguments[i];
-                    if ($process && $process.processDispatcher) {
-                        $process.processDispatcher.methodCallResolver(this, fname, args);
+                    var callback = arguments[arguments.length - 1];
+
+                    if (!this.isMaster()) {
+                        for (var i = 1; i < (arguments.length - 1) ; i++)
+                            args[i - 1] = arguments[i];
+                        this.remoteCall(fname, args, callback);
+                        return;
                     }
-                    else
-                        this[csMethod_prefix + fname].apply(this, args);
+                    else {
+                        for (var i = 1; i < arguments.length; i++)
+                            args[i - 1] = arguments[i];
+                        if ($process && $process.processDispatcher) {
+                            result = $process.processDispatcher.methodCallResolver(this, fname, args);
+                        }
+                        else
+                            result = this[csMethod_prefix + fname].apply(this, args);
+                    };
                 } else
                     throw new Error("ProcessObject: \"_methodCall\" should have at least 2 args.");
+
+                return result;
             }
 
         });

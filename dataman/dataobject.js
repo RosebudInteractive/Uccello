@@ -14,7 +14,102 @@ define(
 
             init: function(cm,params){
                 UccelloClass.super.apply(this, [cm, params]);
-            }
+            },
+
+            edit: function (cb) {
+                var result = null;
+
+                var args = [];
+                Array.prototype.push.apply(args, arguments);
+                args.unshift("edit");
+                result = this._methodCall.apply(this, args);
+
+                return result;
+            },
+
+            save: function (cb) {
+                var result = null;
+
+                var args = [];
+                Array.prototype.push.apply(args, arguments);
+                args.unshift("save");
+                result = this._methodCall.apply(this, args);
+
+                return result;
+            },
+
+            cancel: function (cb) {
+                var result = null;
+
+                var args = [];
+                Array.prototype.push.apply(args, arguments);
+                args.unshift("cancel");
+                result = this._methodCall.apply(this, args);
+
+                return result;
+            },
+
+            convert: function (cb) {
+                var result = null;
+
+                var args = [];
+                Array.prototype.push.apply(args, arguments);
+                args.unshift("convert");
+                result = this._methodCall.apply(this, args);
+
+                return result;
+            },
+
+            archive: function (cb) {
+                var result = null;
+
+                var args = [];
+                Array.prototype.push.apply(args, arguments);
+                args.unshift("archive");
+                result = this._methodCall.apply(this, args);
+
+                return result;
+            },
+
+            _$local_edit: function (cb) {
+                var result = { result: "OK" };
+                if (cb)
+                    setTimeout(function () {
+                        cb(result);
+                    }, 0);
+            },
+
+            _$local_save: function (cb) {
+                var result = { result: "OK" };
+                if (cb)
+                    setTimeout(function () {
+                        cb(result);
+                    }, 0);
+            },
+
+            _$local_cancel: function (cb) {
+                var result = { result: "OK" };
+                if (cb)
+                    setTimeout(function () {
+                        cb(result);
+                    }, 0);
+            },
+
+            _$local_convert: function (cb) {
+                var result = { result: "OK" };
+                if (cb)
+                    setTimeout(function () {
+                        cb(result);
+                    }, 0);
+            },
+
+            _$local_archive: function (cb) {
+                var result = { result: "OK" };
+                if (cb)
+                    setTimeout(function () {
+                        cb(result);
+                    }, 0);
+            },
         });
         return DataObject;
     }

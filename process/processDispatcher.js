@@ -27,6 +27,8 @@ define(
 
             methodCallResolver: function (uobj, obj_method, args) {
 
+                var result;
+
                 if (!this.dispMethodCallTable)
                     this._genDispMethodCallTable();
 
@@ -45,7 +47,9 @@ define(
                     this._methodCallViaProcess(procArgs, objURI, ProcessObject._methodPrefix + obj_method, args, callback);
 
                 } else
-                    uobj[obj_method].apply(uobj, args);
+                    result = uobj[ProcessObject._methodPrefix + obj_method].apply(uobj, args);
+
+                return result;
             },
 
             _methodCallViaProcess: function (procArgs, objURI, func, args, callback) {
@@ -91,7 +95,7 @@ define(
                 };
 
                 if (procArgs.isNewProcess)
-                    this._proxyWfe.startProcessInstanceAndWait(procArgs.processDefGuid, procArgs.requestName, 100000, sendResponse);
+                    this._proxyWfe.startProcessInstanceAndWait(procArgs.processDefGuid, procArgs.requestName, procArgs.timeout, sendResponse);
                 else
                     if (callback)
                         setTimeout(function () {
@@ -101,11 +105,12 @@ define(
 
             _genDispMethodCallTable: function () {
                 this.dispMethodCallTable = {};
-                this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.Dataset] = {};
-                this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.Dataset]["addObject"] = {
+                this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.RootLead] = {};
+                this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.RootLead]["newObject"] = {
                     isNewProcess: true,
                     processDefGuid: "8349600e-3d0e-4d4e-90c8-93d42c443ab3",
                     requestName: "Request1",
+                    timeout: 100000
                 };
             }
         });

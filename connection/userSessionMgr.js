@@ -255,7 +255,8 @@ define(
 				var cm = context.getContextCM();
 				// поискать объект в VC, а если нет то в контентной базе
 				// в будущем найти более единообразное решение и сделать рефакторинг
-				var uobj = (this.cmsys.get(args.objGuid)) ? this.cmsys.get(args.objGuid) : cm.get(args.objGuid);
+				//var uobj = (this.cmsys.get(args.objGuid)) ? this.cmsys.get(args.objGuid) : cm.get(args.objGuid);
+				var uobj = (this.cmsys.getObj(args.objGuid)) ? this.cmsys.getObj(args.objGuid) : cm.getObj(args.objGuid);
 				cm.remoteCallExec(uobj, args, data.srcDbGuid, data.trGuid, data.rootv, done);
 				//var dispObj = this.methodCallResolver(uobj, args);
 				//cm.remoteCallExec(dispObj.uobj, dispObj.args, data.srcDbGuid, data.trGuid, data.rootv, done);

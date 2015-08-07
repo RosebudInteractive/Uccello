@@ -259,7 +259,11 @@ define(
 				}
 			},
 			
-            /**
+			getCurrentDataObject: function () {
+			    return this.pvt.dataObj;
+			},
+
+			    /**
              *  добавить новый объект в коллекцию
              * @param flds - поля объекта для инициализации
              */
@@ -275,50 +279,25 @@ define(
 			//},
 			
 			addObject: function (flds, cb) {
-			    if (!this.isMaster()) {
-			        this.remoteCall('addObject', [flds], cb);
-			        return;
-			    }
-			    else {
-			        // Временное решение для отладки механизма вызова
-                    //   д.б. по-хорошему реализовано в processObject
-			        var args = [];
-			        for (var i = 0; i < arguments.length; i++)
-			            args[i] = arguments[i];
-			        if ($process && $process.processDispatcher) {
-			            $process.processDispatcher.methodCallResolver(this, "addObject", args);
-			        }
-			        else
-			            this._$local_addObject.apply(this, args);
-			    };
-			    return;
-			},
 
-			_$local_addObject: function (flds, cb) {
-			    var db = this.getDB();
-			    var dataRoot = this.root(); // db.getRoot(this.root()).obj;
-			    var objGuid = dataRoot.getCol("DataElements").getColType().getGuid();
-			    var cm = this.getControlMgr();
-			    var constr = cm.getContext().getConstructorHolder().getComponent(objGuid).constr;
-			    var params = { parent: dataRoot, colName: "DataElements", ini: flds };
-			    var obj = new constr(cm, params);
+			    function addObjectCallback(objGuid) {
 
-			    //var db = this.getDB().getController().getDB(args.dbGuid);
-			    //var dataRoot = db.getRoot(args.rootGuid).obj;
-			    //var constr = db.getContext().getConstructorHolder().getComponent(args.objTypeGuid).constr;
-			    //var params = { parent: dataRoot, colName: "DataElements", ini: args.flds };
-			    //var obj = new constr(db, params);
+			        //this.event.fire({ // TODO другое событие сделать
+			        //    type: 'modFld',
+			        //    target: this
+			        //});
+			        if (DEBUG)
+			            console.log("### addObjectCallback: " + JSON.stringify(objGuid));
 
-			    ////db.addObj(db.getObj(this.objtype()),parent,flds);
+			        if (cb)
+			            setTimeout(function () {
+			                cb(objGuid);
+			            }, 0);
+                };
 
-			    this.event.fire({ // TODO другое событие сделать
-			        type: 'modFld',
-			        target: this
-			    });
-			    if (cb) cb(obj);
-			    return obj;
+			    this.root().newObject(flds, addObjectCallback);
+
 			}
-
         });
         return Dataset;
     }
