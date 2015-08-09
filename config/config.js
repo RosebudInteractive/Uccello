@@ -195,9 +195,17 @@ define([], function () {
                             }
                         }
                         break;
+
                     case 'guids': // запретить перезатирать
-                    case 'classGuids':
                         break;
+
+                    case 'classGuids':
+                        for (var cName in config[index]) {
+                            if (! this.classGuids[cName])
+                                this.classGuids[cName] = config[index][cName];
+                        };
+                        break;
+
                     case 'webSocketServer': // разрешить изменять лишь порт
                         if ('port' in config.webSocketServer && config.webSocketServer.port)
                             this.webSocketServer.port = config.webSocketServer.port;

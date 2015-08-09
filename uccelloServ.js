@@ -156,30 +156,33 @@ define(
                     var wfe = this.pvt.wfe;
                     var def = wfe.newProcessDefinition();
                     def.definitionID("8349600e-3d0e-4d4e-90c8-93d42c443ab3");
-                    var task = def.addUserTask("UserTask1");
+                    var taskStart = def.addUserTask("StartTask");
 
-                    var req = task.addRequest("Request1");
+                    var req = taskStart.addRequest("ObjCreateRequest");
                     req.addParameter("objURI");
                     req.addParameter("func");
                     req.addParameter("args");
-                    //req.addParameter("dbGuid");
-                    //req.addParameter("rootGuid");
-                    //req.addParameter("objTypeGuid");
-                    //req.addParameter("flds");
 
-                    var taskScript = def.addScriptTask("ScriptTask1", {
+                    var taskScriptObjCreate = def.addScriptTask("ObjCreateScript", {
                         moduleName: 'scriptTask',
-                        methodName: 'execObjMethod'
-                        //methodName: 'execScript'
+                        methodName: 'execObjMethodCreate'
                     });
 
-                    var taskFin = def.addUserTask("UserTask2");
+                    var taskObjEdit = def.addUserTask("ObjEditTask");
 
-                    req = taskFin.addRequest("Request2");
-                    req.addParameter("result");
+                    req = taskObjEdit.addRequest("ObjModifRequest");
+                    req.addParameter("objURI");
+                    req.addParameter("func");
+                    req.addParameter("args");
 
-                    def.connect(task, taskScript);
-                    def.connect(taskScript, taskFin);
+                    var taskScriptObjEdit = def.addScriptTask("ObjEditScript", {
+                        moduleName: 'scriptTask',
+                        methodName: 'execObjMethodEdit'
+                    });
+
+                    def.connect(taskStart, taskScriptObjCreate);
+                    def.connect(taskScriptObjCreate, taskObjEdit);
+                    def.connect(taskObjEdit, taskScriptObjEdit);
                     wfe.addProcessDefinition(def);
                 };
             },
