@@ -69,7 +69,8 @@ define(
                             }
                         };
 
-                        self._proxyWfe.submitResponseAndWait(responceObj, "ObjModifRequest", 1000000, function (result) {
+                        //self._proxyWfe.processResponse(responceObj, procArgs.timeout, function (result) {
+                        self._proxyWfe.submitResponseAndWait(responceObj, "ObjModifRequest", procArgs.timeout, function (result) {
                             console.log("Submit Response: " + result.result);
 
                             if (result.result === "OK") {
@@ -99,7 +100,7 @@ define(
                 };
 
                 if (procArgs.isNewProcess)
-                    this._proxyWfe.startProcessInstanceAndWait(procArgs.processDefGuid, procArgs.requestName, procArgs.timeout, sendResponse);
+                    this._proxyWfe.startProcessInstanceAndWait(procArgs.processDefGuid, procArgs.requestName, procArgs.processTimeout, sendResponse);
                 else {
                     var res = { result: "ERROR" };
                     var isDone = true;
@@ -108,7 +109,7 @@ define(
                         var processID = uobj.currentProcess();
                         if (processID) {
                             isDone = false;
-                            this._proxyWfe.waitForRequest(processID, 1, procArgs.requestName, procArgs.timeout, function (result) {
+                            this._proxyWfe.waitForRequest(processID, null, procArgs.requestName, procArgs.timeout, function (result) {
                                 console.log("Got Request [" + procArgs.requestName + "] result: " + result.result);
                                 isDone = true;
                                 if (result.result === "OK") {
@@ -153,6 +154,7 @@ define(
                     isNewProcess: true,
                     processDefGuid: "8349600e-3d0e-4d4e-90c8-93d42c443ab3",
                     requestName: "ObjCreateRequest",
+                    processTimeout: 100000,
                     timeout: 100000
                 };
 
