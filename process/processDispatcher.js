@@ -107,7 +107,7 @@ define(
 
                     if (uobj instanceof ProcessObject) {
                         var processID = uobj.currentProcess();
-                        if (processID) {
+                        if (processID && (processID !== "")) {
                             isDone = false;
                             this._proxyWfe.waitForRequest(processID, null, procArgs.requestName, procArgs.timeout, function (result) {
                                 console.log("Got Request [" + procArgs.requestName + "] result: " + result.result);
@@ -124,6 +124,12 @@ define(
                                             args: args
                                         }
                                     };
+                                    self._proxyWfe.processResponse(responceObj, procArgs.timeout, function (result) {
+                                        if (callback)
+                                            setTimeout(function () {
+                                                callback(result.responseResult);
+                                            }, 0);
+                                    });
                                 } else
                                     res = result;
 
@@ -148,8 +154,9 @@ define(
             _genDispMethodCallTable: function () {
                 this.dispMethodCallTable = {};
 
-                // RootLead.newObject
+                // RootLead
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.RootLead] = {};
+                // RootLead.newObject
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.RootLead]["newObject"] = {
                     isNewProcess: true,
                     processDefGuid: "8349600e-3d0e-4d4e-90c8-93d42c443ab3",
@@ -158,11 +165,22 @@ define(
                     timeout: 100000
                 };
 
-                // DataLead.edit
+                // DataLead
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead] = {};
+                // DataLead.edit
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["edit"] = {
                     requestName: "ObjModifRequest",
-                    timeout: 10000
+                    timeout: 100000
+                };
+                // DataLead.convert
+                this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["convert"] = {
+                    requestName: "ObjModifRequest",
+                    timeout: 100000
+                };
+                // DataLead.archive
+                this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["archive"] = {
+                    requestName: "ObjModifRequest",
+                    timeout: 100000
                 };
             }
         });

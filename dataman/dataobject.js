@@ -73,6 +73,11 @@ define(
 
             _$local_edit: function (cb) {
                 var result = { result: "OK" };
+                var state=this._genericSetter("State");
+                if ((state == "Converted") || (state == "Archieved")) {
+                    result.result = "ERROR";
+                    result.message = "Can't edit \"" + state + "\" lead.";
+                };
                 if (cb)
                     setTimeout(function () {
                         cb(result);
@@ -97,6 +102,7 @@ define(
 
             _$local_convert: function (cb) {
                 var result = { result: "OK" };
+                this._genericSetter("State", "Converted");
                 if (cb)
                     setTimeout(function () {
                         cb(result);
@@ -105,6 +111,7 @@ define(
 
             _$local_archive: function (cb) {
                 var result = { result: "OK" };
+                this._genericSetter("State", "Archieved");
                 if (cb)
                     setTimeout(function () {
                         cb(result);
