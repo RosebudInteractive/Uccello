@@ -159,21 +159,21 @@ define(
                     def.addParameter("CurrentObj").value("");
                     def.addParameter("IsDone").value(false);
 
-                    var taskStart = def.addUserTask("StartTask");
-                    //var taskStart = def.addUserTask("StartTask", {
-                    //    moduleName: 'scriptTask',
-                    //    methodName: 'execObjMethodCreate'
-                    //});
+                    //var taskStart = def.addUserTask("StartTask");
+                    var taskStart = def.addUserTask("StartTask", {
+                        moduleName: 'scriptTask',
+                        methodName: 'execObjMethodCreate'
+                    });
 
                     var req = taskStart.addRequest("ObjCreateRequest");
                     req.addParameter("objURI");
                     req.addParameter("func");
                     req.addParameter("args");
 
-                    var taskScriptObjCreate = def.addScriptTask("ObjCreateScript", {
-                        moduleName: 'scriptTask',
-                        methodName: 'execObjMethodCreate'
-                    });
+                    //var taskScriptObjCreate = def.addScriptTask("ObjCreateScript", {
+                    //    moduleName: 'scriptTask',
+                    //    methodName: 'execObjMethodCreate'
+                    //});
 
                     //var taskObjEdit = def.addUserTask("ObjEditTask");
                     var taskObjEdit = def.addUserTask("ObjEditTask", {
@@ -195,11 +195,7 @@ define(
                     var gateway = def.addExclusiveGateway('CheckIfDone');
 
 
-                    //def.connect(taskStart, taskObjEdit);
-
-                    def.connect(taskStart, taskScriptObjCreate);
-                    def.connect(taskScriptObjCreate, taskObjEdit);
-                    //def.connect(taskObjEdit, taskScriptObjEdit);
+                    def.connect(taskStart, taskObjEdit);
 
                     def.connect(taskObjEdit, gateway);
                     def.connect(gateway, taskObjEdit, {

@@ -69,31 +69,15 @@ define(
                             }
                         };
 
-                        //self._proxyWfe.processResponse(responceObj, procArgs.timeout, function (result) {
-                        self._proxyWfe.submitResponseAndWait(responceObj, "ObjModifRequest", procArgs.timeout, function (result) {
+                        self._proxyWfe.processResponse(responceObj, procArgs.timeout, function (result) {
                             console.log("Submit Response: " + result.result);
 
                             if (result.result === "OK") {
 
                                 if (callback)
                                     setTimeout(function () {
-                                        callback(result);
+                                        callback(result.responseResult);
                                     }, 0);
-                                //var responceObj = {
-                                //    processID: result.requestInfo.processID,
-                                //    requestID: result.requestInfo.requestID,
-                                //    tokenID: result.requestInfo.tokenID,
-                                //    response: { result: true }
-                                //};
-
-                                //self._proxyWfe.submitResponse(responceObj, function (result) {
-                                //    console.log("Submit Response 2: " + result.result);
-                                //    if (callback)
-                                //        setTimeout(function () {
-                                //            callback(result);
-                                //        }, 0);
-
-                                //});
                             };
                         });
                     }
@@ -161,8 +145,8 @@ define(
                     isNewProcess: true,
                     processDefGuid: "8349600e-3d0e-4d4e-90c8-93d42c443ab3",
                     requestName: "ObjCreateRequest",
-                    processTimeout: 100000,
-                    timeout: 100000
+                    processTimeout: 10000,
+                    timeout: 10000
                 };
 
                 // DataLead
@@ -170,17 +154,17 @@ define(
                 // DataLead.edit
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["edit"] = {
                     requestName: "ObjModifRequest",
-                    timeout: 100000
+                    timeout: 10000
                 };
                 // DataLead.convert
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["convert"] = {
                     requestName: "ObjModifRequest",
-                    timeout: 100000
+                    timeout: 10000
                 };
                 // DataLead.archive
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["archive"] = {
                     requestName: "ObjModifRequest",
-                    timeout: 100000
+                    timeout: 10000
                 };
             }
         });
