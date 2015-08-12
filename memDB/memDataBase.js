@@ -1210,7 +1210,8 @@ define(
 						this.pvt.curTranGuid = Utils.guid();
 					this.pvt.tranCounter=1;
 				}
-				console.log("TRAN|START "+this.pvt.tranCounter);
+				if (DEBUG)
+				    console.log("TRAN|START " + this.pvt.tranCounter);
 				return this.pvt.curTranGuid;
 				
 			},
@@ -1224,7 +1225,8 @@ define(
 					this.pvt.externalTran = false;
 				}
 				else this.pvt.tranCounter--;
-				console.log("TRAN|COMMIT "+memTran+" "+this.pvt.tranCounter);	
+				if (DEBUG)
+				    console.log("TRAN|COMMIT " + memTran + " " + this.pvt.tranCounter);
 			},
 
 

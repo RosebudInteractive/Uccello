@@ -197,7 +197,8 @@ define(
 					// TODO кинуть исключение
 					return;
 				}
-				console.log("REMOTE CALL "+func,aparams,cb);
+				if (DEBUG)
+				    console.log("REMOTE CALL " + func, aparams, cb);
 				var cm = this.getControlMgr();
 				var socket = cm.getSocket();
 				var pg = cm.getProxyMaster().guid;

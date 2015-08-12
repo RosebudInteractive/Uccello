@@ -220,8 +220,11 @@ define(
 				return this.pvt.objType.pvt.fieldsArr[i];
 			},
 			
-			getFieldType: function(i) {
-				return this.pvt.objType.pvt.fieldsTable[this.pvt.objType.pvt.fieldsArr[i]].ftype;
+			getFieldType: function (fld) {
+			    var fname = fld;
+			    if (typeof fname === "numeric")
+			        fname = this.pvt.objType.pvt.fieldsArr[i];
+			    return this.pvt.objType.pvt.fieldsTable[fname].ftype;
 			},
 			
 			countFields: function() {

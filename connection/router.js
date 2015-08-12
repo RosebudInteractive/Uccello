@@ -26,8 +26,9 @@ define(['../system/event'], function(event) {
             var that = this;
             setInterval(function () {
                 var endTime = new Date();
-                console.log('LOADNEWROOTS: ' + that.testCount + 'items, time:' + that.testTime + 'мс');
-                console.log('SEND DELTA: ' + that.testCountDelta + ' items, time:' + (endTime - that.testTimeDelta) + 'мс, ' +
+                console.log('### LOADNEWROOTS: ' + that.testCount + ' items, time:' + that.testTime + 'мс, ' +
+                    (that.testCount * 1000 / (endTime - that.testTimeDelta)).toFixed(2) + ' op/sec.');
+                console.log('### SENDDELTA:    ' + that.testCountDelta + ' items, time:' + (endTime - that.testTimeDelta) + 'мс, ' +
                     (that.testCountDelta * 1000 / (endTime - that.testTimeDelta)).toFixed(2) + ' op/sec.');
                 that.testCount = 0;
                 that.testCountDelta = 0;
