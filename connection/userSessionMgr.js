@@ -129,10 +129,17 @@ define(
 				    constructHolder: this.pvt.constructHolder
 				};
                 var context = new VisualContext(this.cmsys, params);
-				context.on(this.cmsys, params);
+				function icb(res) {
+					var result = {roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};
+					controller.genDeltas(that.cmsys.getGuid());
+					done(result);
+				}
+				context.on(this.cmsys, params, icb,null, true );
+				/*
                 var result = {roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};
 				controller.genDeltas(this.cmsys.getGuid());
                 done(result);
+				*/
             },
 
             /**

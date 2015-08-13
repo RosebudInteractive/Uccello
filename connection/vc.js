@@ -40,7 +40,7 @@ define(
 			 * @callback cb
 			 * @renderRoot - содержит колбэк для рендеринга
 			 */
-			on: function(cm, params,cb, renderRoot) {
+			on: function(cm, params,cb, renderRoot, onServer) {
 				if (this.isOn()) {
 					var guids = this.pvt.cm.getRootGuids("res")
 					this.pvt.cm.initRender(guids);
@@ -63,7 +63,7 @@ define(
 				this.pvt.cmsys = cm;
 
 				var that = this;
-				if (!cb) {// если нет колбэка значит на сервере - но это надо поменять TODO
+				if (onServer) {// если нет колбэка значит на сервере - но это надо поменять TODO
 					//var createCompCallback = function (obj) {
 					// подписаться на событие завершения applyDelta в контроллере, чтобы переприсвоить параметры 
 					controller.event.on({
@@ -132,9 +132,10 @@ define(
 					});
 					this.pvt.cdb.setDefaultCompCallback(createCompCallback);
 					
+					/*
 					function icb() {
 						if (cb) cb();
-					}
+					}*/
 
 					this.loadNewRoots(params.formGuids, { rtype: "res" },cb); // TODO поставить icb (сейчас почему-то не работает)
 					
@@ -163,7 +164,7 @@ define(
 
 				}
 				// TODO!!! TEMPO
-				if (cb /*cb*/) { // подписываемся только на клиенте
+				if (!onServer /*cb*/) { // подписываемся только на клиенте
 					this.pvt.cm.event.on({
 						type: 'endTransaction',
 						subscriber: this,
