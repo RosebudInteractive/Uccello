@@ -30,21 +30,24 @@ define(
         };
         
         var MAX_NOT_CONFIRMED_LEN = 100;
+        var IO_LOG_FLAG = false;
 
         CommunicationServer.Server = UccelloClass.extend({
             
             init: function (options) {
                 
-                this.port = options.port ? options.port : CommunicationServer.PORT;
+                this.port = (options && options.port) ? options.port : CommunicationServer.PORT;
 
-                this.serverType = options.type ? options.type :
+                this.serverType = (options && options.type) ? options.type :
                     CommunicationServer.AJAX + CommunicationServer.WEB_SOCKET;
                 if ((this.serverType & CommunicationServer.SOCKET_IO) != 0)
                     this.serverType = CommunicationServer.SOCKET_IO;
 
-                this._queue_out_maxlen = options.queue_out_maxlen ?
+                this._queue_out_maxlen = (options && options.queue_out_maxlen) ?
                     options.queue_out_maxlen : QUEUE_OUT_MAXLEN;
                 
+                this._io_log_flag = (options && options.io_log_flag) ? options.io_log_flag : IO_LOG_FLAG;
+
                 this._wss = null;
                 this._ajax = null;
                 this._io = null;
@@ -174,11 +177,14 @@ define(
                             chStateData.lastMsg = msg_to_send;
 
                             if (chStateData.chType == CommunicationServer.WEB_SOCKET) {
+                                if (DEBUG || self._io_log_flag)
+                                    console.log("###io " + chStateData.clientId + " ts:" + Number(new Date()) + " WS MSG sent: " + JSON.stringify(msg_to_send));
                                 chStateData.stream.send(JSON.stringify(msg_to_send), function ack(error) {
                                     if (typeof (error) !== "undefined") {
                                         // Error !!! Restore message queue
                                         self._restoreMsgQueue(chStateData);
-                                        if (DEBUG) console.log("###Error while sending WS- message");
+                                        if (DEBUG || self.io_log_flag) console.log("###io " + chStateData.clientId + " ts:" + Number(new Date())
+                                            + " Error while sending WS- message: " + JSON.stringify(msg_to_send));
                                     };
                                     chStateData.lastMsg = null;
                                 });
@@ -341,7 +347,8 @@ define(
             },
             
             _processMsg: function (msg, chStateData){
-                if (DEBUG) console.log("###MSG received: " + JSON.stringify(msg));
+                if (DEBUG || this.io_log_flag)
+                    console.log("###io " + chStateData.clientId + " ts:" + Number(new Date()) + " MSG received: " + JSON.stringify(msg));
                 var inp = [];
                 var i;
                 if (msg !== null) {
@@ -415,9 +422,11 @@ define(
             },
                     
             _getWSCloseProcessor: function (chStateData) {
+                var self = this;
                 return function (event) {
                     
-                    if (DEBUG) console.log("###WS closed: " + JSON.stringify(event));
+                    if (DEBUG || self.io_log_flag)
+                        console.log("###io " + chStateData.clientId + " ts:" + Number(new Date()) + " WS closed: " + JSON.stringify(event));
                     if (chStateData.stream !== null) {
                         chStateData.stream.removeListener('message', chStateData.wsMsgProcessor);
                         chStateData.stream.removeListener('close', chStateData.wsCloseProcessor);

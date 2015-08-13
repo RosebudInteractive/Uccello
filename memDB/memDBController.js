@@ -310,8 +310,14 @@ define(
 
 				        if (cdelta.items[0].newRoot)
 				            var rootObj = db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback());
-				        else
+				        else {
+				            if (!root) {
+				                var msg = "Missing ROOT:\n" + JSON.stringify(delta);
+				                console.log(msg);
+				                throw new Error(msg);
+				            };
 				            rootObj = root.obj;
+				        };
 
 				        rootObj.getLog().applyDelta(cdelta);
 
