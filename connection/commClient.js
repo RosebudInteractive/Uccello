@@ -33,7 +33,7 @@ define(
             
             init: function (options_param) {
                 
-                this._io_log_flag = (options && options.io_log_flag) ? options.io_log_flag : IO_LOG_FLAG;
+                this._io_log_flag = (options_param && options_param.io_log_flag) ? options_param.io_log_flag : IO_LOG_FLAG;
 
                 var options = { ajax: {} };
                 if (typeof (options_param) !== "undefined"){
