@@ -526,7 +526,7 @@ define(
 
             /**
              * Стать подписчиком корневого объекта с гуидом rootGuid
-             * @param dbGuid
+             * @param dbGuid - гуид базы данных подписчика
              * @param rootGuids - 1 гуид или массив гуидов либо селектор - "res" для ресурсов, "data" для данных, "all" для всех
              * @returns {*}
              */
@@ -534,15 +534,9 @@ define(
 				// TODO проверить что база подписана на базу
 				var rg = [];
 				var res = [];
-				/*
-				if (Array.isArray(rootGuids))
-					rg = rootGuids;
-				else {
-					if ((rootGuids == "res") || (rootGuids == "data") || (rootGuids == "all"))
-						rg = this.getRootGuids(rootGuids);
-					else
-						rg.push(rootGuids);
-				}*/
+
+				this.pvt.controller.genDeltas(this.getGuid());
+				
 				rg  = this.getRootGuids(rootGuids);
 
 				for (var i=0; i<rg.length; i++) {
@@ -551,8 +545,6 @@ define(
 						res.push(this.serialize(ro.obj)); 
 					}
 				}
-				// TODO ВАЖНО! нужно сделать рассылку только для данного корневого объекта - оптимизировать потом!!!!
-				this.pvt.controller.genDeltas(this.getGuid());
 				return res;
 			},
 
@@ -1140,7 +1132,7 @@ define(
              * (для сервера нужно будет передавать ИД подписчика)
              * @returns {Array}
              */
-			genDeltas: function(commit) {
+			genDeltas: function() {
 			    var allDeltas = [];
 
 			    for (var i = 0; i < this.countRoot() ; i++) {

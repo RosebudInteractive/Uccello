@@ -341,9 +341,9 @@ define(
              * Сгенерировать и разослать "дельты" 
              * @param dbGuid - гуид базы данных, для которой генерим дельты
              */
-			genDeltas: function(dbGuid, commit, callback, sendFunc) {
+			genDeltas: function(dbGuid, callback, sendFunc) {
 				var db  = this.getDB(dbGuid);
-				var deltas = db.genDeltas(commit);
+				var deltas = db.genDeltas();
 				if (deltas.length > 0) {
 				    this.propagateDeltas(dbGuid, null, deltas, callback, sendFunc);
 				    if (db.getVersion("sent") < db.getVersion()) db.setVersion("sent", db.getVersion());
