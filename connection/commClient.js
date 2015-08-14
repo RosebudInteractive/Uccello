@@ -304,7 +304,8 @@ define(
                         chStateData.state.lastMsg = msg_to_send;
                         
                         if (chStateData.chType == CommunicationClient.WEB_SOCKET) {
-                            if (DEBUG || self._io_log_flag) console.log("###io WS output msg: " + JSON.stringify(msg_to_send));
+                            if (DEBUG || self._io_log_flag)
+                                console.log("###io\t" + chStateData.state.clientId + "\tts:" + Number(new Date()) + "\tcli\tout\t" + JSON.stringify(msg_to_send));
                             chStateData.stream.send(JSON.stringify(msg_to_send));
                         } else {
                             if (chStateData.chType == CommunicationClient.SOCKET_IO) {
@@ -516,7 +517,9 @@ define(
                 else
                     throw new Error("CommServer::_processMsg: Input message should always be an ARRAY!");
 
-                if (DEBUG || this._io_log_flag) console.log("###io Input msg: " + JSON.stringify(inp));
+                if (DEBUG || this._io_log_flag)
+                    console.log("###io\t" + chStateData.state.clientId + "\tts:" + Number(new Date()) + "\tcli\tinp\t" + JSON.stringify(inp));
+
                 for (var i = 0; i < inp.length; i++) {
                     //try {
                         if (typeof (inp[i]._cmd_) !== "undefined")
