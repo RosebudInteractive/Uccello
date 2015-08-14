@@ -881,7 +881,9 @@ define(
 			addRoots: function(sobjs, params, rg, rgsubs) {
 				if (!this.isMaster()) return null; // Работает только на мастер-базе. Слейв добавляет рут через мастер.
 
-			    var subDbGuid = params.subDbGuid;
+				this.getController().genDeltas(this.getGuid());		// рассылаем дельты
+
+				var subDbGuid = params.subDbGuid;
 				var cb = this.getDefaultCompCallback();
 				
 				var res = [];
