@@ -940,15 +940,8 @@ define(
 							if (subscriber.kind == 'remote') {
 								// Подписываем либо данные (тогда всех) либо подписчика (если ресурс), но только если еще не подписан!
 								var subs2 = this.pvt.rcoll[croot.getGuid()].subscribers;
-								if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) && !(subs2[subscriber.guid])) {
+								if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) && !(subs2[subscriber.guid])) 
 									this._onSubscribeRoot(guid,croot.getGuid(),true);
-								  //subs2[subscriber.guid] = subscriber;
-								  /*
-								  var o = { obj:croot, type:"subscribe"};
-								  o.subscriber = subscriber.guid;
-								  croot.getLog().add(o);*/
-								  //croot.getLog().add({ obj:croot, type:"subscribe", subscriber: subscriber.guid });
-								}
 							}
 						}			
 					}

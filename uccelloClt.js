@@ -298,20 +298,9 @@ define(
              * @param callback
              */
             createRoot: function(formGuids, rtype, callback, context) {
-				
 				if (!context.isOn()) return false;
 				var cm = context ? context.getContextCM() : this.getContext().getContextCM();
 				cm.getRoots(formGuids, {rtype:rtype }, callback);
-				/*
-				// F606 - предположительно - передача subDbGuid не требуется, так как назначается внутри VC
-                //var subDbGuid = context? context.dataBase(): this.getContext().getContentDB().getGuid();
-                context = context? context: this.getContext();
-				if (!context.isOn()) return false;
-                context.XloadNewRoots(formGuids, {rtype:rtype  }, function(result){
-					//context.getContextCM().initRender(result.guids);
-                    //context.renderForms(result.guids, true);
-                    if (callback) callback(result);
-                });*/
             },
 
             subscribeUser: function(callback) {

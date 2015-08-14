@@ -170,20 +170,12 @@ define(
                 if (i>=0 && i<this.countFields())
 					return this.getFieldType(i);
             },
-			/*
-			isModule: function() { 
-				if (this.getParent())
-					return false;
-				else 
-					return true;
-			},*/
 			
             /**
              * Возвращает true если модуль в режиме MASTER и false если в режиме SLAVE
              */			
 			isMaster: function() {
 				return this.getControlMgr().isMaster();
-				//return this.isMaster();
 				
 			},
 			
@@ -192,7 +184,11 @@ define(
 			 * @param func - имя удаленной функции
              * @param aparams - массив параметров удаленной функции
 			 * @callback cb - коллбэк
-             */			
+             */		
+			 remoteCall: function(func, aparams, cb) {
+				this.getControlMgr().remoteCallPlus(this.getGuid(),func,aparams,cb);
+			 },
+/*			 
 			remoteCall: function(func, aparams, cb) {
 				if (this.isMaster()) {
 					// TODO кинуть исключение
@@ -205,7 +201,7 @@ define(
 				var pg = cm.getProxyMaster().guid;
 				
 				
-				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func /*, trGuid:trGuid*/ };
+				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func  };
 				myargs.contextGuid = cm.getContext() ? cm.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
 				var contextCM = cm.getContext() ? cm : this.getContextCM();
 				var data={action:"remoteCall2",type:"method",args: myargs };
@@ -219,7 +215,7 @@ define(
 				}
 				 contextCM._execMethod(socket,socket.send,[data,cb]);
 			},
-
+*/
 
             /**
              * Выставления признака isProcess для ProcessDelta
