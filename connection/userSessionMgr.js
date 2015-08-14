@@ -29,7 +29,7 @@ define(
                 // системные объекты
                 this.dbcsys = new MemDBController(router);
 				var dbp =  {name: "System", kind: "master", guid:UCCELLO_CONFIG.guids.sysDB}
-                this.cmsys = new ControlMgr( { controller: this.dbcsys, dbparams: dbp });
+                this.cmsys = new ControlMgr( { controller: this.dbcsys, dbparams: dbp }, undefined,undefined,options.proxyServer);
 
                 // создаем метаинфо
                 this.cmsys.buildMetaInfo('sys');
@@ -42,6 +42,7 @@ define(
                 router.add('createContext', function(){ return that.routerCreateContext.apply(that, arguments); });
                 router.add('newTab', function(){ return that.routerNewTab.apply(that, arguments); });
 				router.add('remoteCall2', function(){ return that.routerRemoteCallExec.apply(that, arguments); });
+				router.add('remoteCall3', function(){ return that.routerRemoteCallExec3.apply(that, arguments); });
             },
 			
 			getController: function() {
@@ -269,6 +270,19 @@ define(
 				//cm.remoteCallExec(dispObj.uobj, dispObj.args, data.srcDbGuid, data.trGuid, data.rootv, done);
 			},
 
+			routerRemoteCallExec3: function(data,done) {				
+				var args = data.args;
+
+				var cm  = this.getController().getDB(args.masterGuid);
+				
+				if (args.objGuid) 
+					var uobj = cm.getObj(args.objGuid)
+				else
+					uobj = cm;
+				
+				cm.remoteCallExec(uobj, args, data.srcDbGuid, data.trGuid, data.rootv, done);
+			},
+			
             /**
              * Подключаемся к серверу с клиента
              * @param {object} socket

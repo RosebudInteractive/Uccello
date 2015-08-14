@@ -113,7 +113,7 @@ define(
 						  var rgp = rgi;
 						else rgp = rg;
 						// this.getDB().tranStart();  - перетащили в обертку
-						//this.getControlMgr().getContext().loadNewRoots([rgp],params, icb);
+						//this.getControlMgr().getContext().XloadNewRoots([rgp],params, icb);
 						this.dataLoad([rgp],params, icb);
 
 					}
@@ -251,7 +251,8 @@ define(
 			
 			dataLoad: function(rootGuids,params, cb) {
 				if (this.isMaster()) {
-					this.getControlMgr().getContext().loadNewRoots(rootGuids,params, cb);
+					//this.getControlMgr().getContext().XloadNewRoots(rootGuids,params, cb);
+					this.getControlMgr().getRoots(rootGuids,params, cb);
 				}
 				else {
 					params.subDbGuid = this.getControlMgr().getGuid();

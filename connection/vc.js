@@ -132,12 +132,8 @@ define(
 					});
 					this.pvt.cdb.setDefaultCompCallback(createCompCallback);
 					
-					/*
-					function icb() {
-						if (cb) cb();
-					}*/
-
-					this.loadNewRoots(params.formGuids, { rtype: "res" },cb); // TODO поставить icb (сейчас почему-то не работает)
+					//this.XloadNewRoots(params.formGuids, { rtype: "res" },cb);
+					this.getContextCM().getRoots(params.formGuids, { rtype: "res" },cb);
 					
 					this.dataBase(this.pvt.cdb.getGuid());
 					this.contextGuid(this.getGuid());
@@ -159,8 +155,9 @@ define(
 						if (forms == null) forms = "all";
 						else if (forms == "") forms = [];
 						// 1212 that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
-						that.loadNewRoots(forms, { rtype: "res" /* 1212 , compcb: createCompCallback*/ },cb2);
-					});
+						//that.XloadNewRoots(forms, { rtype: "res"  },cb2);
+						that.getContextCM().getRoots(forms, { rtype: "res"  },cb2);
+					},this.pvt.proxyServer);
 
 				}
 				// TODO!!! TEMPO
@@ -250,7 +247,7 @@ define(
 			 * @returns {object}
 			 */
 			createDb: function(dbc, params){
-				var cm = this.pvt.cm = new ControlMgr( { controller: dbc, dbparams: params },this,this.pvt.socket);
+				var cm = this.pvt.cm = new ControlMgr( { controller: dbc, dbparams: params },this,this.pvt.socket,undefined, this.pvt.proxyServer);
 				cm.buildMetaInfo('content');
 				return cm;
 			},

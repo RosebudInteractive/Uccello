@@ -16,7 +16,7 @@ define(
 			 * @param 
 			 * @param vc - контекст менеджера
              */
-			init: function(dbinit, vc, socket, cb){
+			init: function(dbinit, vc, socket, cb, proxySrv){
 
 				UccelloClass.super.apply(this, [dbinit.controller, dbinit.dbparams, cb]);
 
@@ -27,6 +27,7 @@ define(
 				this.pvt.dataInitFlag = {};
 				this.pvt.rootGuids = {};
 				this.pvt.vc = vc;
+				this.pvt.proxySrv = proxySrv;
 				this._isNode = typeof exports !== 'undefined' && this.exports !== exports;
 
 				this.pvt.tranQueue = null; // очередь выполнения методов если в транзакции
@@ -453,6 +454,46 @@ define(
 				}
 			},
 
+			
+            /**
+             * Удаленный вызов метода на сервере
+			 * @param func - имя удаленной функции
+             * @param aparams - массив параметров удаленной функции
+			 * @callback cb - коллбэк
+             */			
+			remoteCallPlus: function(objGuid, func, aparams, cb) {
+			
+				if (this.isMaster()) {
+					// TODO кинуть исключение
+					return;
+				}
+				if (objGuid && !this.get(objGuid)) {
+					console.log("Объект не принадлежит базе ",objGuid);
+					return;
+				}
+
+				var cm = this; //.getControlMgr();
+				var socket = this.getSocket();
+				var pg = cm.getProxyMaster().guid;
+				
+				var myargs = { masterGuid: pg,  objGuid: objGuid, aparams:aparams, func:func /*, trGuid:trGuid*/ };
+				// TODO contextGuid вроде лишний
+				myargs.contextGuid = cm.getContext() ? cm.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
+				var contextCM = this; //cm.getContext() ? cm : this.getContextCM();
+				var data={action:"remoteCall3",type:"method",args: myargs };
+				if (contextCM.getCurTranGuid()) {
+					data.trGuid = contextCM.getCurTranGuid();
+					data.rootv = {}; // добавить версии рутов
+					data.srcDbGuid = contextCM.getGuid();
+					var guids = contextCM.getRootGuids();
+					for (var i=0; i<guids.length; i++)
+						data.rootv[guids[i]]=contextCM.getObj(guids[i]).getRootVersion("valid");				
+				}
+				 contextCM._execMethod(socket,socket.send,[data,cb]);
+			},
+
+			
+			
             /**
              * Параметр автоотсылки дельт
              * @param value {boolean}
@@ -495,7 +536,71 @@ define(
 						if (done) done();
 					});
 				}
+			},
+			
+
+		    // добавляем новый набор данных - мастер-слейв варианты
+			// params.rtype = "res" | "data"
+			// params.compcb - только в случае ресурсов (может использоваться дефолтный)
+			// params.expr - выражение для данных
+			getRoots: function(rootGuids,params, cb) {
+				//var db = this.getContentDB();				
+				var that = this;
+				if (this.isMaster()) {
+
+					function icb(r) {
+
+						var objArr = r ? r.datas : null;
+
+						function localCallback() {
+							var res = that.addRoots(objArr, params, rg, rgsubs);
+							if (cb) cb({ guids: res });
+						};
+
+						if (cb)
+							that.addRemoteComps(objArr, localCallback);
+						else {
+							that.addLocalComps(objArr);
+							localCallback();
+						};
+					}
+					// Проверять, есть ли уже объект с таким гуидом и хэшем !!! (expression)
+					// если есть - то просто возвращать его, а не загружать заново. Если нет, тогда грузить.
+					var rg = []; // эти загрузить
+					var rgsubs = []; // а на эти просто подписать
+					rootGuids = this.getRootGuids(rootGuids);
+					
+					// Всегда добавляем новые - проверка существования не имеет смысла, мы говорим о гуидах прототипов
+					for (var i=0; i<rootGuids.length; i++) {
+						if (rootGuids[i].length > 36) { // instance Guid
+							var cr = this.getRoot(rootGuids[i]); 
+							if (cr && (params.expr &&  params.expr!=cr.hash)) 
+									rg.push(rootGuids[i]);
+							else rgsubs.push(rootGuids[i]);
+						}
+						else rg.push(rootGuids[i]); // если resourceGuid			
+					}
+				
+					if (rg.length>0) {
+						if (params.rtype == "res") {
+							this.pvt.proxySrv.loadResources(rg, icb);
+							return "XXX";
+						}
+						if (params.rtype == "data") {
+							this.pvt.proxySrv.queryDatas(rg, params.expr, icb);
+							return "XXX";
+						}
+					}
+					else icb();
+
+				}
+				else { // slave
+					// вызываем загрузку нового рута у мастера
+					params.subDbGuid = this.getGuid();
+					this.remoteCallPlus(undefined,'getRoots', [rootGuids, params],cb);
+				}
 			}
+
 
 		});
 		return ControlMgr;

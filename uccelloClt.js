@@ -165,11 +165,11 @@ define(
 
                     // создаем системную бд
                     var dbp = {name:"System", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: that.pvt.guids.masterSysGuid}};
-					that.pvt.cmsys = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket, done);
+					that.pvt.cmsys = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket, done,that.pvt.proxyServer);
 
                     // создаем мастер базу для клиентского контекста (является "держателем" клиентского контекста
                     dbp = {name:"MasterClient", kind: "master"};
-                    that.pvt.cmclient = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket);
+                    that.pvt.cmclient = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket,null,that.pvt.proxyServer);
                     that.pvt.cmclient.buildMetaInfo('client', function(){
                         that.pvt.clientConnection.init(that.pvt.cmclient, {});
                     });
@@ -298,16 +298,20 @@ define(
              * @param callback
              */
             createRoot: function(formGuids, rtype, callback, context) {
-
+				
+				if (!context.isOn()) return false;
+				var cm = context ? context.getContextCM() : this.getContext().getContextCM();
+				cm.getRoots(formGuids, {rtype:rtype }, callback);
+				/*
 				// F606 - предположительно - передача subDbGuid не требуется, так как назначается внутри VC
                 //var subDbGuid = context? context.dataBase(): this.getContext().getContentDB().getGuid();
                 context = context? context: this.getContext();
 				if (!context.isOn()) return false;
-                context.loadNewRoots(formGuids, {rtype:rtype /*, subDbGuid: subDbGuid*/ }, function(result){
+                context.XloadNewRoots(formGuids, {rtype:rtype  }, function(result){
 					//context.getContextCM().initRender(result.guids);
                     //context.renderForms(result.guids, true);
                     if (callback) callback(result);
-                });
+                });*/
             },
 
             subscribeUser: function(callback) {
@@ -337,7 +341,8 @@ define(
                     return component;
                 };
                 this.getSysCM().setDefaultCompCallback(compCallBack);
-                this.getSysCM().subscribeRoots(this.pvt.guids.sysRootGuid, callback, compCallBack);
+               // this.getSysCM().subscribeRoots(this.pvt.guids.sysRootGuid, callback, compCallBack);
+				this.getSysCM().getRoots(this.pvt.guids.sysRootGuid, { rtype: "res"  },callback);
             },
 
             deauthenticate: function(callback){

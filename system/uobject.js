@@ -120,13 +120,14 @@ define(
             /**
              * Возвращает объект-модуль текущего объекта или undefined если модуля нет 
              */			
+			 /*
 			getModule: function() {
 				var obj = this.getRoot();
 				if (obj.isModule())
 					return obj;
 				else
 					return undefined;
-			},
+			},*/
 
 			countChild: function(colName) {
 				if (colName == undefined) colName = "Children";
@@ -169,13 +170,13 @@ define(
                 if (i>=0 && i<this.countFields())
 					return this.getFieldType(i);
             },
-			
+			/*
 			isModule: function() { 
 				if (this.getParent())
 					return false;
 				else 
 					return true;
-			},
+			},*/
 			
             /**
              * Возвращает true если модуль в режиме MASTER и false если в режиме SLAVE
