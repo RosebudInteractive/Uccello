@@ -349,8 +349,9 @@ define(
 			},
 			
 			
-			_checkRootVer: function(rootv) {
-				console.log("CHECK ROOT VERSIONS");
+			_checkRootVer: function (rootv) {
+			    if (DEBUG)
+			        console.log("CHECK ROOT VERSIONS");
 				for (var guid in rootv) console.log(guid, rootv[guid],this.getObj(guid).getRootVersion("valid"));
 				for (var guid in rootv) 
 					if (rootv[guid] != this.getObj(guid).getRootVersion("valid")) return false;
