@@ -183,7 +183,7 @@ define(
                                     if (typeof (error) !== "undefined") {
                                         // Error !!! Restore message queue
                                         self._restoreMsgQueue(chStateData);
-                                        if (DEBUG || self.io_log_flag) console.log("###io " + chStateData.clientId + " ts:" + Number(new Date())
+                                        if (DEBUG || self._io_log_flag) console.log("###io " + chStateData.clientId + " ts:" + Number(new Date())
                                             + " Error while sending WS- message: " + JSON.stringify(msg_to_send));
                                     };
                                     chStateData.lastMsg = null;
@@ -347,7 +347,7 @@ define(
             },
             
             _processMsg: function (msg, chStateData){
-                if (DEBUG || this.io_log_flag)
+                if (DEBUG || this._io_log_flag)
                     console.log("###io " + chStateData.clientId + " ts:" + Number(new Date()) + " MSG received: " + JSON.stringify(msg));
                 var inp = [];
                 var i;
@@ -425,7 +425,7 @@ define(
                 var self = this;
                 return function (event) {
                     
-                    if (DEBUG || self.io_log_flag)
+                    if (DEBUG || self._io_log_flag)
                         console.log("###io " + chStateData.clientId + " ts:" + Number(new Date()) + " WS closed: " + JSON.stringify(event));
                     if (chStateData.stream !== null) {
                         chStateData.stream.removeListener('message', chStateData.wsMsgProcessor);
