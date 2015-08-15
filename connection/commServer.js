@@ -177,13 +177,13 @@ define(
                             chStateData.lastMsg = msg_to_send;
 
                             if (chStateData.chType == CommunicationServer.WEB_SOCKET) {
-                                if (DEBUG || self._io_log_flag)
+                                if (self._io_log_flag)
                                     console.log("###io\t" + chStateData.clientId + "\tts:" + Number(new Date()) + "\tsrv\tout\t" + JSON.stringify(msg_to_send));
                                 chStateData.stream.send(JSON.stringify(msg_to_send), function ack(error) {
                                     if (typeof (error) !== "undefined") {
                                         // Error !!! Restore message queue
                                         self._restoreMsgQueue(chStateData);
-                                        if (DEBUG || self._io_log_flag) console.log("###io\t" + chStateData.clientId + "\tts:" + Number(new Date()) +
+                                        if (self._io_log_flag) console.log("###io\t" + chStateData.clientId + "\tts:" + Number(new Date()) +
                                             "\tsrv\terr\t" + "Error while sending WS- message: " + JSON.stringify(msg_to_send));
                                     };
                                     chStateData.lastMsg = null;
@@ -348,7 +348,7 @@ define(
             
             _processMsg: function (msg, chStateData){
 
-                if (DEBUG || this._io_log_flag)
+                if (this._io_log_flag)
                     console.log("###io\t" + chStateData.clientId + "\tts:" + Number(new Date()) + "\tsrv\tinp\t" + JSON.stringify(msg));
 
                 var inp = [];
@@ -427,7 +427,7 @@ define(
                 var self = this;
                 return function (event) {
                     
-                    if (DEBUG || self._io_log_flag)
+                    if (self._io_log_flag)
                         console.log("###io\t" + chStateData.clientId + "\tts:" + Number(new Date()) + "\tsrv\tclose\t" + "WS closed: " + JSON.stringify(event));
 
                     if (chStateData.stream !== null) {
