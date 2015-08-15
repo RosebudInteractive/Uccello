@@ -301,6 +301,9 @@ define(
 			    };
 			},
 
+			loadNewRoots: function(rootGuids,params, cb) {
+				this.getContextCM().getRoots(rootGuids,params, cb);
+			},
 			/* OBSOLETE --> ControlMgr.getRoots()
 			loadNewRoots: function(rootGuids,params, cb) {
 				var db = this.getContentDB();
