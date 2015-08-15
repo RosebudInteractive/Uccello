@@ -123,7 +123,7 @@ define (
 					var r = p.proxy[data.func].apply(p.proxy,data.args);
 					//var r = p.proxy[data.func].apply(p.proxy,data.args,done);
 				}
-				if (r!="XXX") done(r);
+				//if (r!="XXX") done(r);
 			},
 			
 			// опубликовать 

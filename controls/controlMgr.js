@@ -355,7 +355,8 @@ define(
 			},
 			
             /**
-             * Метод для отправки дельт
+             * Метод для отправки дельт - инкапсуляция аналогичного метода контроллера БД
+			 * (требуется для проведения посылки дельт через транзакционный механизм)
              * @param data
 			 * @param cb
              */			
@@ -575,7 +576,7 @@ define(
 						var objArr = r ? r.datas : null;
 
 						function localCallback() {
-							var res = that.addRoots(objArr, params, rg, rgsubs);
+							var res = that.addRoots(objArr, params, rg, rgsubs);							
 							if (cb) cb({ guids: res });
 						};
 
@@ -606,11 +607,11 @@ define(
 					if (rg.length>0) {
 						if (params.rtype == "res") {
 							this.pvt.proxySrv.loadResources(rg, icb);
-							return "XXX";
+							return;
 						}
 						if (params.rtype == "data") {
 							this.pvt.proxySrv.queryDatas(rg, params.expr, icb);
-							return "XXX";
+							return;
 						}
 					}
 					else icb();

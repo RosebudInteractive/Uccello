@@ -131,13 +131,18 @@ define(
 						callback: this.onNewRoot
 					});
 					this.pvt.cdb.setDefaultCompCallback(createCompCallback);
-
-					this.getContextCM().getRoots(params.formGuids, { rtype: "res" },cb);
 					
-					this.dataBase(this.pvt.cdb.getGuid());
-					this.contextGuid(this.getGuid());
-					this.pvt.isOn = true;
-					if (this.pvt.renderRoot) this.pvt.isVisible = true;
+					function cb3(res) {
+						that.dataBase(that.pvt.cdb.getGuid());
+						that.contextGuid(that.getGuid());
+						that.pvt.isOn = true;
+						if (that.pvt.renderRoot) that.pvt.isVisible = true;	
+						if (cb) cb(res);
+					}
+
+					this.getContextCM().getRoots(params.formGuids, { rtype: "res" },cb3);
+					
+
 				}
 				else { // подписка (slave)			
 					guid = this.dataBase();

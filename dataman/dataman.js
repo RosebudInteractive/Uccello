@@ -233,7 +233,7 @@ define(
                     });
                 } else
                     this.readTableFile(table+(whereParams?'-'+whereParams[0]:'')+'.json', typeGuid, false, done);
-                return "XXX";
+                //return "XXX";
             },
 
             _loadMetaDataMgr: function () {

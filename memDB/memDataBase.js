@@ -930,7 +930,7 @@ define(
 				
 				// просто подписать остальные руты
 				for (i=0; i<rgsubs.length; i++) {
-					root = db.getRoot(rgsubs[i]);
+					root = this.getRoot(rgsubs[i]);
 					if (root) {
 						croot = root.obj;		
 						// возвращаем гуид если не были подписаны
@@ -945,6 +945,10 @@ define(
 							}
 						}			
 					}
+					else {
+						var ggs = this.getRootGuids();
+						console.log("ERROR ROOT SUBSCRIPTION", ggs.length, ggs, rg, rgsubs, this.pvt.rcoll);
+					}
 					
 				}
 
@@ -953,6 +957,7 @@ define(
 					this.getController().genDeltas(this.getGuid());		// рассылаем дельты
 				}
 				if (DEBUG) console.log("SERVER VERSION " + this.getVersion());
+
 				return res;
 			},
 
