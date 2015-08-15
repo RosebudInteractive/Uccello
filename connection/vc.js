@@ -368,7 +368,7 @@ define(
              * @param data
 			 * @param cb
              */			
-			sendDataBaseDelta: function(data, cb) {
+			OLDsendDataBaseDelta: function(data, cb) {
 				if (this.isMaster()) {	
 					var cm = this.getSysCM().getController();
 					var res=cm.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);

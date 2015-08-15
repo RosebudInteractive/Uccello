@@ -333,7 +333,7 @@ define(
                     nargs = [args];
 				this._tranStart(!nots);
 				if (f) f.apply(context, nargs);			
-				this.getController().genDeltas(this.getGuid(),undefined,null, function(res,cb) { that.getContext().sendDataBaseDelta(res,cb); });
+				this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });
 				this._tranCommit();				
 				if (!this.inTran()) {
 					var vc = this.getContext(); // ? рендерить можно и без завершения транзакции, подумать (если править, то и в колбэке выше!)
@@ -353,6 +353,21 @@ define(
 				}
 			},
 			
+            /**
+             * Метод для отправки дельт
+             * @param data
+			 * @param cb
+             */			
+			sendDataBaseDelta: function(data, cb) {
+				if (this.isMaster()) {	
+					var cdb = this.getController();
+					var res=cdb.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
+					if (cb) cb({data: {dbVersion: cdb.getDB(data.dbGuid).getVersion() }});
+				}
+				else {
+					this.remoteCallPlus(undefined, 'sendDataBaseDelta',[data],cb);
+				}
+			},			
 			
 			_checkRootVer: function (rootv) {
 			    if (DEBUG)
