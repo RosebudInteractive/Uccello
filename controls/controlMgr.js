@@ -158,7 +158,8 @@ define(
 			 * Вернуть компонент по его гуид
              */			
 			get: function(guid) {
-				return this.pvt.compByGuid[guid];
+			    //return this.pvt.compByGuid[guid];
+			    return this.pvt.objs[guid];
 			},
 
             /**
