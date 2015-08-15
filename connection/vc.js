@@ -131,8 +131,7 @@ define(
 						callback: this.onNewRoot
 					});
 					this.pvt.cdb.setDefaultCompCallback(createCompCallback);
-					
-					//this.XloadNewRoots(params.formGuids, { rtype: "res" },cb);
+
 					this.getContextCM().getRoots(params.formGuids, { rtype: "res" },cb);
 					
 					this.dataBase(this.pvt.cdb.getGuid());
@@ -154,8 +153,7 @@ define(
 						var forms = params.formGuids;
 						if (forms == null) forms = "all";
 						else if (forms == "") forms = [];
-						// 1212 that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
-						//that.XloadNewRoots(forms, { rtype: "res"  },cb2);
+						// that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
 						that.getContextCM().getRoots(forms, { rtype: "res"  },cb2);
 					},this.pvt.proxyServer);
 
@@ -303,10 +301,7 @@ define(
 			    };
 			},
 
-		    // добавляем новый набор данных - мастер-слейв варианты
-			// params.rtype = "res" | "data"
-			// params.compcb - только в случае ресурсов (может использоваться дефолтный)
-			// params.expr - выражение для данных
+			/* OBSOLETE --> ControlMgr.getRoots()
 			loadNewRoots: function(rootGuids,params, cb) {
 				var db = this.getContentDB();
 				
@@ -317,7 +312,7 @@ define(
 					    var objArr = r ? r.datas : null;
 
 					    function localCallback() {
-					        var res = db.addRoots(objArr, params, rg, rgsubs/*params.compcb, params.subDbGuid, override*/);
+					        var res = db.addRoots(objArr, params, rg, rgsubs);
 					        if (cb) cb({ guids: res });
 					    };
 
@@ -338,7 +333,7 @@ define(
 					for (var i=0; i<rootGuids.length; i++) {
 					    if (rootGuids[i].length > 36) { // instance Guid
 							var cr = this.getContextCM().getRoot(rootGuids[i]); 
-							if (cr && (params.expr &&  params.expr!=cr.hash) /*|| !params.expr*/) 
+							if (cr && (params.expr &&  params.expr!=cr.hash)) 
 									rg.push(rootGuids[i]);
 							else rgsubs.push(rootGuids[i]);
 						}
@@ -363,6 +358,7 @@ define(
 					this.remoteCall('loadNewRoots', [rootGuids, params],cb);
 				}
 			},
+			*/
 
             /**
              * Метод для отправки дельт

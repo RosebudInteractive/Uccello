@@ -77,7 +77,7 @@ define(
             routerSendDelta: function(data, done) {
 				if (DEBUG) console.time('applyDeltas');
                 this.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
-				//this.remoteCallExec(this, "applyDeltas",[data.dbGuid, data.srcDbGuid, data.delta],null,data.args.trGuid,done);
+				this.remoteCallExec(this, "applyDeltas",[data.dbGuid, data.srcDbGuid, data.delta],data.srcDbGuid,data.trGuid,done);
 				if (DEBUG) console.timeEnd('applyDeltas');
 
                 done({data: {dbVersion: this.getDB(data.dbGuid).getVersion() }});

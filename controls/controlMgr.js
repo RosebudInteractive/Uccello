@@ -263,7 +263,10 @@ define(
 				if (dbTran)
 					this.tranStart();
 			},
-
+			
+            /**
+             * Завершить транзакцию контрол-менеджера - 
+             */
 			_tranCommit: function() {
 				if (this.pvt.inTran) {
 					for (var i=0; i<this.pvt.tranQueue.length; i++) {
@@ -278,11 +281,13 @@ define(
 					this.pvt.tranQueue = null;
 					this.pvt.inTran = false;
 					if (this.pvt.tranCounter == 1)
-						this.getContext().remoteCall("endTran");
+						this.remoteCallPlus(undefined,"endTran");
+						
+						//this.getContext().remoteCall("endTran");
 					var memGuid = this.getCurTranGuid();
 					this.tranCommit();
 					if (memGuid && !this.inTran()) {
-						delete this.pvt.execTr[memGuid]; // почистить транзакцию
+						delete this.pvt.execTr[memGuid]; // почистить очередь транзакции
 						this.pvt.execQ.splice(0,1);
 						this.pvt.memTranIdx++;			
 					}		
@@ -481,7 +486,7 @@ define(
 				// TODO contextGuid вроде лишний
 				myargs.contextGuid = cm.getContext() ? cm.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
 				var contextCM = this; //cm.getContext() ? cm : this.getContextCM();
-				var data={action:"remoteCall3",type:"method",args: myargs };
+				var data={action:"remoteCall2",type:"method",args: myargs };
 				if (contextCM.getCurTranGuid()) {
 					data.trGuid = contextCM.getCurTranGuid();
 					data.rootv = {}; // добавить версии рутов

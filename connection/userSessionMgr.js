@@ -42,7 +42,6 @@ define(
                 router.add('createContext', function(){ return that.routerCreateContext.apply(that, arguments); });
                 router.add('newTab', function(){ return that.routerNewTab.apply(that, arguments); });
 				router.add('remoteCall2', function(){ return that.routerRemoteCallExec.apply(that, arguments); });
-				router.add('remoteCall3', function(){ return that.routerRemoteCallExec3.apply(that, arguments); });
             },
 			
 			getController: function() {
@@ -257,6 +256,7 @@ define(
                 return result;
             },
 			
+			/*
 			routerRemoteCallExec: function(data,done) {				
 				var args = data.args;
 				var context = this.cmsys.get(args.contextGuid);
@@ -268,9 +268,9 @@ define(
 				cm.remoteCallExec(uobj, args, data.srcDbGuid, data.trGuid, data.rootv, done);
 				//var dispObj = this.methodCallResolver(uobj, args);
 				//cm.remoteCallExec(dispObj.uobj, dispObj.args, data.srcDbGuid, data.trGuid, data.rootv, done);
-			},
+			},*/
 
-			routerRemoteCallExec3: function(data,done) {				
+			routerRemoteCallExec: function(data,done) {				
 				var args = data.args;
 
 				var cm  = this.getController().getDB(args.masterGuid);
