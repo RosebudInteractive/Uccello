@@ -123,7 +123,7 @@ define(
 					}
 				
 				if (this.isMaster()) { // главная (master) TODO разобраться с KIND
-					this.pvt.cdb = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
+					this.pvt.cm = this.pvt.cdb = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
 					// подписываемся на добавление нового рута
 					this.pvt.cdb.event.on( {
 						type: "newRoot",
@@ -131,6 +131,7 @@ define(
 						callback: this.onNewRoot
 					});
 					this.pvt.cdb.setDefaultCompCallback(createCompCallback);
+					
 					
 					function cb3(res) {
 						that.dataBase(that.pvt.cdb.getGuid());
@@ -140,8 +141,13 @@ define(
 						if (cb) cb(res);
 					}
 
-					this.getContextCM().getRoots(params.formGuids, { rtype: "res" },cb3);
-					
+					if (onServer)
+						this.getContextCM().getRoots(params.formGuids, { rtype: "res" },cb3);
+					else {
+						var cm2 = that.getContextCM();
+						cm2.userEventHandler(cm2,cm2.getRoots, [params.formGuids, { rtype: "res"  },cb3]);
+					}
+					    			
 
 				}
 				else { // подписка (slave)			
@@ -153,13 +159,15 @@ define(
 					}
 
 					var dbp = {name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}};
+					
 					this.pvt.cdb = this.pvt.cm = new ControlMgr( { controller: controller, dbparams: dbp}, that,that.pvt.socket, function(){
 						that.pvt.cdb.setDefaultCompCallback(createCompCallback);
 						var forms = params.formGuids;
 						if (forms == null) forms = "all";
 						else if (forms == "") forms = [];
 						// that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
-						that.getContextCM().getRoots(forms, { rtype: "res"  },cb2);
+						var cm2 = that.getContextCM();
+						cm2.userEventHandler(cm2,cm2.getRoots, [forms, { rtype: "res"  },cb2]);
 					},this.pvt.proxyServer);
 
 				}
@@ -168,7 +176,7 @@ define(
 					this.pvt.cm.event.on({
 						type: 'endTransaction',
 						subscriber: this,
-						callback: function(args) { that.renderAll(true); }
+						callback: function(args) { that.allDataInit(true); that.renderAll(true); }
 					});
 				}
 				
@@ -309,64 +317,7 @@ define(
 			loadNewRoots: function(rootGuids,params, cb) {
 				this.getContextCM().getRoots(rootGuids,params, cb);
 			},
-			/* OBSOLETE --> ControlMgr.getRoots()
-			loadNewRoots: function(rootGuids,params, cb) {
-				var db = this.getContentDB();
-				
-				var that = this;
-				if (this.isMaster()) {
-					function icb(r) {
 
-					    var objArr = r ? r.datas : null;
-
-					    function localCallback() {
-					        var res = db.addRoots(objArr, params, rg, rgsubs);
-					        if (cb) cb({ guids: res });
-					    };
-
-					    if (cb)
-					        db.addRemoteComps(objArr, localCallback);
-					    else {
-					        db.addLocalComps(objArr);
-					        localCallback();
-					    };
-					}
-					// Проверять, есть ли уже объект с таким гуидом и хэшем !!! (expression)
-					// если есть - то просто возвращать его, а не загружать заново. Если нет, тогда грузить.
-					var rg = []; // эти загрузить
-					var rgsubs = []; // а на эти просто подписать
-					rootGuids = db.getRootGuids(rootGuids);
-					
-					// Всегда добавляем новые - проверка существования не имеет смысла, мы говорим о гуидах прототипов
-					for (var i=0; i<rootGuids.length; i++) {
-					    if (rootGuids[i].length > 36) { // instance Guid
-							var cr = this.getContextCM().getRoot(rootGuids[i]); 
-							if (cr && (params.expr &&  params.expr!=cr.hash)) 
-									rg.push(rootGuids[i]);
-							else rgsubs.push(rootGuids[i]);
-						}
-						else rg.push(rootGuids[i]); // если resourceGuid			
-					}
-				
-					if (rg.length>0) {
-						if (params.rtype == "res") {
-							this.pvt.proxyServer.loadResources(rg, icb);
-							return "XXX";
-						}
-						if (params.rtype == "data") {
-							this.pvt.proxyServer.queryDatas(rg, params.expr, icb);
-							return "XXX";
-						}
-					}
-					else icb();
-				}
-				else { // slave
-					// вызываем загрузку нового рута у мастера
-					params.subDbGuid = this.getContentDB().getGuid();
-					this.remoteCall('loadNewRoots', [rootGuids, params],cb);
-				}
-			},
-			*/
 
             /**
              * Метод для отправки дельт
@@ -389,6 +340,14 @@ define(
 
 				var params = {ini: sobj, parent: parent.obj, colName: parent.colName};
 				return new (this.pvt.constructHolder.getComponent(typeObj.getGuid()).constr)(this.getContextCM(), params);
+			},
+			
+			allDataInit: function(pd) {
+				var roots = this.pvt.cm.getRootGuids("res");
+				for (var i=0; i<roots.length; i++) {
+					var root = this.pvt.cm.get(roots[i]);
+					this.pvt.cm.allDataInit(root, pd);
+				}				
 			},
 
 			renderAll: function(pd) {

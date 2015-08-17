@@ -188,34 +188,6 @@ define(
 			 remoteCall: function(func, aparams, cb) {
 				this.getControlMgr().remoteCallPlus(this.getGuid(),func,aparams,cb);
 			 },
-/*			 
-			remoteCall: function(func, aparams, cb) {
-				if (this.isMaster()) {
-					// TODO кинуть исключение
-					return;
-				}
-				if (DEBUG)
-				    console.log("REMOTE CALL " + func, aparams, cb);
-				var cm = this.getControlMgr();
-				var socket = cm.getSocket();
-				var pg = cm.getProxyMaster().guid;
-				
-				
-				var myargs = { masterGuid: pg,  objGuid: this.getGuid(), aparams:aparams, func:func  };
-				myargs.contextGuid = cm.getContext() ? cm.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
-				var contextCM = cm.getContext() ? cm : this.getContextCM();
-				var data={action:"remoteCall2",type:"method",args: myargs };
-				if (contextCM.getCurTranGuid()) {
-					data.trGuid = contextCM.getCurTranGuid();
-					data.rootv = {}; // добавить версии рутов
-					data.srcDbGuid = contextCM.getGuid();
-					var guids = contextCM.getRootGuids();
-					for (var i=0; i<guids.length; i++)
-						data.rootv[guids[i]]=contextCM.getObj(guids[i]).getRootVersion("valid");				
-				}
-				 contextCM._execMethod(socket,socket.send,[data,cb]);
-			},
-*/
 
             /**
              * Выставления признака isProcess для ProcessDelta

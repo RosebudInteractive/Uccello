@@ -179,13 +179,28 @@ define(
 				// сбросить признак isProcessed
 				for (var g in this.pvt.compByGuid) this.pvt.compByGuid[g]._isProcessed(false);
 			},
+			
+			allDataInit: function(component, pd) {
+				if (!this.pvt.subsInitFlag[component.getGuid()]) {
+					this.subsInit(component);  // если не выполнена постинициализация, то запустить
+					this.pvt.subsInitFlag[component.getGuid()] = true;
+				}
+				if (!this.pvt.dataInitFlag[component.getGuid()]) {
+					this._tranStart(true);
+					this.dataInit(component);
+					this._tranCommit();
+					this.pvt.dataInitFlag[component.getGuid()] = true;
+				}
+				
+				if (pd) this.processDelta();			
+			},
 
             /**
 			 * Рендеринг компонентов интерфейса
 			 *  @param component - корневой (обязательно) элемент, с которого запускается рендеринг
              */				
 			render: function(component, renderItem, pd) {
-			
+			/*
 				if (!this.pvt.subsInitFlag[component.getGuid()]) {
 					this.subsInit(component);  // если не выполнена постинициализация, то запустить
 					this.pvt.subsInitFlag[component.getGuid()] = true;
@@ -198,7 +213,7 @@ define(
 				}
 				
 				if (pd) this.processDelta();
-			
+			*/
 				if (renderItem) {
 					for(var i in this.pvt.viewSets)
 						if (this.pvt.viewSets[i].enable())
@@ -266,7 +281,7 @@ define(
 			},
 			
             /**
-             * Завершить транзакцию контрол-менеджера - 
+             * Завершить транзакцию контрол-менеджера 
              */
 			_tranCommit: function() {
 				if (this.pvt.inTran) {
@@ -281,10 +296,7 @@ define(
 					}
 					this.pvt.tranQueue = null;
 					this.pvt.inTran = false;
-					if (this.pvt.tranCounter == 1)
-						this.remoteCallPlus(undefined,"endTran");
-						
-						//this.getContext().remoteCall("endTran");
+					if (this.getCurTranCounter() == 1) this.remoteCallPlus(undefined,"endTran");					
 					var memGuid = this.getCurTranGuid();
 					this.tranCommit();
 					if (memGuid && !this.inTran()) {
@@ -299,15 +311,22 @@ define(
 				return this.pvt.inTran;
 			},
 
+            /**
+             * Вызов функции через транзакции, то есть с буферизацией (реальный вызов происходит при _commit)
+             * @param context Контекст в котором запускается прикладная функция
+             * @param method {function} функция
+             * @param args {object} Аргументы функции
+             */
 			_execMethod: function(context, method,args) {
 			
+				var that=this;
 				var ucallback = args[args.length-1];
-				if (typeof ucallback === 'function') {
-					var that=this;
-
-					args[args.length-1] = function(res) {
-						that.userEventHandler(context,ucallback,res, true);
+				if (typeof ucallback === 'function') {	
+					if (this._inTran()) { // это если на клиенте - на сервере мы не буферизуем вызовы
+						args[args.length-1] = function(res) { that.userEventHandler(context,ucallback,res, true); }
+						console.log("WE ARE ON  CLIENT");
 					}
+					else console.log("WE ARE ON  SERVER");
 				}
 
 				if (this._inTran())
@@ -316,7 +335,7 @@ define(
 			},
 			
             /**
-             * Функция-оболочка в которой завернуты системные действия. Должна вызываться компонентами
+             * Функция-оболочка в которой выполняются системные действия. Должна вызываться компонентами
 			 * в ответ на действия пользователя, содержательные методы передаются в функцию f
              * @param context Контекст в котором запускается прикладная функция
              * @param f {function} функция
@@ -343,6 +362,42 @@ define(
             },
 			
 			
+            /**
+             * Удаленный вызов метода на сервере
+			 * @param func - имя удаленной функции
+             * @param aparams - массив параметров удаленной функции
+			 * @callback cb - коллбэк
+             */			
+			remoteCallPlus: function(objGuid, func, aparams, cb) {
+			
+				if (this.isMaster()) {
+					// TODO кинуть исключение
+					return;
+				}
+				if (objGuid && !this.get(objGuid)) {
+					console.log("Объект не принадлежит базе ",objGuid);
+					return;
+				}
+
+				var socket = this.getSocket();
+				var pg = this.getProxyMaster().guid;
+				
+				var myargs = { masterGuid: pg,  objGuid: objGuid, aparams:aparams, func:func /*, trGuid:trGuid*/ };
+				// TODO contextGuid вроде лишний
+				myargs.contextGuid = this.getContext() ? this.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
+				var data={action:"remoteCall2",type:"method",args: myargs };
+				
+				if (this.getCurTranGuid()) {
+					data.trGuid = this.getCurTranGuid();
+					data.rootv = {}; // добавить версии рутов
+					data.srcDbGuid = this.getGuid();
+					var guids = this.getRootGuids();
+					for (var i=0; i<guids.length; i++)
+						data.rootv[guids[i]]=this.getObj(guids[i]).getRootVersion("valid");				
+				}
+				this._execMethod(socket,socket.send,[data,cb]);
+			},		
+						
 			// временный вариант ф-ции для рассылки оповещений подписантам, используется для рассылки признака конца транзакции
 			subsRemoteCall: function(func, aparams, excludeGuid) {		
 				var subs = this.getSubscribers();	
@@ -477,46 +532,7 @@ define(
 				}
 			},
 
-			
-            /**
-             * Удаленный вызов метода на сервере
-			 * @param func - имя удаленной функции
-             * @param aparams - массив параметров удаленной функции
-			 * @callback cb - коллбэк
-             */			
-			remoteCallPlus: function(objGuid, func, aparams, cb) {
-			
-				if (this.isMaster()) {
-					// TODO кинуть исключение
-					return;
-				}
-				if (objGuid && !this.get(objGuid)) {
-					console.log("Объект не принадлежит базе ",objGuid);
-					return;
-				}
 
-				var cm = this; //.getControlMgr();
-				var socket = this.getSocket();
-				var pg = cm.getProxyMaster().guid;
-				
-				var myargs = { masterGuid: pg,  objGuid: objGuid, aparams:aparams, func:func /*, trGuid:trGuid*/ };
-				// TODO contextGuid вроде лишний
-				myargs.contextGuid = cm.getContext() ? cm.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
-				var contextCM = this; //cm.getContext() ? cm : this.getContextCM();
-				var data={action:"remoteCall2",type:"method",args: myargs };
-				if (contextCM.getCurTranGuid()) {
-					data.trGuid = contextCM.getCurTranGuid();
-					data.rootv = {}; // добавить версии рутов
-					data.srcDbGuid = contextCM.getGuid();
-					var guids = contextCM.getRootGuids();
-					for (var i=0; i<guids.length; i++)
-						data.rootv[guids[i]]=contextCM.getObj(guids[i]).getRootVersion("valid");				
-				}
-				 contextCM._execMethod(socket,socket.send,[data,cb]);
-			},
-
-			
-			
             /**
              * Параметр автоотсылки дельт
              * @param value {boolean}
@@ -580,8 +596,10 @@ define(
 							if (cb) cb({ guids: res });
 						};
 
-						if (cb)
-							that.addRemoteComps(objArr, localCallback);
+						if (cb) {
+							that._execMethod(that,that.addRemoteComps,[objArr, localCallback]);
+							//that.addRemoteComps(objArr, localCallback);
+						}
 						else {
 							that.addLocalComps(objArr);
 							localCallback();
@@ -606,11 +624,13 @@ define(
 				
 					if (rg.length>0) {
 						if (params.rtype == "res") {
-							this.pvt.proxySrv.loadResources(rg, icb);
+							this._execMethod(this.pvt.proxySrv,this.pvt.proxySrv.loadResources, [rg,icb]);
+							//this.pvt.proxySrv.loadResources(rg, icb);
 							return;
 						}
 						if (params.rtype == "data") {
-							this.pvt.proxySrv.queryDatas(rg, params.expr, icb);
+							this._execMethod(this.pvt.proxySrv,this.pvt.proxySrv.queryDatas, [rg, params.expr, icb]);
+							//this.pvt.proxySrv.queryDatas(rg, params.expr, icb);
 							return;
 						}
 					}

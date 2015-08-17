@@ -173,13 +173,6 @@ define(
                 return newVal;
             },
 			
-			/*
-            rootInstance: function (value) {
-               var val = this._genericSetter("RootInstance", value);
-			   return val;
-            },
-			*/
-
             cursor: function (value) {
 				var oldVal = this._genericSetter("Cursor");
                 var newVal=this._genericSetter("Cursor", value);

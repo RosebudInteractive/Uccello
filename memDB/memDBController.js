@@ -156,8 +156,8 @@ define(
 			// proxy - прокси базы, которая подписывается
 			// masterGuid - база данных, на которую подписываем
             onSubscribe: function(proxy,masterGuid) {
-				var p=this.findOrCreateProxy(proxy);				
-				db=this.getDB(masterGuid);
+				var p = this.findOrCreateProxy(proxy);				
+				var db = this.getDB(masterGuid);
 				db.onSubscribe(p);
 				return { dbVersion: db.getVersion() };
             },

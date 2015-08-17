@@ -150,13 +150,6 @@ define(
                     // создаем  контроллер и бд
                     that.pvt.controller = new MemDBController();
 
-/*
-                    that.pvt.controller.event.on({
-                        type: 'endApplyDeltas',
-                        subscriber: this,
-                        callback: function(args) { if ( that.getContext() && args.commit) that.getContext().renderAll(true); }
-                    });
-*/
                     // создаем бд менеджера метаинформации
                     var dbp = {name:"DatamanDB", proxyMaster : {connect: that.pvt.clientConnection.socket, guid: '66d43749-223a-48cb-9143-122381b9ed3c'}};
                     that.pvt.cmdataman = new ControlMgr( { controller: that.pvt.controller, dbparams: dbp},null,that.pvt.clientConnection.socket, function(){
@@ -271,7 +264,8 @@ define(
 
                 function cbfinal2(result2){
                     result2 = result2 && result2.guids ? result2.guids : result2;
-                    that.getContext().renderForms(result2, false);
+                    // that.getContext().renderForms(result2, false);
+					that.getContext().allDataInit(false);
                     if (cbfinal)
                         cbfinal(result2);
                 }

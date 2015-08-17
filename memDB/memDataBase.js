@@ -1236,6 +1236,10 @@ define(
 			
 			getCurTranGuid: function() {
 				return this.pvt.curTranGuid;
+			},
+			
+			getCurTranCounter: function() {
+				return this.pvt.tranCounter;
 			}
 
         });
