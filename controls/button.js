@@ -12,7 +12,10 @@ define(
 			classGuid: UCCELLO_CONFIG.classGuids.Button,
             metaFields: [
                 {fname:"Caption",ftype:"string"},
-                {fname: "OnClick", ftype: "event"}
+                {fname: "OnClick", ftype: "event"},
+                {fname:"ButtonKind",ftype:"string"},  // Normal, Toggle, Radio
+                {fname:"RadioGroup",ftype:"string"},
+                {fname:"Pressed",ftype:"boolean"}
             ],
 
             /**
@@ -30,6 +33,18 @@ define(
 			// Properties
             caption: function(value) {
                 return this._genericSetter("Caption", value);
+            },
+
+            buttonKind: function(value) {
+                return this._genericSetter("ButtonKind", value);
+            },
+
+            radioGroup: function(value) {
+                return this._genericSetter("RadioGroup", value);
+            },
+
+            pressed: function(value) {
+                return this._genericSetter("Pressed", value);
             }
         });
         return Button;
