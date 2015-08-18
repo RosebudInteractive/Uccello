@@ -222,8 +222,8 @@ define(
 			
 			getFieldType: function (fld) {
 			    var fname = fld;
-			    if (typeof fname === "numeric")
-			        fname = this.pvt.objType.pvt.fieldsArr[i];
+			    if (typeof fname === "number")
+			        fname = this.pvt.objType.pvt.fieldsArr[fld];
 			    return this.pvt.objType.pvt.fieldsTable[fname].ftype;
 			},
 			
