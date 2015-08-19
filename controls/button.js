@@ -14,7 +14,6 @@ define(
                 {fname:"Caption",ftype:"string"},
                 {fname: "OnClick", ftype: "event"},
                 {fname:"ButtonKind",ftype:"string"},  // Normal, Toggle, Radio
-                {fname:"RadioGroup",ftype:"string"},
                 {fname:"Pressed",ftype:"boolean"}
             ],
 
