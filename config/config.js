@@ -70,6 +70,9 @@ define([], function () {
             { className: 'MetaModelField', isUccello: true, component: 'metaData/metaModelField', metaType: ['sys', 'client'] },
             { className: 'MetaModel', isUccello: true, component: 'metaData/metaModel', metaType: ['sys', 'client'] },
             { className: 'MetaDataMgr', isUccello: true, component: 'metaData/metaDataMgr', metaType: ['sys', 'client'] },
+            { className:'Toolbar', isUccello: true, component:'controls/toolbar', viewset:false, metaType: ['content']},
+            { className:'ToolbarButton', isUccello: true, component:'controls/toolbarButton', viewset:false, metaType: ['content']},
+            { className:'ToolbarSeparator', isUccello: true, component:'controls/toolbarSeparator', viewset:false, metaType: ['content']}
         ],
 
         // остальные гуиды
@@ -141,7 +144,10 @@ define([], function () {
             'CollectionIndex':"43626e45-cfeb-406a-aca8-122a8bcbd5aa",
             'IndexField':"7806a983-c946-438f-95a4-71ab08e38074",
             'TabContainer':"3fd621ab-4b0a-038f-b617-88dc28a05a67",
-            'ProcessObject':"8b8d0990-543c-40b1-8f04-7b7235938f65"
+            'ProcessObject':"8b8d0990-543c-40b1-8f04-7b7235938f65",
+            'Toolbar':'afc2da5a-ad87-4d0c-83dd-96df7ae1b3b6',
+            'ToolbarButton':'6ddef43f-252a-46e3-bb68-2a5a52f0702e',
+            'ToolbarSeparator':'050fd0ed-873a-4637-916b-145cb71e425f'
         },
 
         // изменяемые свойства
