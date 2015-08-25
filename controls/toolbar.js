@@ -17,7 +17,11 @@ define(
                 {fname:"Caption",ftype:"string"},
                 {fname:"Image",ftype:"string"},
                 {fname:"ContentAlign",ftype:"string"},
-                {fname:"Spacing",ftype:"string"}
+                {fname:"Spacing",ftype:"string"},
+                {fname:"LayersContainer",ftype:{
+                    type: "ref",
+                    res_elem_type: UCCELLO_CONFIG.classGuids.LayersContainer
+                }}
             ],
 
             init: function(cm,params){
@@ -50,6 +54,9 @@ define(
             },
             spacing: function(value) {
                 return this._genericSetter("Spacing", value);
+            },
+            layersContainer: function(value) {
+                return this._genericSetter("LayersContainer", value);
             }
         });
         return Toolbar;

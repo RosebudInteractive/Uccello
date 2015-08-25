@@ -14,7 +14,9 @@ define(
                 {fname:"Caption",ftype:"string"},
                 {fname: "OnClick", ftype: "event"},
                 {fname:"ButtonKind",ftype:"string"},  // Normal, Toggle, Radio
-                {fname:"Pressed",ftype:"boolean"}
+                {fname:"Pressed",ftype:"boolean"},
+                {fname:"CaptionStyle",ftype:"string"},
+                {fname:"Image",ftype:"string"}
             ],
 
             /**
@@ -44,6 +46,13 @@ define(
 
             pressed: function(value) {
                 return this._genericSetter("Pressed", value);
+            },
+            captionStyle: function(value) {
+                return this._genericSetter("CaptionStyle", value);
+            },
+
+            image: function(value) {
+                return this._genericSetter("Image", value);
             }
         });
         return Button;

@@ -11,8 +11,7 @@ define(
             className: "GenToolbarButton",
             classGuid: UCCELLO_CONFIG.classGuids.ToolbarButton,
             metaFields: [
-                {fname:"CaptionStyle",ftype:"string"},
-                {fname:"Image",ftype:"string"}
+                {fname:"TabNumber",ftype:"int"}
             ],
 
             /**
@@ -26,12 +25,8 @@ define(
             },
 
             // Properties
-            captionStyle: function(value) {
-                return this._genericSetter("CaptionStyle", value);
-            },
-
-            image: function(value) {
-                return this._genericSetter("Image", value);
+            tabNumber: function(value) {
+                return this._genericSetter("TabNumber", value);
             }
 
         });
