@@ -180,7 +180,7 @@ define(
 				for (var g in this.pvt.compByGuid) this.pvt.compByGuid[g]._isProcessed(false);
 			},
 			
-			allDataInit: function(component, pd) {
+			allDataInit: function(component) {
 				if (!this.pvt.subsInitFlag[component.getGuid()]) {
 					this.subsInit(component);  // если не выполнена постинициализация, то запустить
 					this.pvt.subsInitFlag[component.getGuid()] = true;
@@ -192,14 +192,15 @@ define(
 					this.pvt.dataInitFlag[component.getGuid()] = true;
 				}
 				
-				if (pd) this.processDelta();			
+				//if (pd) 
+				this.processDelta();			
 			},
 
             /**
 			 * Рендеринг компонентов интерфейса
 			 *  @param component - корневой (обязательно) элемент, с которого запускается рендеринг
              */				
-			render: function(component, renderItem, pd) {
+			render: function(component, renderItem) {
 			/*
 				if (!this.pvt.subsInitFlag[component.getGuid()]) {
 					this.subsInit(component);  // если не выполнена постинициализация, то запустить
@@ -323,7 +324,14 @@ define(
 				var ucallback = args[args.length-1];
 				if (typeof ucallback === 'function') {	
 					if (this._inTran()) { // это если на клиенте - на сервере мы не буферизуем вызовы
-						args[args.length-1] = function(res) { that.userEventHandler(context,ucallback,res, true); }
+						// TODO REFACT8 здесь нужно вставить вызов процесс-дельта!!!
+						function cb(res) {
+							var vc = that.getContext();
+							if (vc) vc.allDataInit();
+							that.userEventHandler(context,ucallback,res, true);
+						}
+						
+						args[args.length-1] = cb;
 						console.log("WE ARE ON  CLIENT");
 					}
 					else console.log("WE ARE ON  SERVER");
@@ -356,8 +364,8 @@ define(
 				this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });
 				this._tranCommit();				
 				if (!this.inTran()) {
-					var vc = this.getContext(); // ? рендерить можно и без завершения транзакции, подумать (если править, то и в колбэке выше!)
-					if (vc) vc.renderAll(true); // true? если мы на клиенте, то наверное да..
+					var vc = this.getContext();
+					if (vc) vc.renderAll();
 				}
             },
 			
@@ -382,9 +390,11 @@ define(
 				var socket = this.getSocket();
 				var pg = this.getProxyMaster().guid;
 				
-				var myargs = { masterGuid: pg,  objGuid: objGuid, aparams:aparams, func:func /*, trGuid:trGuid*/ };
+				var myargs = { masterGuid: pg,  objGuid: objGuid, aparams:aparams, func:func };
 				// TODO contextGuid вроде лишний
+				/*
 				myargs.contextGuid = this.getContext() ? this.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
+				*/
 				var data={action:"remoteCall2",type:"method",args: myargs };
 				
 				if (this.getCurTranGuid()) {
@@ -450,7 +460,8 @@ define(
 				var queue = this.pvt.execQ;
 				var auto = false;				
 				// пропускаем "конец" транзакции если клиент был сам ее инициатором
-				if (trGuid && (db.getCurTranGuid() == trGuid) && !(db.isExternalTran()) && (args.func=="endTran")) return;
+				if (trGuid && (db.getCurTranGuid() == trGuid) && !(db.isExternalTran()) && (args.func=="endTran")) 
+					return;
 				if (!trGuid) {	// "автоматическая" транзакция, создается если нет гуида транзакции
 					trGuid = Utils.guid();
 					auto=true;

@@ -108,7 +108,6 @@ define(
                         var id = Math.floor(Math.random() * 100000);
                         var obj = null;
                         if (parObj) {
-                            //cm.userEventHandler(that, function () {
                                 colName = colName? colName: "Children";
                                 if (fields) {
                                     if (!fields['Id']) fields['Id'] = id;
@@ -116,7 +115,6 @@ define(
                                 } else
                                     fields = {Id:id, Name:objName, Width: 50, Height: 100};
                                 obj = new (vc.getConstructorHolder().getComponent(UCCELLO_CONFIG.classGuids[className]).constr)(cm, {parent: parObj, colName: colName, ini:{fields:fields} });
-                            //});
                         }
                         return obj;
                     },
@@ -265,7 +263,7 @@ define(
                 function cbfinal2(result2){
                     result2 = result2 && result2.guids ? result2.guids : result2;
                     // that.getContext().renderForms(result2, false);
-					that.getContext().allDataInit(false);
+					that.getContext().allDataInit();
                     if (cbfinal)
                         cbfinal(result2);
                 }

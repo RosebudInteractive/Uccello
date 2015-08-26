@@ -794,14 +794,13 @@ define(
 				
 				if (rholder)   // VER инициализация номеров версий рута
 					if (("ver" in sobj)) {
-						rholder.vver = sobj.ver; // TODOХ не до конца ясно как поступать с версиями в случае частичной сериализации - продумать
+						rholder.vver = sobj.ver; 
 						rholder.sver = sobj.ver; // НАЗНАЧЕНИЕ ВЕРСИЙ ВЫНЕСТИ ЗА ПРЕДЕЛЫ ДЕСЕРИАЛАЙЗА
 						rholder.dver = sobj.ver;						
 					}
 
 				this.resolveAllRefs();
 				res.getLog().setActive(true);
-				// TODO - запомнить "сериализованный" объект (или еще раз запустить сериализацию?)
 				return res;
 			},
 
@@ -1203,7 +1202,7 @@ define(
 					this.pvt.tranCounter=1;
 				}
 				if (DEBUG)
-				    console.log("TRAN|START " + this.pvt.tranCounter);
+				    console.log("TRANSTART "+this.pvt.curTranGuid+" | " + this.pvt.tranCounter," Ext:",this.pvt.externalTran);
 				return this.pvt.curTranGuid;
 				
 			},

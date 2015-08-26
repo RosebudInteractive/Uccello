@@ -44,6 +44,7 @@ define(
 				if (this.isOn()) {
 					var guids = this.pvt.cm.getRootGuids("res")
 					this.pvt.cm.initRender(guids);
+					if (!onServer) this.renderAll();
 					cb(guids);
 					return;
 				}
@@ -176,7 +177,7 @@ define(
 					this.pvt.cm.event.on({
 						type: 'endTransaction',
 						subscriber: this,
-						callback: function(args) { that.allDataInit(true); that.renderAll(true); }
+						callback: function(args) { that.allDataInit(); that.renderAll(); }
 					});
 				}
 				
@@ -318,45 +319,27 @@ define(
 				this.getContextCM().getRoots(rootGuids,params, cb);
 			},
 
-
-            /**
-             * Метод для отправки дельт
-             * @param data
-			 * @param cb
-             */			
-			OLDsendDataBaseDelta: function(data, cb) {
-				if (this.isMaster()) {	
-					var cm = this.getSysCM().getController();
-					var res=cm.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
-					if (cb) cb({data: {dbVersion: cm.getDB(data.dbGuid).getVersion() }});
-				}
-				else {
-					this.remoteCall('sendDataBaseDelta',[data],cb);
-				}
-			},
-
-
 			createComponent: function(typeObj, parent, sobj) {
 
 				var params = {ini: sobj, parent: parent.obj, colName: parent.colName};
 				return new (this.pvt.constructHolder.getComponent(typeObj.getGuid()).constr)(this.getContextCM(), params);
 			},
 			
-			allDataInit: function(pd) {
+			allDataInit: function() {
 				var roots = this.pvt.cm.getRootGuids("res");
 				for (var i=0; i<roots.length; i++) {
 					var root = this.pvt.cm.get(roots[i]);
-					this.pvt.cm.allDataInit(root, pd);
+					this.pvt.cm.allDataInit(root);
 				}				
 			},
 
-			renderAll: function(pd) {
+			renderAll: function() {
 				
 				var ga = this.pvt.cm.getRootGuids("res");
-				this.renderForms(ga,pd);
+				this.renderForms(ga);
 			},
 
-			renderForms: function(roots, pd) {
+			renderForms: function(roots) {
 			    //if (DEBUG) console.log("%c RENDER FORMS " + pd, 'color: green');
 				for (var i=0; i<roots.length; i++) {
 					var root = this.pvt.cm.get(roots[i]);
@@ -364,7 +347,7 @@ define(
 						var renderItem = this.pvt.renderRoot(roots[i]);
 					else renderItem = null;
 					if (root)
-						this.pvt.cm.render(root,renderItem, pd);
+						this.pvt.cm.render(root,renderItem);
 				}
 				this.getContentDB().resetModifLog();
 			},
