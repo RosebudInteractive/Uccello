@@ -201,7 +201,7 @@ define(
 					return;
 				
 				var db = this.getObj().getDB();
-				var dbver = db.getCurrentVersion(); // инкрементируем версии если нужно
+				/*var dbver =*/ db.getCurrentVersion(); // инкрементируем версии если нужно
 				var ver = this.getObj().getCurVersion();
 
 				if (!(ver.toString() in this.pvt.versions))

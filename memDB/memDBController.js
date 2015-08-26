@@ -19,7 +19,7 @@ define(
                     router.add('unsubscribe', function(){ return that.routerUnsubscribe.apply(that, arguments); });
                     router.add('subscribeRoot', function(){ return that.routerSubscribeRoot.apply(that, arguments); });
 					router.add('subscribeManyRoots', function(){ return that.routerSubscribeManyRoots.apply(that, arguments); });
-                    router.add('sendDelta', function(){ return that.routerSendDelta.apply(that, arguments); });
+                    //router.add('sendDelta', function(){ return that.routerSendDelta.apply(that, arguments); });
                 }
 			},
 			
@@ -74,14 +74,14 @@ define(
             },
 
 
+			/*
             routerSendDelta: function(data, done) {
 				if (DEBUG) console.time('applyDeltas');
                 this.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
 				
-				/*
-				var args = { func: "applyDeltas", aparams :[data.dbGuid, data.srcDbGuid, data.delta] };
-				this.getDB(data.dbGuid).remoteCallExec(this, args,data.srcDbGuid,data.trGuid,null, done);
-				*/
+				//var args = { func: "applyDeltas", aparams :[data.dbGuid, data.srcDbGuid, data.delta] };
+				//this.getDB(data.dbGuid).remoteCallExec(this, args,data.srcDbGuid,data.trGuid,null, done);
+				
 				if (DEBUG) console.timeEnd('applyDeltas');
 
                 done({data: {dbVersion: this.getDB(data.dbGuid).getVersion() }});
@@ -92,7 +92,7 @@ define(
 					db: this.getDB(data.dbGuid)
                 });
 				
-            },
+            },*/
 			
 			// сгенерировать guid
 			guid: function () {

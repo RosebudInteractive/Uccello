@@ -192,7 +192,6 @@ define(
 					this.pvt.dataInitFlag[component.getGuid()] = true;
 				}
 				
-				//if (pd) 
 				this.processDelta();			
 			},
 
@@ -201,20 +200,7 @@ define(
 			 *  @param component - корневой (обязательно) элемент, с которого запускается рендеринг
              */				
 			render: function(component, renderItem) {
-			/*
-				if (!this.pvt.subsInitFlag[component.getGuid()]) {
-					this.subsInit(component);  // если не выполнена постинициализация, то запустить
-					this.pvt.subsInitFlag[component.getGuid()] = true;
-				}
-				if (!this.pvt.dataInitFlag[component.getGuid()]) {
-					this._tranStart(true);
-					this.dataInit(component);
-					this._tranCommit();
-					this.pvt.dataInitFlag[component.getGuid()] = true;
-				}
-				
-				if (pd) this.processDelta();
-			*/
+
 				if (renderItem) {
 					for(var i in this.pvt.viewSets)
 						if (this.pvt.viewSets[i].enable())
@@ -324,7 +310,6 @@ define(
 				var ucallback = args[args.length-1];
 				if (typeof ucallback === 'function') {	
 					if (this._inTran()) { // это если на клиенте - на сервере мы не буферизуем вызовы
-						// TODO REFACT8 здесь нужно вставить вызов процесс-дельта!!!
 						function cb(res) {
 							var vc = that.getContext();
 							if (vc) vc.allDataInit();
@@ -391,10 +376,7 @@ define(
 				var pg = this.getProxyMaster().guid;
 				
 				var myargs = { masterGuid: pg,  objGuid: objGuid, aparams:aparams, func:func };
-				// TODO contextGuid вроде лишний
-				/*
-				myargs.contextGuid = this.getContext() ? this.getContext().getGuid() :  this.getGuid(); // если нет гуида контекста, то считаем что метод из VC
-				*/
+
 				var data={action:"remoteCall2",type:"method",args: myargs };
 				
 				if (this.getCurTranGuid()) {

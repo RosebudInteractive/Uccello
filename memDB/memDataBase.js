@@ -64,7 +64,6 @@ define(
 		        this.event = new Event();
 				// транзакции
 				pvt.curTranGuid = undefined; // верси текущей транзакции БД
-				//pvt.tranId = 0;				// номер версии транзакции
 				pvt.tranCounter = 0;		// счетчик транзакции
 				pvt.commitFlag = false;
 
