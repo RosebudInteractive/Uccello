@@ -84,7 +84,7 @@ define(
 				
 				if (DEBUG) console.timeEnd('applyDeltas');
 
-                done({data: {dbVersion: this.getDB(data.dbGuid).getVersion() }});
+                done({data: {dbVersion: this.getDB(data.dbGuid).XgetVersion() }});
 				
 				this.event.fire({
                     type: 'end2ApplyDeltas',
@@ -159,7 +159,7 @@ define(
 				var p = this.findOrCreateProxy(proxy);				
 				var db = this.getDB(masterGuid);
 				db.onSubscribe(p);
-				return { dbVersion: db.getVersion() };
+				return { /*dbVersion: db.getVersion()*/ };
             },
 
             /**
@@ -270,7 +270,6 @@ define(
 
 				if (cdelta.constructors) {
 				    // Пришли конструкторы новых типов
-
 				    console.log("Constructors have been received with DELTA!");
 				    var constr = cdelta.constructors;
 				    var constructHolder = (constr.length > 0) && db.getContext() ? db.getContext().getConstructorHolder() : null;
@@ -285,6 +284,7 @@ define(
 				    var ro = db.getObj(cdelta.rootGuid);
 				    if (ro) {
 				        var lval = ro.getRootVersion("valid");
+						var lsent = ro.getRootVersion("sent");
 				        var ldraft = ro.getRootVersion();
 				        var dver = cdelta.ver;
 				        if (db.isMaster()) { // мы в мастер-базе (на сервере или на клиенте в клиентском контексте)
@@ -295,9 +295,12 @@ define(
 				            }
 				        }
 				        else { // на клиенте (slave)
-				            if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
+							// TODO 9
+				            //if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
+							if (lsent == dver - 1) {
 				                // если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
-				                if (ldraft > lval) {
+				                //if (ldraft > lval) {
+								 if (ldraft > lsent) {
 				                    console.log("UNDO if (ldraft>lval) : " + ro.getGuid() + "valid version: " + lval + " delta version:" + dver);
 				                    db.undo(lval);
 				                }
@@ -332,11 +335,13 @@ define(
 				            db._buildMetaTables();
 				    }
 
-				    db.setVersion("valid", cdelta.dbVersion);
-				    db.setVersion("sent", cdelta.dbVersion);
+
+					//db.setVersion("valid", cdelta.dbVersion);
+				    //db.setVersion("sent", cdelta.dbVersion);
 
 				    if (cdelta.rootGuid) {
-				        db.getObj(cdelta.rootGuid).setRootVersion("valid", cdelta.ver);
+						// TODO 9 - valid -версию меняем в коммите
+				        // db.getObj(cdelta.rootGuid).setRootVersion("valid", cdelta.ver);
 				        db.getObj(cdelta.rootGuid).setRootVersion("sent", cdelta.ver);
 				    }
 				};
@@ -357,7 +362,8 @@ define(
 				var deltas = db.genDeltas();
 				if (deltas.length > 0) {
 				    this.propagateDeltas(dbGuid, null, deltas, callback, sendFunc);
-				    if (db.getVersion("sent") < db.getVersion()) db.setVersion("sent", db.getVersion());
+
+				    //if (db._getVersion("sent") < db._getVersion()) db._setVersion("sent", db._getVersion());
 
 				    for (var i = 0; i < deltas.length; i++) {
 				        if (deltas[i].rootGuid) {
@@ -378,6 +384,8 @@ define(
 
 					if (DEBUG) console.log("CALLBACK PROPAGATE DELTAS",result,deltas);
 					
+					// TODO 9 валид-версии меняем в коммите
+					/*
 					for (var guid in rootv) // апдейтим подтвержденные версии рутов после того, как успешно применили их на сервере
 						if (db.getObj(guid).getRootVersion("valid")<rootv[guid])
 							db.getObj(guid).setRootVersion("valid",rootv[guid]);
@@ -385,14 +393,15 @@ define(
 						 console.log("SYNC VERS CB PROBLEM: "+rootv[guid]+"Clt Ver:"+db.getObj(guid).getRootVersion("valid")+"Cb Ver:"+rootv[guid]);
 					
 					
-					if (db.getVersion("valid")<result.data.dbVersion) 
-						db.setVersion("valid", result.data.dbVersion); 
+					if (db.XgetVersion("valid")<result.data.dbVersion) 
+						db.XsetVersion("valid", result.data.dbVersion); 
 						
-					if (db.getVersion("valid")>result.data.dbVersion) { 
+					if (db.XgetVersion("valid")>result.data.dbVersion) { 
 						// откатить до версии сервера
 						//db.undo(result.data.dbVersion);
-						console.log("SYNC VERS CBDB PROBLEM - Clt Ver:"+db.getVersion("valid")+"Cb Ver:"+result.data.dbVersion);
+						console.log("SYNC VERS CBDB PROBLEM - Clt Ver:"+db.XgetVersion("valid")+"Cb Ver:"+result.data.dbVersion);
 					}
+					*/
 
 					if (callback)
 					    callback(result);
@@ -444,7 +453,7 @@ define(
 									emptyDelta.ver = delta.ver;
 									emptyDelta.rootGuid = delta.rootGuid;
 									emptyDelta.trGuid = delta.trGruid;
-									emptyDelta.dbVersion = delta.dbVersion;
+									//emptyDelta.dbVersion = delta.dbVersion;
 								}
 								
 								subscriber.connect.send({action:"sendDelta", delta:emptyDelta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid(), trGuid:trGuid});

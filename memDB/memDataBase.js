@@ -71,10 +71,9 @@ define(
 		            var db=this;
 		            controller._subscribe(this,params.proxyMaster, function(result) {
 		                pvt.proxyMaster = controller.getProxy(params.proxyMaster.guid);
-						// DBVER
-		                pvt.version = result.data.dbVersion; // устанавливаем номер версии базы по версии мастера
+		                /*pvt.version = result.data.dbVersion; // устанавливаем номер версии базы по версии мастера
 		                pvt.validVersion = pvt.version;
-		                pvt.sentVersion = pvt.version;
+		                pvt.sentVersion = pvt.version;*/
 		                controller.subscribeRoots(db, UCCELLO_CONFIG.guids.metaRootGuid, function(){
 		                    db._buildMetaTables();
 		                    if (cb !== undefined && (typeof cb == "function")) cb();
@@ -887,7 +886,8 @@ define(
 				var res = [];
 
 				// VER если нужно инкрементируем драфт-версию
-				this.getCurrentVersion();
+				// TODO 9
+				//this.getCurrentVersion();
 
 				var allSubs = this.getSubscribers();
 
@@ -923,7 +923,8 @@ define(
 						root.hash = params.expr;
 					}
 					// VER подтверждаем версию на сервере
-					croot.setRootVersion("valid",croot.getRootVersion());
+					// TODO 9 валид-версию меняем в коммите
+					//croot.setRootVersion("valid",croot.getRootVersion());
 				}	
 				
 				// просто подписать остальные руты
@@ -951,10 +952,10 @@ define(
 				}
 
 				if (!this.getCurTranGuid()) {
-					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
+					// TODO 9
+					// this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
 					this.getController().genDeltas(this.getGuid());		// рассылаем дельты
 				}
-				if (DEBUG) console.log("SERVER VERSION " + this.getVersion());
 
 				return res;
 			},
@@ -982,6 +983,7 @@ define(
             /**
              * Вернуть версию БД
              */
+			 /*
 			getVersion: function(verType) {
 				switch (verType) {
 					case "sent": return this.pvt.sentVersion;
@@ -989,11 +991,15 @@ define(
 					default: return this.pvt.version;
 				}
 			},
+			
+			_getVersion: function(verType) {
+				return this.getVersion(verType);
+			},
 
 			setVersion: function(verType,val) {
 				switch (verType) {
 					case "sent":
-						if (/*(val>=this.pvt.validVersion) && */(val<=this.pvt.version)) this.pvt.sentVersion=val;
+						if ((val<=this.pvt.version)) this.pvt.sentVersion=val;
 						else {
 							//if (DEBUG) console.log("*** sent setversion error");
 							//if (DEBUG) console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
@@ -1014,16 +1020,21 @@ define(
 						break;
 				}
 			},
+			
+			_setVersion: function(verType,val) {
+				return this.setVersion(verType,val);
+			},*/
 
 			// вернуть "текущую" версию, которой маркируются изменения в логах
 			
+			/*
 			getCurrentVersion: function() {
 
 				var sver = this.getVersion("sent");
 				var ver = this.getVersion();
 				if (ver==sver) this.setVersion("draft",this.getVersion()+1);
 				return this.getVersion();
-			},
+			},*/
 
 
             /**
@@ -1115,13 +1126,16 @@ define(
              */
 			undo: function(version) {
 				if (DEBUG) console.log("****************************************  UNDO MODIFICATIONS!!!!!!!!!!");
-				if (version<this.getVersion("valid"))
+				// TODO 9 -  ПЕРЕПИСАТЬ
+				/*
+				if (version<this.XgetVersion("valid"))
 					return false;
 				for (var i=0; i<this.countRoot(); i++)
 					this.getRoot(i).obj.getLog().undo(version);
 
-				if (this.getVersion("sent")>version) this.setVersion("sent",version);
-				this.setVersion("draft",version);
+				if (this.XgetVersion("sent")>version) this.XsetVersion("sent",version);
+				this.XsetVersion("draft",version);
+				*/
 				return true;
 			},
 
@@ -1155,15 +1169,17 @@ define(
 					        };
 					    } else
 					        allDeltas.push(d);
-					    // VER если в мастере, то сразу и подтверждаем 					
-						if (this.isMaster() && !this.getCurTranGuid()) 
-							this.getRoot(i).obj.setRootVersion("valid",this.getRoot(i).obj.getRootVersion());
+					    // VER если в мастере, то сразу и подтверждаем 		
+						// TODO 9 валид-версию меняем в коммите
+						//if (this.isMaster() && !this.getCurTranGuid()) 
+						//	this.getRoot(i).obj.setRootVersion("valid",this.getRoot(i).obj.getRootVersion());
 						
 					}
 				}
-				// DBVER если в мастере и вне транзакции, то автоматом поднимаем валидную версию				
-				if (this.isMaster() && !this.getCurTranGuid())	
-					this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (если вне транзакции)
+				// DBVER если в мастере и вне транзакции, то автоматом поднимаем валидную версию	
+				// TODO 9 валид-версию меняем в коммите				
+				//if (this.isMaster() && !this.getCurTranGuid())	
+				//	this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (если вне транзакции)
 
 				return allDeltas;
 			},
@@ -1184,9 +1200,7 @@ define(
 
 			// Транзакции
 			// - только 1 транзакция в единицу времени на memDB			
-			tranStart: function(guid) {
-				this.pvt.externalTran = false;
-						
+			tranStart: function(guid) {					
 				if (this.pvt.curTranGuid) 
 					if ((this.pvt.curTranGuid == guid) || (!guid)) 
 						this.pvt.tranCounter++;
@@ -1196,8 +1210,10 @@ define(
 						this.pvt.curTranGuid = guid;
 						this.pvt.externalTran = true;
 					}
-					else
+					else {
 						this.pvt.curTranGuid = Utils.guid();
+						this.pvt.externalTran = false;
+					}
 					this.pvt.tranCounter=1;
 				}
 				if (DEBUG)
@@ -1205,7 +1221,33 @@ define(
 				return this.pvt.curTranGuid;
 				
 			},
-			
+
+			tranCommit: function(cb) {
+				var that = this;
+				function icb() {
+					var guids = that.getRootGuids();   // поднять valid-версии до draft-версий при коммите
+					for (var i=0; i<guids.length; i++) {
+						var df = that.getObj(guids[i]).getRootVersion();
+						that.getObj(guids[i]).setRootVersion("valid",df);	
+					}
+				}
+				var p = this.pvt;
+				var memTran = p.curTranGuid; 
+				if (p.tranCounter==0) return;
+				if (p.tranCounter==1) {
+					if (this.isMaster() || p.externalTran) 
+						icb();
+					else 
+						this.remoteCallPlus(undefined,"endTran", [], icb);
+					p.curTranGuid = undefined;
+					p.tranCounter = 0;
+					p.externalTran = false;		
+				}
+				else p.tranCounter--;
+				if (DEBUG)
+				    console.log("TRAN|COMMIT " + memTran + " " + p.tranCounter);
+			},
+/*			
 			tranCommit: function() {
 				var memTran = this.pvt.curTranGuid; 
 				if (this.pvt.tranCounter==0) return;
@@ -1213,12 +1255,13 @@ define(
 					this.pvt.curTranGuid = undefined;
 					this.pvt.tranCounter = 0;	
 					this.pvt.externalTran = false;
+					
 				}
 				else this.pvt.tranCounter--;
 				if (DEBUG)
 				    console.log("TRAN|COMMIT " + memTran + " " + this.pvt.tranCounter);
 			},
-
+*/
 
 			inTran: function() {
 				if (this.pvt.tranCounter>0) return true;

@@ -280,8 +280,10 @@ define(
 			setRootVersion: function(verType, n) {
 				var robj = this.getRoot();
 				var rholder = this.getDB().getRoot(robj.getGuid());
-				switch (verType) {
-					case "sent": return rholder.sver=n; //TODOХ 2 - добавить проверки
+				switch (verType) { // TODO 9 добавить проверку, что версия не может уменьшаться
+					case "sent": 	rholder.sver = n;
+									if (rholder.dver<n) rholder.dver=n;
+									return rholder.sver;
 					case "valid":  	rholder.vver = n;
 									if (rholder.dver<n) rholder.dver=n;
 									return rholder.vver;
@@ -294,8 +296,12 @@ define(
 
 				var sver = this.getRootVersion("sent");
 				var ver = this.getRootVersion();
-				if (ver==sver) this.setRootVersion("draft",this.getRootVersion()+1);
-				return this.getRootVersion();
+				if (ver<=sver) {
+					ver = sver+1;
+					this.setRootVersion("draft",ver);
+					//this.getDB().getCurrentVersion();
+				}
+				return ver;
 			},
 			
 			getLog: function() {

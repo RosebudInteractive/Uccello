@@ -92,9 +92,6 @@ define(
 				var obj = this.getObj();
 				var db = obj.getDB();
 				
-				// FINALTR
-				//var sver = db.getVersion("sent"); // VER определяем с какой по какую версию делать лог
-				//var ver = db.getVersion();
 				var sver = this.getObj().getRootVersion("sent"); // VER определяем с какой по какую версию делать лог
 				var ver = this.getObj().getRootVersion();
 				
@@ -149,8 +146,8 @@ define(
 				}
 				delta.rootGuid = obj.getRoot().getGuid();
 				
-				// FINALTR записывем версию текущей транзакции в дельту
-				delta.dbVersion = db.getVersion(); //TODO а есть ли уверенность, что на момент генерации дельты версия еще не поменялась?
+				// записывем версию текущей транзакции в дельту
+				//delta.dbVersion = db.getVersion(); //TODO а есть ли уверенность, что на момент генерации дельты версия еще не поменялась?
 				delta.ver = obj.getRootVersion();						
 				if (db.inTran()) delta.trGuid = db.getCurTranGuid();
 				//this.truncate();
@@ -196,19 +193,21 @@ define(
 				this.setActive(true);
 			},
 			
-			add: function(item) {					
+			add: function(item) {	
+				var p = this.pvt;
 				if (!(this.getActive()))
 					return;
 				
 				var db = this.getObj().getDB();
-				/*var dbver =*/ db.getCurrentVersion(); // инкрементируем версии если нужно
+				// TODO 9
+				// db.getCurrentVersion(); // инкрементируем версии если нужно
 				var ver = this.getObj().getCurVersion();
 
-				if (!(ver.toString() in this.pvt.versions))
-					this.pvt.versions[ver] = this.pvt.log.length; // отмечаем место в логе, соответствующее началу этой версии
+				if (!(ver.toString() in p.versions))
+					p.versions[ver] = p.log.length; // отмечаем место в логе, соответствующее началу этой версии
 
 				item.idx = db.getNewCounter();
-				this.pvt.log.push(item);				// добавить в лог корневого объекта
+				p.log.push(item);				// добавить в лог корневого объекта
 			}
 		});
 		return MemObjLog;

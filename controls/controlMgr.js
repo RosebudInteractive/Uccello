@@ -31,7 +31,7 @@ define(
 				this._isNode = typeof exports !== 'undefined' && this.exports !== exports;
 
 				this.pvt.tranQueue = null; // очередь выполнения методов если в транзакции
-				this.pvt.inTran = false; // признак транзакции
+				this.pvt._inTran = false; // признак транзакции
 				
 				this.pvt.execQ = [];
 				this.pvt.execTr = {};
@@ -260,8 +260,8 @@ define(
              * @param dbTran - true|false - нужно ли открывать транзакцию БД
              */
 			_tranStart: function(dbTran) {
-				if (this.pvt.inTran) return;
-				this.pvt.inTran = true;
+				if (this._inTran()) return;
+				this.pvt._inTran = true;
 				this.pvt.tranQueue = [];
 				if (dbTran)
 					this.tranStart();
@@ -271,7 +271,7 @@ define(
              * Завершить транзакцию контрол-менеджера 
              */
 			_tranCommit: function() {
-				if (this.pvt.inTran) {
+				if (this._inTran()) {
 					for (var i=0; i<this.pvt.tranQueue.length; i++) {
 						var mc = this.pvt.tranQueue[i];
 						this.tranStart(); // увеличиваем счетчик db-транзакции перед вызовом серверного метода
@@ -282,8 +282,9 @@ define(
 						  this.tranCommit(); // если колбэка нет, то сразу закрываем транзакцию 				
 					}
 					this.pvt.tranQueue = null;
-					this.pvt.inTran = false;
-					if (this.getCurTranCounter() == 1) this.remoteCallPlus(undefined,"endTran");					
+					this.pvt._inTran = false;
+					// TODO 9 перенесли в транКоммит ???
+					//if (this.getCurTranCounter() == 1) this.remoteCallPlus(undefined,"endTran"); 
 					var memGuid = this.getCurTranGuid();
 					this.tranCommit();
 					if (memGuid && !this.inTran()) {
@@ -295,7 +296,7 @@ define(
 			},
 
 			_inTran:function() {
-				return this.pvt.inTran;
+				return this.pvt._inTran;
 			},
 
             /**
@@ -411,7 +412,7 @@ define(
 				if (this.isMaster()) {	
 					var cdb = this.getController();
 					var res=cdb.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
-					if (cb) cb({data: {dbVersion: cdb.getDB(data.dbGuid).getVersion() }});
+					if (cb) cb({data: { /*dbVersion: cdb.getDB(data.dbGuid).getVersion() */}});
 				}
 				else {
 					this.remoteCallPlus(undefined, 'sendDataBaseDelta',[data],cb);
@@ -512,7 +513,7 @@ define(
 				tqueue.push(function() { exec1(); });
 				//console.log("RCEXEC PUSH TO QUEUE ",args.func,args,trGuid,auto, queue);
 							
-				if (!db.getCurTranGuid()) {
+				if (!db.inTran()) {
 					this._checkRootVer(rootv);
 					db.tranStart(trGuid); // Если не в транзакции, то заходим в нее
 				}
