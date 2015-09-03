@@ -59,6 +59,9 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                 router: function(data){
                     //console.log('сообщение с сервера:', data);
                     var result = {};
+                    data = 'result$' in data ? data.result$ : data;
+
+
                     if (data.args) {
                         switch (data.args.action) {
                             case 'error': // ошибки
