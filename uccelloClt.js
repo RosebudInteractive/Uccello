@@ -290,7 +290,7 @@ define(
              * @param callback
              */
             createRoot: function(formGuids, rtype, callback, context) {
-				if (!context.isOn()) return false;
+				if (context && !context.isOn()) return false;
 				var cm = context ? context.getContextCM() : this.getContext().getContextCM();
 				cm.getRoots(formGuids, {rtype:rtype }, callback);
             },
