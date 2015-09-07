@@ -1,0 +1,43 @@
+<!-- template: navigator -->
+<div class="navigator control">
+    <table cellspacing="0" cellpadding="0" width="100%" height="100%">
+        <tr>
+            <td style="height: 31px;" colspan="10">База данных: <select class="dbSelector"></select> <span class="dbVersionSpan"></span></td>
+        </tr>
+        <tr valign="top">
+            <td><u>список объектов</u><div class="left"></div></td>
+            <td>
+                <table width="100%" height="100%">
+                    <tr valign="top">
+                    <td>
+                        <div class="levels"></div>
+                    </td>
+                    </tr>
+                    <tr valign="top">
+                    <td colspan="100">
+                        <input type="button" class="dragRight" value="сдвинуть влево">
+                        <input type="button" class="dragLeft" value="сдвинуть вправо">
+                        <input type="button" class="refresh" value="обновить">
+                    </td>
+                    </tr>
+                </table>
+            </td>
+            <td><u>список полей текущего объекта</u><div class="right"></div></td>
+        </tr>
+    </table>
+</div>
+
+<!-- template: levelCol -->
+<div class="level">
+    <u>коллекции объекта</u><div class="centerTop"></div>
+    <u>субэлементы коллекции объекта</u><div class="centerBottom"></div>
+</div>
+
+<!-- template: left -->
+<p><a href="#"></a></p>
+
+<!-- template: centerTop -->
+<p><a href="#"></a></p>
+
+<!-- template: right -->
+<p><span class="name"></span> <span class="type"></span> <input class="value" /> <input class="save" type="button" value="*"></p>
