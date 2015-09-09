@@ -25,7 +25,7 @@ define(
         init: function(cm, params) {
             UccelloClass.super.apply(this, [cm, params]);
 
-            if (params==undefined) return; // в этом режиме только создаем метаинфо
+            if (params===undefined) return; // в этом режиме только создаем метаинфо
             this.event = new event(this);
             //this.id = params.id;
             this.ws = params.ws;

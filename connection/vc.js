@@ -72,7 +72,7 @@ define(
 						subscriber: that,
 						callback: that._setFormParams
 					});
-					
+
 					var createCompCallback = function (typeObj, parent, sobj) {
 
 

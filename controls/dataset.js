@@ -48,6 +48,7 @@ define(
 				this.pvt.dataObj = null;	
 
 				if (this.get("OnMoveCursor"))
+					/*jshint evil: true */
 					this.onMoveCursor = new Function("newVal", this.get("OnMoveCursor"));
 
             },
@@ -104,17 +105,13 @@ define(
 				if (rg) {
 					if (!dataRoot || !onlyMaster) {
 						if (onlyMaster && master) return; // если НЕ мастер, а детейл, то пропустить
-						var that = this;
 						var params = {rtype:"data"};
 						if (master) { // если детейл, то экспрешн
 							params.expr = master.getField("Id");
                         }
-						if (rgi)
-						  var rgp = rgi;
-						else rgp = rg;
-
+						var rgp = rg;
+						if (rgi) rgp = rgi;
 						this.dataLoad([rgp],params, icb);
-
 					}
 					else this._initCursor();
 				}

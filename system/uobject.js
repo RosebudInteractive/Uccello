@@ -23,7 +23,7 @@ define(
 				if (!("pvt" in this)) this.pvt = {};
 			
 				this._buildMetaInfo(cm);
-                if (params==undefined) return; // в этом режиме только создаем метаинфо			
+                if (params===undefined) return; // в этом режиме только создаем метаинфо
 
 				params.ini = params.ini ? params.ini : {};
 				if (!("colName" in params))

@@ -28,7 +28,7 @@ define(
 
                 // системные объекты
                 this.dbcsys = new MemDBController(router);
-				var dbp =  {name: "System", kind: "master", guid:UCCELLO_CONFIG.guids.sysDB}
+				var dbp =  {name: "System", kind: "master", guid:UCCELLO_CONFIG.guids.sysDB};
                 this.cmsys = new ControlMgr( { controller: this.dbcsys, dbparams: dbp }, undefined,undefined,options.proxyServer);
 
                 // создаем метаинфо
@@ -228,10 +228,10 @@ define(
                 function _genDispMethodCallTable() {
                     self.dispMethodCallTable = {};
                     self.dispMethodCallTable[UCCELLO_CONFIG.classGuids.Dataset] = {};
-                    self.dispMethodCallTable[UCCELLO_CONFIG.classGuids.Dataset]["addObject"] = {
+                    self.dispMethodCallTable[UCCELLO_CONFIG.classGuids.Dataset].addObject = {
                         isNewProcess: true,
                         processDefGuid: "8349600e-3d0e-4d4e-90c8-93d42c443ab3",
-                        requestName: "Request1",
+                        requestName: "Request1"
                     };
                 };
 
@@ -240,8 +240,7 @@ define(
                     _genDispMethodCallTable();
 
                 var objTypeGuid = uobj.getTypeGuid();
-                if (this._proxyWfe && this.dispMethodCallTable[objTypeGuid]
-                    && this.dispMethodCallTable[objTypeGuid][args.func]) {
+                if (this._proxyWfe && this.dispMethodCallTable[objTypeGuid] && this.dispMethodCallTable[objTypeGuid][args.func]) {
                     var newArgs = {
                         func: "methodCallViaProcess",
                         aparams: [{
@@ -272,12 +271,12 @@ define(
 			},*/
 
 			routerRemoteCallExec: function(data,done) {				
-				var args = data.args;
+				var args = data.args, uobj;
 
 				var cm  = this.getController().getDB(args.masterGuid);
 				
 				if (args.objGuid) 
-					var uobj = cm.getObj(args.objGuid)
+					uobj = cm.getObj(args.objGuid);
 				else
 					uobj = cm;
 				
@@ -313,7 +312,7 @@ define(
                 }
 
                 // добавляем коннект в общий список и в сессию
-				var ini =  { fields: {Id:socket.getConnectId(), Name: "C"+socket.getConnectId()}}
+				var ini =  { fields: {Id:socket.getConnectId(), Name: "C"+socket.getConnectId()}};
                 var connect = new Connect(this.cmsys, {parent:session, colName: "Connects", ini: ini, /*id:socket.getConnectId()*/ ws:socket,  /*sessionID:sessionId*/ userAgent:data.client.agent, stateReady:1});
                 this.addConnect(connect);
                 session.addConnect(connect);
@@ -467,7 +466,7 @@ define(
                 var sessions = user.getSessions();
                 for(var i in sessions) {
                     this.removeSession(sessions[i].getId());
-                    user.removeSession(sessions[i].getId())
+                    user.removeSession(sessions[i].getId());
                 }
             },
 			

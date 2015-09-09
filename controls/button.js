@@ -28,6 +28,7 @@ define(
                 UccelloClass.super.apply(this, [cm, params]);
                 if (!params) return;
                 if (this.get("OnClick"))
+                    /*jshint evil: true */
                     this.onClick = new Function(this.get("OnClick"));
             },
 

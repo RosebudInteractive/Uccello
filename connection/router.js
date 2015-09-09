@@ -62,7 +62,7 @@ define(['../system/event'], function(event) {
             if (this._actions[data.action]) {
                 var that = this;
                 var log = [Date.now(), data.action];
-                function doneTime() {
+                var doneTime = function () {
                     log.push((Date.now() - log[0]));
                     log[0] = (new Date(log[0])).toISOString();
 
@@ -81,7 +81,7 @@ define(['../system/event'], function(event) {
                    /* if (data.action != 'sendDelta')
                       logger.info(log.join(';'));*/
                     done.apply(this, arguments);
-                }
+                };
                 return this._actions[data.action](data, doneTime);
             }
             return null;

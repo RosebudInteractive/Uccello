@@ -22,7 +22,7 @@ define(
 				UccelloClass.super.apply(this, [cm, params]);
 				this.pvt.isRendered = false;
 
-				if (params==undefined) return; // в этом режиме только создаем метаинфо
+				if (params===undefined) return; // в этом режиме только создаем метаинфо
 				this.event.on({ // подписка на изменение объекта свойств, чтобы сбрасывать флаг рендеринга (TODO коллекции тоже)
 						type: "mod", // TODO не забыть про отписку
 						subscriber: this,

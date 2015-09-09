@@ -113,7 +113,7 @@ define(
              */
             move: function(guid, parentGuid) {
 				if (DEBUG)
-					console.log('заглушка перемещения контрола: '+guid+' в '+parentGuid)
+					console.log('заглушка перемещения контрола: '+guid+' в '+parentGuid);
             },
 
 			// временно
@@ -170,7 +170,7 @@ define(
 					if (!c._isProcessed()) c.processDelta(); 
 				}
 				// сбросить признак isProcessed
-				for (var g in this.pvt.compByGuid) this.pvt.compByGuid[g]._isProcessed(false);
+				for (g in this.pvt.compByGuid) this.pvt.compByGuid[g]._isProcessed(false);
 			},
 			
 			allDataInit: function(component) {
@@ -206,7 +206,7 @@ define(
 			},
 			
 			setToRendered: function(component, val) {
-				if (component == undefined) return;
+				if (component === undefined) return;
 			
 				if ("_isRendered" in component) component._isRendered(val);
 				var col=component.getCol("Children");
@@ -273,7 +273,7 @@ define(
 				var that = this;
 				if (args)
 				  if (Array.isArray(args))
-				    nargs = args
+				    nargs = args;
 				  else
                     nargs = [args];
 				this.tranStart();
@@ -319,7 +319,7 @@ define(
 					// собираем все нужные скрипты в кучу
 					for (var i = 0; i < ctrls.length; i++) {
 						if ((!ctrls[i].metaType && type=='content') || (ctrls[i].metaType && ctrls[i].metaType.indexOf(type)!=-1)) {
-							var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath : UCCELLO_CONFIG.controlsPath
+							var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath : UCCELLO_CONFIG.controlsPath;
 							scripts.push(path + ctrls[i].component);
 						}
 					}
@@ -342,7 +342,7 @@ define(
 				var that = this;
 				if (this.isMaster()) {
 
-					function icb(r) {
+					var icb = function(r) {
 
 						var objArr = r ? r.datas : null;
 
@@ -360,7 +360,7 @@ define(
 							that.addLocalComps(objArr);
 							localCallback();
 						};
-					}
+					};
 					// Проверять, есть ли уже объект с таким гуидом и хэшем !!! (expression)
 					// если есть - то просто возвращать его, а не загружать заново. Если нет, тогда грузить.
 					var rg = []; // эти загрузить

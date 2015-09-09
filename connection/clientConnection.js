@@ -58,7 +58,7 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                 },
                 router: function(data){
                     //console.log('сообщение с сервера:', data);
-                    var result = {};
+                    var result = {}, args = {}, db;
                     data = 'result$' in data ? data.result$ : data;
 
 
@@ -69,15 +69,13 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                                     console.log(data.args.error);
                                 break;
                             case 'sendDelta':
-								var args = {};
 								args.aparams = [data.args.dbGuid, data.args.srcDbGuid, data.args.delta];
-								var db = that.getDB().getController().getDB(data.args.dbGuid);
+								db = that.getDB().getController().getDB(data.args.dbGuid);
 								args.func = "applyDeltas";
 								db.remoteCallExec(that.getDB().getController(),args,undefined,data.args.trGuid, null);								
                                 break;
 							case 'endTran':
-								var args = {};
-								var db = that.getDB().getController().getDB(data.args.dbGuid);
+                                db = that.getDB().getController().getDB(data.args.dbGuid);
 								args.func = "endTran";
 								db.remoteCallExec(null,args,undefined,data.args.trGuid, null);														
 								break;

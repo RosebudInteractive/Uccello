@@ -25,7 +25,7 @@ define(
         init: function(cm, params) {
             UccelloClass.super.apply(this, [cm, params]);
 
-            if (params==undefined) return;
+            if (params===undefined) return;
             this.pvt.event = new Event(this);
             //this.id = params.session;
             //this.user = params.user;

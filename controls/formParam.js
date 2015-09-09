@@ -27,7 +27,7 @@ define(
                         this.onModify = new Function("newVal",this.getObj().get("OnModify"));
                     }
                 }*/
-
+                /*jshint evil: true */
 				if (this.get("OnModify")) this.onModify = new Function("newVal",this.get("OnModify"));
             },
 

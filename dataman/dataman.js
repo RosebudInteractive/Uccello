@@ -23,7 +23,7 @@ define(
 				var that = this;
 				this.pvt.createComponent = function (typeObj, parent, sobj) {
 				    var newObj = null;
-				    var constr = that.pvt.constructHolder.getComponent(typeObj.getGuid())
+				    var constr = that.pvt.constructHolder.getComponent(typeObj.getGuid());
 				    if (constr && constr.constr) {
 				        var params = { ini: sobj, parent: parent.obj, colName: parent.colName };
 				        newObj = new constr.constr(that.pvt.dataBase, params);
@@ -48,7 +48,6 @@ define(
 				this.pvt.constructHolder.addTypeProvider(this.pvt.metaDataMgr, true); // локальный провайдер
 
 				this.pvt.dataSource = 'local'; // 'local' or 'mysql'
-				var that = this;
                 router.add('query', function(){ return that.query.apply(that, arguments); });
 
                 if (this.pvt.dataSource == 'mysql') {

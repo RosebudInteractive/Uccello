@@ -24,7 +24,7 @@ define(
         init: function(cm, params) {
             UccelloClass.super.apply(this, [cm, params]);
 
-            if (params==undefined) return; // в этом режиме только создаем метаинфо
+            if (params===undefined) return; // в этом режиме только создаем метаинфо
             this.pvt.data = {};
             //this.pvt.name = params.name;
             //this.pvt.loginTime = false;

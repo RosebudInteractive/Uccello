@@ -162,8 +162,6 @@ define([], function () {
             port:1325
         },
 
-        commClientTypes: CommClientTypes,
-        commServerTypes: CommServerTypes,
 
         webSocketServer: {
             port: 8081,
