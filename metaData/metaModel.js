@@ -3,9 +3,9 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../system/uobject', './metaModelField'],
-    function (UObject, MetaModelField) {
-        var MetaModel = UObject.extend({
+    ['../system/uobject', './metaModelField', '../system/event', '../memDB/memMetaType'],
+    function (UObject, MetaModelField, Event, MemMetaType) {
+        var MetaModel = UObject.extend([new Event()], {
 
             className: "MetaModel",
             classGuid: UCCELLO_CONFIG.classGuids.MetaModel,
@@ -21,6 +21,8 @@ define(
 
                 UccelloClass.super.apply(this, [cm, params]);
                 if (params) {
+                    this.eventsInit();  // WARNING !!! This line is essential !!! It initializes "Event" mixin.
+
                     this._fieldsCol = this.getCol("Fields");
                     this._fieldsCol.on({
                         type: 'add',
@@ -86,6 +88,73 @@ define(
                 return this._fields.length;
             },
 
+            _getOnFieldTypeChangeProc: function (fieldObj) {
+                var self = this;
+                var oldFieldType = fieldObj._genericSetter("FieldType");
+
+                return function (args) {
+                    var fieldName = fieldObj._genericSetter("Name");
+                    var fieldType = fieldObj._genericSetter("FieldType");
+
+                    if (oldFieldType instanceof MemMetaType.DataRefType) {
+                        self.fire({
+                            type: "removeLink",
+                            target: self,
+                            fieldName: fieldName
+                        });
+                    };
+
+                    if (fieldType instanceof MemMetaType.DataRefType) {
+                        self.fire({
+                            type: "addLink",
+                            target: self,
+                            fieldName: fieldName,
+                            type: fieldType
+                        });
+                    };
+
+                    oldFieldType = fieldType;
+                };
+            },
+
+            _getOnFieldNameChangeProc: function (fieldObj) {
+                var self = this;
+                var oldFieldName = fieldObj._genericSetter("Name");
+
+                return function (args) {
+                    var fieldType = fieldObj._genericSetter("FieldType");
+                    var fieldName = fieldObj._genericSetter("Name");
+
+                    if (fieldName !== oldFieldName) {
+
+                        if (self._fieldsByName[fieldName] !== undefined) {
+                            fieldObj._genericSetter("Name", oldFieldName);
+                            throw new Error("Can't change field name from \"" +
+                                oldFieldName + "\" to \"" + fieldName + "\". Field \"" + fieldName + "\" is already defined.");
+                        };
+
+                        var order = self._fieldsByName[oldFieldName];
+                        delete self._fieldsByName[oldFieldName];
+                        self._fieldsByName[fieldName] = order;
+
+                        if (fieldType instanceof MemMetaType.DataRefType) {
+                            self.fire({
+                                type: "removeLink",
+                                target: self,
+                                fieldName: oldFieldName
+                            });
+                            self.fire({
+                                type: "addLink",
+                                target: self,
+                                fieldName: fieldName,
+                                link: fieldType
+                            });
+                        };
+                        oldFieldName = fieldName;
+                    };
+                };
+            },
+
             _onAddField: function (args) {
                 var field = args.obj;
                 var name = field.get("Name");
@@ -107,11 +176,31 @@ define(
                 this._fields.splice(order, 0, field);
                 if (isNewOrder)
                     field.set("Order", order);
+
+                var fieldType = field._genericSetter("FieldType");
+                if (fieldType instanceof MemMetaType.DataRefType) {
+                    this.fire({
+                        type: "addLink",
+                        target: this,
+                        fieldName: name,
+                        link: fieldType
+                    });
+                };
+
+                field.event.on({
+                    type: 'mod%Name',
+                    subscriber: this,
+                    callback: this._getOnFieldNameChangeProc(field)
+                }).on({
+                    type: 'mod%FieldType',
+                    subscriber: this,
+                    callback: this._getOnFieldTypeChangeProc(field)
+                });
             },
 
             _onDeleteField: function (args) {
-                var model = args.obj;
-                var name = model.get("Name");
+                var field = args.obj;
+                var name = field.get("Name");
                 var idx = this._fieldsByName[name];
                 if (typeof idx === "number") {
                     if ((idx >= 0) && (idx < this._fields.length)) {
@@ -121,6 +210,16 @@ define(
                     }
                     delete this._fieldsByName[name];
                 };
+
+                var fieldType = field._genericSetter("FieldType");
+                if (fieldType instanceof MemMetaType.DataRefType) {
+                    this.fire({
+                        type: "removeLink",
+                        target: this,
+                        fieldName: name
+                    });
+                };
+
             }
         });
         return MetaModel;

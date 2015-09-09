@@ -74,9 +74,11 @@ define(
              * @param {Any}       val A value to be checked
              * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
              * @param {String}    errObj.errMsg Error message
+             * @param {String}    fldName A field name of the value
+             * @param {Object}    obj An MemProtoObject which fldName belongs to 
              * @return {Boolean} True if value is corect
              */
-            checkVal: function (val, errObj) {
+            checkVal: function (val, errObj, fldName, obj) {
                 return true;
             },
 
@@ -169,7 +171,7 @@ define(
             setValue: function (val, fldName, obj, withCheckVal) {
                 if (withCheckVal) {
                     var errObj = {};
-                    if (!this.checkVal(val))
+                    if (!this.checkVal(val, errObj, fldName, obj))
                         if (errObj.errMsg)
                             throw new Error(errObj.errMsg);
                         else
@@ -325,8 +327,8 @@ define(
              * 
              * @param {String|Object}                    val Serialized representation of this data type
              * @param {Boolean} [val.external=false]     True if ref is external
-             * @param {Boolean} [val.res_type=null]      Resource type GUID
-             * @param {Boolean} [val.res_elem_type=null] Resource element type GUID
+             * @param {String}  [val.res_type=null]      Resource type GUID
+             * @param {String}  [val.res_elem_type=null] Resource element type GUID
              * @param {Boolean} [val.strict=false]       True if ref type should be checked strictly
              * @throws                                   Will throw an error if the value isn't correct
              * @private
@@ -467,10 +469,11 @@ define(
              * @param {Any}       val A value to be checked (could be MemProtoObj or serialized reference)
              * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
              * @param {String}    errObj.errMsg Error message
+             * @param {String}    fldName A field name of the value
              * @param {Object}    obj A MemProtoObject which [val] belongs to 
              * @return {Boolean} True if value is corect
              */
-            checkVal: function (val, errObj, obj) {
+            checkVal: function (val, errObj, fldName, obj) {
                 var result = true;
                 var msg;
                 if (!val.objRef) {
@@ -595,7 +598,7 @@ define(
 
                 if (withCheckVal) {
                     var errObj = {};
-                    if (!this.checkVal(result, errObj, obj))
+                    if (!this.checkVal(result, errObj, fldName, obj))
                         throw new Error(errObj.errMsg);
                 };
 
@@ -603,7 +606,189 @@ define(
                 return result;
             }
         });
+        /////////////////////////////////////////////////////////////////////////////////////
 
+        var DataRefType = IntegerType.extend({
+            /**
+             * The Data reference type (references in Data Objects). 
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends BaseType
+             * @constructor
+             */
+            init: function (typeObj, refResolver) {
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
+                this._is_complex = true;
+            },
+
+            /**
+             * Data Type hash code.
+             * Uniquely represents data type instance.
+             * 
+             * @return {Strng} The hash code
+             */
+            hash: function () {
+                var result = UccelloClass.super.apply(this, []);
+
+                if ((this._refResolver) &&
+                        (typeof (this._refResolver.getGuid) === "function"))
+                    result += "_" + this._refResolver.getGuid();
+
+                result += "_" + this._model + "_" + this._refAction;
+                return result;
+            },
+
+            /**
+             * Returns a serialized representation of the data type
+             * 
+             * @return {Object} Serialized representation
+             */
+            serialize: function () {
+                var result = UccelloClass.super.apply(this, []);
+
+                result.model = this._model;
+                if (this._refAction !== "none")
+                    result.refAction = this._refAction;
+                if (!this._allowNul)
+                    result.allowNull = this._allowNull;
+
+                return result;
+            },
+
+            /**
+             * Converts this data type from the serialized representation 
+             * to the internal one (only constructor can invoke it)
+             * 
+             * @param {Object}                        val Serialized representation of this data type
+             * @param {String} [val.model=false]      True if ref is external
+             * @param {String} [val.refAction="none"] Resource type GUID
+             * @throws                                Will throw an error if the value isn't correct
+             * @private
+             */
+            _deserialize: function (val) {
+                UccelloClass.super.apply(this, [val]);
+
+                this._model = null;
+                this._refAction = "none";
+                this._allowNull = true;
+
+                if (val instanceof Object) {
+                    if (typeof (val.model) === "string") {
+                        this._model = val.model;
+                    };
+                    if (typeof (val.refAction) === "string") {
+                        switch (val.refAction) {
+                            case "none":
+                            case "parentRestrict":
+                            case "parentCascade":
+                            case "parentSetNull":
+                                break;
+                            default:
+                                throw new Error("Unknown ref-action: \"" + val.refAction + "\".");
+                        };
+
+                        this._refAction = val.refAction;
+                    };
+                };
+
+                if (this._model === null)
+                    throw new Error("Undefined \"model\" in [dateRef] type.");
+            },
+
+            /**
+             * Checks if value is correct.
+             * 
+             * @param {Any}       val A value to be checked (could be MemProtoObj or serialized reference)
+             * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
+             * @param {String}    errObj.errMsg Error message
+             * @param {String}    fldName A field name of the value
+             * @param {Object}    obj A MemProtoObject which [val] belongs to 
+             * @return {Boolean} True if value is corect
+             */
+            checkVal: function (val, errObj, fldName, obj) {
+
+                var result = this._allowNull && (val === null);
+
+                if (!result) {
+
+                    result = UccelloClass.super.apply(this, [val, errObj, fldName, obj]);
+
+                    if (result) {
+                        var _errMsg = {};
+
+                        if (this._refResolver && (typeof this._refResolver.checkDataObjectRef === "function"))
+                            result = this._refResolver.checkDataObjectRef(val, _errMsg, fldName, obj);
+
+                        if (!result)
+                            errObj.errMsg = _errMsg.errMsg;
+                    };
+                };
+
+                return result;
+            },
+
+            /**
+             * Converts a Value of this data type from the serialized
+             * or "end-user" representation to the internal one.
+             * 
+             * @param {Integer} val A value of this data type (could be an integer value)
+             * @param {String}  fldName A field name of the value
+             * @param {Object}  obj A MemProtoObject which [fldName] belongs to 
+             * @param {Boolean} withCheckVal True if the value needs to be checked
+             * @throws          Will throw an error if the value isn't correct
+             * @return {Integer}
+             */
+            setValue: function (val, fldName, obj, withCheckVal) {
+                var result = val;
+                if (!(this._allowNull && (val === null))) {
+                    result = UccelloClass.super.apply(this, [val, fldName, obj, withCheckVal]);
+                };
+                return result;
+            },
+
+            /**
+             * Returns referenced model name
+             * 
+             */
+            model: function () {
+                return this._model;
+            },
+
+            /**
+             * Returns reference action
+             * 
+             */
+            refAction: function () {
+                return this._refAction;
+            },
+
+            /**
+             * Returns "allow Null" flag
+             * 
+             */
+            allowNull: function () {
+                return this._allowNull;
+            },
+
+            /**
+             * Converts an integer Value to a referenced object
+             *
+             * @param {Any}     val An internal value (integer)
+             * @param {String}  fldName A field name of the value
+             * @param {Object}  obj A DataObject which [fldName] belongs to 
+             * @return {Object} referenced object
+             */
+            getRefObject: function (val, fldName, obj) {
+                var retval = null;
+                if (this._refResolver && (typeof this._refResolver.getRefDataObject === "function"))
+                    retval = this._refResolver.getRefDataObject(val, fldName, obj);
+                return retval;
+            }
+
+        });
+
+        /////////////////////////////////////////////////////////////////////////////////////
         datafieldTypeCodes = {
             "int": { code: 0, constructor: IntegerType },
             "string": { code: 1, constructor: StringType },
@@ -614,7 +799,8 @@ define(
             "integer": { code: 8, constructor: IntegerType },
             "date": { code: 9, constructor: DateTimeType },
             "time": { code: 10, constructor: DateTimeType },
-            "timestamp": { code: 11, constructor: DateTimeType }
+            "timestamp": { code: 11, constructor: DateTimeType },
+            "dataRef": { code: 14, constructor: DataRefType }
         };
 
         var DataFieldType = BaseType.extend({
@@ -725,10 +911,11 @@ define(
              * @param {Any}       val A value to be checked (could be BaseType or serialized type)
              * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
              * @param {String}    errObj.errMsg Error message
+             * @param {String}    fldName A field name of the value
              * @param {Object}    obj A MemProtoObject which [val] belongs to 
              * @return {Boolean} True if value is corect
              */
-            checkVal: function (val, errObj, obj) {
+            checkVal: function (val, errObj, fldName, obj) {
                 var result = true;
                 var msg;
 
@@ -829,12 +1016,14 @@ define(
             "time": { code: 10, constructor: DateTimeType },
             "timestamp": { code: 11, constructor: DateTimeType },
             "datatype": { code: 12, constructor: DataFieldType },
-            "money": { code: 13, constructor: FloatType }
+            "money": { code: 13, constructor: FloatType },
+            "dataRef": { code: 14, constructor: DataRefType }
         };
 
         var MetaTypes = {
             createTypeObject: GetFldTypeUniq,
-            BaseType: BaseType
+            BaseType: BaseType,
+            DataRefType: DataRefType
         };
         
         return MetaTypes;

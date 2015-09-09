@@ -32,6 +32,10 @@ define(
                 this._constrByName = {};
                 this._router = null;
 
+                this._linksTo = {};         // исходящие ссылки (по таблицам)
+                this._linksFrom = {};       // входящие ссылки (по таблицам)
+                this._linksUnresolved = {}; // неразрешенные ссылки
+
                 UccelloClass.super.apply(this, [cm, params]);
 
                 if (params) {
@@ -232,6 +236,88 @@ define(
                 return Constructor;
             },
 
+            _addLink: function (args) {
+                var model = args.target;
+                var modelName = model._genericSetter("Name");
+                var dstName = args.type.model();
+                var fieldName = args.fieldName;
+                var link = {
+                    src: model,
+                    type: args.type,
+                    field: fieldName,
+                    dst: this._modelsByName[dstName]
+                };
+                var linksTo = this._linksTo[modelName];
+                if (!linksTo)
+                    linksTo = this._linksTo[modelName] = {};
+                linksTo[fieldName] = link;
+                if (link.dst) {
+                    var linksFrom = this._linksFrom[dstName];
+                    if (!linksFrom)
+                        linksFrom = this._linksFrom[dstName] = {};
+                    linksFrom[modelName + "_" + fieldName] = link;
+                }
+                else
+                    this._linksUnresolved[modelName + "_" + fieldName] = link;
+            },
+
+            _removeLink: function (args) {
+                var model = args.target;
+                var modelName = model._genericSetter("Name");
+                var fieldName = args.fieldName;
+                var link = this._linksTo[modelName] && this._linksTo[modelName][fieldName] ? this._linksTo[modelName][fieldName] : null;
+                if (link) {
+                    if (link.dst)
+                        delete this._linksFrom[link.dst._genericSetter("Name")][modelName + "_" + fieldName];
+                    else
+                        delete this._linksUnresolved[modelName + "_" + fieldName];
+                };
+            },
+
+            _addModelToLinks: function (name, model) {
+                var linksFrom = null;
+                var links = Object.keys(this._linksUnresolved);
+                for (var i = 0; i < links.length; i++) {
+                    var link = this._linksUnresolved[links[i]];
+                    if (link.type.model() === name) {
+                        link.dst = model;
+                        if (!linksFrom)
+                            linksFrom = this._linksFrom[name] = {};
+                        linksFrom[link.src._genericSetter("Name") + "_" + link.field] = link;
+                        delete this._linksUnresolved[links[i]];
+                    };
+                };
+            },
+
+            _removeModelFromLinks: function (name) {
+                var linksTo = this._linksTo[name];
+                if (linksTo) {
+                    var links = Object.keys(linksTo);
+
+                    for (var i = 0; i < links.length; i++) {
+                        var link = linksTo[links[i]];
+                        if (link.dst) {
+                            var linksFrom = this._linksFrom[link.dst._genericSetter("Name")];
+                            if (linksFrom)
+                                delete linksFrom[name + "_" + links[i]];
+                        } else
+                            delete this._linksUnresolved[name + "_" + links[i]];
+                    };
+                    delete this._linksTo[name];
+                };
+
+                var linksFrom = this._linksFrom[name];
+                if (linksFrom) {
+                    var links = Object.keys(linksFrom);
+                    for (var i = 0; i < links.length; i++) {
+                        var link = linksFrom[links[i]];
+                        link.dst = null;
+                        this._linksUnresolved[link.src._genericSetter("Name") + "_" + link.field] = link;
+                    };
+                    delete this._linksFrom[name];
+                };
+            },
+
             _onAddModel: function (args) {
                 var model = args.obj;
                 var name = model.get("Name");
@@ -246,12 +332,27 @@ define(
                 };
                 this._modelsByName[name] = model;
                 this._modelsByGuid[guid] = model;
+
+                this._addModelToLinks(name, model);
+
+                model.on({
+                    type: 'addLink',
+                    subscriber: this,
+                    callback: this._addLink
+                }).on({
+                    type: 'removeLink',
+                    subscriber: this,
+                    callback: this._removeLink
+                });
             },
 
             _onDeleteModel: function (args) {
                 var model = args.obj;
                 var name = model.get("Name");
                 var guid = model.get("DataObjectGuid");
+
+                this._removeModelFromLinks(name);
+
                 delete this._modelsByName[name];
                 delete this._modelsByGuid[guid];
             }
