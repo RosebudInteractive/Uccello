@@ -42,6 +42,7 @@ define(
                 router.add('createContext', function(){ return that.routerCreateContext.apply(that, arguments); });
                 router.add('newTab', function(){ return that.routerNewTab.apply(that, arguments); });
 				router.add('remoteCall2', function(){ return that.routerRemoteCallExec.apply(that, arguments); });
+				router.add('remoteCall3', function(){ return that.routerRemoteCallExec3.apply(that, arguments); });
             },
 			
 			getController: function() {
@@ -281,6 +282,19 @@ define(
 					uobj = cm;
 				
 				cm.remoteCallExec(uobj, args, data.srcDbGuid, data.trGuid, data.rootv, done);
+			},
+
+			routerRemoteCallExec3: function(data,done) {				
+				var args = data.args;
+
+				var cm  = this.getController().getDB(args.masterGuid);
+				
+				/*if (args.objGuid) 
+					var uobj = cm.getObj(args.objGuid)
+				else
+					uobj = cm;*/
+				//onRemoteCall3Plus: function(rc, srcDbGuid, trGuid, rootv, done) {
+				cm.onRemoteCall3Plus(args.rc, data.srcDbGuid, data.trGuid, undefined, done);
 			},
 			
             /**
