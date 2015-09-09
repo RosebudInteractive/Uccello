@@ -438,7 +438,7 @@ define(
 
 					var root = db.getRoot(delta.rootGuid);	
 					var emptyDelta = null;
-					for(guid in root.subscribers) {
+					for(var guid in root.subscribers) {
 						var subscriber = root.subscribers[guid];
 
 						if (subscriber.kind == 'remote' && srcDbGuid != guid && (!delta.subscribers || (delta.subscribers && delta.subscribers[subscriber.guid]))) {

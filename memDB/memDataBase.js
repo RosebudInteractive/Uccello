@@ -67,6 +67,10 @@ define(
 				pvt.tranCounter = 0;		// счетчик транзакции
 				pvt.commitFlag = false;
 
+				pvt.execQ = [];
+				pvt.execTr = {};
+				pvt.memTranIdx = 0;
+
 				if (params.kind != "master") {
 		            var db=this;
 		            controller._subscribe(this,params.proxyMaster, function(result) {
@@ -1201,11 +1205,14 @@ define(
 			// Транзакции
 			// - только 1 транзакция в единицу времени на memDB			
 			tranStart: function(guid) {					
-				if (this.pvt.curTranGuid) 
+				if (this.pvt.curTranGuid) {
 					if ((this.pvt.curTranGuid == guid) || (!guid)) 
 						this.pvt.tranCounter++;
 					else return;
+				}
 				else {
+					this.pvt._memFunc = [];
+					this.pvt._memFuncDone = [];
 					if (guid) {
 						this.pvt.curTranGuid = guid;
 						this.pvt.externalTran = true;
@@ -1222,11 +1229,11 @@ define(
 				
 			},
 
-			tranCommit: function(cb) {
+			tranCommit: function() {
 				var that = this;
 				function icb() {
 					var guids = that.getRootGuids();   // поднять valid-версии до draft-версий при коммите
-					for (var i=0; i<guids.length; i++) {
+					for (var i=0; i<guids.length; i++) { // TODO 9 При возврате с сервера нужно передавать список версий по рутам и эти версии коммитить, а не все до драфта.
 						var df = that.getObj(guids[i]).getRootVersion();
 						that.getObj(guids[i]).setRootVersion("valid",df);	
 					}
@@ -1234,35 +1241,116 @@ define(
 				var p = this.pvt;
 				var memTran = p.curTranGuid; 
 				if (p.tranCounter==0) return;
-				if (p.tranCounter==1) {
+				if (p.tranCounter==1) {	
 					if (this.isMaster() || p.externalTran) 
 						icb();
 					else 
-						this.remoteCallPlus(undefined,"endTran", [], icb);
+						this._rcCommit(icb);
 					p.curTranGuid = undefined;
 					p.tranCounter = 0;
 					p.externalTran = false;		
+					p._memFunc = [];
+					p._memFuncDone = [];
+						
+					if (memTran && !this.inTran()) {
+						delete this.pvt.execTr[memTran]; // почистить очередь транзакции
+						this.pvt.execQ.splice(0,1);
+						this.pvt.memTranIdx++;			
+					}	
 				}
 				else p.tranCounter--;
 				if (DEBUG)
 				    console.log("TRAN|COMMIT " + memTran + " " + p.tranCounter);
 			},
-/*			
-			tranCommit: function() {
-				var memTran = this.pvt.curTranGuid; 
-				if (this.pvt.tranCounter==0) return;
-				if (this.pvt.tranCounter==1) {
-					this.pvt.curTranGuid = undefined;
-					this.pvt.tranCounter = 0;	
-					this.pvt.externalTran = false;
-					
-				}
-				else this.pvt.tranCounter--;
-				if (DEBUG)
-				    console.log("TRAN|COMMIT " + memTran + " " + this.pvt.tranCounter);
-			},
-*/
+									
+			// синхронизировать в рамках транзакции
+			syncInTran: function(doneBefore,doneAfter) {	
+				if (!this.inTran()) return;
+				if (!this.pvt._memFunc || !this.pvt._memFunc.length) return; 				
 
+				this.tranStart();
+				this._rc(this.pvt._memFunc,this.pvt._memFuncDone,doneBefore,doneAfter);
+				this.pvt._memFunc = [];
+				this.pvt._memFuncDone = [];
+			},
+
+			rc: function(objGuid, func, aparams, cb) {
+				if (this.isMaster()) {
+					// TODO кинуть исключение
+					return;
+				}			
+				if (this.inTran())
+					this._rcAdd(objGuid, func, aparams, cb);
+				else
+					this._rc([{objGuid: objGuid, func:func, aparams:aparams }],[cb]);
+			},
+
+			// запомнить удаленный вызов на клиенте в транзакции
+			_rcAdd: function(objGuid, func, aparams, cb) {
+				if (this.isMaster() || !this.inTran()) {
+					console.log("REMOTE CALL Вне транзакции ");
+					return;
+				}
+				if (objGuid && !this.get(objGuid)) {
+					console.log("Объект не принадлежит базе ",objGuid);
+					return;
+				}
+				var args = {objGuid: objGuid, func:func, aparams:aparams };
+				if (func == "sendDataBaseDelta") { // Дельты в пакете всегда перед вызовами других методов, поэтому вставляем в начало массива
+					this.pvt._memFunc.splice(0,0,args);
+					this.pvt._memFuncDone.splice(0,0,cb);
+				}
+				else {
+					this.pvt._memFunc.push(args);
+					this.pvt._memFuncDone.push(cb);
+				}
+			},
+						
+			// команда завершения транзакции
+			_rcCommit: function(cb) {
+				if (!this.inTran()) return;				
+				function icb(result) {		
+					if (cb) cb(result);
+				}		
+				var args = {objGuid: undefined, func:"endTran", aparams:undefined };
+				this._rc([args],[icb]);
+			},
+			
+			_rc: function(rcargs,rccbs,doneBefore,doneAfter) {
+				var that = this;	
+				function icb(result) {				
+					if (doneBefore) doneBefore();	
+					for (var i=0; i<result.cbres.length; i++) 
+						if (rccbs[i]) rccbs[i](result.cbres[i]);					
+					that.getController().genDeltas(that.getGuid(),undefined, function(res,cb1) { that.sendDataBaseDelta(res,cb1); });
+					that.syncInTran(doneBefore,doneAfter); 
+					that.tranCommit();
+					if (doneAfter) doneAfter();
+				}
+
+				var socket = this.getSocket();
+				var pg = this.getProxyMaster().guid;
+				var data={action:"remoteCall3",type:"method",args: { masterGuid: pg, rc: rcargs } };
+				if (this.getCurTranGuid()) {
+					data.trGuid = this.getCurTranGuid();		
+					data.srcDbGuid = this.getGuid();
+					/*
+					data.rootv = {}; // добавить версии рутов
+					var guids = this.getRootGuids();
+					for (var i=0; i<guids.length; i++)
+						data.rootv[guids[i]]=this.getObj(guids[i]).getRootVersion("valid");	
+					*/						
+				}
+				socket.send(data,icb);
+				
+				if (this.pvt.name!="System") {
+					var s = "";
+					for (var i=0; i<rcargs.length; i++) 
+						s += rcargs[i].func + " ";
+					console.log("%c SEND DATA ("+s+")  ","color: blue", data.args);
+				}					
+			},
+						
 			inTran: function() {
 				if (this.pvt.tranCounter>0) return true;
 				else return false;
@@ -1281,8 +1369,159 @@ define(
 			
 			getCurTranCounter: function() {
 				return this.pvt.tranCounter;
-			}
+			},
+			
+			onRemoteCall3Plus: function(rc, srcDbGuid, trGuid, rootv, done) {
+				var l = rc.length;
+				var l2 = l;
+				var globres = [];
+				function idone(res) {
+					l2--;
+					globres.push(res);
+					if (!l2) {
+						done( { cbres: globres } );
+					}
+				};
+				for (var i=0; i<l; i++) {
+					var c = rc[i];
+					var uobj = (c.objGuid) ?  this.getObj(c.objGuid) : this;
+					this.remoteCallExec(uobj, c, srcDbGuid, trGuid, undefined, idone);
+				}
+			},
+			
+			// временный вариант ф-ции для рассылки оповещений подписантам, используется для рассылки признака конца транзакции
+			subsRemoteCall: function(func, aparams, excludeGuid) {		
+				var subs = this.getSubscribers();	
+				var trGuid = this.getCurTranGuid();
+				for(var guid in subs) {
+					var csub = subs[guid];
+					if (excludeGuid!=guid) // для всех ДБ кроме исключенной (та, которая инициировала вызов)
+						csub.connect.send({action:func, trGuid: trGuid, dbGuid:guid }); //TODO TRANS2 сделать вызов любого метода
+				}
+			},
+			
+            /**
+             * Метод для отправки дельт - инкапсуляция аналогичного метода контроллера БД
+			 * (требуется для проведения посылки дельт через транзакционный механизм)
+             * @param data
+			 * @param cb
+             */			
+			sendDataBaseDelta: function(data, cb) {
+				if (this.isMaster()) {	
+					var cdb = this.getController();
+					var res=cdb.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
+					if (cb) cb({data: { /*dbVersion: cdb.getDB(data.dbGuid).getVersion() */}});
+				}
+				else {
+					this.rc(undefined, 'sendDataBaseDelta',[data],cb);
+				}
+			},			
+			
+			_checkRootVer: function (rootv) {
+			    if (DEBUG)
+			        console.log("CHECK ROOT VERSIONS");
+				for (var guid in rootv) console.log(guid, rootv[guid],this.getObj(guid).getRootVersion("valid"));
+				for (var guid in rootv) 
+					if (rootv[guid] != this.getObj(guid).getRootVersion("valid")) return false;
+				return true;
+			},
+			
+            /**
+             * Ответ на вызов удаленного метода. Ставит вызовы в очередь по транзакциям
+             * @param uobj {object}
+             * @param args [array] 
+             * @param srcDbGuid - гуид БД-источника
+			 * @param trGuid - гуид транзакции (может быть null)
+			 * @param rootv {object} - версии рутов
+			 * @callback done - колбэк
+             */
+			remoteCallExec: function(uobj, args, srcDbGuid, trGuid, rootv, done) {
+				var db = this;
+				var trans = this.pvt.execTr;
+				var queue = this.pvt.execQ;
+				var auto = false;				
+				// пропускаем "конец" транзакции если клиент был сам ее инициатором
+				if (trGuid && (db.getCurTranGuid() == trGuid) && !(db.isExternalTran()) && (args.func=="endTran")) 
+					return;
+				if (!trGuid) {	// "автоматическая" транзакция, создается если нет гуида транзакции
+					trGuid = Utils.guid();
+					auto=true;
+				}
+				if (!(trGuid in trans)) { // создать новую транзакцию и поставить в очередь
+					var qElem = {};
+					qElem.tr = trGuid;
+					qElem.q = [];
+					qElem.a = auto;
+					queue.push(qElem);
+					trans[trGuid] = this.pvt.memTranIdx+queue.length-1; // "индекс" для быстрого доступа в очередь
+				}
+				var tqueue = queue[trans[trGuid]-this.pvt.memTranIdx].q;
 
+				function done2(res,endTran) { // коллбэк-обертка для завершения транзакции				
+					var memTranGuid = db.getCurTranGuid();
+					tq = queue[trans[memTranGuid]-db.pvt.memTranIdx];		
+					db.getController().genDeltas(db.getGuid()); // сгенерировать дельты и разослать подписчикам
+					var commit = tq.a || endTran; // конец транзакции - либо автоматическая либо признак конца
+					if (commit) { 
+						db.subsRemoteCall("endTran",undefined, srcDbGuid); // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid
+						if (db.isExternalTran()) // закрываем только "внешние" транзакции (созданные внутри remoteCallExec)
+							db.tranCommit(); 	
+						db.event.fire({
+							type: 'endTransaction',
+							target: db
+						});
+						
+						if (done) done(res);
+						
+						delete trans[memTranGuid];
+						queue.splice(0,1);
+						db.pvt.memTranIdx++;
+						db.pvt.execFst = false;
+						
+						if (queue.length>0) { // Если есть другие транзакции в очереди, то перейти к их выполнению
+							db._checkRootVer(rootv);
+							db.tranStart(queue[0].tr);
+							db.pvt.execFst = true;
+							var f=queue[0].q[0];
+							f(); 
+						}										
+					}			
+					else {
+						if (done) done(res); // сейчас срабатывает только на сервере, чтобы вернуть ответ на клиент
+						
+						tq.q.splice(0,1);				
+						if (tq.q.length>0) 
+							tq.q[0]();
+						else 
+							db.pvt.execFst = false;
+					}
+					//console.log("RCEXEC DONE ",args.func,args,trGuid,auto,commit, queue);
+				}
+				var aparams = args.aparams || [];
+				aparams.push(done2); // добавить колбэк последним параметром
+
+				function exec1() {
+					if (args.func == "endTran")  // если получили маркер конца транзакции, то коммит
+						done2(null,true);		
+					else
+						uobj[args.func].apply(uobj,aparams); // выполняем соответствующий метод uobj.func(aparams)		
+				}	
+				// ставим в очередь
+				tqueue.push(function() { exec1(); });
+				//console.log("RCEXEC PUSH TO QUEUE ",args.func,args,trGuid,auto, queue);
+							
+				if (!db.inTran()) {
+					this._checkRootVer(rootv);
+					db.tranStart(trGuid); // Если не в транзакции, то заходим в нее
+				}
+
+				if (trGuid == db.getCurTranGuid()) { // Если мемДБ в той же транзакции, что и метод, можем попробовать его выполнить, но только		
+					if (!this.pvt.execFst) { 		// если первый вызов не исполняется в данный момент
+						this.pvt.execFst = true;
+						tqueue[0](); // выполнить первый в очереди метод
+					}				
+				}
+			}
         });
 		return MemDataBase;
 	}
