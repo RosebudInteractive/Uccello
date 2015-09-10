@@ -47,6 +47,7 @@ define(
 		        pvt.$idCnt = 0;
 		        pvt.$maxRootId = -1;        // максимальный номер корневого объекта
 		        pvt.subscribers = {}; 		// все базы-подписчики
+		        pvt.dataRoots = {};         // список всех dataRoots
 
 		        if ("guid" in params)
 		            pvt.guid = params.guid;
@@ -1521,8 +1522,65 @@ define(
 						tqueue[0](); // выполнить первый в очереди метод
 					}				
 				}
-			}
-        });
+			},
+
+		    /**
+             * Регистрирует dataRoot по имени в списке
+             * 
+             * @param {String}  name Имя dataRoot
+             * @param {Object}  dataRoot Сам dataRoot
+             * @return {String}
+             */
+			registerDataRoot: function (name, dataRoot) {
+			    this.pvt.dataRoots[name] = dataRoot;
+			},
+
+		    /**
+             * Проверяет, существует ли объект по ссылке
+             * 
+             * @param {Integer}      val Целочисленное значение ссылки
+             * @param {Object}       errObj Объект, куда будет записано сообщение об ошибке
+             * @param {String}       fldName Имя поля, содержащего ссылку
+             * @param {DataObject}   dataObj Объект, который ссылается
+             * @param {DataRefType}  refType Описание типа ссылки
+             * @return {Boolean}
+             */
+			checkDataObjectRef: function (val, errObj, fldName, dataObj, refType) {
+			    var result = false;
+			    var name = refType.model();
+			    var dataRoot = this.pvt.dataRoots[name];
+			    if (dataRoot) {
+			        result = !dataRoot.getCol("DataElements").getObjById(val); // Пока не используем индексы
+			        if ((!result) && errObj)
+			            errObj.errMsg = "Object \"" + name + "\" (Id = " + val + ") doesn't exist.";
+                }
+			    else
+			        if (errObj)
+			            errObj.errMsg = "Data Root \"" + name + "\" doesn't exist.";
+
+			    return result;
+			},
+
+		    /**
+             * Возвращает объект по ссылке
+             * 
+             * @param {Integer}      val Целочисленное значение ссылки
+             * @param {String}       fldName Имя поля, содержащего ссылку
+             * @param {DataObject}   dataObj Объект, который ссылается
+             * @param {DataRefType}  refType Описание типа ссылки
+             * @return {DataObject}
+             */
+			getRefDataObject: function (val, fldName, dataObj, refType) {
+			    var result = null;
+			    var name = refType.model();
+			    var dataRoot = this.pvt.dataRoots[name];
+			    if (dataRoot)
+			        result = dataRoot.getCol("DataElements").getObjById(val); // Пока не используем индексы
+
+			    return result ? result : null;
+			},
+
+		});
 		return MemDataBase;
 	}
 );

@@ -12,7 +12,9 @@ define(
             metaCols: [{ "cname": "Fields", "ctype": "MetaModelField" }],
             metaFields: [
                 { fname: "Name", ftype: "string" },
-                { fname: "DataObjectGuid", ftype: "string" }
+                { fname: "DataObjectGuid", ftype: "string" },
+                { fname: "DataRootName", ftype: "string" },
+                { fname: "DataRootGuid", ftype: "string" }
             ],
 
             init: function (cm, params) {

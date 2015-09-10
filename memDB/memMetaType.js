@@ -606,7 +606,6 @@ define(
                 return result;
             }
         });
-        /////////////////////////////////////////////////////////////////////////////////////
 
         var DataRefType = IntegerType.extend({
             /**
@@ -718,9 +717,9 @@ define(
                         var _errMsg = {};
 
                         if (this._refResolver && (typeof this._refResolver.checkDataObjectRef === "function"))
-                            result = this._refResolver.checkDataObjectRef(val, _errMsg, fldName, obj);
+                            result = this._refResolver.checkDataObjectRef(val, _errMsg, fldName, obj, this);
 
-                        if (!result)
+                        if ((!result) && errObj)
                             errObj.errMsg = _errMsg.errMsg;
                     };
                 };
@@ -750,6 +749,7 @@ define(
             /**
              * Returns referenced model name
              * 
+             * @return {String}
              */
             model: function () {
                 return this._model;
@@ -758,6 +758,7 @@ define(
             /**
              * Returns reference action
              * 
+             * @return {String}
              */
             refAction: function () {
                 return this._refAction;
@@ -766,6 +767,7 @@ define(
             /**
              * Returns "allow Null" flag
              * 
+             * @return {Boolean}
              */
             allowNull: function () {
                 return this._allowNull;
@@ -782,13 +784,12 @@ define(
             getRefObject: function (val, fldName, obj) {
                 var retval = null;
                 if (this._refResolver && (typeof this._refResolver.getRefDataObject === "function"))
-                    retval = this._refResolver.getRefDataObject(val, fldName, obj);
+                    retval = this._refResolver.getRefDataObject(val, fldName, obj, this);
                 return retval;
             }
 
         });
 
-        /////////////////////////////////////////////////////////////////////////////////////
         datafieldTypeCodes = {
             "int": { code: 0, constructor: IntegerType },
             "string": { code: 1, constructor: StringType },

@@ -29,12 +29,14 @@ define(
                 this._modelsByName = {};
                 this._modelsByGuid = {};
 
-                this._constrByName = {};
                 this._router = null;
 
                 this._linksTo = {};         // исходящие ссылки (по таблицам)
                 this._linksFrom = {};       // входящие ссылки (по таблицам)
                 this._linksUnresolved = {}; // неразрешенные ссылки
+
+                this._isConstrReady = false;
+                this._constructors = { byName: {}, byGuid: {} };
 
                 UccelloClass.super.apply(this, [cm, params]);
 
@@ -72,34 +74,36 @@ define(
 
             createObjByName: function (name, params) {
                 var obj = null;
-                var model = this._modelsByName[name];
-                if (model)
-                    obj = this._createObj(model, params, name);
+                var code = this.getObjConstrByName(name);
+                if (code)
+                    obj = this._createObj(code, params, name);
                 return obj;
             },
 
             createObjByGuid: function (guid, params) {
                 var obj = null;
-                var model = this._modelsByGuid[guid];
-                if (model)
-                    obj = this._createObj(model, params, model.get("Name"));
+                var code = this.getObjConstrByGuid(guid);
+                if (code)
+                    obj = this._createObj(code, params, model.get("Name"));
                 return obj;
             },
 
             getObjConstrByName: function (name) {
-                var obj = null;
-                var model = this._modelsByName[name];
-                if (model)
-                    obj = this._getObjConstr(model);
-                return obj;
+                var constr = null;
+                this._rebuildConstructors();
+                var obj = this._constructors.byName[name];
+                if (obj)
+                    constr = obj.constr;
+                return constr;
             },
 
             getObjConstrByGuid: function (guid) {
-                var obj = null;
-                var model = this._modelsByGuid[guid];
-                if (model)
-                    obj = this._getObjConstr(model);
-                return obj;
+                var constr = null;
+                this._rebuildConstructors();
+                var obj = this._constructors.byGuid[guid];
+                if (obj)
+                    constr = obj.constr;
+                return constr;
             },
 
             getConstructors: function (guids, callback) {
@@ -119,12 +123,10 @@ define(
                 return callback ? REMOTE_RESULT : constrArr;
             },
 
-            _createObj: function (model, params, name) {
+            _createObj: function (code, params, name) {
                 var obj = null;
-                if (model) {
-                    var constr = null;
-                    if (!this._constrByName[name])
-                        constr = this._buildConstr(model);
+                if (code) {
+                    var constr = this._buildConstr(code);
                     if (constr) {
                         obj = new constr(this.getDB(), params);
                     };
@@ -132,13 +134,15 @@ define(
                 return obj;
             },
 
-            addModel: function (name, guid) {
+            addModel: function (name, guid, rootName, rootGuid) {
                 if (name) {
                     var params = {
                         ini: {
                             fields: {
                                 Name: name,
-                                DataObjectGuid: guid ? guid : this.getDB().getController().guid()
+                                DataObjectGuid: guid ? guid : this.getDB().getController().guid(),
+                                DataRootName: rootName ? rootName : "Root" + name,
+                                DataRootGuid: rootGuid ? rootGuid : this.getDB().getController().guid(),
                             }
                         },
                         parent: this,
@@ -168,6 +172,31 @@ define(
 
             getModelByGuid: function (guid) {
                 return this._modelsByGuid[guid];
+            },
+
+
+            _rebuildConstructors: function () {
+                if (!this._isConstrReady) {
+                    this._constructors = { byName: {}, byGuid: {} };
+
+                    var names = Object.keys(this._modelsByName);
+
+                    for (var i = 0; i < names.length; i++) {
+                        var model = this._modelsByName[names[i]];
+                        var name = model.get("Name");
+                        var guid = model.get("DataObjectGuid");
+                        var rootName = model.get("DataRootName");
+                        var rootGuid = model.get("DataRootGuid");
+                        var objConstr = { constr: this._getObjConstr(model), objGuid: null, rootGuid: rootGuid };
+                        var rootConstr = { constr: this._getRootConstr(model), objGuid: guid, rootGuid: null };
+                        this._constructors.byGuid[guid] = objConstr;
+                        this._constructors.byGuid[rootGuid] = rootConstr;
+                        this._constructors.byName[name] = objConstr;
+                        this._constructors.byName[rootName] = rootConstr;
+                    };
+
+                    this._isConstrReady = true;
+                };
             },
 
             _genGetterName: function (fname) {
@@ -213,9 +242,26 @@ define(
                 return { parentGuid: UCCELLO_CONFIG.classGuids.DataObject, constrBody: constr + footer };
             },
 
-            _buildConstr: function (model) {
+            _getRootConstr: function (model) {
+
+                var constr = "return Parent.extend({\n" +
+                    "\t\tclassName: \"" + model.get("DataRootName") + "\",\n" +
+                    "\t\tclassGuid: \"" + model.get("DataRootGuid") + "\",\n" +
+                    "\t\tmetaCols: [{ \"cname\": \"DataElements\", \"ctype\": \"" + model.get("Name") + "\" }],\n" +
+                    "\t\tmetaFields: [],\n" +
+                    "\n" +
+                    "\t\tinit: function(cm,params){\n" +
+                    "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n" +
+                    "\t\t\tif(params)\n" +
+                    "\t\t\t\tcm.registerDataRoot(\"" + model.get("Name") + "\", this);\n" +
+                    "\t\t}\n" +
+                    "\t});";
+
+                return { parentGuid: UCCELLO_CONFIG.classGuids.DataRoot, constrBody: constr };
+            },
+
+            _buildConstr: function (code) {
                 var Constructor = null;
-                var code = this._getObjConstr(model);
                 var parent = null;
 
                 switch (code.parentGuid) {
