@@ -21,10 +21,11 @@ define(
                 this._fieldsByName = {};
                 this._fields = [];
 
-                UccelloClass.super.apply(this, [cm, params]);
-                if (params) {
+                if (params)
                     this.eventsInit();  // WARNING !!! This line is essential !!! It initializes "Event" mixin.
 
+                UccelloClass.super.apply(this, [cm, params]);
+                if (params) {
                     this._fieldsCol = this.getCol("Fields");
                     this._fieldsCol.on({
                         type: 'add',
@@ -111,7 +112,7 @@ define(
                             type: "addLink",
                             target: self,
                             fieldName: fieldName,
-                            type: fieldType
+                            link: fieldType
                         });
                     };
 

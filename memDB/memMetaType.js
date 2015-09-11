@@ -689,6 +689,8 @@ define(
 
                         this._refAction = val.refAction;
                     };
+                    if (typeof (val.allowNull) === "boolean")
+                        this._allowNull = val.allowNull;
                 };
 
                 if (this._model === null)

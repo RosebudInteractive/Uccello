@@ -283,15 +283,17 @@ define(
             },
 
             _addLink: function (args) {
+                this._isConstrReady = false;
+
                 var model = args.target;
                 var modelName = model._genericSetter("Name");
-                var dstName = args.type.model();
+                var dstName = args.link.model();
                 var fieldName = args.fieldName;
                 var link = {
                     src: model,
-                    type: args.type,
+                    type: args.link,
                     field: fieldName,
-                    dst: this._modelsByName[dstName]
+                    dst: this._modelsByName[dstName] ? this._modelsByName[dstName] : null
                 };
                 var linksTo = this._linksTo[modelName];
                 if (!linksTo)
@@ -308,6 +310,8 @@ define(
             },
 
             _removeLink: function (args) {
+                this._isConstrReady = false;
+
                 var model = args.target;
                 var modelName = model._genericSetter("Name");
                 var fieldName = args.fieldName;
@@ -317,10 +321,13 @@ define(
                         delete this._linksFrom[link.dst._genericSetter("Name")][modelName + "_" + fieldName];
                     else
                         delete this._linksUnresolved[modelName + "_" + fieldName];
+                    delete this._linksTo[link.src._genericSetter("Name")][fieldName];
                 };
             },
 
             _addModelToLinks: function (name, model) {
+                this._isConstrReady = false;
+
                 var linksFrom = null;
                 var links = Object.keys(this._linksUnresolved);
                 for (var i = 0; i < links.length; i++) {
@@ -336,6 +343,8 @@ define(
             },
 
             _removeModelFromLinks: function (name) {
+                this._isConstrReady = false;
+
                 var linksTo = this._linksTo[name];
                 if (linksTo) {
                     var links = Object.keys(linksTo);
@@ -365,6 +374,8 @@ define(
             },
 
             _onAddModel: function (args) {
+                this._isConstrReady = false;
+
                 var model = args.obj;
                 var name = model.get("Name");
                 var guid = model.get("DataObjectGuid");
@@ -393,6 +404,8 @@ define(
             },
 
             _onDeleteModel: function (args) {
+                this._isConstrReady = false;
+
                 var model = args.obj;
                 var name = model.get("Name");
                 var guid = model.get("DataObjectGuid");

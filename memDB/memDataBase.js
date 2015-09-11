@@ -1550,7 +1550,7 @@ define(
 			    var name = refType.model();
 			    var dataRoot = this.pvt.dataRoots[name];
 			    if (dataRoot) {
-			        result = !dataRoot.getCol("DataElements").getObjById(val); // Пока не используем индексы
+			        result = dataRoot.getCol("DataElements").getObjById(val) ? true : false; // Пока не используем индексы
 			        if ((!result) && errObj)
 			            errObj.errMsg = "Object \"" + name + "\" (Id = " + val + ") doesn't exist.";
                 }
