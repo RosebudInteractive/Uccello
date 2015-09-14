@@ -607,7 +607,6 @@ define(
 				newObj.ver = obj.getRootVersion();
 
 				newObj.$sys.typeGuid = obj.getTypeGuid();
-				// поля объекта TODO? можно сделать сериализацию в более "компактном" формате, то есть "массивом" и без названий полей
 				newObj.fields = {};
 				for (var i = 0; i < obj.count() ; i++)
 				    newObj.fields[obj.getFieldName(i)] = obj.getSerialized(i, use_resource_guid);
@@ -1230,19 +1229,27 @@ define(
 				
 			},
 
-			tranCommit: function() {
-				var that = this;
+			tranCommit: function() {				
 				function icb() {
+					/*
 					var guids = that.getRootGuids();   // поднять valid-версии до draft-версий при коммите
 					for (var i=0; i<guids.length; i++) { // TODO 9 При возврате с сервера нужно передавать список версий по рутам и эти версии коммитить, а не все до драфта.
 						var df = that.getObj(guids[i]).getRootVersion();
 						that.getObj(guids[i]).setRootVersion("valid",df);	
+					}*/
+					// Когда приходит подтверждение коммита с сервера, выставляем valid-версии в соответствии с тем, что запомнили
+					for (var cguid in verByRoot) {
+						that.getObj(cguid).setRootVersion("valid",verByRoot[cguid]);
+						console.log("%c Update versions ", "color:red",cguid+" "+verByRoot[cguid]);
 					}
+					
 				}
-				var p = this.pvt;
-				var memTran = p.curTranGuid; 
+				var that = this, p = this.pvt, memTran = p.curTranGuid; 
 				if (p.tranCounter==0) return;
 				if (p.tranCounter==1) {	
+					var verByRoot = {}, guids = this.getRootGuids();
+					for (var i=0; i<guids.length; i++) 
+						verByRoot[guids[i]] = this.getObj(guids[i]).getRootVersion(); // запомнить draft-версию для коммита
 					if (this.isMaster() || p.externalTran) 
 						icb();
 					else 
@@ -1348,7 +1355,7 @@ define(
 					var s = "";
 					for (var i=0; i<rcargs.length; i++) 
 						s += rcargs[i].func + " ";
-					console.log("%c SEND DATA ("+s+")  ","color: blue", data.args);
+					console.log("%c SEND DATA ("+s+")  ","color: blue", data.args, " trGuid: ",data.trGuid);
 				}					
 			},
 						

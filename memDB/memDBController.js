@@ -335,15 +335,8 @@ define(
 				            db._buildMetaTables();
 				    }
 
-
-					//db.setVersion("valid", cdelta.dbVersion);
-				    //db.setVersion("sent", cdelta.dbVersion);
-
-				    if (cdelta.rootGuid) {
-						// TODO 9 - valid -версию меняем в коммите
-				        // db.getObj(cdelta.rootGuid).setRootVersion("valid", cdelta.ver);
+				    if (cdelta.rootGuid) 
 				        db.getObj(cdelta.rootGuid).setRootVersion("sent", cdelta.ver);
-				    }
 				};
 
 				this.propagateDeltas(dbGuid,srcDbGuid,[cdelta]);
@@ -362,9 +355,6 @@ define(
 				var deltas = db.genDeltas();
 				if (deltas.length > 0) {
 				    this.propagateDeltas(dbGuid, null, deltas, callback, sendFunc);
-
-				    //if (db._getVersion("sent") < db._getVersion()) db._setVersion("sent", db._getVersion());
-
 				    for (var i = 0; i < deltas.length; i++) {
 				        if (deltas[i].rootGuid) {
 				            var obj = db.getRoot(deltas[i].rootGuid).obj;

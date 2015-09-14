@@ -147,9 +147,8 @@ define(
 				delta.rootGuid = obj.getRoot().getGuid();
 				
 				// записывем версию текущей транзакции в дельту
-				//delta.dbVersion = db.getVersion(); //TODO а есть ли уверенность, что на момент генерации дельты версия еще не поменялась?
 				delta.ver = obj.getRootVersion();						
-				if (db.inTran()) delta.trGuid = db.getCurTranGuid();
+				//if (db.inTran()) delta.trGuid = db.getCurTranGuid();
 				//this.truncate();
 				return delta;
 			},
