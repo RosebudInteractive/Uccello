@@ -198,8 +198,6 @@ define(
 					return;
 				
 				var db = this.getObj().getDB();
-				// TODO 9
-				// db.getCurrentVersion(); // инкрементируем версии если нужно
 				var ver = this.getObj().getCurVersion();
 
 				if (!(ver.toString() in p.versions))

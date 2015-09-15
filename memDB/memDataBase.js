@@ -66,7 +66,7 @@ define(
 				// транзакции
 				pvt.curTranGuid = undefined; // верси текущей транзакции БД
 				pvt.tranCounter = 0;		// счетчик транзакции
-				pvt.commitFlag = false;
+				pvt.tho = {};
 
 				pvt.execQ = [];
 				pvt.execTr = {};
@@ -115,6 +115,7 @@ define(
 		            root.dver = 0; 			// версии корневого объекта: draft / sent / valid
 		            root.sver = 0;
 		            root.vver = 0;
+					root.vho = {};			// история версий
 		            root.event = new Event();
 		            this.pvt.robjs.push(root);
 		            this.pvt.rcoll[obj.getGuid()] = root;
@@ -889,10 +890,6 @@ define(
 				
 				var res = [];
 
-				// VER если нужно инкрементируем драфт-версию
-				// TODO 9
-				//this.getCurrentVersion();
-
 				var allSubs = this.getSubscribers();
 
 				for (var i=0; i<rg.length; i++) {
@@ -926,9 +923,6 @@ define(
 						root = this.getRoot(croot.getGuid()); 
 						root.hash = params.expr;
 					}
-					// VER подтверждаем версию на сервере
-					// TODO 9 валид-версию меняем в коммите
-					//croot.setRootVersion("valid",croot.getRootVersion());
 				}	
 				
 				// просто подписать остальные руты
@@ -954,13 +948,13 @@ define(
 					}
 					
 				}
-
+/*
 				if (!this.getCurTranGuid()) {
-					// TODO 9
+					// TODO 10
 					// this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
 					this.getController().genDeltas(this.getGuid());		// рассылаем дельты
 				}
-
+*/
 				return res;
 			},
 
@@ -1130,7 +1124,7 @@ define(
              */
 			undo: function(version) {
 				if (DEBUG) console.log("****************************************  UNDO MODIFICATIONS!!!!!!!!!!");
-				// TODO 9 -  ПЕРЕПИСАТЬ
+				// TODO 10 -  ПЕРЕПИСАТЬ
 				/*
 				if (version<this.XgetVersion("valid"))
 					return false;
@@ -1171,19 +1165,11 @@ define(
 				                        allDeltas.splice(1, 0, { rootGuid: metaRootGuid, constructors: res.constr });
                                 };
 					        };
-					    } else
+					    } 
+						else
 					        allDeltas.push(d);
-					    // VER если в мастере, то сразу и подтверждаем 		
-						// TODO 9 валид-версию меняем в коммите
-						//if (this.isMaster() && !this.getCurTranGuid()) 
-						//	this.getRoot(i).obj.setRootVersion("valid",this.getRoot(i).obj.getRootVersion());
-						
 					}
 				}
-				// DBVER если в мастере и вне транзакции, то автоматом поднимаем валидную версию	
-				// TODO 9 валид-версию меняем в коммите				
-				//if (this.isMaster() && !this.getCurTranGuid())	
-				//	this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (если вне транзакции)
 
 				return allDeltas;
 			},
@@ -1204,56 +1190,67 @@ define(
 
 			// Транзакции
 			// - только 1 транзакция в единицу времени на memDB			
-			tranStart: function(guid) {					
-				if (this.pvt.curTranGuid) {
-					if ((this.pvt.curTranGuid == guid) || (!guid)) 
-						this.pvt.tranCounter++;
+			tranStart: function(guid, srcDbGuid) {	
+				var p = this.pvt;
+				if (p.curTranGuid) {
+					if ((p.curTranGuid == guid) || (!guid)) 
+						p.tranCounter++;
 					else return;
 				}
 				else {
-					this.pvt._memFunc = [];
-					this.pvt._memFuncDone = [];
+					p._memFunc = [];
+					p._memFuncDone = [];
 					if (guid) {
-						this.pvt.curTranGuid = guid;
-						this.pvt.externalTran = true;
+						p.curTranGuid = guid;
+						p.srcDbGuid = srcDbGuid;
+						p.externalTran = true;
 					}
 					else {
-						this.pvt.curTranGuid = Utils.guid();
-						this.pvt.externalTran = false;
+						p.curTranGuid = Utils.guid();
+						p.externalTran = false;
 					}
-					this.pvt.tranCounter=1;
+					p.tranCounter=1;
+					if (!p.tho[p.curTranGuid]) p.tho[p.curTranGuid] = {};
+					var trobj = this.pvt.tho[p.curTranGuid];
+					trobj.guid = p.curTranGuid;
+					trobj.roots = {};
+
 				}
 				if (DEBUG)
-				    console.log("TRANSTART "+this.pvt.curTranGuid+" | " + this.pvt.tranCounter," Ext:",this.pvt.externalTran);
-				return this.pvt.curTranGuid;
+				    console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
+				return p.curTranGuid;
 				
 			},
 
 			tranCommit: function() {				
 				function icb() {
-					/*
-					var guids = that.getRootGuids();   // поднять valid-версии до draft-версий при коммите
-					for (var i=0; i<guids.length; i++) { // TODO 9 При возврате с сервера нужно передавать список версий по рутам и эти версии коммитить, а не все до драфта.
-						var df = that.getObj(guids[i]).getRootVersion();
-						that.getObj(guids[i]).setRootVersion("valid",df);	
-					}*/
 					// Когда приходит подтверждение коммита с сервера, выставляем valid-версии в соответствии с тем, что запомнили
 					for (var cguid in verByRoot) {
 						that.getObj(cguid).setRootVersion("valid",verByRoot[cguid]);
 						console.log("%c Update versions ", "color:red",cguid+" "+verByRoot[cguid]);
-					}
-					
+					}		
 				}
 				var that = this, p = this.pvt, memTran = p.curTranGuid; 
 				if (p.tranCounter==0) return;
-				if (p.tranCounter==1) {	
-					var verByRoot = {}, guids = this.getRootGuids();
+				if (p.tranCounter==1) {	// Счетчик вложенности = 1, закрываем транзакцию
+					var verByRoot = {}, guids = this.getRootGuids(), isMaster = this.isMaster();
 					for (var i=0; i<guids.length; i++) 
 						verByRoot[guids[i]] = this.getObj(guids[i]).getRootVersion(); // запомнить draft-версию для коммита
-					if (this.isMaster() || p.externalTran) 
+					
+					// сгенерировать и разослать дельты (либо на сервер либо подписчикам)
+					if (isMaster)
+						this.getController().genDeltas(this.getGuid());
+					else
+					  if (!p.externalTran)
+						this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });
+					  
+					if (isMaster || p.externalTran) // TODO 10 точно ли так нужно обрабатывать externalTran?
 						icb();
 					else 
 						this._rcCommit(icb);
+					if (isMaster) // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid					  
+					  this.subsRemoteCall("endTran",undefined,this.pvt.srcDbGuid); 
+					
 					p.curTranGuid = undefined;
 					p.tranCounter = 0;
 					p.externalTran = false;		
@@ -1324,8 +1321,7 @@ define(
 				this._rc([args],[icb]);
 			},
 			
-			_rc: function(rcargs,rccbs,doneBefore,doneAfter) {
-				var that = this;	
+			_rc: function(rcargs,rccbs,doneBefore,doneAfter) { // TODO 10 - если есть удаленный вызов кроме дельты, то установить lock
 				function icb(result) {				
 					if (doneBefore) doneBefore();	
 					for (var i=0; i<result.cbres.length; i++) 
@@ -1335,7 +1331,7 @@ define(
 					that.tranCommit();
 					if (doneAfter) doneAfter();
 				}
-
+				var that = this;
 				var socket = this.getSocket();
 				var pg = this.getProxyMaster().guid;
 				var data={action:"remoteCall3",type:"method",args: { masterGuid: pg, rc: rcargs } };
@@ -1352,9 +1348,7 @@ define(
 				socket.send(data,icb);
 				
 				if (this.pvt.name!="System") {
-					var s = "";
-					for (var i=0; i<rcargs.length; i++) 
-						s += rcargs[i].func + " ";
+					for (var i=0, s = ""; i<rcargs.length; i++) s += rcargs[i].func + " ";
 					console.log("%c SEND DATA ("+s+")  ","color: blue", data.args, " trGuid: ",data.trGuid);
 				}					
 			},
@@ -1377,6 +1371,10 @@ define(
 			
 			getCurTranCounter: function() {
 				return this.pvt.tranCounter;
+			},
+			
+			getTranObj: function(guid) {
+				return this.pvt.tho[guid];
 			},
 			
 			onRemoteCall3Plus: function(rc, srcDbGuid, trGuid, rootv, done) {
@@ -1458,6 +1456,7 @@ define(
 				if (!(trGuid in trans)) { // создать новую транзакцию и поставить в очередь
 					var qElem = {};
 					qElem.tr = trGuid;
+					qElem.src = srcDbGuid
 					qElem.q = [];
 					qElem.a = auto;
 					queue.push(qElem);
@@ -1471,9 +1470,9 @@ define(
 					db.getController().genDeltas(db.getGuid()); // сгенерировать дельты и разослать подписчикам
 					var commit = tq.a || endTran; // конец транзакции - либо автоматическая либо признак конца
 					if (commit) { 
-						db.subsRemoteCall("endTran",undefined, srcDbGuid); // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid
+						//db.subsRemoteCall("endTran",undefined, srcDbGuid); // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid
 						if (db.isExternalTran()) // закрываем только "внешние" транзакции (созданные внутри remoteCallExec)
-							db.tranCommit(); 	
+							db.tranCommit();   // TODO 10 -	isExternalTran должна возвр тру, эта проверка лишняя?
 						db.event.fire({
 							type: 'endTransaction',
 							target: db
@@ -1488,7 +1487,7 @@ define(
 						
 						if (queue.length>0) { // Если есть другие транзакции в очереди, то перейти к их выполнению
 							db._checkRootVer(rootv);
-							db.tranStart(queue[0].tr);
+							db.tranStart(queue[0].tr, queue[0].src);
 							db.pvt.execFst = true;
 							var f=queue[0].q[0];
 							f(); 
@@ -1520,7 +1519,7 @@ define(
 							
 				if (!db.inTran()) {
 					this._checkRootVer(rootv);
-					db.tranStart(trGuid); // Если не в транзакции, то заходим в нее
+					db.tranStart(trGuid,srcDbGuid); // Если не в транзакции, то заходим в нее
 				}
 
 				if (trGuid == db.getCurTranGuid()) { // Если мемДБ в той же транзакции, что и метод, можем попробовать его выполнить, но только		

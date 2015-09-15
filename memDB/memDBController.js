@@ -295,7 +295,7 @@ define(
 				            }
 				        }
 				        else { // на клиенте (slave)
-							// TODO 9
+							// TODO 10
 				            //if (lval <= dver - 1) { // нормальная ситуация, на клиент пришла дельта с подтвержденной версией +1
 							if (lsent == dver - 1) {
 				                // если к тому времени на клиенте появилась еще драфт версия - откатываем ее чтобы не было конфликтов
@@ -374,7 +374,7 @@ define(
 
 					if (DEBUG) console.log("CALLBACK PROPAGATE DELTAS",result,deltas);
 					
-					// TODO 9 валид-версии меняем в коммите
+					// TODO 10 валид-версии меняем в коммите
 					/*
 					for (var guid in rootv) // апдейтим подтвержденные версии рутов после того, как успешно применили их на сервере
 						if (db.getObj(guid).getRootVersion("valid")<rootv[guid])
