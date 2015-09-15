@@ -73,7 +73,8 @@ define([], function () {
             { className:'Toolbar', isUccello: true, component:'controls/toolbar', viewset:false, metaType: ['content']},
             { className:'ToolbarButton', isUccello: true, component:'controls/toolbarButton', viewset:false, metaType: ['content']},
             { className:'ToolbarSeparator', isUccello: true, component:'controls/toolbarSeparator', viewset:false, metaType: ['content']},
-            { className:'LayersContainer', isUccello: true, component:'controls/layersContainer', viewset:false, metaType: ['content']}
+            { className:'LayersContainer', isUccello: true, component:'controls/layersContainer', viewset:false, metaType: ['content']},
+            { className:'DbNavigator', isUccello: true, component:'lib/dbNavigator', viewset:false, metaType: ['content']}
         ],
 
         // остальные гуиды
@@ -149,7 +150,8 @@ define([], function () {
             'Toolbar':'afc2da5a-ad87-4d0c-83dd-96df7ae1b3b6',
             'ToolbarButton':'6ddef43f-252a-46e3-bb68-2a5a52f0702e',
             'ToolbarSeparator':'050fd0ed-873a-4637-916b-145cb71e425f',
-            'LayersContainer':'005f4241-7cb4-45ea-bf7d-5cb047eadac1'
+            'LayersContainer':'005f4241-7cb4-45ea-bf7d-5cb047eadac1',
+            'DbNavigator':'38aec981-30ae-ec1d-8f8f-5004958b4cfa'
         },
 
         // изменяемые свойства
