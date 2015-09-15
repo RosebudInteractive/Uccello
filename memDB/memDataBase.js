@@ -67,6 +67,7 @@ define(
 				pvt.curTranGuid = undefined; // верси текущей транзакции БД
 				pvt.tranCounter = 0;		// счетчик транзакции
 				pvt.tho = {};
+				pvt.tha = [];
 
 				pvt.execQ = [];
 				pvt.execTr = {};
@@ -116,6 +117,7 @@ define(
 		            root.sver = 0;
 		            root.vver = 0;
 					root.vho = {};			// история версий
+					root.vha = [];
 		            root.event = new Event();
 		            this.pvt.robjs.push(root);
 		            this.pvt.rcoll[obj.getGuid()] = root;
@@ -797,9 +799,14 @@ define(
 				
 				if (rholder)   // VER инициализация номеров версий рута
 					if (("ver" in sobj)) {
+						res.setRootVersion("draft",sobj.ver);
+						res.setRootVersion("sent",sobj.ver);
+						res.setRootVersion("valid",sobj.ver);
+						/*
 						rholder.vver = sobj.ver; 
 						rholder.sver = sobj.ver; // НАЗНАЧЕНИЕ ВЕРСИЙ ВЫНЕСТИ ЗА ПРЕДЕЛЫ ДЕСЕРИАЛАЙЗА
-						rholder.dver = sobj.ver;						
+						rholder.dver = sobj.ver;
+						*/
 					}
 
 				this.resolveAllRefs();
@@ -1210,7 +1217,12 @@ define(
 						p.externalTran = false;
 					}
 					p.tranCounter=1;
-					if (!p.tho[p.curTranGuid]) p.tho[p.curTranGuid] = {};
+					if (!p.tho[p.curTranGuid]) {
+						var ct = p.tho[p.curTranGuid] = {};
+						ct.start = new Date();
+						ct.src = srcDbGuid | this.getGuid();
+						p.tha.push(ct);
+					}
 					var trobj = this.pvt.tho[p.curTranGuid];
 					trobj.guid = p.curTranGuid;
 					trobj.roots = {};
@@ -1251,6 +1263,7 @@ define(
 					if (isMaster) // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid					  
 					  this.subsRemoteCall("endTran",undefined,this.pvt.srcDbGuid); 
 					
+					this.getTranObj(p.curTranGuid).end = new Date();
 					p.curTranGuid = undefined;
 					p.tranCounter = 0;
 					p.externalTran = false;		
@@ -1375,6 +1388,10 @@ define(
 			
 			getTranObj: function(guid) {
 				return this.pvt.tho[guid];
+			},
+
+			getTranList: function(guid) {
+				return this.pvt.tha;
 			},
 			
 			onRemoteCall3Plus: function(rc, srcDbGuid, trGuid, rootv, done) {

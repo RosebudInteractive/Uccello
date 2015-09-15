@@ -280,11 +280,19 @@ define(
 			_setDraftVer: function(n) {
 				var robj = this.getRoot();
 				var rholder = this.getDB().getRoot(robj.getGuid());
+				var oldver = rholder.dver;
+				if (oldver == n) return;
+				if (oldver > n) {
+					console.log("ERROR: cannot decrement version");
+					return;
+				}
 				//var trGuid = (tran ? : tran.guid; this.getDB().getCurTranGuid());
 				var trGuid = this.getDB().getCurTranGuid();
 				var trobj = rholder.vho[n.toString()];
-				if (!trobj) 
+				if (!trobj) {
 					trobj = rholder.vho[n.toString()] = this.getDB().getTranObj(trGuid);
+					rholder.vha.push(trobj);
+				}
 				if (trobj) {
 					var r = trobj.roots[robj.getGuid()];
 					if (!r) {
@@ -299,7 +307,7 @@ define(
 				return n;
 			},
 			
-			setRootVersion: function(verType, n, tran) {	
+			setRootVersion: function(verType, n) {	
 				var robj = this.getRoot();
 				var rholder = this.getDB().getRoot(robj.getGuid());
 				switch (verType) { // TODO 10 добавить проверку, что версия не может уменьшаться
@@ -324,6 +332,12 @@ define(
 					//this.getDB().getCurrentVersion();
 				}
 				return ver;
+			},
+			
+			getVerHist: function() {
+				var robj = this.getRoot();
+				var rholder = this.getDB().getRoot(robj.getGuid());
+				return rholder.vho;
 			},
 			
 			getLog: function() {
