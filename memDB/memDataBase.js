@@ -1219,6 +1219,7 @@ define(
 					p.tranCounter=1;
 					if (!p.tho[p.curTranGuid]) {
 						var ct = p.tho[p.curTranGuid] = {};
+						ct.guid = p.curTranGuid;
 						ct.start = new Date();
 						ct.src = srcDbGuid | this.getGuid();
 						p.tha.push(ct);
