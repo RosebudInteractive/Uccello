@@ -341,6 +341,7 @@ define(
 			},
 			
 			truncVer: function(n) {
+				if (!n) n = 1E8;
 				var robj = this.getRoot();
 				var rholder = this.getDB().getRoot(robj.getGuid());			
 

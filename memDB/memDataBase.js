@@ -1399,25 +1399,34 @@ define(
 
 				var p = this.pvt;
 				if (guid) {
-					var maxVer = this.getTranObj(guid).max;
+
+					var roots = {};
 					for (var i=0; i<p.tha.length; i++) {
-						if (p.tha[i].guid == guid) {
+
+						var tobj = p.tha[i];
+						for (var g in tobj.roots) 
+							roots[g] = roots[g] ? Math.max(roots[g],tobj.roots[g].max) : tobj.roots[g].max;
+						
+					
+						if (tobj.guid == guid) {
+							for (var g in roots) 
+								this.getObj(g).truncVer(roots[g]);
 							for (var j=0; j<i; j++) 
-								delete p.tho[p.tha[i].guid];
+								delete p.tho[p.tha[j].guid];
 							p.tha.splice(0,i+1);		
 							break;
 						}
 					}
 				}
 				else {
-					maxVer = undefined;
 					p.tha = [];
 					p.tho = {};
+					var rg = this.getRootGuids();
+					for (i=0; i<rg.length; i++) 
+						this.getObj(rg[i]).truncVer();
+				
 				}
-				var rg = this.getRootGuids();
-				for (i=0; i<rg.length; i++) {
-					this.getObj(rg[i]).truncVer(maxVer);
-				}
+
 			},
 			
 			onRemoteCall3Plus: function(rc, srcDbGuid, trGuid, rootv, done) {
