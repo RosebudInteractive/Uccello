@@ -291,7 +291,7 @@ define(
 				var trobj = rholder.vho[n.toString()];
 				if (!trobj) {
 					trobj = rholder.vho[n.toString()] = this.getDB().getTranObj(trGuid);
-					rholder.vha.push(trobj);
+					rholder.vha.push({ ver: n, tr: trobj });
 				}
 				if (trobj) {
 					var r = trobj.roots[robj.getGuid()];
@@ -340,8 +340,18 @@ define(
 				return rholder.vho;
 			},
 			
-			truncVer: function() {
-				
+			truncVer: function(n) {
+				var robj = this.getRoot();
+				var rholder = this.getDB().getRoot(robj.getGuid());			
+
+				for (var i=0; i<rholder.vha.length; i++) {
+					var el = rholder.vha[i];
+					if (el.ver <= n) 
+						delete rholder.vho[el.ver.toString()];
+					else
+						break;
+				}
+				rholder.vha.splice(0,i);	
 			},
 			
 			getLog: function() {

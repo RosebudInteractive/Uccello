@@ -1221,7 +1221,7 @@ define(
 						var ct = p.tho[p.curTranGuid] = {};
 						ct.guid = p.curTranGuid;
 						ct.start = new Date();
-						ct.src = srcDbGuid | this.getGuid();
+						ct.src = srcDbGuid ? srcDbGuid : this.getGuid();
 						p.tha.push(ct);
 					}
 					var trobj = this.pvt.tho[p.curTranGuid];
@@ -1391,8 +1391,33 @@ define(
 				return this.pvt.tho[guid];
 			},
 
-			getTranList: function(guid) {
+			getTranList: function(guid) { // TODO 10 лучше скопировать?
 				return this.pvt.tha;
+			},
+			
+			truncTran: function(guid) {
+
+				var p = this.pvt;
+				if (guid) {
+					var maxVer = this.getTranObj(guid).max;
+					for (var i=0; i<p.tha.length; i++) {
+						if (p.tha[i].guid == guid) {
+							for (var j=0; j<i; j++) 
+								delete p.tho[p.tha[i].guid];
+							p.tha.splice(0,i+1);		
+							break;
+						}
+					}
+				}
+				else {
+					maxVer = undefined;
+					p.tha = [];
+					p.tho = {};
+				}
+				var rg = this.getRootGuids();
+				for (i=0; i<rg.length; i++) {
+					this.getObj(rg[i]).truncVer(maxVer);
+				}
 			},
 			
 			onRemoteCall3Plus: function(rc, srcDbGuid, trGuid, rootv, done) {
