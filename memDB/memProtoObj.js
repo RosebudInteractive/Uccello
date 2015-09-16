@@ -340,6 +340,10 @@ define(
 				return rholder.vho;
 			},
 			
+			truncVer: function() {
+				
+			},
+			
 			getLog: function() {
 				var p = this;
 				while (!p.pvt.log) p=p.getParent();
