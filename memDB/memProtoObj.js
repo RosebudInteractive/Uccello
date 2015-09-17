@@ -4,8 +4,8 @@
 }
 
 define(
-	['./memObjLog', '../system/event'],
-	function (MemObjLog, Event) {
+	['./memObjLog', '../system/event', '../system/utils'],
+	function (MemObjLog, Event, Utils) {
 
 	    var MemProtoObj = UccelloClass.extend({
 				
@@ -291,14 +291,14 @@ define(
 				var trobj = rholder.vho[n.toString()];
 				if (!trobj) {
 					trobj = rholder.vho[n.toString()] = this.getDB().getTranObj(trGuid);
-					rholder.vha.push({ ver: n, tr: trobj });
+					rholder.vha.push({ ver: n, tr: trobj, guid: Utils.guid() });
 				}
 				if (trobj) {
 					var r = trobj.roots[robj.getGuid()];
 					if (!r) {
 						r = trobj.roots[robj.getGuid()] = {};
 						r.max = 0;
-						r.min = 1E7;					
+						r.min = 1E7;
 					}
 					r.max = r.max ? Math.max(r.max,n) : n;
 					r.min = r.min ? Math.min(r.min,n) : n;
@@ -337,7 +337,7 @@ define(
 			getVerHist: function() {
 				var robj = this.getRoot();
 				var rholder = this.getDB().getRoot(robj.getGuid());
-				return rholder.vho;
+				return rholder.vho; // return rholder.vha; { ver: n, tr: trobj, guid: Utils.guid() }
 			},
 			
 			// удалить из лога все версии до n включительно, если n==undefined, то чистятся все версии
@@ -396,9 +396,7 @@ define(
 			getCol: function(i) {
 				return this.pvt.collections[i];
 			},
-			getCol2: function(i) {
-				return this.pvt.collections[i];
-			},			
+			
 			consoleLog: function(buf) {
 				if (buf === undefined) buf=""
 				else buf+="  ";
