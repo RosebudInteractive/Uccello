@@ -340,6 +340,7 @@ define(
 				return rholder.vho;
 			},
 			
+			// удалить из лога все версии до n включительно, если n==undefined, то чистятся все версии
 			truncVer: function(n) {
 				if (!n) n = 1E8;
 				var robj = this.getRoot();

@@ -1395,6 +1395,7 @@ define(
 				return this.pvt.tha;
 			},
 			
+			// почистить все транзакции до транзакции с гуидом guid (хронологически), если guid==undefined, то почистить все
 			truncTran: function(guid) {
 
 				var p = this.pvt;
