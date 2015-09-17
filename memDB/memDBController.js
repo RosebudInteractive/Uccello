@@ -398,6 +398,7 @@ define(
 				}
 
 				var db  = this.getDB(dbGuid);
+				var src = srcDbGuid ? srcDbGuid : db.getGuid();
 				var rootv = {};
 
 				for (var i=0; i<deltas.length; i++) {
@@ -414,9 +415,7 @@ define(
 								// TODO валидировать версию
 								}
 							else {
-
-								//if (DEBUG) console.log("sending delta db: "+db.getGuid(), delta);
-								var data = {action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: db.getGuid(), trGuid: db.getCurTranGuid()};
+								var data = {action:"sendDelta", type:'method', delta:delta, dbGuid:proxy.guid, srcDbGuid: src, trGuid: db.getCurTranGuid()};
 								
 								if (sendFunc)
 								  sendFunc(data,cb);
@@ -433,7 +432,8 @@ define(
 
 						if (subscriber.kind == 'remote' && srcDbGuid != guid && (!delta.subscribers || (delta.subscribers && delta.subscribers[subscriber.guid]))) {
 							var trGuid = db.getCurTranGuid();
-							subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid(), trGuid:trGuid});
+							
+							subscriber.connect.send({action:"sendDelta", delta:delta, dbGuid:subscriber.guid, srcDbGuid: src, trGuid:trGuid});
 							if (DEBUG) console.log("sent to DB : "+subscriber.guid);
 							}
 						else {
@@ -446,7 +446,7 @@ define(
 									//emptyDelta.dbVersion = delta.dbVersion;
 								}
 								
-								subscriber.connect.send({action:"sendDelta", delta:emptyDelta, dbGuid:subscriber.guid, srcDbGuid: db.getGuid(), trGuid:trGuid});
+								subscriber.connect.send({action:"sendDelta", delta:emptyDelta, dbGuid:subscriber.guid, srcDbGuid: src, trGuid:trGuid});
 							}
 						}
 					}

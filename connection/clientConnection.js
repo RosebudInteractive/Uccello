@@ -72,7 +72,7 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
 								args.aparams = [data.args.dbGuid, data.args.srcDbGuid, data.args.delta];
 								db = that.getDB().getController().getDB(data.args.dbGuid);
 								args.func = "applyDeltas";
-								db.remoteCallExec(that.getDB().getController(),args,undefined,data.args.trGuid, null);								
+								db.remoteCallExec(that.getDB().getController(),args,data.args.srcDbGuid,data.args.trGuid, null);								
                                 break;
 							case 'endTran':
                                 db = that.getDB().getController().getDB(data.args.dbGuid);

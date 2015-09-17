@@ -1491,7 +1491,7 @@ define(
 				for(var guid in subs) {
 					var csub = subs[guid];
 					if (excludeGuid!=guid) // для всех ДБ кроме исключенной (та, которая инициировала вызов)
-						csub.connect.send({action:func, trGuid: trGuid, dbGuid:guid }); //TODO TRANS2 сделать вызов любого метода
+						csub.connect.send({action:func, trGuid: trGuid, dbGuid:guid, srcDbGuid:excludeGuid }); //TODO TRANS2 сделать вызов любого метода
 				}
 			},
 			
