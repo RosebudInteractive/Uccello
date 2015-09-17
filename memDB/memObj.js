@@ -104,7 +104,7 @@ define(
 					    return this.pvt.collections[i];
                 }
 				if (typeof col == "number") 
-					return this.getCol2(col);
+					return this.getCol(col);
 				return null;
 			},
 			
