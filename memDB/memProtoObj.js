@@ -337,7 +337,7 @@ define(
 			getVerHist: function() {
 				var robj = this.getRoot();
 				var rholder = this.getDB().getRoot(robj.getGuid());
-				return rholder.vho; // return rholder.vha; { ver: n, tr: trobj, guid: Utils.guid() }
+				return rholder.vha;//rholder.vho; // return rholder.vha; { ver: n, tr: trobj, guid: Utils.guid() }
 			},
 			
 			// удалить из лога все версии до n включительно, если n==undefined, то чистятся все версии
