@@ -1222,6 +1222,8 @@ define(
 						ct.guid = p.curTranGuid;
 						ct.start = new Date();
 						ct.src = srcDbGuid ? srcDbGuid : this.getGuid();
+						ct.state = 's';
+						ct.prev = (p.tha.length>0) ? p.tha[p.tha.length-1] : null; // сослаться на предыдующую транзакцию
 						p.tha.push(ct);
 					}
 					var trobj = this.pvt.tho[p.curTranGuid];
@@ -1238,17 +1240,23 @@ define(
 			tranCommit: function() {				
 				function icb() {
 					// Когда приходит подтверждение коммита с сервера, выставляем valid-версии в соответствии с тем, что запомнили
+					/*
 					for (var cguid in verByRoot) {
 						that.getObj(cguid).setRootVersion("valid",verByRoot[cguid]);
 						console.log("%c Update versions ", "color:red",cguid+" "+verByRoot[cguid]);
-					}		
+					}	
+					*/
+					that._setTranState(memTr,'c');
+					
 				}
 				var that = this, p = this.pvt, memTran = p.curTranGuid; 
 				if (p.tranCounter==0) return;
 				if (p.tranCounter==1) {	// Счетчик вложенности = 1, закрываем транзакцию
-					var verByRoot = {}, guids = this.getRootGuids(), isMaster = this.isMaster();
+					var /*verByRoot = {},*/ guids = this.getRootGuids(), isMaster = this.isMaster();
+					/*
 					for (var i=0; i<guids.length; i++) 
 						verByRoot[guids[i]] = this.getObj(guids[i]).getRootVersion(); // запомнить draft-версию для коммита
+						*/
 					
 					// сгенерировать и разослать дельты (либо на сервер либо подписчикам)
 					if (isMaster)
@@ -1265,11 +1273,13 @@ define(
 					  this.subsRemoteCall("endTran",undefined,this.pvt.srcDbGuid); 
 					
 					this.getTranObj(p.curTranGuid).end = new Date();
+					var memTr = p.curTranGuid;
 					p.curTranGuid = undefined;
 					p.tranCounter = 0;
 					p.externalTran = false;		
 					p._memFunc = [];
 					p._memFuncDone = [];
+					this._setTranState(memTr,'p'); // установить транзакцию в pre-commit
 						
 					if (memTran && !this.inTran()) {
 						delete this.pvt.execTr[memTran]; // почистить очередь транзакции
@@ -1395,6 +1405,31 @@ define(
 				return this.pvt.tha;
 			},
 			
+			// установить состояние транзакции
+			_setTranState: function(guid,state) {
+				var tobj = this.getTranObj(guid);
+				if (!tobj) return;
+				if (state == 'p') { // установить в pre-commited
+					if (!tobj.prev || tobj.prev.state == 'p' || tobj.prev.state == 'c') {
+						tobj.state = 'p';
+						return true;
+					}
+					return false;
+				}
+				if (state == 'c') { // установить в commited
+					if (!tobj.prev || tobj.prev.state == 'c') { // проверить предыдущую транзакцию
+						tobj.state = 'c';
+						for (var g in tobj.roots) {
+							var r = this.getObj(g);
+							r.setRootVersion("valid",tobj.roots[g].max);
+						}
+						return true;
+					}
+					return false;
+				}
+				//TODO 10 сделать другие состояния
+			},
+			
 			// почистить все транзакции до транзакции с гуидом guid (хронологически), если guid==undefined, то почистить все
 			truncTran: function(guid) {
 
@@ -1414,7 +1449,8 @@ define(
 								this.getObj(g).truncVer(roots[g]);
 							for (var j=0; j<i; j++) 
 								delete p.tho[p.tha[j].guid];
-							p.tha.splice(0,i+1);		
+							p.tha.splice(0,i+1);	
+							if (p.tha.length>0) p.tha[0].prev = null;
 							break;
 						}
 					}
