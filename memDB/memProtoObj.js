@@ -286,7 +286,6 @@ define(
 					console.log("ERROR: cannot decrement version");
 					return;
 				}
-				//var trGuid = (tran ? : tran.guid; this.getDB().getCurTranGuid());
 				var trGuid = this.getDB().getCurTranGuid();
 				var trobj = rholder.vho[n.toString()];
 				if (!trobj) {
@@ -295,11 +294,10 @@ define(
 				}
 				if (trobj) {
 					var r = trobj.roots[robj.getGuid()];
-					if (!r) {
+					if (!r) 
 						r = trobj.roots[robj.getGuid()] = {};
-						r.max = 0;
-						r.min = 1E7;
-					}
+						//r.max = 0;
+						//r.min = 1E7;
 					r.max = r.max ? Math.max(r.max,n) : n;
 					r.min = r.min ? Math.min(r.min,n) : n;
 				}	
@@ -312,12 +310,12 @@ define(
 				var rholder = this.getDB().getRoot(robj.getGuid());
 				switch (verType) { // TODO 10 добавить проверку, что версия не может уменьшаться
 					case "sent": 	rholder.sver = n;
-									if (rholder.dver<n) this._setDraftVer(n); //rholder.dver=n;
+									if (rholder.dver<n) this._setDraftVer(n);
 									return rholder.sver;
 					case "valid":  	rholder.vver = n;
-									if (rholder.dver<n) this._setDraftVer(n); //rholder.dver=n;
+									if (rholder.dver<n) this._setDraftVer(n);
 									return rholder.vver;
-					default: return this._setDraftVer(n); //rholder.dver=n;
+					default: return this._setDraftVer(n);
 				}					
 			},	
 			
@@ -337,7 +335,7 @@ define(
 			getVerHist: function() {
 				var robj = this.getRoot();
 				var rholder = this.getDB().getRoot(robj.getGuid());
-				return rholder.vha;//rholder.vho; // return rholder.vha; { ver: n, tr: trobj, guid: Utils.guid() }
+				return rholder.vha;
 			},
 			
 			// удалить из лога все версии до n включительно, если n==undefined, то чистятся все версии

@@ -1238,25 +1238,10 @@ define(
 			},
 
 			tranCommit: function() {				
-				function icb() {
-					// Когда приходит подтверждение коммита с сервера, выставляем valid-версии в соответствии с тем, что запомнили
-					/*
-					for (var cguid in verByRoot) {
-						that.getObj(cguid).setRootVersion("valid",verByRoot[cguid]);
-						console.log("%c Update versions ", "color:red",cguid+" "+verByRoot[cguid]);
-					}	
-					*/
-					that._setTranState(memTr,'c');
-					
-				}
 				var that = this, p = this.pvt, memTran = p.curTranGuid; 
 				if (p.tranCounter==0) return;
 				if (p.tranCounter==1) {	// Счетчик вложенности = 1, закрываем транзакцию
-					var /*verByRoot = {},*/ guids = this.getRootGuids(), isMaster = this.isMaster();
-					/*
-					for (var i=0; i<guids.length; i++) 
-						verByRoot[guids[i]] = this.getObj(guids[i]).getRootVersion(); // запомнить draft-версию для коммита
-						*/
+					var guids = this.getRootGuids(), isMaster = this.isMaster();
 					
 					// сгенерировать и разослать дельты (либо на сервер либо подписчикам)
 					if (isMaster)
@@ -1264,22 +1249,25 @@ define(
 					else
 					  if (!p.externalTran)
 						this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });
-					  
+					 
+					var memTr = p.curTranGuid;
 					if (isMaster || p.externalTran) // TODO 10 точно ли так нужно обрабатывать externalTran?
-						icb();
-					else 
-						this._rcCommit(icb);
+						this._setTranState(memTr,'c');
+					else {
+						this._setTranState(memTr,'p');
+						this._rcCommit( function() { that._setTranState(memTr,'c'); } );
+					}
 					if (isMaster) // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid					  
 					  this.subsRemoteCall("endTran",undefined,this.pvt.srcDbGuid); 
 					
 					this.getTranObj(p.curTranGuid).end = new Date();
-					var memTr = p.curTranGuid;
 					p.curTranGuid = undefined;
 					p.tranCounter = 0;
 					p.externalTran = false;		
 					p._memFunc = [];
 					p._memFuncDone = [];
-					this._setTranState(memTr,'p'); // установить транзакцию в pre-commit
+					//if (!(isMaster || p.externalTran)) // клиент, который инициировал транзакцию
+					//	this._setTranState(memTr,'p'); // установить транзакцию в pre-commit 
 						
 					if (memTran && !this.inTran()) {
 						delete this.pvt.execTr[memTran]; // почистить очередь транзакции
@@ -1423,6 +1411,9 @@ define(
 							var r = this.getObj(g);
 							r.setRootVersion("valid",tobj.roots[g].max);
 						}
+						// удалить из истории последнюю подтвержденную транзакцию (может быть в комменте в целях тестирования)
+						// if (tobj.prev && tobj.prev.state == 'c') this.truncTran(tobj.prev.guid);
+						
 						return true;
 					}
 					return false;

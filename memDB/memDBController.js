@@ -443,7 +443,7 @@ define(
 									emptyDelta.ver = delta.ver;
 									emptyDelta.rootGuid = delta.rootGuid;
 									emptyDelta.trGuid = delta.trGruid;
-									//emptyDelta.dbVersion = delta.dbVersion;
+									emptyDelta.marker = "empty";
 								}
 								
 								subscriber.connect.send({action:"sendDelta", delta:emptyDelta, dbGuid:subscriber.guid, srcDbGuid: src, trGuid:trGuid});
