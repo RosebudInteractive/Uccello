@@ -1231,7 +1231,8 @@ define(
 					trobj.roots = {};
 
 				}
-				if (DEBUG) console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
+				//if (DEBUG) 
+				console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
 				return p.curTranGuid;
 				
 			},
@@ -1275,7 +1276,7 @@ define(
 					}	
 				}
 				else p.tranCounter--;
-				if (DEBUG)
+				//if (DEBUG)
 				    console.log("TRAN|COMMIT " + memTran + " " + p.tranCounter);
 			},
 									
@@ -1329,6 +1330,7 @@ define(
 					if (cb) cb(result);
 				}		
 				var args = {objGuid: undefined, func:"endTran", aparams:undefined };
+				console.log("***************ENDTRAN ",this.getCurTranGuid());
 				this._rc([args],[icb]);
 			},
 			
@@ -1360,7 +1362,7 @@ define(
 				
 				if (this.pvt.name!="System") {
 					for (var i=0, s = ""; i<rcargs.length; i++) s += rcargs[i].func + " ";
-					console.log("%c SEND DATA ("+s+")  ","color: blue", data.args, " trGuid: ",data.trGuid);
+					//console.log("%c SEND DATA ("+s+")  ","color: blue", data.args, " trGuid: ",data.trGuid);
 				}					
 			},
 						
