@@ -43,6 +43,16 @@ define(
                         }
                     });
 
+				this._provider = null;
+				if (opts.connection && opts.connection.provider) {
+				    try {
+				        var provider = require("./providers/" + opts.connection.provider + "/provider");
+				    } catch (err) {
+				        throw new Error("Unknown provider: \"" + opts.connection.provider + "\".");
+				    };
+				    this._provider = new provider(this, opts.connection);
+				};
+
 				new MetaModelField(this._dataBase);
 				new MetaModel(this._dataBase);
 				new MetaDataMgr(this._dataBase);
@@ -55,23 +65,16 @@ define(
 				};
 				this._constructHolder.addTypeProvider(this._metaDataMgr, true); // локальный провайдер
 
-				this._provider = null;
-				if (opts.connection && opts.connection.provider) {
-				    try {
-				        var provider = require("./providers/" + opts.connection.provider + "/provider");
-				    } catch (err) {
-				        throw new Error("Unknown provider: \"" + opts.connection.provider + "\".");
-				    };
-				    this._provider = new provider(this, opts.connection);
-				    this._provider.connectionMgr().getConnection()
-                        .then(function (connection) {
-                            console.log("Connected !!!");
-                        })
-                        .catch(function (err) {
-                            console.log("Connection failed. Error: "+ err);
-                        });
-				};
-			},
+                //////////////////// test
+				this._provider.connectionMgr().getConnection()
+                    .then(function (connection) {
+                        console.log("Connected !!!");
+                    })
+                    .catch(function (err) {
+                        console.log("Connection failed. Error: " + err);
+                    });
+
+            },
 
             getSchema: function () {
                 return this._metaDataMgr;

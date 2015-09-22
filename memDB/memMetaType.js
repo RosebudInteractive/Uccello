@@ -17,6 +17,9 @@ define(
         var fldTypeCodes;
         
         var BaseType = UccelloClass.extend({
+
+            key: "$base$",
+
             /**
              * The Base Type all Type objects inherit from.
              *
@@ -182,6 +185,9 @@ define(
         });
         
         var IntegerType = BaseType.extend({
+
+            key: "int",
+
             /**
              * The Integer Type.
              *
@@ -196,6 +202,9 @@ define(
         });
         
         var StringType = BaseType.extend({
+
+            key: "string",
+
             /**
              * The String Type.
              *
@@ -210,6 +219,9 @@ define(
         });
         
         var FloatType = BaseType.extend({
+
+            key: "float",
+
             /**
              * The Float Type.
              *
@@ -224,6 +236,9 @@ define(
         });
         
         var DateTimeType = BaseType.extend({
+
+            key: "datetime",
+
             /**
              * The Date-time Type.
              *
@@ -238,6 +253,9 @@ define(
         });
         
         var BooleanType = BaseType.extend({
+
+            key: "boolean",
+
             /**
              * The Boolean Type.
              *
@@ -252,6 +270,9 @@ define(
         });
 
         var DecimalType = BaseType.extend({
+
+            key: "decimal",
+
             /**
              * The Decimal Type.
              *
@@ -266,6 +287,9 @@ define(
         });
 
         var RefType = BaseType.extend({
+
+            key: "ref",
+
             /**
              * The Reference Type.
              *
@@ -608,6 +632,9 @@ define(
         });
 
         var DataRefType = IntegerType.extend({
+
+            key: "dataRef",
+
             /**
              * The Data reference type (references in Data Objects). 
              *
@@ -807,6 +834,9 @@ define(
         };
 
         var DataFieldType = BaseType.extend({
+
+            key: "datatype",
+
             /**
              * The DataField Type
              *  represents type of data-object field.
@@ -847,14 +877,14 @@ define(
                     var is_correct_val = true;
                     if (!_val1 instanceof BaseType)
                         try {
-                            _val1 = MetaTypes.createTypeObject(_val1, this._refResolver, datafieldTypeCodes);
+                            _val1 = MetaTypes.createTypeObject(_val1, this._refResolver, datafieldTypeCodes, true);
                         } catch (err) {
                             is_correct_val = false;
                         };
 
                     if (is_correct_val && (!_val2 instanceof BaseType))
                         try {
-                            _val2 = MetaTypes.createTypeObject(_val2, this._refResolver, datafieldTypeCodes);
+                            _val2 = MetaTypes.createTypeObject(_val2, this._refResolver, datafieldTypeCodes, true);
                         } catch (err) {
                             is_correct_val = false;
                         };
@@ -885,14 +915,14 @@ define(
                         var is_correct_val = true;
                         if (!(_val1 instanceof BaseType))
                             try {
-                                _val1 = MetaTypes.createTypeObject(_val1, this._refResolver, datafieldTypeCodes);
+                                _val1 = MetaTypes.createTypeObject(_val1, this._refResolver, datafieldTypeCodes, true);
                             } catch (err) {
                                 is_correct_val = false;
                             };
 
                         if (is_correct_val && (!(_val2 instanceof BaseType)))
                             try {
-                                _val2 = MetaTypes.createTypeObject(_val2, this._refResolver, datafieldTypeCodes);
+                                _val2 = MetaTypes.createTypeObject(_val2, this._refResolver, datafieldTypeCodes, true);
                             } catch (err) {
                                 is_correct_val = false;
                             };
@@ -926,7 +956,7 @@ define(
                     var _val = val;
                     if (!(_val instanceof BaseType))
                         try {
-                            _val = MetaTypes.createTypeObject(_val, this._refResolver, datafieldTypeCodes);
+                            _val = MetaTypes.createTypeObject(_val, this._refResolver, datafieldTypeCodes, true);
                         } catch (err) {
                             result = false;
                             msg = err.message;
@@ -956,7 +986,7 @@ define(
 
                 var result = val;
                 if (!(result instanceof BaseType))
-                    result = MetaTypes.createTypeObject(result, this._refResolver, datafieldTypeCodes);
+                    result = MetaTypes.createTypeObject(result, this._refResolver, datafieldTypeCodes, true);
                 return result;
             }
         });
@@ -970,11 +1000,12 @@ define(
          * 
          * @param {String|Object} typeObj Serialized data type representation
          * @param {Object}        refResolver An Object which implements link resolver interface
-         * @param {Object}        typeTable Table of allowed types (default: fldTypeCode)
+         * @param {Object}        [typeTable = fldTypeCode] Table of allowed types
+         * @param {Boolean}       [extTypeResolve = false] Indicates if we use external type resolver
          * @return {Object}       Data type object
          * @constructor
          */
-        function GetFldTypeUniq(typeObj, refResolver, typeTable) {
+        function GetFldTypeUniq(typeObj, refResolver, typeTable, extTypeResolve) {
 
             var _fldTypeCodes = typeTable ? typeTable : fldTypeCodes;
 
@@ -993,7 +1024,11 @@ define(
             if (!_fldTypeCodes[key])
                 throw new Error("Unknown type: \"" + JSON.stringify(typeObj) + "\".");
 
-            result = new _fldTypeCodes[key].constructor(typeObj, refResolver);
+            var constr = _fldTypeCodes[key].constructor;
+            if (extTypeResolve)
+                constr = refResolver.resolveSqlType(constr);
+
+            result = new constr(typeObj, refResolver);
             var hash = result.hash();
 
             if (! typeObjects[hash]) {
@@ -1023,10 +1058,38 @@ define(
             "dataRef": { code: 14, constructor: DataRefType }
         };
 
+        function addDataType(typeTable, type) {
+            if (!typeTable[type.prototype.key])
+                typeTable[type.prototype.key] = type;
+            else
+                throw new Error("Duplicate data type definition: \"" + type.prototype.key + "\".");
+        };
+
+        function makeDescendant(key, table, impl) {
+            var base = MetaTypes.typeTable[key];
+            if ((!base) || (typeof (base) !== "function"))
+                throw new Error("Can't find base \"" + tp + "\" type.");
+            addDataType(table, base.extend(impl));
+        };
+
+        var typeTable = {};
+        addDataType(typeTable, BaseType);
+        addDataType(typeTable, IntegerType);
+        addDataType(typeTable, StringType);
+        addDataType(typeTable, DecimalType);
+        addDataType(typeTable, FloatType);
+        addDataType(typeTable, BooleanType);
+        addDataType(typeTable, DateTimeType);
+        addDataType(typeTable, RefType);
+        addDataType(typeTable, DataFieldType);
+        addDataType(typeTable, DataRefType);
+
         var MetaTypes = {
             createTypeObject: GetFldTypeUniq,
+            typeTable: typeTable,
             BaseType: BaseType,
-            DataRefType: DataRefType
+            DataRefType: DataRefType,
+            makeDescendant: makeDescendant
         };
         
         return MetaTypes;

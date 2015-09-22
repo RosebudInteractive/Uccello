@@ -10,6 +10,10 @@ define(
 
         var BaseProvider = UccelloClass.extend({
 
+            providerId: PROVIDER_ID,
+
+            query: QueryExec,
+
             init: function (engine, options) {
 
                 if (!(engine instanceof Engine))
@@ -23,8 +27,6 @@ define(
                 this._queryGen = this._createQueryGen();
                 this._sqlTypes = this._createSqlTypes();
                 this._connectionMgr.initPools();
-
-                this.query = this._getQuery();
             },
 
             engine: function () {
@@ -45,10 +47,6 @@ define(
 
             _createConnectionMgr: function () {
                 return new ConnectionMgr(this._engine, this._options);
-            },
-
-            _getQuery: function () {
-                return QueryExec;
             },
 
             _createQueryGen: function () {

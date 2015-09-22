@@ -1666,6 +1666,43 @@ define(
 			    return result ? result : null;
 			},
 
+		    /**
+             * Инсталляция типов данных СУБД (вызывается провайдером)
+             * 
+             * @param {Object} sqlTypes Таблица типов
+             * @param {Object} provider Провайдер
+             */
+			installSqlTypes: function (sqlTypes, provider) {
+			    this.pvt.sqlTypes = { types: sqlTypes, provider: provider };
+			},
+
+		    /**
+             * Деинсталляция типов данных СУБД
+             * 
+             */
+			removeSqlTypes: function () {
+			    this.pvt.sqlTypes = undefined;
+			},
+
+		    /**
+             * Заменяет конструктор "обычного" типа данных на тип
+             *   данных СУБД, если он имеется в таблице провайдера
+             *
+             * @param {Constructor} dataType Конструктор "обычного" типа данных
+             * @throws Генерирует прерывание, если провайдер не поддерживает запрошенный конструктор
+             * @return {Constructor} Конструктор типа данных СУБД
+             */
+			resolveSqlType: function (dataType) {
+			    var result = dataType;
+			    if (this.pvt.sqlTypes) {
+			        result = this.pvt.sqlTypes.types[dataType.prototype.key];
+			        if (!result)
+			            throw new Error("Provider: \"" + this.pvt.sqlTypes.provider.providerId +
+                            "\" doesn't support type \"" + dataType.prototype.key + "\".");
+			    }
+			    return result;
+			}
+
 		});
 		return MemDataBase;
 	}
