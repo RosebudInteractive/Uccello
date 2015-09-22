@@ -117,18 +117,6 @@ define(
                 return this.className;
             },
 
-            /**
-             * Возвращает объект-модуль текущего объекта или undefined если модуля нет 
-             */			
-			 /*
-			getModule: function() {
-				var obj = this.getRoot();
-				if (obj.isModule())
-					return obj;
-				else
-					return undefined;
-			},*/
-
 			countChild: function(colName) {
 				if (colName == undefined) colName = "Children";
 				//var col = this.getObj().getCol(colName);

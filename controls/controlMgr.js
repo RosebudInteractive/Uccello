@@ -261,7 +261,12 @@ define(
 			 * @param nots {boolean) true - не стартовать транзакцию дб
              */
             userEventHandler: function(context, f, args) {
-			
+				
+				if (this.inTran()) {
+					console.log("%c ALREADY IN TRANSACTION! "+this.getCurTranGuid(),"color: red");
+					return;
+					}
+				
 				function doneBefore() {	
 					if (vc) vc.allDataInit();
 				}		
@@ -276,6 +281,7 @@ define(
 				    nargs = args;
 				  else
                     nargs = [args];
+				
 				this.tranStart();
 				if (f) f.apply(context, nargs);			
 				this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });

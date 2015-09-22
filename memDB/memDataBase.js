@@ -68,6 +68,11 @@ define(
 				pvt.tranCounter = 0;		// счетчик транзакции
 				pvt.tho = {};
 				pvt.tha = [];
+				// лог удаленных вызовов и входящих
+				pvt.rco = {};
+				pvt.rca = [];
+				pvt.rexeco = {};
+				pvt.rexeca = [];
 
 				pvt.execQ = [];
 				pvt.execTr = {};
@@ -1210,6 +1215,7 @@ define(
 					if (guid) {
 						p.curTranGuid = guid;
 						p.srcDbGuid = srcDbGuid;
+						console.log("EXTERNAL TRAN START ",srcDbGuid);
 						p.externalTran = true;
 					}
 					else {
@@ -1231,15 +1237,16 @@ define(
 					trobj.roots = {};
 
 				}
-				if (DEBUG)
-				    console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
+				//if (DEBUG) 
+				console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
 				return p.curTranGuid;
 				
 			},
 
 			tranCommit: function() {				
 				var that = this, p = this.pvt, memTran = p.curTranGuid; 
-				if (p.tranCounter==0) return;
+				if (p.tranCounter==0) 
+					return;
 				if (p.tranCounter==1) {	// Счетчик вложенности = 1, закрываем транзакцию
 					var guids = this.getRootGuids(), isMaster = this.isMaster();
 					
@@ -1255,7 +1262,7 @@ define(
 						this._setTranState(memTr,'c');
 					else {
 						this._setTranState(memTr,'p');
-						this._rcCommit( function() { that._setTranState(memTr,'c'); } );
+						this._rcCommit();
 					}
 					if (isMaster) // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid					  
 					  this.subsRemoteCall("endTran",undefined,this.pvt.srcDbGuid); 
@@ -1263,6 +1270,7 @@ define(
 					this.getTranObj(p.curTranGuid).end = new Date();
 					p.curTranGuid = undefined;
 					p.tranCounter = 0;
+					var memExternal = p.externalTran;
 					p.externalTran = false;		
 					p._memFunc = [];
 					p._memFuncDone = [];
@@ -1276,14 +1284,18 @@ define(
 					}	
 				}
 				else p.tranCounter--;
-				if (DEBUG)
+				//if (DEBUG)				
 				    console.log("TRAN|COMMIT " + memTran + " " + p.tranCounter);
+				if (!p.tranCounter) console.trace();
 			},
 									
 			// синхронизировать в рамках транзакции
 			syncInTran: function(doneBefore,doneAfter) {	
 				if (!this.inTran()) return;
-				if (!this.pvt._memFunc || !this.pvt._memFunc.length) return; 				
+				if (!this.pvt._memFunc || !this.pvt._memFunc.length) {
+					console.log("%c NO DATA TO SYNC","color:red");
+					return;
+				} 				
 
 				this.tranStart();
 				this._rc(this.pvt._memFunc,this.pvt._memFuncDone,doneBefore,doneAfter);
@@ -1324,23 +1336,56 @@ define(
 			},
 						
 			// команда завершения транзакции
-			_rcCommit: function(cb) {
-				if (!this.inTran()) return;				
-				function icb(result) {		
-					if (cb) cb(result);
-				}		
+			_rcCommit: function() {
+				function icb(result) {	
+					that._setTranState(memTr,'c');
+					//if (cb) cb(result);
+				}	
+				if (!this.inTran()) {
+					console.log(" *** WE ARE NOT IN TRANSACTION ");
+					return;	
+				}
+				var that = this, memTr = this.getCurTranGuid();
 				var args = {objGuid: undefined, func:"endTran", aparams:undefined };
+				console.log("***************ENDTRAN ",this.getCurTranGuid());
 				this._rc([args],[icb]);
 			},
 			
+			logRemoteCall: function(data,cb) {
+				var t = new Date();
+				for (var i=0; i<data.args.rc.length; i++) {
+					var o = {};
+					o.time = t;
+					o.type = 'out';
+					o.trGuid = data.trGuid;
+					o.src = data.srcDbGuid;
+					o.rc = data.args.rc[i];	
+					this.pvt.rca.push(o);
+				}				
+			},
+			
+			getRcLog: function() {
+				return this.pvt.rca;
+			},
+			
 			_rc: function(rcargs,rccbs,doneBefore,doneAfter) { // TODO 10 - если есть удаленный вызов кроме дельты, то установить lock
-				function icb(result) {				
+				function icb(result) {			
+					var actDone = false;
 					if (doneBefore) doneBefore();	
 					for (var i=0; i<result.cbres.length; i++) 
-						if (rccbs[i]) rccbs[i](result.cbres[i]);					
-					that.getController().genDeltas(that.getGuid(),undefined, function(res,cb1) { that.sendDataBaseDelta(res,cb1); });
-					that.syncInTran(doneBefore,doneAfter); 
-					that.tranCommit();
+						if (rccbs[i]) {
+							rccbs[i](result.cbres[i]);
+							actDone = true;
+						}
+
+					console.log("CALLBACKS",rccbs,result);
+					
+					if (actDone) {
+						that.getController().genDeltas(that.getGuid(),undefined, function(res,cb1) { that.sendDataBaseDelta(res,cb1); });
+						that.syncInTran(doneBefore,doneAfter); 
+					}
+					if (cbCommit)
+						that.tranCommit();
 					if (doneAfter) doneAfter();
 				}
 				var that = this;
@@ -1357,6 +1402,9 @@ define(
 						data.rootv[guids[i]]=this.getObj(guids[i]).getRootVersion("valid");	
 					*/						
 				}
+				var cbCommit = true;
+				if (rcargs[0].func == 'endTran') cbCommit = false;
+				this.logRemoteCall(data,icb);
 				socket.send(data,icb);
 				
 				if (this.pvt.name!="System") {
@@ -1405,7 +1453,7 @@ define(
 					return false;
 				}
 				if (state == 'c') { // установить в commited
-					if (!tobj.prev || tobj.prev.state == 'c') { // проверить предыдущую транзакцию
+					if (!tobj.prev || tobj.prev.state == 'p' || tobj.prev.state == 'c') { // проверить предыдущую транзакцию
 						tobj.state = 'c';
 						for (var g in tobj.roots) {
 							var r = this.getObj(g);
