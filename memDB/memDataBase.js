@@ -1398,14 +1398,14 @@ define(
 				var tobj = this.getTranObj(guid);
 				if (!tobj) return;
 				if (state == 'p') { // установить в pre-commited
-					if (!tobj.prev || tobj.prev.state == 'p' || tobj.prev.state == 'c') {
+					if (!tobj.prev || tobj.prev.state == 's' || tobj.prev.state == 'p' || tobj.prev.state == 'c') {
 						tobj.state = 'p';
 						return true;
 					}
 					return false;
 				}
 				if (state == 'c') { // установить в commited
-					if (!tobj.prev || tobj.prev.state == 'c') { // проверить предыдущую транзакцию
+					if (!tobj.prev || tobj.prev.state == 'p' || tobj.prev.state == 'c') { // проверить предыдущую транзакцию
 						tobj.state = 'c';
 						for (var g in tobj.roots) {
 							var r = this.getObj(g);
