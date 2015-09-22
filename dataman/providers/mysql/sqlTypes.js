@@ -12,7 +12,7 @@ define(
 
         // Ќапример, тип "int" можно переопределить так:
         //
-        //MetaTypes.makeDescendant("int", types, { toSql: function () { return "INT"; } });
+        //MetaTypes.makeDescendant("int", types, { prefix: "MySQL", toSql: function () { return "INT"; } });
 
         // »спользуем базовые, там где не было переопределени€
         //

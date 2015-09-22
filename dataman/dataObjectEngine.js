@@ -4,8 +4,9 @@
 }
 
 define(
-    ['../controls/controlMgr', '../metaData/metaDataMgr', '../metaData/metaModel', '../metaData/metaModelField', 'bluebird', 'lodash'],
-    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Promise, _) {
+    ['../controls/controlMgr', '../metaData/metaDataMgr', '../metaData/metaModel',
+        '../metaData/metaModelField', 'bluebird', 'lodash', './dataObjectQuery'],
+    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Promise, _, Query) {
 
         var ENGINE_DB_NAME = "DataEngineDB";
         var ENGINE_DB_GUID = "5360e933-9983-410c-8175-d83b296d247f";
@@ -44,6 +45,8 @@ define(
                     });
 
 				this._provider = null;
+				this._query = null;
+
 				if (opts.connection && opts.connection.provider) {
 				    try {
 				        var provider = require("./providers/" + opts.connection.provider + "/provider");
@@ -51,6 +54,7 @@ define(
 				        throw new Error("Unknown provider: \"" + opts.connection.provider + "\".");
 				    };
 				    this._provider = new provider(this, opts.connection);
+				    this._query = new Query(this, this._provider);
 				};
 
 				new MetaModelField(this._dataBase);
@@ -66,14 +70,14 @@ define(
 				this._constructHolder.addTypeProvider(this._metaDataMgr, true); // локальный провайдер
 
                 //////////////////// test
-				this._provider.connectionMgr().getConnection()
-                    .then(function (connection) {
-                        console.log("Connected !!!");
+				//this._query.createTable(this._metaDataMgr.getModel("DataLead"))
+                this._query.select(this._metaDataMgr.getModel("DataLead"))
+                    .then(function (result) {
+                        console.log("Operation done !!!");
                     })
                     .catch(function (err) {
-                        console.log("Connection failed. Error: " + err);
+                        console.log("Operation failed. Error: " + err);
                     });
-
             },
 
             getSchema: function () {

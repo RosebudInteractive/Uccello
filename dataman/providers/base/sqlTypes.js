@@ -8,15 +8,15 @@ define(
 
         var types = {};
 
-        // «десь переопредел€ем базовые типы
+        // «десь переопредел€ем базовые типы, наследу€сь от них
         //
-        MetaTypes.makeDescendant("int", types, { toSql: function () { return "INTEGER"; } });
-        MetaTypes.makeDescendant("dataRef", types, { toSql: function () { return "INTEGER"; } });
-        MetaTypes.makeDescendant("string", types, { toSql: function () { return "VARCHAR"; } });
-        MetaTypes.makeDescendant("float", types, { toSql: function () { return "FLOAT"; } });
-        MetaTypes.makeDescendant("datetime", types, { toSql: function () { return "DATETIME"; } });
-        MetaTypes.makeDescendant("decimal", types, { toSql: function () { return "NUMERIC"; } });
-        MetaTypes.makeDescendant("boolean", types, { toSql: function () { return "BOOLEAN"; } });
+        MetaTypes.makeDescendant("int", types, { prefix: "SQL", toSql: function () { return "INTEGER"; } });
+        MetaTypes.makeDescendant("dataRef", types, { prefix: "SQL", toSql: function () { return "INTEGER"; } });
+        MetaTypes.makeDescendant("string", types, { prefix: "SQL", toSql: function () { return "VARCHAR(255)"; } });
+        MetaTypes.makeDescendant("float", types, { prefix: "SQL", toSql: function () { return "FLOAT"; } });
+        MetaTypes.makeDescendant("datetime", types, { prefix: "SQL", toSql: function () { return "DATETIME"; } });
+        MetaTypes.makeDescendant("decimal", types, { prefix: "SQL", toSql: function () { return "NUMERIC(10, 4)"; } });
+        MetaTypes.makeDescendant("boolean", types, { prefix: "SQL", toSql: function () { return "BOOLEAN"; } });
 
         var SqlTypes = UccelloClass.extend({
 

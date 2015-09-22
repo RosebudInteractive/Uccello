@@ -8,9 +8,15 @@ define(
 
         var QueryExec = UccelloClass.extend({
 
-            init: function (engine, options) {
+            init: function (engine, connection, options) {
+                this._engine = engine;
+                this._connection = connection;
+                this._options = options || {};
+            },
 
-            }
+            run: function (sql) {
+                throw new Error("\"run\" wasn't implemented in descendant.");
+            },
         });
 
         return QueryExec;

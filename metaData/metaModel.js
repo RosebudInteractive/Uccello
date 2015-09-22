@@ -17,6 +17,22 @@ define(
                 { fname: "DataRootGuid", ftype: "string" }
             ],
 
+            name: function (value) {
+                return this._genericSetter("Name", value);
+            },
+
+            dataObjectGuid: function (value) {
+                return this._genericSetter("DataObjectGuid", value);
+            },
+
+            dataRootName: function (value) {
+                return this._genericSetter("DataRootName", value);
+            },
+
+            dataRootGuid: function (value) {
+                return this._genericSetter("DataRootGuid", value);
+            },
+
             init: function (cm, params) {
                 this._fieldsByName = {};
                 this._fields = [];

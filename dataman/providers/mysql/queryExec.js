@@ -8,9 +8,34 @@ define(
 
         var MySqlQueryExec = Base.extend({
 
-            init: function (engine, options) {
-                UccelloClass.super.apply(this, [engine, options]);
-            }
+            init: function (engine, connection, options) {
+                UccelloClass.super.apply(this, [engine, connection, options]);
+            },
+
+            run: function (sql) {
+                var self = this;
+                var promise = new this._options.Promise(function (resolve, reject) {
+                    self._connection.query(sql, function (err, results, fields) {
+                        if (err) {
+                            err.sql = sql;
+
+                            reject(self._formatError(err));
+                        } else {
+                            resolve(self._formatResults(results));
+                        }
+                    });
+                });
+                return promise;
+            },
+
+            _formatError: function (err) {
+                return err;
+            },
+
+            _formatResults: function (results) {
+                return results;
+            },
+
         });
 
         return MySqlQueryExec;

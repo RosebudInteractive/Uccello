@@ -18,6 +18,8 @@ define(
         
         var BaseType = UccelloClass.extend({
 
+            prefix: "",
+
             key: "$base$",
 
             /**
@@ -59,7 +61,7 @@ define(
              * @return {Strng} The hash code
              */
             hash: function () {
-                return this._fldType;
+                return this.prefix + this._fldType;
             },
 
             /**
