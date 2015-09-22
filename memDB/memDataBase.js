@@ -1231,8 +1231,7 @@ define(
 					trobj.roots = {};
 
 				}
-				if (DEBUG)
-				    console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
+				if (DEBUG) console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
 				return p.curTranGuid;
 				
 			},
