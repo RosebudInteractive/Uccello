@@ -36,9 +36,11 @@ define(
                 return Promise.resolve(this._connection_mgr.getConnection())
                 .then(function (connection) {
                     var query = new self._query(self._engine, connection, self._query_options);
+                    console.log("Started: " + sql);
                     return query.run(sql).then(function (result) {
                         return (self._connection_mgr.releaseConnection(connection))
                             .then(function(){
+                                console.log("Finished: " + sql);
                                 return Promise.resolve(result);
                             });
                     }, function (err) {

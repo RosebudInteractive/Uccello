@@ -14,16 +14,17 @@ define(
 
             dropTableQuery: function (model) {
                 var query = "DROP TABLE IF EXISTS <%= table %>";
-                return _.template(query)({ table: model.name() }).trim() + ";";
+                return _.template(query)({ table: this._addTicks(model.name()) }).trim() + ";";
             },
 
             createTableQuery: function (model) {
                 var query = "CREATE TABLE IF NOT EXISTS <%= table %> (<%= fields%>) ENGINE=InnoDB";
+                var self = this;
                 var attrs = [];
                 _.forEach(model.fields(), function (field) {
-                    attrs.push(field.name() + " " + field.fieldType().toSql());
+                    attrs.push(self._addTicks(field.name()) + " " + field.fieldType().toSql());
                 });
-                var values = { table: model.name(), fields: attrs.join(", ") };
+                var values = { table: this._addTicks(model.name()), fields: attrs.join(", ") };
                 return _.template(query)(values).trim() + ";";
             },
 

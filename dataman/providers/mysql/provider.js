@@ -3,14 +3,33 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../base/baseProvider', './connectionMgr', './queryExec', './queryGen', './sqlTypes'],
-    function (Base, ConnectionMgr, QueryExec, QueryGen, SqlTypes) {
+    ['lodash', '../base/baseProvider', './connectionMgr', './queryExec', './queryGen', './sqlTypes'],
+    function (_, Base, ConnectionMgr, QueryExec, QueryGen, SqlTypes) {
 
         var PROVIDER_ID = "mysql";
+
+        var supports = _.merge(_.cloneDeep(Base.prototype.supports), {
+            'VALUES ()': true,
+            'LIMIT ON UPDATE': true,
+            'IGNORE': ' IGNORE',
+            lock: true,
+            forShare: 'LOCK IN SHARE MODE',
+            index: {
+                collate: false,
+                length: true,
+                parser: true,
+                type: true,
+                using: 1,
+            },
+
+            TICK_CHAR: '`'
+        });
 
         var BaseProvider = Base.extend({
 
             providerId: PROVIDER_ID,
+
+            supports: supports,
 
             query: QueryExec,
 
