@@ -1351,15 +1351,26 @@ define(
 				this._rc([args],[icb]);
 			},
 			
-			logRemoteCall: function(data,cb) {
+			logRemoteCall: function(data,ctype,trGuid) {
 				var t = new Date();
-				for (var i=0; i<data.args.rc.length; i++) {
+				if (ctype == 'c')
+					var ar = data.args.rc;
+				else
+					ar = data;
+				for (var i=0; i<ar.length; i++) {
 					var o = {};
 					o.time = t;
-					o.type = 'out';
-					o.trGuid = data.trGuid;
-					o.src = data.srcDbGuid;
-					o.rc = data.args.rc[i];	
+					o.type = ctype == 'c' ? 'out' : 'rsp';
+					o.trGuid = trGuid;
+					if (ctype=='c') {
+						o.trGuid = data.trGuid;
+						o.src = data.srcDbGuid;
+						o.rc = ar[i];
+					}
+					else {
+						o.rc = {};
+					}
+						
 					this.pvt.rca.push(o);
 				}				
 			},
@@ -1379,6 +1390,7 @@ define(
 						}
 
 					console.log("CALLBACKS",rccbs,result);
+					that.logRemoteCall(result.cbres,'r',data.trGuid);
 					
 					if (actDone) {
 						that.getController().genDeltas(that.getGuid(),undefined, function(res,cb1) { that.sendDataBaseDelta(res,cb1); });
@@ -1404,8 +1416,8 @@ define(
 				}
 				var cbCommit = true;
 				if (rcargs[0].func == 'endTran') cbCommit = false;
-				this.logRemoteCall(data,icb);
-				socket.send(data,icb);
+				this.logRemoteCall(data,'c');
+				socket.send(data,icb,data.trGuid);
 				
 				if (this.pvt.name!="System") {
 					for (var i=0, s = ""; i<rcargs.length; i++) s += rcargs[i].func + " ";
