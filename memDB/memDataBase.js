@@ -1284,9 +1284,9 @@ define(
 					}	
 				}
 				else p.tranCounter--;
-				//if (DEBUG)				
+				if (DEBUG)				
 				    console.log("TRAN|COMMIT " + memTran + " " + p.tranCounter);
-				if (!p.tranCounter) console.trace();
+				//if (!p.tranCounter) console.trace();
 			},
 									
 			// синхронизировать в рамках транзакции
