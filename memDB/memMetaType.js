@@ -251,6 +251,78 @@ define(
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
+                this._is_complex = true;
+            },
+
+            /**
+             * Checks if val1 is equal to val2.
+             * 
+             * @param {Any}       val1 First value
+             * @param {Any}       val2 Second value
+             * @return {Boolean} True if values are equal
+             */
+            isEqual: function (val1, val2) {
+                return val1 === val2;
+            },
+
+            /**
+             * Compares val1 and val2.
+             * 
+             * @param {Any}       val1 First value
+             * @param {Any}       val2 Second value
+             * @return {Integer} 0 - [val1===val2], 1- [val1 > val2], (-1) - [val1 < val2]
+             */
+            compare: function (val1, val2) {
+                var d1 = this._convert(val1) - 0;
+                var d2 = this._convert(val2) - 0;
+                return UccelloClass.super.apply(this, [val1, val2]);
+            },
+
+            /**
+             * Checks if value is correct.
+             * 
+             * @param {Any}       val A value to be checked
+             * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
+             * @param {String}    errObj.errMsg Error message
+             * @param {String}    fldName A field name of the value
+             * @param {Object}    obj A MemProtoObject which [val] belongs to 
+             * @return {Boolean} True if value is corect
+             */
+            checkVal: function (val, errObj, fldName, obj) {
+                var result = !isNaN(this._convert(val) - 0);
+                if ((!result) && errObj)
+                    errObj.errMsg = "Invalid \"datetime\" value: " + JSON.stringify(val) + " .";
+                return result;
+            },
+
+            /**
+             * Converts a Value of this data type from the serialized
+             * or "end-user" representation to the internal one.
+             * 
+             * @param {Any} val A value of this data type (could be Integer, String or Date)
+             * @param {String}  fldName A field name of the value
+             * @param {Object}  obj A MemProtoObject which [fldName] belongs to 
+             * @param {Boolean} withCheckVal True if the value needs to be checked
+             * @throws          Will throw an error if the value isn't correct
+             * @return {Date}
+             */
+            setValue: function (val, fldName, obj, withCheckVal) {
+                var result = this._convert(val);
+                UccelloClass.super.apply(this, [val, fldName, obj, withCheckVal]);
+                return result;
+            },
+
+            /**
+             * Converts a Value to Date type
+             * 
+             * @param {Any} val An input value
+             * @return {Date}
+             */
+            _convert: function (val) {
+                var result = val;
+                if (!(val instanceof Date))
+                    result = new Date(val);
+                return result;
             }
         });
         
@@ -747,7 +819,7 @@ define(
                     if (result) {
                         var _errMsg = {};
 
-                        if (this._refResolver && (typeof this._refResolver.checkDataObjectRef === "function"))
+                        if (obj && this._refResolver && (typeof this._refResolver.checkDataObjectRef === "function"))
                             result = this._refResolver.checkDataObjectRef(val, _errMsg, fldName, obj, this);
 
                         if ((!result) && errObj)

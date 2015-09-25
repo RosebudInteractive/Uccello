@@ -36,7 +36,7 @@ define(
 
             // TODO сделать ReadOnly property
             authenticated: function(value) {
-                return this._genericSetter("LoginTime",value);
+                return this._genericSetter("Authenticated", value);
             }
         });
         return UserInfo;

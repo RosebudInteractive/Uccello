@@ -31,6 +31,11 @@ define(
                 return this._runQuery(sql);
             },
 
+            insert: function (model, values) {
+                var sql = this._query_gen.insertQuery(model, values);
+                return this._runQuery(sql);
+            },
+
             _runQuery: function (sql) {
                 var self = this;
                 return Promise.resolve(this._connection_mgr.getConnection())

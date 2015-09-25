@@ -15,7 +15,7 @@ define(
                 UccelloClass.super.apply(this, [engine, options]);
 
                 try {
-                    this._lib = require(NATIVE_PACKAGE);
+                    this._nativeLib = require(NATIVE_PACKAGE);
                 } catch (err) {
                     throw new Error("Please install \"" + NATIVE_PACKAGE + "\" package.");
                 };
@@ -41,7 +41,7 @@ define(
                         });
                     }
 
-                    var connection = self._lib.createConnection(connectionConfig);
+                    var connection = self._nativeLib.createConnection(connectionConfig);
 
                     connection.connect(function (err) {
                         if (err) {

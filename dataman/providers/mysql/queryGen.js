@@ -14,7 +14,7 @@ define(
 
             dropTableQuery: function (model) {
                 var query = "DROP TABLE IF EXISTS <%= table %>";
-                return _.template(query)({ table: this._addTicks(model.name()) }).trim() + ";";
+                return _.template(query)({ table: this.escapeId(model.name()) }).trim() + ";";
             },
 
             createTableQuery: function (model) {
@@ -22,10 +22,18 @@ define(
                 var self = this;
                 var attrs = [];
                 _.forEach(model.fields(), function (field) {
-                    attrs.push(self._addTicks(field.name()) + " " + field.fieldType().toSql());
+                    attrs.push(self.escapeId(field.name()) + " " + field.fieldType().toSql());
                 });
-                var values = { table: this._addTicks(model.name()), fields: attrs.join(", ") };
+                var values = { table: this.escapeId(model.name()), fields: attrs.join(", ") };
                 return _.template(query)(values).trim() + ";";
+            },
+
+            escapeValue: function (s) {
+                return this.getNativeLib().escape(s);
+            },
+
+            escapeId: function (s) {
+                return this.getNativeLib().escapeId(s);
             },
 
         });

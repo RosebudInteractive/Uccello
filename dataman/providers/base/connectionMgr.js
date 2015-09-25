@@ -20,11 +20,16 @@ define(
                 var config = _.defaults(options || {}, { timezone: "+00:00" });
                 this._config = config;
                 this._engine = engine;
+                this._nativeLib = null;
 
                 config.pool = config.pool ? _.cloneDeep(config.pool) : {};
                 config.pool = _.defaults(config.pool, defaultPoolingConfig, {
                     validate: this.$validate.bind(this)
                 });
+            },
+
+            getNativeLib: function () {
+                return this._nativeLib;
             },
 
             initPools: function () {
