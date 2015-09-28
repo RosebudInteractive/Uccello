@@ -13,6 +13,7 @@ define(
 	            this._name = name;
 	            this._obj = obj;
 	            this._db = obj.getDB();
+				this._guidIndex = {};
 	            this.eventsInit();  // WARNING !!! This line is essential !!! 
 	            obj._addCol(this);
 	        },
@@ -22,6 +23,8 @@ define(
 	        _add: function (obj) {
 	            // TODO проверить корректность типа
 	            this._elems.push(obj);
+
+				this._guidIndex[obj.getGuid()] = this._elems.length - 1;
 
 	            if (this._obj.getLog().getActive()) {
 	                var mg = (obj.getParent() ? obj.getParent().getGuid() : "");
@@ -63,7 +66,7 @@ define(
 	                }
 	            }
 
-
+				delete this._guidIndex[obj.getGuid()];
 
 	        },
 
@@ -108,7 +111,11 @@ define(
 	                    res = res.typeObj;
 	            }
 	            return res;
-	        }
+	        },
+
+			indexOf: function(obj) {
+				return this._guidIndex[obj.getGuid()];
+			}
 
 
 	    });
