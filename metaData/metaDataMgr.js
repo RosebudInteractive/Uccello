@@ -29,6 +29,9 @@ define(
                 this._modelsByName = {};
                 this._modelsByGuid = {};
 
+                this._modelsByRootName = {};
+                this._modelsByRootGuid = {};
+
                 this._router = null;
 
                 this._linksTo = {};         // исходящие ссылки (по таблицам)
@@ -182,6 +185,13 @@ define(
                 return this._modelsByGuid[guid];
             },
 
+            getModelByRootName: function (name) {
+                return this._modelsByRootName[name];
+            },
+
+            getModelByRootGuid: function (guid) {
+                return this._modelsByRootGuid[guid];
+            },
 
             _rebuildConstructors: function () {
                 if (!this._isConstrReady) {
@@ -385,18 +395,40 @@ define(
                 this._isConstrReady = false;
 
                 var model = args.obj;
+
                 var name = model.get("Name");
                 var guid = model.get("DataObjectGuid");
-                if (this._modelsByName[name] !== undefined) {
+
+                var root_name = model.get("DataRootName");
+                var root_guid = model.get("DataRootGuid");
+
+                if ((this._modelsByName[name] !== undefined)
+                        || (this._modelsByRootName[name] !== undefined)) {
                     this._modelsCol._del(model);
                     throw new Error("Model \"" + name + "\" is already defined.");
                 };
-                if (this._modelsByGuid[guid] !== undefined) {
+                if ((this._modelsByGuid[guid] !== undefined)
+                        || (this._modelsByRootGuid[guid] !== undefined)) {
                     this._modelsCol._del(model);
                     throw new Error("Model \"" + guid + "\" is already defined.");
                 };
+
+                if ((this._modelsByName[root_name] !== undefined)
+                        || (this._modelsByRootName[root_name] !== undefined)) {
+                    this._modelsCol._del(model);
+                    throw new Error("Model with Root Name: \"" + root_name + "\" is already defined.");
+                };
+                if ((this._modelsByGuid[root_guid] !== undefined)
+                        || (this._modelsByRootGuid[root_guid] !== undefined)) {
+                    this._modelsCol._del(model);
+                    throw new Error("Model with Root Guid: \"" + root_guid + "\" is already defined.");
+                };
+
                 this._modelsByName[name] = model;
                 this._modelsByGuid[guid] = model;
+
+                this._modelsByRootName[root_name] = model;
+                this._modelsByRootGuid[root_guid] = model;
 
                 this._addModelToLinks(name, model);
 
@@ -418,10 +450,16 @@ define(
                 var name = model.get("Name");
                 var guid = model.get("DataObjectGuid");
 
+                var root_name = model.get("DataRootName");
+                var root_guid = model.get("DataRootGuid");
+
                 this._removeModelFromLinks(name);
 
                 delete this._modelsByName[name];
                 delete this._modelsByGuid[guid];
+
+                delete this._modelsByRootName[root_name];
+                delete this._modelsByRootGuid[root_guid];
             }
         });
         return MetaDataMgr;

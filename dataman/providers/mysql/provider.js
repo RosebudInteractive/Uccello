@@ -25,6 +25,14 @@ define(
             TICK_CHAR: '`'
         });
 
+        var defaultMySqlConfig = {
+            port: 3306,
+            provider_options: {
+                engine: "InnoDB"
+            },
+            timezone: "+00:00"
+        };
+
         var BaseProvider = Base.extend({
 
             providerId: PROVIDER_ID,
@@ -34,7 +42,8 @@ define(
             query: QueryExec,
 
             init: function (engine, options) {
-                UccelloClass.super.apply(this, [engine, options]);
+                var opts = _.defaultsDeep(options ? _.cloneDeep(options) : {}, defaultMySqlConfig);
+                UccelloClass.super.apply(this, [engine, opts]);
             },
 
             _createConnectionMgr: function () {

@@ -18,13 +18,17 @@ define(
             },
 
             createTableQuery: function (model) {
-                var query = "CREATE TABLE IF NOT EXISTS <%= table %> (<%= fields%>) ENGINE=InnoDB";
+                var query = "CREATE TABLE IF NOT EXISTS <%= table %> (<%= fields%>) ENGINE=<%= engine%>";
                 var self = this;
                 var attrs = [];
                 _.forEach(model.fields(), function (field) {
                     attrs.push(self.escapeId(field.name()) + " " + field.fieldType().toSql());
                 });
-                var values = { table: this.escapeId(model.name()), fields: attrs.join(", ") };
+                var values = {
+                    table: this.escapeId(model.name()),
+                    fields: attrs.join(", "),
+                    engine: this._options.provider_options.engine
+                };
                 return _.template(query)(values).trim() + ";";
             },
 

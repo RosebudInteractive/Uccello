@@ -17,7 +17,7 @@ define(
 
             init: function (engine, options) {
 
-                var config = _.defaults(options || {}, { timezone: "+00:00" });
+                var config = options || {};
                 this._config = config;
                 this._engine = engine;
                 this._nativeLib = null;

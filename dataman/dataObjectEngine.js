@@ -15,12 +15,13 @@ define(
 
         var DataObjectEngine = UccelloClass.extend({
 
-            init: function (options) {
-                var opts = options || {};
+            init: function (router, controller, construct_holder, rpc, options) {
+                var opts = _.cloneDeep(options || {});
 
-                this._router = opts.router;
-                this._controller = opts.controller;
-                this._constructHolder = opts.construct_holder;
+                this._router = router;
+                this._controller = controller;
+                this._constructHolder = construct_holder;
+                this._options = opts;
                 this._schemas = {};
 
                 var self = this;
@@ -54,7 +55,7 @@ define(
                         throw new Error("Unknown provider: \"" + opts.connection.provider + "\".");
                     };
                     this._provider = new provider(this, opts.connection);
-                    this._query = new Query(this, this._provider);
+                    this._query = new Query(this, this._provider, this._options);
                 };
 
                 new MetaModelField(this._dataBase);
@@ -63,21 +64,25 @@ define(
 
                 this._metaDataMgr = this._loadMetaDataMgr();
                 this._metaDataMgr.router(this._router);
-                if (opts.rpc) {
-                    var remote = opts.rpc._publ(this._metaDataMgr, this._metaDataMgr.getInterface());
+                if (rpc) {
+                    var remote = rpc._publ(this._metaDataMgr, this._metaDataMgr.getInterface());
                     this._constructHolder.addTypeProvider(remote); // удаленный провайдер
                 };
                 this._constructHolder.addTypeProvider(this._metaDataMgr, true); // локальный провайдер
+                if (this.hasConnection() && opts.importData && (opts.importData.autoimport === true)) {
 
-                //////////////////// test
-                //this._query.createTable(this._metaDataMgr.getModel("DataLead"))
-                //this._query.select(this._metaDataMgr.getModel("DataLead"))
-                //.then(function (result) {
-                //    console.log("Operation done !!!");
-                //})
-                //.catch(function (err) {
-                //    console.log("Operation failed. Error: " + err);
-                //});
+                    this.importDir(opts.importData.dir, { force: true })
+                    .then(function (result) {
+                        console.log("### Import finished !!!");
+                    })
+                    .catch(function (err) {
+                        throw err;
+                    });
+                };
+            },
+
+            hasConnection: function () {
+                return this._provider && this._query;
             },
 
             getSchema: function () {
@@ -108,7 +113,7 @@ define(
 
             syncSchema: function (options) {
 
-                if (this._provider && this._query) {
+                if (this.hasConnection()) {
 
                     var opts = options || {};
                     var self = this;
@@ -140,9 +145,47 @@ define(
                     return Promise.reject(new Error("DB connection wasn't defined."));
             },
 
+            loadQuery: function (query, options) {
+                if (this.hasConnection()) {
+                    if (!query.dataObject)
+                        return Promise.reject(new Error("\"dataObject\" isn't defined in query."));
+                    var model = null;
+                    if (query.dataObject.name) {
+                        model = this._metaDataMgr.getModel(query.dataObject.name);
+                        if (!model)
+                            return Promise.reject(new Error("Can't find model (name = \"" + query.dataObject.name + "\"."));
+                    };
+                    if (query.dataObject.guid) {
+                        model = this._metaDataMgr.getModelByGuid(query.dataObject.guid);
+                        if (!model)
+                            return Promise.reject(new Error("Can't find model (guid = \"" + query.dataObject.guid + "\"."));
+                    };
+                    if (query.dataObject.rootName) {
+                        model = this._metaDataMgr.getModelByRootName(query.dataObject.rootName);
+                        if (!model)
+                            return Promise.reject(new Error("Can't find model (rootName = \"" + query.dataObject.rootName + "\"."));
+                    };
+                    if (query.dataObject.rootGuid) {
+                        model = this._metaDataMgr.getModelByRootGuid(query.dataObject.rootGuid);
+                        if (!model)
+                            return Promise.reject(new Error("Can't find model (rootGuid = \"" + query.dataObject.rootGuid + "\"."));
+                    };
+                    if (!model)
+                        return Promise.reject(new Error("Can't find model " + JSON.stringify(query.dataObject) + "."));
+
+                    var self = this;
+                    return this._query.select(model, query.predicate)
+                        .then(function (result) {
+                            return self._formatLoadResult(query.dataGuid, model, result);
+                        });
+                }
+                else
+                    return Promise.reject(new Error("DB connection wasn't defined."));
+            },
+
             importDir: function (dir, options) {
 
-                if (this._provider && this._query) {
+                if (this.hasConnection()) {
 
                     var opts = _.defaults(options || {}, { ext_filter: "json" });
                     var self = this;
@@ -170,11 +213,13 @@ define(
                                 _.forEach(files, function (file) {
                                     var fname = path.format({ dir: dir, base: file });
                                     var data = JSON.parse(fs.readFileSync(fname, { encoding: "utf8" }));
-                                    console.log("Read file: " + file);
+                                    if (self._options.trace.importDir)
+                                        console.log("Read file: " + file);
 
                                     if (data && data.collections && data.collections.DataElements
                                         && (data.collections.DataElements.length > 0)) {
-                                        console.log("Process file: " + file);
+                                        if (self._options.trace.importDir)
+                                            console.log("Process file: " + file);
                                         _.forEach(data.collections.DataElements, function (dataObj) {
                                             if (dataObj.$sys && dataObj.fields && dataObj.fields.Id) {
                                                 var modelGuid = dataObj.$sys.typeGuid;
@@ -194,6 +239,8 @@ define(
                                 });
 
                                 resolve(self._seqExec(allData, function (val, key) {
+                                    if (self._options.trace.importDir)
+                                        console.log("Import data: \"" + val.model.name() + "\".");
                                     var _model = val.model;
                                     var _data = val.data;
                                     return self._seqExec(_data, function (values, id) {
@@ -249,6 +296,40 @@ define(
                 });
             },
 
+            _formatLoadResult: function (dataGuid, model, rawData) {
+                var objTypeGuid = model.dataObjectGuid();
+                var controller = this._controller;
+                var data_guid = dataGuid ? dataGuid : controller.guid();
+
+                var result = {
+                    "$sys": {
+                        "guid": data_guid,
+                        "typeGuid": model.dataRootGuid()
+                    },
+                    "fields": {
+                        "Id": 1000,
+                        "Name": model.dataRootName()
+                    },
+                    "collections": {
+                        "DataElements": [
+                        ]
+                    }
+                };
+
+                _.forEach(rawData, function (data) {
+                    result.collections.DataElements.push({
+                        "$sys": {
+                            "guid": controller.guid(),
+                            "typeGuid": objTypeGuid
+                        },
+                        "fields": data,
+                        "collections": {}
+                    });
+                });
+
+                return result;
+            },
+
             _loadMetaDataMgr: function () {
                 var fs = require('fs');
                 var metaDataMgr = null;
@@ -258,6 +339,7 @@ define(
                 return metaDataMgr;
             }
         });
+
         return DataObjectEngine;
 	}
 );

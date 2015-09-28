@@ -13,6 +13,7 @@ define(
             init: function (engine, options) {
                 this._engine = engine;
                 this._provider = engine.getProvider();
+                this._options = options || {};
             },
 
             getNativeLib: function () {
@@ -35,7 +36,7 @@ define(
                 return this._provider;
             },
 
-            selectQuery: function (model) {
+            selectQuery: function (model, predicate) {
                 var query = "SELECT <%= fields%> FROM <%= table %>";
                 var attrs = [];
                 var self = this;
@@ -43,7 +44,21 @@ define(
                     attrs.push(self.escapeId(field.name()));
                 });
                 var values = { table: this.escapeId(model.name()), fields: attrs.join(", ") };
-                return _.template(query)(values).trim() + ";";
+                var result = _.template(query)(values).trim();
+                if (predicate) {
+                    var escVals = this._escapeValues(model, predicate);
+                    var self = this;
+                    var conditions = [];
+                    _.forEach(escVals, function (value, key) {
+                        if (model.getField(key)) {
+                            conditions.push("(" + value.id + " = " + value.val + ")");
+                        };
+                    });
+                    if (conditions.length > 0) {
+                        result += " WHERE " + conditions.join(" AND ");
+                    };
+                };
+                return result + ";";
             },
 
             insertQuery: function (model, vals) {

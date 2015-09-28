@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../../dataObjectEngine', './connectionMgr', './queryExec', './queryGen', './sqlTypes'],
-    function (Engine, ConnectionMgr, QueryExec, QueryGen, SqlTypes) {
+    ['lodash', '../../dataObjectEngine', './connectionMgr', './queryExec', './queryGen', './sqlTypes'],
+    function (_, Engine, ConnectionMgr, QueryExec, QueryGen, SqlTypes) {
 
         var PROVIDER_ID = "unknown";
 
@@ -66,7 +66,7 @@ define(
                     throw new Error("Incorrect or missing \"engine\" parameter.");
 
                 this._engine = engine;
-                this._options = options || {};
+                this._options = options ? _.cloneDeep(options) : {};
                 this._providerId = PROVIDER_ID;
 
                 this._connectionMgr = this._createConnectionMgr();
