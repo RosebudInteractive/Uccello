@@ -9,7 +9,7 @@ define(
     function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Promise, _, Query) {
 
         var ENGINE_DB_NAME = "DataEngineDB";
-        var ENGINE_DB_GUID = "5360e933-9983-410c-8175-d83b296d247f";
+        var ENGINE_DB_GUID = "66d43749-223a-48cb-9143-122381b9ed3c";
 
         var METADATA_FILE_NAME = UCCELLO_CONFIG.dataPath + "meta/metaTables.json";
 

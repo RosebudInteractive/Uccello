@@ -52,7 +52,8 @@ define(
                     _.forEach(escVals, function (value, key) {
                         if (model.getField(key)) {
                             conditions.push("(" + value.id + " = " + value.val + ")");
-                        };
+                        } else
+                            throw new Error("Predicate error: Unknown field \"" + key + "\" in model \"" + model.name() + "\".");
                     });
                     if (conditions.length > 0) {
                         result += " WHERE " + conditions.join(" AND ");

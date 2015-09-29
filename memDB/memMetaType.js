@@ -926,6 +926,22 @@ define(
             },
 
             /**
+             * Data Type hash code.
+             * Uniquely represents data type instance.
+             * 
+             * @return {Strng} The hash code
+             */
+            hash: function () {
+                var result = UccelloClass.super.apply(this, []);
+
+                if ((this._refResolver) &&
+                        (typeof (this._refResolver.getGuid) === "function"))
+                    result += "_" + this._refResolver.getGuid();
+
+                return result;
+            },
+
+            /**
              * Converts a Value of this data type from the internal representation
              * to the serialized one.
              *
