@@ -1,3 +1,11 @@
+/**
+ *  ќбеспечивает работу [dataObjectEngine] с MySQL RDBMS,
+ *    переопредел€€ поведение базового класса [baseProvider].
+ *
+ *    »спользует https://github.com/felixge/node-mysql
+ *      »нсталл€ци€: npm install mysql
+ *
+ */
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');

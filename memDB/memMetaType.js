@@ -61,7 +61,8 @@ define(
              * @return {Strng} The hash code
              */
             hash: function () {
-                return this.prefix + this._fldType;
+                return this.prefix + this._fldType +
+                    (this._allowNull === false ? "_notNull" : "");
             },
 
             /**
@@ -116,12 +117,24 @@ define(
             },
 
             /**
+             * Returns "allow Null" flag
+             * 
+             * @return {Boolean}
+             */
+            allowNull: function () {
+                return this._allowNull;
+            },
+
+            /**
              * Returns a serialized representation of the data type
              * 
              * @return {Object} Serialized representation
              */
             serialize: function () {
-                return { type: this._fldType };
+                var result = { type: this._fldType };
+                if (!this._allowNull)
+                    result.allowNull = this._allowNull;
+                return result;
             },
 
             /**
@@ -138,6 +151,10 @@ define(
                     this._fldType = val.type;
                 };
                 this._fldTypeCode = fldTypeCodes[this._fldType].code;
+
+                this._allowNull = true;
+                if ((val instanceof Object) && (typeof (val.allowNull) === "boolean"))
+                    this._allowNull = val.allowNull;
             },
 
             /**
@@ -217,6 +234,60 @@ define(
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
+            },
+
+            /**
+             * Data Type hash code.
+             * Uniquely represents data type instance.
+             * 
+             * @return {Strng} The hash code
+             */
+            hash: function () {
+                var result = UccelloClass.super.apply(this, []);
+                return result +
+                    (this._length < Infinity ? ("_" + this._length) : "");
+            },
+
+            /**
+             * Returns a serialized representation of the data type
+             * 
+             * @return {Object} Serialized representation
+             */
+            serialize: function () {
+                var result = UccelloClass.super.apply(this, []);
+                if (this._length < Infinity)
+                    result.length = this._length;
+                return result;
+            },
+
+            /**
+             * The length property
+             * 
+             * @return {Integer}
+             */
+            length: function () {
+                return this._length;
+            },
+
+            /**
+             * Converts this data type from the serialized representation 
+             * to the internal one (only constructor can invoke it)
+             * 
+             * @param {String|Object} val Serialized representation of this data type
+             * @private
+             */
+            _deserialize: function (val) {
+                var result = UccelloClass.super.apply(this, [val]);
+
+                this._length = Infinity;
+                if ((val instanceof Object) && val.length)
+                    if (typeof (val.length) === "number")
+                        if (val.length > 0)
+                            this._length = Math.floor(val.length);
+                        else
+                            throw new Error("Invalid value of string \"length\": " + val.length + ".");
+                    else
+                        throw new Error("Invalid value of string \"length\": " + val.length + ".");
             }
         });
         
@@ -347,6 +418,10 @@ define(
 
             key: "decimal",
 
+            dfltPrecision: 15,
+
+            dfltScale: 4,
+
             /**
              * The Decimal Type.
              *
@@ -357,6 +432,82 @@ define(
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
+            },
+
+            /**
+             * Data Type hash code.
+             * Uniquely represents data type instance.
+             * 
+             * @return {Strng} The hash code
+             */
+            hash: function () {
+                var result = UccelloClass.super.apply(this, []);
+                return result + "_" + this._precision + "_" + this._scale;
+            },
+
+            /**
+             * Returns a serialized representation of the data type
+             * 
+             * @return {Object} Serialized representation
+             */
+            serialize: function () {
+                var result = UccelloClass.super.apply(this, []);
+                result.precision = this._precision;
+                result.scale = this._scale;
+                return result;
+            },
+
+            /**
+             * The precision property
+             * 
+             * @return {Integer}
+             */
+            precision: function () {
+                return this._precision;
+            },
+
+            /**
+             * The scale property
+             * 
+             * @return {Integer}
+             */
+            scale: function () {
+                return this._scale;
+            },
+
+            /**
+             * Converts this data type from the serialized representation 
+             * to the internal one (only constructor can invoke it)
+             * 
+             * @param {String|Object} val Serialized representation of this data type
+             * @throws                    Will throw an error if val.precision or\and val.scale is incorrect
+             * @private
+             */
+            _deserialize: function (val) {
+                var result = UccelloClass.super.apply(this, [val]);
+
+                this._precision = this.dfltPrecision;
+                this._scale = this.dfltScale;
+                if ((val instanceof Object) && val.precision) {
+                    if (typeof (val.precision) === "number")
+                        if (val.precision > 0)
+                            this._precision = Math.floor(val.precision);
+                        else
+                            throw new Error("Invalid value of decimal \"precision\": " + val.precision + ".");
+                    else
+                        throw new Error("Invalid value of decimal \"precision\": " + val.precision + ".");
+                };
+                if ((val instanceof Object) && val.scale) {
+                    if (typeof (val.scale) === "number")
+                        if (val.scale > 0)
+                            this._scale = Math.floor(val.scale);
+                        else
+                            throw new Error("Invalid value of decimal \"scale\": " + val.scale + ".");
+                    else
+                        throw new Error("Invalid value of decimal \"scale\": " + val.scale + ".");
+                };
+                if(this._scale>this._precision)
+                    throw new Error("Decimal \"precision\": " + val.precision + " should be greater than \"scale\": " + val.scale + ".");
             }
         });
 
@@ -750,8 +901,6 @@ define(
                 result.model = this._model;
                 if (this._refAction !== "none")
                     result.refAction = this._refAction;
-                if (!this._allowNul)
-                    result.allowNull = this._allowNull;
 
                 return result;
             },
@@ -865,15 +1014,6 @@ define(
              */
             refAction: function () {
                 return this._refAction;
-            },
-
-            /**
-             * Returns "allow Null" flag
-             * 
-             * @return {Boolean}
-             */
-            allowNull: function () {
-                return this._allowNull;
             },
 
             /**

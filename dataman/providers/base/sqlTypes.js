@@ -12,10 +12,22 @@ define(
         //
         MetaTypes.makeDescendant("int", types, { prefix: "SQL", toSql: function () { return "INTEGER"; } });
         MetaTypes.makeDescendant("dataRef", types, { prefix: "SQL", toSql: function () { return "INTEGER"; } });
-        MetaTypes.makeDescendant("string", types, { prefix: "SQL", toSql: function () { return "VARCHAR(255)"; } });
+        MetaTypes.makeDescendant("string", types, {
+            prefix: "SQL",
+            toSql: function () {
+                if (this._length === Infinity)
+                    throw new Error("Length of string type can't be unlimited.");
+                return "VARCHAR(" + this._length + ")";
+            }
+        });
         MetaTypes.makeDescendant("float", types, { prefix: "SQL", toSql: function () { return "FLOAT"; } });
         MetaTypes.makeDescendant("datetime", types, { prefix: "SQL", toSql: function () { return "DATETIME"; } });
-        MetaTypes.makeDescendant("decimal", types, { prefix: "SQL", toSql: function () { return "NUMERIC(10, 4)"; } });
+        MetaTypes.makeDescendant("decimal", types, {
+            prefix: "SQL",
+            toSql: function () {
+                return "NUMERIC(" + this._precision + ", " + this._scale + ")";
+            }
+        });
         MetaTypes.makeDescendant("boolean", types, { prefix: "SQL", toSql: function () { return "BOOLEAN"; } });
 
         var SqlTypes = UccelloClass.extend({
