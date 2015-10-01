@@ -22,6 +22,8 @@ define(
 
             key: "$base$",
 
+            canAutoIncrement: false,
+
             /**
              * The Base Type all Type objects inherit from.
              *
@@ -206,6 +208,8 @@ define(
         var IntegerType = BaseType.extend({
 
             key: "int",
+
+            canAutoIncrement: true,
 
             /**
              * The Integer Type.

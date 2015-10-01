@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../system/uobject'],
-    function (UObject) {
+    ['../system/uobject', './metaDefs'],
+    function (UObject, Meta) {
         var MetaModelField = UObject.extend({
 
             className: "MetaModelField",
@@ -13,7 +13,8 @@ define(
             metaFields: [
                 { fname: "Name", ftype: "string" },
                 { fname: "FieldType", ftype: "datatype" },
-                { fname: "Order", ftype: "int" }
+                { fname: "Order", ftype: "int" },
+                { fname: "Flags", ftype: "int" }
             ],
 
             name: function (value) {
@@ -26,6 +27,18 @@ define(
 
             order: function (value) {
                 return this._genericSetter("Order", value);
+            },
+
+            flags: function (value) {
+
+                var type = this._genericSetter("FieldType");
+                if (((value & Meta.Field.AutoIncrement) !== 0) && (!type.canAutoIncrement)) {
+                    var table_name = this.getParent().name();
+                    var field_name = this.name();
+                    throw new Error("Field \"" + field_name + "\" (\"" + table_name + "\") can't be auto-increment.");
+                };
+
+                return this._genericSetter("Flags", value);
             },
 
             init: function (cm, params) {

@@ -300,6 +300,19 @@ define(
                 return Constructor;
             },
 
+            _getOnChangeModelReadOnlyProp: function (model, prop_name) {
+                var self = this;
+                var oldVal = model._genericSetter(prop_name);
+
+                return function (args) {
+                    var newVal = model._genericSetter(prop_name);
+                    if (!model.getFieldType(prop_name).isEqual(oldVal, newVal)) {
+                        model.set(prop_name, oldVal);
+                        throw new Error("Property \"" + prop_name + "\" is READONLY.");
+                    };
+                };
+            },
+
             _addLink: function (args) {
                 this._isConstrReady = false;
 
@@ -432,6 +445,7 @@ define(
 
                 this._addModelToLinks(name, model);
 
+                var self = this;
                 model.on({
                     type: 'addLink',
                     subscriber: this,
@@ -440,6 +454,30 @@ define(
                     type: 'removeLink',
                     subscriber: this,
                     callback: this._removeLink
+                }).on({
+                    type: 'modelModified',
+                    subscriber: this,
+                    callback: function (args) {
+                        self._isConstrReady = false;
+                    }
+                });
+
+                model.event.on({
+                    type: 'mod%Name',
+                    subscriber: this,
+                    callback: this._getOnChangeModelReadOnlyProp(model, "Name")
+                }).on({
+                    type: 'mod%DataObjectGuid',
+                    subscriber: this,
+                    callback: this._getOnChangeModelReadOnlyProp(model, "DataObjectGuid")
+                }).on({
+                    type: 'mod%DataRootName',
+                    subscriber: this,
+                    callback: this._getOnChangeModelReadOnlyProp(model, "DataRootName")
+                }).on({
+                    type: 'mod%DataRootGuid',
+                    subscriber: this,
+                    callback: this._getOnChangeModelReadOnlyProp(model, "DataRootGuid")
                 });
             },
 

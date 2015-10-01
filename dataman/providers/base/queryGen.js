@@ -14,6 +14,7 @@ define(
                 this._engine = engine;
                 this._provider = engine.getProvider();
                 this._options = options || {};
+                this.Meta = engine.Meta;
             },
 
             getNativeLib: function () {

@@ -22,8 +22,14 @@ define(
                 var self = this;
                 var attrs = [];
                 _.forEach(model.fields(), function (field) {
-                    attrs.push(self.escapeId(field.name()) + " " + field.fieldType().toSql());
+                    var flags = field.flags() | 0;
+                    attrs.push(self.escapeId(field.name()) + " " + field.fieldType().toSql() +
+                        ((((flags & self.Meta.Field.PrimaryKey) !== 0) || (!field.fieldType().allowNull())) ? " NOT NULL" : "") +
+                        (((flags & self.Meta.Field.AutoIncrement) !== 0) ? " auto_increment" : ""));
                 });
+                if (model.getPrimaryKey()) {
+                    attrs.push("PRIMARY KEY (" + this.escapeId(model.getPrimaryKey().name()) + ")");
+                };
                 var values = {
                     table: this.escapeId(model.name()),
                     fields: attrs.join(", "),

@@ -5,11 +5,8 @@
 
 define(
     ['../controls/controlMgr', '../metaData/metaDataMgr', '../metaData/metaModel',
-        '../metaData/metaModelField', 'bluebird', 'lodash', './dataObjectQuery'],
-    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Promise, _, Query) {
-
-        var ENGINE_DB_NAME = "DataEngineDB";
-        var ENGINE_DB_GUID = "66d43749-223a-48cb-9143-122381b9ed3c";
+        '../metaData/metaModelField', '../metaData/metaDefs', 'bluebird', 'lodash', './dataObjectQuery'],
+    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Meta, Promise, _, Query) {
 
         var METADATA_FILE_NAME = UCCELLO_CONFIG.dataPath + "meta/metaTables.json";
 
@@ -23,6 +20,7 @@ define(
                 this._constructHolder = construct_holder;
                 this._options = opts;
                 this._schemas = {};
+                this.Meta = Meta;
 
                 var self = this;
                 this._createComponent = function (typeObj, parent, sobj) {
@@ -39,9 +37,9 @@ define(
                     {
                         controller: this._controller,
                         dbparams: {
-                            name: ENGINE_DB_NAME,
+                            name: Meta.Db.Name,
                             kind: "master",
-                            guid: ENGINE_DB_GUID
+                            guid: Meta.Db.Guid
                         }
                     });
 
