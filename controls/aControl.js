@@ -231,6 +231,15 @@ define(
                     } else
                         return child._next(startedAt, rootPassed, checkTabStop, reverce);
                 }
+            },
+
+            /**
+             * Установить фокус на контрол
+             */
+            setFocused: function(){
+                var form = this.getRoot();
+                if (form && "currentControl" in form)
+                    form.currentControl(this);
             }
 
 

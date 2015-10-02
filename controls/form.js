@@ -10,7 +10,12 @@ define(
 
             className: "Form",
             classGuid: UCCELLO_CONFIG.classGuids.Form,
-            metaFields: [{fname:"Title", ftype:"string"},{fname:"dbgName",ftype:"string"}],
+            metaFields: [{fname:"Title", ftype:"string"},{fname:"dbgName",ftype:"string"}, {
+                fname: "CurrentControl", ftype: {
+                    type: "ref",
+                    res_elem_type: UCCELLO_CONFIG.classGuids.AControl
+                }
+            }],
             metaCols: [{ "cname": "Params", "ctype": "UObject" }, { "cname": "SubForms", "ctype": "UObject" }],
 
             init: function(cm,params){
@@ -19,6 +24,9 @@ define(
 
             title: function (value) {
                 return this._genericSetter("Title", value);
+            },
+            currentControl: function (value) {
+                return this._genericSetter("CurrentControl", value);
             }
 			/*
 			load: function(rootGuids,params, cb) {
