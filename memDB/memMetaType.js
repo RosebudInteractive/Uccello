@@ -337,7 +337,7 @@ define(
              * @return {Boolean} True if values are equal
              */
             isEqual: function (val1, val2) {
-                return val1 === val2;
+                return (this.compare(val1, val2) === 0);
             },
 
             /**
@@ -395,8 +395,10 @@ define(
              */
             _convert: function (val) {
                 var result = val;
-                if (!(val instanceof Date))
-                    result = new Date(val);
+                if ((typeof (val) === "string") && (val.length === 0))
+                    result = null;
+                if ((!(result instanceof Date)) && (!((result === null) && this._allowNull)))
+                    result = new Date(result);
                 return result;
             }
         });

@@ -446,39 +446,120 @@ define(
                 this._addModelToLinks(name, model);
 
                 var self = this;
-                model.on({
-                    type: 'addLink',
-                    subscriber: this,
-                    callback: this._addLink
-                }).on({
-                    type: 'removeLink',
-                    subscriber: this,
-                    callback: this._removeLink
-                }).on({
-                    type: 'modelModified',
-                    subscriber: this,
-                    callback: function (args) {
-                        self._isConstrReady = false;
-                    }
-                });
+                model.handlers = [];
 
-                model.event.on({
-                    type: 'mod%Name',
-                    subscriber: this,
-                    callback: this._getOnChangeModelReadOnlyProp(model, "Name")
-                }).on({
-                    type: 'mod%DataObjectGuid',
-                    subscriber: this,
-                    callback: this._getOnChangeModelReadOnlyProp(model, "DataObjectGuid")
-                }).on({
-                    type: 'mod%DataRootName',
-                    subscriber: this,
-                    callback: this._getOnChangeModelReadOnlyProp(model, "DataRootName")
-                }).on({
-                    type: 'mod%DataRootGuid',
-                    subscriber: this,
-                    callback: this._getOnChangeModelReadOnlyProp(model, "DataRootGuid")
-                });
+                var hdesc = {
+                    obj: model,
+                    handler: {
+                        type: 'addLink',
+                        subscriber: this,
+                        callback: this._addLink
+                    }
+                };
+                model.handlers.push(hdesc);
+                hdesc.obj.on(hdesc.handler);
+
+                hdesc = {
+                    obj: model,
+                    handler: {
+                        type: 'removeLink',
+                        subscriber: this,
+                        callback: this._removeLink
+                    }
+                };
+                model.handlers.push(hdesc);
+                hdesc.obj.on(hdesc.handler);
+
+                hdesc = {
+                    obj: model,
+                    handler: {
+                        type: 'modelModified',
+                        subscriber: this,
+                        callback: function (args) {
+                            self._isConstrReady = false;
+                        }
+                    }
+                };
+                model.handlers.push(hdesc);
+                hdesc.obj.on(hdesc.handler);
+
+                //model.on({
+                //    type: 'addLink',
+                //    subscriber: this,
+                //    callback: this._addLink
+                //}).on({
+                //    type: 'removeLink',
+                //    subscriber: this,
+                //    callback: this._removeLink
+                //}).on({
+                //    type: 'modelModified',
+                //    subscriber: this,
+                //    callback: function (args) {
+                //        self._isConstrReady = false;
+                //    }
+                //});
+
+                hdesc = {
+                    obj: model.event,
+                    handler: {
+                        type: 'mod%Name',
+                        subscriber: this,
+                        callback: this._getOnChangeModelReadOnlyProp(model, "Name")
+                    }
+                };
+                model.handlers.push(hdesc);
+                hdesc.obj.on(hdesc.handler);
+
+                hdesc = {
+                    obj: model.event,
+                    handler: {
+                        type: 'mod%DataObjectGuid',
+                        subscriber: this,
+                        callback: this._getOnChangeModelReadOnlyProp(model, "DataObjectGuid")
+                    }
+                };
+                model.handlers.push(hdesc);
+                hdesc.obj.on(hdesc.handler);
+
+                hdesc = {
+                    obj: model.event,
+                    handler: {
+                        type: 'mod%DataRootName',
+                        subscriber: this,
+                        callback: this._getOnChangeModelReadOnlyProp(model, "DataRootName")
+                    }
+                };
+                model.handlers.push(hdesc);
+                hdesc.obj.on(hdesc.handler);
+
+                hdesc = {
+                    obj: model.event,
+                    handler: {
+                        type: 'mod%DataRootGuid',
+                        subscriber: this,
+                        callback: this._getOnChangeModelReadOnlyProp(model, "DataRootGuid")
+                    }
+                };
+                model.handlers.push(hdesc);
+                hdesc.obj.on(hdesc.handler);
+
+                //model.event.on({
+                //    type: 'mod%Name',
+                //    subscriber: this,
+                //    callback: this._getOnChangeModelReadOnlyProp(model, "Name")
+                //}).on({
+                //    type: 'mod%DataObjectGuid',
+                //    subscriber: this,
+                //    callback: this._getOnChangeModelReadOnlyProp(model, "DataObjectGuid")
+                //}).on({
+                //    type: 'mod%DataRootName',
+                //    subscriber: this,
+                //    callback: this._getOnChangeModelReadOnlyProp(model, "DataRootName")
+                //}).on({
+                //    type: 'mod%DataRootGuid',
+                //    subscriber: this,
+                //    callback: this._getOnChangeModelReadOnlyProp(model, "DataRootGuid")
+                //});
             },
 
             _onDeleteModel: function (args) {
@@ -498,6 +579,11 @@ define(
 
                 delete this._modelsByRootName[root_name];
                 delete this._modelsByRootGuid[root_guid];
+
+                for (var i = 0; i < model.handlers.length; i++) {
+                    var hdesc = model.handlers[i];
+                    hdesc.obj.off(hdesc.handler);
+                };
             }
         });
         return MetaDataMgr;

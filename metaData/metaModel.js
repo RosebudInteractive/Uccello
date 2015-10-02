@@ -162,14 +162,21 @@ define(
                     var fieldName = fieldObj._genericSetter("Name");
                     var order = fieldObj._genericSetter("Order");
 
-                    if ((order < 0) || (order > self._fields.length)) {
+                    if ((order < 0) || (order >= self._fields.length)) {
                         fieldObj.set("Order", oldOrder);
-                        throw new Error("Invalid field \"" + fieldName + "\" order: " + order + " .");
+                        throw new Error("Invalid order (" + order + ") of field \"" + fieldName + "\".");
                     };
                     self._fieldsByName[fieldName] = order;
+                    self._fields.splice(oldOrder, 1);
                     self._fields.splice(order, 0, fieldObj);
+                    self._reindexFields();
 
                     oldOrder = order;
+
+                    self.fire({
+                        type: "modelModified",
+                        target: self
+                    });
                 };
             },
 
@@ -180,7 +187,13 @@ define(
                 return function (args) {
                     var fieldName = fieldObj._genericSetter("Name");
                     var fieldType = fieldObj._genericSetter("FieldType");
+                    var flags = fieldObj._genericSetter("Flags");
                     var isFired = false;
+
+                    if (((flags & Meta.Field.PrimaryKey) !== 0) && fieldType.allowNull()) {
+                        fieldObj.set("FieldType", oldFieldType);
+                        throw new Error("Primary key \"" + fieldName + "\" can't allow NULL.");
+                    };
 
                     if (oldFieldType instanceof MemMetaType.DataRefType) {
                         self.fire({
@@ -252,6 +265,11 @@ define(
                 };
             },
 
+            _reindexFields: function () {
+                for (var i = 0; i < this._fields.length; i++)
+                    this._fieldsByName[this._fields[i].name()] = i;
+            },
+
             _onAddField: function (args) {
                 var field = args.obj;
                 var name = field.get("Name");
@@ -277,8 +295,10 @@ define(
                     };
                     this._primaryKey = field;
                 };
-                this._fieldsByName[name] = order;
+
                 this._fields.splice(order, 0, field);
+                this._reindexFields();
+
                 if (isNewOrder)
                     field.set("Order", order);
 
@@ -322,6 +342,7 @@ define(
                         this._fields.splice(idx, 1);
                     }
                     delete this._fieldsByName[name];
+                    this._reindexFields();
                 };
 
                 if (this._primaryKey === field)
