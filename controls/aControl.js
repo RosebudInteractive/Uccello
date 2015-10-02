@@ -120,12 +120,12 @@ define(
 
             next: function(checkTabStop) {
                 checkTabStop = (checkTabStop === undefined ? true : false);
-                return this._next(this, false, true, false);
+                return this._next(null, false, true, false);
             },
 
             prev: function(checkTabStop) {
                 checkTabStop = (checkTabStop === undefined ? true : false);
-                return this._next(this, false, true, true);
+                return this._next(null, false, true, true);
             },
 
             /**
@@ -140,6 +140,7 @@ define(
             _next: function(startedAt, rootPassed, checkTabStop, reverce) {
                 console.log("Next for: " + this.name())
                 if (startedAt == this) return this;
+                if (!startedAt) startedAt = this;
 
                 var isContainer = this.isInstanceOf(UCCELLO_CONFIG.classGuids.Container, false);
 
@@ -151,11 +152,27 @@ define(
                     var thisIdx = parentChildren.indexOf(this);
                     var nextControl = null;
                     // Если это не последний элемент, то получаем следующий
-                    if (((thisIdx < parentChildren.count() - 1) && !reverce ) || (thisIdx == 0 && reverce)) {
-                        if (!reverce)
-                            nextControl = parentChildren.get(thisIdx + 1);
-                        else
-                            nextControl = parentChildren.get(thisIdx - 1);
+                    if (((thisIdx < parentChildren.count() - 1) && !reverce ) || (thisIdx > 0 && reverce)) {
+                        var nextSiblingNotFound = true;
+                        while (thisIdx >= 0 && thisIdx < parentChildren.count()) {
+                            if (!reverce) {
+                                nextControl = parentChildren.get(thisIdx + 1);
+                            } else
+                                nextControl = parentChildren.get(thisIdx - 1);
+
+                            if ("tabStop" in nextControl) {
+                                nextSiblingNotFound = false;
+                                break;
+                            } else {
+                                if (reverce) thisIdx--;
+                                else thisIdx ++;
+                                if ((reverce && thisIdx == 0) ||
+                                    (!reverce && (thisIdx == parentChildren.count() -1)))
+                                    break;
+                            }
+                        }
+                        if (nextSiblingNotFound)
+                            return parent._next(startedAt, rootPassed, checkTabStop, reverce);
                     } else // последний элемент коллекции
                         return parent._next(startedAt, rootPassed, checkTabStop, reverce);
 
@@ -200,7 +217,13 @@ define(
                     var child = thisChildren.get(0);
                     if (reverce)
                         child = thisChildren.get(thisChildren.count() - 1);
-                    var tabStop = (child.tabStop() === undefined ? true : child.tabStop()) || (!checkTabStop);
+                    if (!("tabStop" in child)) {
+                        var child = thisChildren.get(1);
+                        if (reverce)
+                            child = thisChildren.get(thisChildren.count() - 2);
+                    }
+                    var tabStop = ("tabStop" in child) &&
+                        ((child.tabStop() === undefined ? true : child.tabStop()) || (!checkTabStop));
                     if (tabStop) {
                         var isContainer = child.isInstanceOf(UCCELLO_CONFIG.classGuids.Container, false);
                         if (isContainer) return child._firstChild(startedAt, rootPassed, checkTabStop, reverce);
@@ -208,6 +231,15 @@ define(
                     } else
                         return child._next(startedAt, rootPassed, checkTabStop, reverce);
                 }
+            },
+
+            /**
+             * Установить фокус на контрол
+             */
+            setFocused: function(){
+                var form = this.getRoot();
+                if (form && "currentControl" in form)
+                    form.currentControl(this);
             }
 
 
