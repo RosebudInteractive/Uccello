@@ -152,11 +152,26 @@ define(
                     var thisIdx = parentChildren.indexOf(this);
                     var nextControl = null;
                     // Если это не последний элемент, то получаем следующий
-                    if (((thisIdx < parentChildren.count() - 1) && !reverce ) || (thisIdx == 0 && reverce)) {
-                        if (!reverce)
-                            nextControl = parentChildren.get(thisIdx + 1);
-                        else
-                            nextControl = parentChildren.get(thisIdx - 1);
+                    if (((thisIdx < parentChildren.count() - 1) && !reverce ) || (thisIdx > 0 && reverce)) {
+                        var nextSiblingFound = true;
+                        while (true) {
+                            if (!reverce) {
+                                nextControl = parentChildren.get(thisIdx + 1);
+                            } else
+                                nextControl = parentChildren.get(thisIdx - 1);
+
+                            if (("tabStop" in nextControl) || (!reverce && thisIdx == parentChildren.count() - 1) ||
+                                (reverce && thisIdx == 0)) {
+                                if (!("tabStop" in nextControl))
+                                    nextSiblingFound = false;
+                                break;
+                            } else {
+                                if (reverce) thisIdx--;
+                                else thisIdx ++;
+                            }
+                            if (!nextSiblingFound)
+                                return parent._next(startedAt, rootPassed, checkTabStop, reverce);
+                        }
                     } else // последний элемент коллекции
                         return parent._next(startedAt, rootPassed, checkTabStop, reverce);
 
