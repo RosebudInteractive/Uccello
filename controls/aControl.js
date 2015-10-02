@@ -153,25 +153,26 @@ define(
                     var nextControl = null;
                     // Если это не последний элемент, то получаем следующий
                     if (((thisIdx < parentChildren.count() - 1) && !reverce ) || (thisIdx > 0 && reverce)) {
-                        var nextSiblingFound = true;
-                        while (true) {
+                        var nextSiblingNotFound = true;
+                        while (thisIdx >= 0 && thisIdx < parentChildren.count()) {
                             if (!reverce) {
                                 nextControl = parentChildren.get(thisIdx + 1);
                             } else
                                 nextControl = parentChildren.get(thisIdx - 1);
 
-                            if (("tabStop" in nextControl) || (!reverce && thisIdx == parentChildren.count() - 1) ||
-                                (reverce && thisIdx == 0)) {
-                                if (!("tabStop" in nextControl))
-                                    nextSiblingFound = false;
+                            if ("tabStop" in nextControl) {
+                                nextSiblingNotFound = false;
                                 break;
                             } else {
                                 if (reverce) thisIdx--;
                                 else thisIdx ++;
+                                if ((reverce && thisIdx == 0) ||
+                                    (!reverce && (thisIdx == parentChildren.count() -1)))
+                                    break;
                             }
-                            if (!nextSiblingFound)
-                                return parent._next(startedAt, rootPassed, checkTabStop, reverce);
                         }
+                        if (nextSiblingNotFound)
+                            return parent._next(startedAt, rootPassed, checkTabStop, reverce);
                     } else // последний элемент коллекции
                         return parent._next(startedAt, rootPassed, checkTabStop, reverce);
 
