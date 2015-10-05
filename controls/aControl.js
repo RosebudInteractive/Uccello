@@ -238,8 +238,12 @@ define(
              */
             setFocused: function(){
                 var form = this.getRoot();
-                if (form && "currentControl" in form)
-                    form.currentControl(this);
+                if (form && "currentControl" in form) {
+                    var cm = this.getControlMgr();
+                    cm.userEventHandler(this, function () {
+                        form.currentControl(this);
+                    });
+                }
             }
 
 

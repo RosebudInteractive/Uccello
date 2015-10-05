@@ -34,7 +34,20 @@ define(
                         value._isRendered(false);
                 }
                 return this._genericSetter("CurrentControl", value);
+            },
+
+            processDelta: function() {
+                if (this.isFldModified("CurrentControl")) {
+                    var oldControl = this.getControlMgr().getObj(this.getOldFldVal("CurrentControl")),
+                        newControl = this.currentControl();
+                    if (oldControl)
+                        oldControl._isRendered(false);
+                    if (newControl)
+                        newControl._isRendered(false);
+                }
+                this._isProcessed(true);
             }
+
 			/*
 			load: function(rootGuids,params, cb) {
 				if (this.getModule().isMaster()) {
