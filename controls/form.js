@@ -29,7 +29,7 @@ define(
                 if (value !== undefined) {
                     var curControl = this.currentControl();
                     if (curControl)
-                        this._isRendered(false);
+                        curControl._isRendered(false);
                     if (value)
                         value._isRendered(false);
                 }
