@@ -26,6 +26,13 @@ define(
                 return this._genericSetter("Title", value);
             },
             currentControl: function (value) {
+                if (value !== undefined) {
+                    var curControl = this.currentControl();
+                    if (curControl)
+                        this._isRendered(false);
+                    if (value)
+                        value._isRendered(false);
+                }
                 return this._genericSetter("CurrentControl", value);
             }
 			/*
