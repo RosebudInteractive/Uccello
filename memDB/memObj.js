@@ -215,7 +215,37 @@ define(
 				this._finalizeModif(field, oldSerialized, newSerialized);
 			},
 
-			// получить имя поля по индексу
+		    /**
+		     * Returns "end-user" representation of "old value".
+		     *  "Old-value" is represented in log in serialized form.
+             *
+             * @param {String} fldName Field name
+             * @return {Object}
+             */
+		    getOldFldVal: function (fldName) {
+			    if (fldName in this.pvt.fldLog) {
+			        var old_val = this.pvt.fldLog[fldName];
+			        if (old_val !== undefined) {
+			            var objType = this.pvt.objType.pvt;
+			            if (objType.fieldsTable[fldName] === undefined)
+			                throw new Error("Field \"" + fldName + "\" doesn't exist in the object \"" + this.pvt.guid + "\".");
+			            var i = objType.fieldsTable[fldName].cidx;
+			            var fldType = objType.fieldsTypes[i];
+			            var is_complex = fldType.is_complex;
+			            fldType = fldType.type;
+			            if (is_complex) {
+			                var curr_val = fldType.getSerializedValue(this.pvt.fields[i]);
+			                old_val = fldType.getValue(fldType.setValue(old_val, fldName, this, false));
+			                fldType.setValue(curr_val, fldName, this, false);
+			            };
+			        };
+			        return old_val;
+                }
+			    else
+			        return undefined;
+			},
+
+		    // получить имя поля по индексу
 			getFieldName: function(i) {
 				return this.pvt.objType.pvt.fieldsArr[i];
 			},
