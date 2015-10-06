@@ -53,6 +53,14 @@ define(
                     return;
                 }
 
+                // если только фокус
+                var ds = this.dataset();
+                if  (ds && !ds.isDataSourceModified() && !ds.isFldModified("Cursor") && !this.isDataModified()) {
+                    if (this.getRoot().currentControl() == this)
+                        viewset.setFocus.apply(this);
+                    return;
+                }
+
                 // рендерим DOM
                 viewset.render.apply(this, [options]);
             },

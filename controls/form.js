@@ -38,7 +38,6 @@ define(
 
             processDelta: function() {
                 if (this.isFldModified("CurrentControl")) {
-                    //var oldControl = this.getControlMgr().getObj(this.getOldFldVal("CurrentControl")),
                     var oldControl = this.getOldFldVal("CurrentControl"),
                         newControl = this.currentControl();
                     if (oldControl)
