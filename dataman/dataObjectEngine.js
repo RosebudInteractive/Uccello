@@ -127,12 +127,61 @@ define(
             },
 
             execBatch: function (batch, callback) {
-                console.log("UPDATE: " + JSON.stringify(batch));
-                var result = { result: "OK" };
-                if (callback)
-                    setTimeout(function () {
-                        callback(result);
-                    }, 0);
+                console.log("execBatch: " + JSON.stringify(batch));
+
+                var result = {};
+                var res_promise = Promise.resolve(result);
+                var self = this;
+
+                if (this.hasConnection() && (batch.length > 0)) {
+                    res_promise = this._seqExec(batch, function (val) {
+
+                        var promise = Promise.resolve();
+                        var model = self._metaDataMgr.getModel(val.model);
+                        if (!model)
+                            throw new Error("execBatch::Model \"" + val.model + "\" doesn't exist.");
+
+                        switch (val.op) {
+
+                            case "update":
+
+                                if ((!val.data) || (!val.data.key))
+                                    throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
+
+                                var key = model.getPrimaryKey();
+                                if (!key)
+                                    throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
+                                var predicate = {};
+                                predicate[key.name()] = val.data.key;
+
+                                promise = self._query.update(model, val.data.fields, predicate);
+                                break;
+                        };
+                        return promise;
+                    });
+                };
+
+                res_promise
+                    .then(function (opResult) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "OK";
+                                result.detail = opResult;
+                                callback(result);
+                            }, 0);
+                    })
+                    .catch(function (err) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "ERROR";
+                                result.message = "Unknown error in \"execBatch\".";
+                                if (err.message)
+                                    result.message = err.message;
+                                callback(result);
+                            }, 0);
+                    });
+
+                return UCCELLO_CONFIG.REMOTE_RESULT;
             },
 
             syncSchema: function (options) {

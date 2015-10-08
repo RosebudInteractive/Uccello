@@ -219,15 +219,16 @@ define(
 		     * Returns "end-user" representation of "old value".
 		     *  "Old-value" is represented in log in serialized form.
              *
-             * @param {String} fldName Field name
-             * @param {String} [log_name=this.dfltLogName] Log name
+             * @param {String}  fldName Field name
+             * @param {String}  [log_name=this.dfltLogName] Log name
+             * @param {Boolean} [is_serialized=false] If [is_serialized]=true then returns serialized value
              * @return {Object}
              */
-			getOldFldVal: function (fldName, log_name) {
+			getOldFldVal: function (fldName, log_name, is_serialized) {
 		        var logName = log_name ? log_name : this.dfltLogName;
 		        if (fldName in this.pvt.fldLog[logName]) {
 		            var old_val = this.pvt.fldLog[logName][fldName];
-			        if (old_val !== undefined) {
+		            if ((old_val !== undefined) && (!is_serialized)) {
 			            var objType = this.pvt.objType.pvt;
 			            if (objType.fieldsTable[fldName] === undefined)
 			                throw new Error("Field \"" + fldName + "\" doesn't exist in the object \"" + this.pvt.guid + "\".");

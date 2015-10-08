@@ -46,6 +46,18 @@ define(
                 });
             },
 
+            update: function (model, values, predicate) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    var sql = self._query_gen.updateQuery(model, values, predicate);
+                    resolve(self._runQuery(sql).then(function (result) {
+                            //console.log(JSON.stringify(result));
+                            return result;
+                        })
+                    );
+                });
+            },
+
             insert: function (model, values) {
                 var self = this;
                 return new Promise(function (resolve, reject) {

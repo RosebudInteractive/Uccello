@@ -208,10 +208,10 @@ define(
 			        this.getLog().add(o);
 			    }
 
-			    if (!this.isFldModified(field)) { // запоминаем измененные свойства
-			        this._setModified(field, oldVal);
-			    }
-			    if (this.getParent()) this.getParent().logColModif("mod", this.getColName(), this);
+			    this._setModified(field, oldVal); // запоминаем измененные свойства
+
+			    if (this.getParent())
+			        this.getParent().logColModif("mod", this.getColName(), this);
 
 			    this.event.fire({
 			        type: "mod",
@@ -434,9 +434,11 @@ define(
 			
 			_setModified: function (field, oldValue) {
 			    for (var logName in this.pvt.fldLog) {
-			        if (!(field in this.pvt.fldLog[logName])) this.pvt.cntFldModif[logName]++;
-			        this.pvt.fldLog[logName][field] = oldValue;
-			        this.pvt.isModified[logName] = true;
+			        if (!this.isFldModified(field, logName)) {
+			            if (!(field in this.pvt.fldLog[logName])) this.pvt.cntFldModif[logName]++;
+			            this.pvt.fldLog[logName][field] = oldValue;
+			            this.pvt.isModified[logName] = true;
+			        };
 			    };
 				
 			},

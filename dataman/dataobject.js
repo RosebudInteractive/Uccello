@@ -19,18 +19,20 @@ define(
                 this._persFields = {};
                 this._keyField = null;
                 UccelloClass.super.apply(this, [cm, params]);
+                if (params)
+                    this.resetModifFldLog(DATA_LOG_NAME);
             },
 
-            getOldValue: function (fldName) {
+            getOldValue: function (fldName, is_serialized) {
                 var result = undefined;
                 if (!this.isMaster())
                     throw new Error("Can't read \"old value\" of \""
                         + this.className + "." + fldName + "\" in \"Slave\" mode.");
 
                 if (this.isFldModified(fldName, DATA_LOG_NAME))
-                    result = this.getOldFldVal(fldName, DATA_LOG_NAME)
+                    result = this.getOldFldVal(fldName, DATA_LOG_NAME, is_serialized)
                 else
-                    result = this.get(fldName);
+                    result = is_serialized ? this.getSerialized(fldName) : this.get(fldName);
 
                 return result;
             },
@@ -91,8 +93,6 @@ define(
             },
 
             _$local_edit: function (cb) {
-                this.resetModifFldLog(DATA_LOG_NAME);
-
                 var result = { result: "OK" };
                 var state=this._genericSetter("State");
                 if ((state == "Converted") || (state == "Archieved")) {
@@ -108,8 +108,8 @@ define(
             _$local_save: function (cb) {
                 var result = { result: "OK" };
 
-                if ($data && this.countModifiedFields(DATA_LOG_NAME)) {
-                    var data = { key: this._keyField ? this.getOldValue(this._keyField) : null };
+                if ($data && (this.countModifiedFields(DATA_LOG_NAME) > 0)) {
+                    var data = { key: this._keyField ? this.getOldValue(this._keyField, true) : null };
                     var dataObj = { op: "update", model: this.className, data: data };
                     for (var fldName in this._persFields) {
                         if (this.isFldModified(fldName, DATA_LOG_NAME)) {
@@ -130,7 +130,8 @@ define(
                             cb(result);
                         }, 0);
 
-                this.removeModifFldLog(DATA_LOG_NAME);
+                this.resetModifFldLog(DATA_LOG_NAME);
+                //this.removeModifFldLog(DATA_LOG_NAME);
             },
 
             _$local_cancel: function (cb) {

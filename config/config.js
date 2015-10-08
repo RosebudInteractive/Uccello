@@ -156,6 +156,8 @@ define([], function () {
             'DbNavigator': '38aec981-30ae-ec1d-8f8f-5004958b4cfa'
         },
 
+        REMOTE_RESULT: "XXX",
+
         // изменяемые свойства
         controlsPath: '',
         uccelloPath: '',

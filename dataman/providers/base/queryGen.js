@@ -63,6 +63,32 @@ define(
                 return result + ";";
             },
 
+            updateQuery: function (model, vals, predicate) {
+                var query = "UPDATE <%= table %> SET <%= fields%>";
+                var attrs = [];
+                var self = this;
+                var escVals = this._escapeValues(model, vals);
+                _.forEach(escVals, function (value, key) {
+                    attrs.push(value.id + " = " + value.val);
+                });
+                var values = { table: this.escapeId(model.name()), fields: attrs.join(", ") };
+                var result = _.template(query)(values).trim();
+                if (predicate) {
+                    escVals = this._escapeValues(model, predicate);
+                    var conditions = [];
+                    _.forEach(escVals, function (value, key) {
+                        if (model.getField(key)) {
+                            conditions.push("(" + value.id + " = " + value.val + ")");
+                        } else
+                            throw new Error("Predicate error: Unknown field \"" + key + "\" in model \"" + model.name() + "\".");
+                    });
+                    if (conditions.length > 0) {
+                        result += " WHERE " + conditions.join(" AND ");
+                    };
+                };
+                return result + ";";
+            },
+
             insertQuery: function (model, vals) {
                 var query = "INSERT INTO <%= table %> (<%= fields%>) VALUES (<%= values%>)";
                 var escVals = this._escapeValues(model, vals);
