@@ -10,6 +10,14 @@ define(
 
         var METADATA_FILE_NAME = UCCELLO_CONFIG.dataPath + "meta/metaTables.json";
 
+        var iDataObjectEngine = {
+
+            className: "IDataObjectEngine",
+            classGuid: UCCELLO_CONFIG.guids.iDataObjectEngine,
+
+            execBatch: "function"
+        }
+
         var DataObjectEngine = UccelloClass.extend({
 
             init: function (router, controller, construct_holder, rpc, options) {
@@ -77,6 +85,15 @@ define(
                         throw err;
                     });
                 };
+
+                if (rpc && router) {
+                    global.$data = rpc._publ(this, iDataObjectEngine); // Глобальная переменная для доступа к IDataObjectEngine
+                    router.add('iDataObjectEngine', function (data, done) { done({ intf: iDataObjectEngine }); });
+                };
+            },
+
+            getGuid: function () {
+                return UCCELLO_CONFIG.guids.dataObjectEngineGuid;
             },
 
             hasConnection: function () {
@@ -107,6 +124,15 @@ define(
 
             getDB: function () {
                 return this._dataBase;
+            },
+
+            execBatch: function (batch, callback) {
+                console.log("UPDATE: " + JSON.stringify(batch));
+                var result = { result: "OK" };
+                if (callback)
+                    setTimeout(function () {
+                        callback(result);
+                    }, 0);
             },
 
             syncSchema: function (options) {
@@ -339,5 +365,5 @@ define(
         });
 
         return DataObjectEngine;
-	}
+    }
 );

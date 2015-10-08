@@ -7,8 +7,12 @@ define(
 	['./memObjLog', '../system/event', '../system/utils'],
 	function (MemObjLog, Event, Utils) {
 
+	    var DFLT_LOG = "def";
+
 	    var MemProtoObj = UccelloClass.extend({
-				
+
+	        dfltLogName: DFLT_LOG,
+
 			// objType - ссылка на объект-тип
 			// parent - ссылка на объект и имя коллекции либо db, null для корневых  (obj и colname)
 			init: function(objType, parent,flds){
@@ -22,9 +26,11 @@ define(
 				pvt.log = null; 
 				pvt.fldLog = {};
 				pvt.colLog = {};				// лог изменений в дочерних коллекциях
-				pvt.isModified = false;
-				pvt.cntFldModif=0;
-				pvt.cntColModif=0;
+				pvt.isModified = {};
+				pvt.cntFldModif = {};
+				pvt.cntColModif = {};
+				this.resetModifFldLog(this.dfltLogName);
+
 				pvt.$rootId = -1;
 
 				if (!parent.obj) {	// корневой объект
@@ -417,76 +423,92 @@ define(
 				return this.pvt.colName;
 			},
 			
-						
-			isFldModified: function(fldName) {
-				if (fldName in this.pvt.fldLog) 
+			isFldModified: function (fldName, log_name) {
+			    var logName = log_name ? log_name : this.dfltLogName;
+			    if (fldName in this.pvt.fldLog[logName])
 					return true;
 				else
 					return false;
 					
 			},
 			
-			_setModified: function(field,oldValue) {
-				if (!(field in this.pvt.fldLog)) this.pvt.cntFldModif++;
-				this.pvt.fldLog[field] = oldValue;
-				this.pvt.isModified = true;
+			_setModified: function (field, oldValue) {
+			    for (var logName in this.pvt.fldLog) {
+			        if (!(field in this.pvt.fldLog[logName])) this.pvt.cntFldModif[logName]++;
+			        this.pvt.fldLog[logName][field] = oldValue;
+			        this.pvt.isModified[logName] = true;
+			    };
 				
 			},
 			
-			countModifiedFields: function() {
-				return this.pvt.cntFldModif;
+			countModifiedFields: function (log_name) {
+			    var logName = log_name ? log_name : this.dfltLogName;
+			    return this.pvt.cntFldModif[logName] !== undefined ? this.pvt.cntFldModif[logName] : 0;
 			},
 			
-			getOldFldVal: function(fldName) {
-				if (fldName in this.pvt.fldLog) 
-					return this.pvt.fldLog[fldName];
+			getOldFldVal: function (fldName, log_name) {
+			    var logName = log_name ? log_name : this.dfltLogName;
+			    if (fldName in this.pvt.fldLog[logName])
+			        return this.pvt.fldLog[logName][fldName];
 				else
 					return undefined;
 			},
 			
-			resetModifFldLog: function() {
-				this.pvt.fldLog = {};
-				
-				for (var col in this.pvt.colLog) {
-					this.pvt.colLog[col].del = {};
-					this.pvt.colLog[col].add = {};
-					this.pvt.colLog[col].mod = {};
-				}
-				
-				this.pvt.isModified = false;
-				this.pvt.cntColModif = 0;
-				this.pvt.cntFldModif = 0;
+			resetModifFldLog: function (log_name) {
+			    var logName = log_name ? log_name : this.dfltLogName;
+			    this.pvt.fldLog[logName] = {};
+			    this.pvt.colLog[logName] = {};
+
+				this.pvt.isModified[logName] = false;
+				this.pvt.cntColModif[logName] = 0;
+				this.pvt.cntFldModif[logName] = 0;
 				
 			},
 			
-			logColModif: function(op,colName,obj) {
-				if (!(colName in this.pvt.colLog))  {
-					this.pvt.colLog[colName] = {};
-					this.pvt.colLog[colName].del = {};
-					this.pvt.colLog[colName].add = {};
-					this.pvt.colLog[colName].mod = {};
-					this.pvt.cntColModif++;
-				}
-				this.pvt.colLog[colName][op][obj.getGuid()] = obj;
-				this.pvt.isModified = true;
+			removeModifFldLog: function (log_name) {
+			    var logName = log_name ? log_name : this.dfltLogName;
+			    delete this.pvt.fldLog[logName];
+			    delete this.pvt.colLog[logName];
+
+			    delete this.pvt.isModified[logName];
+			    delete this.pvt.cntColModif[logName];
+			    delete this.pvt.cntFldModif[logName];
 			},
 
-			countModifiedCols: function() {
-				return this.pvt.cntColModif;
+			logColModif: function (op, colName, obj) {
+			    for (var logName in this.pvt.colLog) {
+			        var colLog = this.pvt.colLog[logName];
+			        if (!colLog) {
+			            this.resetModifFldLog(logName);
+			            colLog = this.pvt.colLog[logName];
+			        }
+			        if (!(colName in colLog)) {
+			            colLog[colName] = {};
+			            colLog[colName].del = {};
+			            colLog[colName].add = {};
+			            colLog[colName].mod = {};
+			            this.pvt.cntColModif[logName]++;
+			        }
+			        this.pvt.colLog[logName][colName][op][obj.getGuid()] = obj;
+			        this.pvt.isModified[logName] = true;
+			    };
+			},
+
+			countModifiedCols: function (log_name) {
+			    var logName = log_name ? log_name : this.dfltLogName;
+			    return this.pvt.cntColModif[logName] !== undefined ? this.pvt.cntColModif[logName] : 0;
 			},
 			
-			getLogCol: function(colName) {
-				return this.pvt.colLog[colName];
+			getLogCol: function (colName, log_name) {
+			    var logName = log_name ? log_name : this.dfltLogName;
+			    return this.pvt.colLog[logName][colName];
 			},
 			
 			// возвращает true, если данные были изменены
-			isDataModified: function() {
-				return this.pvt.isModified;
-				
+			isDataModified: function (log_name) {
+			    var logName = log_name ? log_name : this.dfltLogName;
+			    return this.pvt.isModified[logName] ? this.pvt.isModified[logName] : false;
 			}
-			
-			
-
 		});
 		return MemProtoObj;
 	}
