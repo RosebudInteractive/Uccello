@@ -76,7 +76,7 @@ define(
 			
 			processDelta: function() {
 
-				if (this.isFldModified("Cursor")) this._setDataObj(this.cursor());
+				if (this.isFldModified("Cursor","pd")) this._setDataObj(this.cursor());
 				
 				this._isProcessed(true);
 	

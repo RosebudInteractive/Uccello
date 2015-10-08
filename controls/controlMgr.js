@@ -187,7 +187,8 @@ define(
 					this.pvt.dataInitFlag[component.getGuid()] = true;
 				}
 				
-				this.processDelta();			
+				this.processDelta();		
+							
 			},
 
             /**
@@ -222,6 +223,7 @@ define(
 				
 				for (var i=0; i<rootGuids.length; i++)
 					this.setToRendered(this.get(rootGuids[i]), false);
+				this.resetModifLog('pd');
 				
 				// TODO обход рекурс
 				for (var g in this.pvt.compByGuid) { 
@@ -283,7 +285,8 @@ define(
                     nargs = [args];
 				
 				this.tranStart();
-				if (f) f.apply(context, nargs);			
+				if (f) f.apply(context, nargs);		
+				this.resetModifLog('pd');					
 				this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });
 				var vc = that.getContext();	
 				this.syncInTran(doneBefore,doneAfter);

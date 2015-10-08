@@ -174,6 +174,7 @@ define(
 				}
 				// TODO!!! TEMPO
 				if (!onServer /*cb*/) { // подписываемся только на клиенте
+					//this.pvt.cm.resetModifLog('pd');
 					this.pvt.cm.event.on({
 						type: 'endTransaction',
 						subscriber: this,
