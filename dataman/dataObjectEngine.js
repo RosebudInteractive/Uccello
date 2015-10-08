@@ -130,7 +130,7 @@ define(
                 console.log("execBatch: " + JSON.stringify(batch));
 
                 var result = {};
-                var res_promise = Promise.resolve(result);
+                var res_promise = Promise.resolve({});
                 var self = this;
 
                 if (this.hasConnection() && (batch.length > 0)) {
