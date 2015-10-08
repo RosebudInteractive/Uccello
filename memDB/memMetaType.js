@@ -350,7 +350,7 @@ define(
             compare: function (val1, val2) {
                 var d1 = this._convert(val1) - 0;
                 var d2 = this._convert(val2) - 0;
-                return UccelloClass.super.apply(this, [val1, val2]);
+                return UccelloClass.super.apply(this, [d1, d2]);
             },
 
             /**

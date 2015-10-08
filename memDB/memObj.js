@@ -220,11 +220,13 @@ define(
 		     *  "Old-value" is represented in log in serialized form.
              *
              * @param {String} fldName Field name
+             * @param {String} [log_name=this.dfltLogName] Log name
              * @return {Object}
              */
-		    getOldFldVal: function (fldName) {
-			    if (fldName in this.pvt.fldLog) {
-			        var old_val = this.pvt.fldLog[fldName];
+			getOldFldVal: function (fldName, log_name) {
+		        var logName = log_name ? log_name : this.dfltLogName;
+		        if (fldName in this.pvt.fldLog[logName]) {
+		            var old_val = this.pvt.fldLog[logName][fldName];
 			        if (old_val !== undefined) {
 			            var objType = this.pvt.objType.pvt;
 			            if (objType.fieldsTable[fldName] === undefined)

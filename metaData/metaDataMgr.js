@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../system/uobject', './metaModel', '../dataman/dataobject', '../dataman/dataRoot'],
-    function (UObject, MetaModel, DataObject, DataRoot) {
+    ['../system/uobject', './metaModel', '../dataman/dataobject', '../dataman/dataRoot', './metaDefs'],
+    function (UObject, MetaModel, DataObject, DataRoot, Meta) {
 
         var REMOTE_RESULT = "XXX";
 
@@ -227,22 +227,28 @@ define(
 
             _getObjConstr: function (model) {
 
+                var fields = model.fields();
                 var header =
                  "return Parent.extend({\n";
 
                 var footer = ",\n\n" +
                     "\t\tinit: function(cm,params){\n" +
-                    "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n" +
-                    "\t\t}\n" +
-                    "\t});";
+                    "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n";
+
+                for (var i = 0; i < fields.length; i++) {
+                    footer += "\t\t\tthis._persFields[\"" + fields[i].get("Name") + "\"] = true;\n";
+                    if(fields[i].get("Flags") & Meta.Field.PrimaryKey)
+                        footer += "\t\t\tthis._keyField = \"" + fields[i].get("Name") + "\";\n";
+                };
+
+                footer += "\t\t}\n" + "\t});";
 
                 var constr = header +
                     "\t\tclassName: \"" + model.get("Name") + "\",\n" +
                     "\t\tclassGuid: \"" + model.get("DataObjectGuid") + "\",\n" +
                     "\t\tmetaFields: [\n";
 
-                var fields = model.fields();
-                for (var i = 0; i < fields.length; i++) {
+                for (i = 0; i < fields.length; i++) {
                     if (i > 0)
                         constr += ",\n";
                     constr += "\t\t\t{fname: \"" + fields[i].get("Name") + "\", ftype: " +
