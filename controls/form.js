@@ -37,8 +37,8 @@ define(
             },
 
             processDelta: function() {
-                if (this.isFldModified("CurrentControl")) {
-                    var oldControl = this.getOldFldVal("CurrentControl"),
+                if (this.isFldModified("CurrentControl","pd")) {
+                    var oldControl = this.getOldFldVal("CurrentControl","pd"),
                         newControl = this.currentControl();
                     if (oldControl)
                         oldControl._isRendered(false);

@@ -33,9 +33,10 @@ define(
 
             processDelta: function() {
                 //var obj = this.getObj();
-                if (this.isFldModified("Value") && ( "onModify" in this)) {
+                if (this.isFldModified("Value","pd") && ( "onModify" in this)) {
                     this.onModify(this.value());
                 }
+				this._isProcessed(true);
             },
 
             type: function (value) {

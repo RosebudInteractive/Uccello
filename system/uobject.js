@@ -21,6 +21,7 @@ define(
             init: function(cm, params){
 
 				if (!("pvt" in this)) this.pvt = {};
+				
 			
 				this._buildMetaInfo(cm);
                 if (params===undefined) return; // в этом режиме только создаем метаинфо
@@ -36,6 +37,8 @@ define(
 					parent = {obj: params.parent, "colName": col};
 
                 UccelloClass.super.apply(this, [cm.getObj(this.classGuid),parent,params.ini]);
+				
+				this.resetModifFldLog('pd');
 
                 this.pvt.controlMgr = cm;
                 this.pvt.isProcessed = false; // признак обработки входящей дельты
@@ -191,6 +194,7 @@ define(
                     this.pvt.isProcessed = false;
                 return this.pvt.isProcessed;
             },
+			
 
             /**
              * сеттер-геттер свойств по умолчанию (дженерик) - используется если нет дополнительной логики в свойствах

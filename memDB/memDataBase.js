@@ -1195,9 +1195,9 @@ define(
             },
 
 
-			resetModifLog: function() {
+			resetModifLog: function(log_name) {
 				for (var g in this.pvt.objs)
-					this.getObj(g).resetModifFldLog();
+					this.getObj(g).resetModifFldLog(log_name);
 			},
 
 			// Транзакции
