@@ -48,10 +48,8 @@ define(
                 }
 
 
-
-
                 // если надо лишь передвинуть курсор
-                if (this.isOnlyCursor(viewset) && !this.editable()) {
+                if (this.isOnlyCursor() && !this.editable()) {
                     viewset.renderCursor.apply(this, [this.dataset().cursor()]);
                     return;
                 }
@@ -63,6 +61,14 @@ define(
                     return;
                 }
 
+                // если передвинули курсор + фокус
+                if (this.isCursorFocus()) {
+                    if (this.getRoot().currentControl() == this)
+                        viewset.setFocus.apply(this);
+                    viewset.renderCursor.apply(this, [this.dataset().cursor()]);
+                    return;
+                }
+
                 // рендерим DOM
                 viewset.render.apply(this, [options]);
             },
@@ -71,7 +77,7 @@ define(
              * Нужно перерендерить только курсор
              * @returns {boolean}
              */
-            isOnlyCursor: function(viewset) {
+            isOnlyCursor: function() {
                 if (this.dataset()) {
                     var ds = this.dataset();
 					if  (!ds.isDataSourceModified() &&
@@ -102,6 +108,23 @@ define(
                 }
                 else return false;
             },
+
+              /**
+             * Нужно перерендерить  курсор+фокус
+             * @returns {boolean}
+             */
+            isCursorFocus: function() {
+                  var ds = this.dataset();
+                  if (ds) {
+					if  (!ds.isDataSourceModified() && !this.isDataModified())
+                        return true;
+                    else
+                        return false;
+                }
+                else return false;
+            },
+
+
 
             editable: function(value) {
                 return this._genericSetter("Editable", value);
