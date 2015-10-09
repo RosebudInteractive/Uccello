@@ -236,18 +236,13 @@ define(
             /**
              * Установить фокус на контрол
              */
-            setFocused: function(noEvent){
+            setFocused: function(){
                 var form = this.getRoot();
                 if (form && "currentControl" in form) {
-                    var cm = this.getControlMgr();
-                    if (noEvent)
-                        form.currentControl(this);
-                    else  {
-                        cm.userEventHandler(this, function () {
-                            form.currentControl(this);
-                        });
-                    }
+                    form.currentControl(this);
+                    return true;
                 }
+                return false;
             }
 
 
