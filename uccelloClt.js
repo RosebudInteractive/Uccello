@@ -266,8 +266,8 @@ define(
 
                 function cbfinal2(result2){
                     result2 = result2 && result2.guids ? result2.guids : result2;
-                    // that.getContext().renderForms(result2, false);
-					that.getContext().allDataInit();
+                    // that.getContext().xxxrenderForms(result2, false);
+					//that.getContext().xxxallDataInit();
                     if (cbfinal)
                         cbfinal(result2);
                 }

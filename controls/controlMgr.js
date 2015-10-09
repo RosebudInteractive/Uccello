@@ -163,7 +163,7 @@ define(
 			},
 			
 			
-			processDelta: function() { // ВРЕМЕННЫЙ ВАРИАНТ
+			processDelta: function() { 
 				// TODO оптимизировать: пробегать только те контролы, в которых имплементирован processDelta
 				for (var g in this.pvt.compByGuid) {
 					var c = this.pvt.compByGuid[g];
@@ -174,17 +174,16 @@ define(
 			},
 			
 			allDataInit: function(component) {
-				if (!this.pvt.subsInitFlag[component.getGuid()]) {
+				var cg = component.getGuid();
+				if (!this.pvt.subsInitFlag[cg]) {
 					this.subsInit(component);  // если не выполнена постинициализация, то запустить
-					this.pvt.subsInitFlag[component.getGuid()] = true;
+					this.pvt.subsInitFlag[cg] = true;
 				}
-				if (!this.pvt.dataInitFlag[component.getGuid()]) {
+				if (!this.pvt.dataInitFlag[cg]) {
 					this.tranStart();
-					//this.remoteCallTranStart(true);
 					this.dataInit(component);
 					this.tranCommit();
-					//this.remoteCallTranCommit();
-					this.pvt.dataInitFlag[component.getGuid()] = true;
+					this.pvt.dataInitFlag[cg] = true;
 				}
 				
 				this.processDelta();		
@@ -263,21 +262,18 @@ define(
 			 * @param nots {boolean) true - не стартовать транзакцию дб
              */
             userEventHandler: function(context, f, args) {
+				function doBefore() {	
+					if (vc) vc.allDataInit();
+				}		
+				function doAfter() {
+					if (!that.inTran() && vc) vc.renderAll();
+				}
 				
 				if (this.inTran()) {
 					console.log("%c ALREADY IN TRANSACTION! "+this.getCurTranGuid(),"color: red");
 					return;
-					}
-				
-				function doneBefore() {	
-					if (vc) vc.allDataInit();
-				}		
-				function doneAfter() {
-					if (!that.inTran() && vc) vc.renderAll();
-				}
-				
-                var nargs = [];
-				var that = this;
+				}				
+				var vc = this.getContext(), nargs = [], that = this;
 				if (args)
 				  if (Array.isArray(args))
 				    nargs = args;
@@ -287,9 +283,8 @@ define(
 				this.tranStart();
 				if (f) f.apply(context, nargs);		
 				this.resetModifLog('pd');					
-				this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });
-				var vc = that.getContext();	
-				this.syncInTran(doneBefore,doneAfter);
+				this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });	
+				this.syncInTran(doBefore,doAfter);
 				this.tranCommit();
             },
 
