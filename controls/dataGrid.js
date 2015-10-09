@@ -55,7 +55,10 @@ define(
 
                 // если только фокус
                 var ds = this.dataset();
-                if  (ds && !ds.isDataSourceModified() && !ds.isFldModified("Cursor") && !this.isDataModified()) {
+                if  (viewset.isCreated.apply(this) && ds &&
+                    !ds.isDataSourceModified() &&
+                    !ds.isFldModified("Cursor") &&
+                    !this.isDataModified()) {
                     if (this.getRoot().currentControl() == this)
                         viewset.setFocus.apply(this);
                     return;
