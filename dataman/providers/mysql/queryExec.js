@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../base/queryExec'],
-    function (Base) {
+    ['../base/queryExec', 'lodash'],
+    function (Base, _) {
 
         var MySqlQueryExec = Base.extend({
 
@@ -33,7 +33,19 @@ define(
             },
 
             _formatResults: function (results) {
-                return results;
+                var res;
+                if (_.isArray(results)) // Результат SELECT ?
+                    res = results
+                else {
+                    res = {
+                        affectedRows: results.affectedRows,
+                        changedRows: results.changedRows,
+                        insertId: results.insertId,
+                        message: results.message,
+                        warningCount: results.warningCount
+                    };
+                };
+                return res;
             },
 
         });

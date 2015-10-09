@@ -13,6 +13,7 @@ define(
             metaFields: [{fname:"dbgName",ftype:"string"}],
 
             init: function(cm,params){
+                this._keyField = null;
                 UccelloClass.super.apply(this, [cm, params]);
             },
 
@@ -30,18 +31,43 @@ define(
             _$local_newObject: function (flds, cb) {
 
                 var db = this.getDB();
-                var objGuid = this.getCol("DataElements").getColType().getGuid();
-                var cm = this.getControlMgr();
-                var constr = cm.getContext().getConstructorHolder().getComponent(objGuid).constr;
-                var params = { parent: this, colName: "DataElements", ini: flds };
-                var obj = new constr(cm, params);
+                var objType = this.getCol("DataElements").getColType();
+                var self = this;
 
-                if (cb)
+                function afterObjCreate(result) {
+                    var localResult = result;
+                    if (localResult.result === "OK") {
+                        var objGuid = objType.getGuid();
+                        var cm = self.getControlMgr();
+                        var constr = cm.getContext().getConstructorHolder().getComponent(objGuid).constr;
+                        if (self._keyField && result.detail && (result.detail.length === 1)
+                            && (result.detail[0].insertId !== undefined))
+                            flds.fields[self._keyField] = result.detail[0].insertId;
+                        var params = { parent: self, colName: "DataElements", ini: flds };
+                        var obj = new constr(cm, params);
+                        localResult.newObject = obj.getGuid();
+                    };
+                    if (cb)
+                        setTimeout(function () {
+                            cb(localResult);
+                        }, 0);
+                };
+
+                if ($data) {
+                    var dataObj = {
+                        op: "insert",
+                        model: objType.get("typeName"),
+                        data: { fields: flds.fields ? flds.fields : {} }
+                    };
+                    var batch = [];
+                    batch.push(dataObj);
+                    $data.execBatch(batch, afterObjCreate);
+                }
+                else {
                     setTimeout(function () {
-                        cb({ result: "OK", newObject: obj.getGuid() });
+                        afterObjCreate({ result: "OK" });
                     }, 0);
-
-                return obj.getGuid();
+                };
             }
         });
         return DataRoot;

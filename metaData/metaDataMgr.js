@@ -275,7 +275,12 @@ define(
                     "\t\tmetaFields: [],\n" +
                     "\n" +
                     "\t\tinit: function(cm,params){\n" +
-                    "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n" +
+                    "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n";
+
+                if (model.getPrimaryKey())
+                    constr += "\t\t\tthis._keyField = \"" + model.getPrimaryKey().name() + "\";\n";
+
+                constr +=
                     "\t\t\tif(params)\n" +
                     "\t\t\t\tcm.registerDataRoot(\"" + model.get("Name") + "\", this);\n" +
                     "\t\t}\n" +

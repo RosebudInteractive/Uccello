@@ -143,6 +143,11 @@ define(
 
                         switch (val.op) {
 
+                            case "insert":
+
+                                promise = self._query.insert(model, val.data.fields);
+                                break;
+
                             case "update":
 
                                 if ((!val.data) || (!val.data.key))
