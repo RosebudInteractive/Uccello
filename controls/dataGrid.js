@@ -47,18 +47,17 @@ define(
                     }
                 }
 
+
+
+
                 // если надо лишь передвинуть курсор
-                if (this.isOnlyCursor() && !this.editable()) {
+                if (this.isOnlyCursor(viewset) && !this.editable()) {
                     viewset.renderCursor.apply(this, [this.dataset().cursor()]);
                     return;
                 }
 
                 // если только фокус
-                var ds = this.dataset();
-                if  (viewset.isCreated.apply(this) && ds &&
-                    !ds.isDataSourceModified() &&
-                    !ds.isFldModified("Cursor") &&
-                    !this.isDataModified()) {
+                if  (this.isOnlyFocus()) {
                     if (this.getRoot().currentControl() == this)
                         viewset.setFocus.apply(this);
                     return;
@@ -72,10 +71,31 @@ define(
              * Нужно перерендерить только курсор
              * @returns {boolean}
              */
-            isOnlyCursor: function() {
+            isOnlyCursor: function(viewset) {
                 if (this.dataset()) {
                     var ds = this.dataset();
-					if  ((!ds.isDataSourceModified()) && (ds.isFldModified("Cursor")) && (!this.isDataModified()))
+					if  (!ds.isDataSourceModified() &&
+                         ds.isFldModified("Cursor") &&
+                         !this.isDataModified() &&
+                         !this.getRoot().isFldModified("CurrentControl"))
+                        return true;
+                    else
+                        return false;
+                }
+                else return false;
+            },
+
+            /**
+             * Нужно перерендерить только фокус
+             * @returns {boolean}
+             */
+            isOnlyFocus: function() {
+                var ds = this.dataset();
+                if (ds) {
+					if  (!ds.isDataSourceModified() &&
+                        !ds.isFldModified("Cursor") &&
+                        !this.isDataModified() &&
+                        this.getRoot().isFldModified("CurrentControl"))
                         return true;
                     else
                         return false;
