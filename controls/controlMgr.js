@@ -28,6 +28,7 @@ define(
 				this.pvt.rootGuids = {};
 				this.pvt.vc = vc;
 				this.pvt.proxySrv = proxySrv;
+				this.pvt.incDeltaFlag = 0;
 				this._isNode = typeof exports !== 'undefined' && this.exports !== exports;
 
 				if (socket)
@@ -164,6 +165,8 @@ define(
 			
 			
 			processDelta: function() { 
+				if (this.incDeltaFlag() != 1) // если не было входящих дельт, то не делаем обработку
+					return;
 				// TODO оптимизировать: пробегать только те контролы, в которых имплементирован processDelta
 				for (var g in this.pvt.compByGuid) {
 					var c = this.pvt.compByGuid[g];
@@ -171,6 +174,7 @@ define(
 				}
 				// сбросить признак isProcessed
 				for (g in this.pvt.compByGuid) this.pvt.compByGuid[g]._isProcessed(false);
+				this.incDeltaFlag(2);
 			},
 			
 			allDataInit: function(component) {
@@ -186,8 +190,7 @@ define(
 					this.pvt.dataInitFlag[cg] = true;
 				}
 				
-				this.processDelta();		
-							
+				this.processDelta();						
 			},
 
             /**
@@ -263,7 +266,7 @@ define(
              */
             userEventHandler: function(context, f, args) {
 				function doBefore() {	
-					if (vc) vc.allDataInit();
+					if (that.incDeltaFlag()<2 && vc) vc.allDataInit();
 				}		
 				function doAfter() {
 					if (!that.inTran() && vc) vc.renderAll();
@@ -404,6 +407,12 @@ define(
 					params.subDbGuid = this.getGuid();
 					this.remoteCallPlus(undefined,'getRoots', [rootGuids, params],cb);
 				}
+			},
+			
+			incDeltaFlag: function(flag) { // 0 = init, 1 = delta, 2 = no delta
+				if (flag === undefined) return this.pvt.incDeltaFlag;
+				this.pvt.incDeltaFlag = flag;
+				return this.pvt.incDeltaFlag;
 			}
 			/*
 			remoteCallTranStart: function(dbTran) {
@@ -444,7 +453,7 @@ define(
 				
 				function icb(result) {				
 					var vc = that.getContext();
-					if (vc) vc.allDataInit();
+					if (vc) vc.XXXallDataInit();
 					function i2cb() {
 						for (var i=0; i<result.cbres.length; i++) 
 							if (cbs[i]) cbs[i](result.cbres[i]);

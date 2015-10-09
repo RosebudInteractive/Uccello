@@ -58,24 +58,23 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
                 },
                 router: function(data){
                     //console.log('сообщение с сервера:', data);
-                    var result = {}, args = {}, db;
+                    var result = {}, args = {};
                     data = 'result$' in data ? data.result$ : data;
-
-
                     if (data.args) {
+						var  contr = that.getDB().getController(), db = contr.getDB(data.args.dbGuid);
                         switch (data.args.action) {
                             case 'error': // ошибки
                                 if (DEBUG)
                                     console.log(data.args.error);
                                 break;
-                            case 'sendDelta':
+                            case 'sendDelta': // получение дельт на клиенте
 								args.aparams = [data.args.dbGuid, data.args.srcDbGuid, data.args.delta];
-								db = that.getDB().getController().getDB(data.args.dbGuid);
 								args.func = "applyDeltas";
-								db.remoteCallExec(that.getDB().getController(),args,data.args.srcDbGuid,data.args.trGuid, null);								
+								db.remoteCallExec(contr,args,data.args.srcDbGuid,data.args.trGuid, null);
+								db.incDeltaFlag(1); // выставить флаг дельт, чтобы запустить обработку processDelta если были входящие дельты
                                 break;
-							case 'endTran':
-                                db = that.getDB().getController().getDB(data.args.dbGuid);
+							case 'endTran': // конец транзакции на клиенте
+                                //db = contr.getDB(data.args.dbGuid);
 								args.func = "endTran";
 								db.remoteCallExec(null,args,undefined,data.args.trGuid, null);														
 								break;
