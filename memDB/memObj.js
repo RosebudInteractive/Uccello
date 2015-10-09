@@ -254,10 +254,7 @@ define(
 			},
 			
 			getFieldType: function (fld) {
-			    var fname = fld;
-			    if (typeof fname === "number")
-			        fname = this.pvt.objType.pvt.fieldsArr[fld];
-			    return this.pvt.objType.pvt.fieldsTable[fname].ftype;
+			    return this.pvt.objType.getFieldType(fld);
 			},
 			
 			countFields: function() {

@@ -54,6 +54,10 @@ define(
                         subscriber: this,
                         callback: this._onDeleteModel
                     });
+
+                    new DataObject(this.getDB());
+                    this._dataObjectType = this.getDB().getObj(DataObject.prototype.classGuid);
+
                 };
             },
 
@@ -494,22 +498,6 @@ define(
                 model.handlers.push(hdesc);
                 hdesc.obj.on(hdesc.handler);
 
-                //model.on({
-                //    type: 'addLink',
-                //    subscriber: this,
-                //    callback: this._addLink
-                //}).on({
-                //    type: 'removeLink',
-                //    subscriber: this,
-                //    callback: this._removeLink
-                //}).on({
-                //    type: 'modelModified',
-                //    subscriber: this,
-                //    callback: function (args) {
-                //        self._isConstrReady = false;
-                //    }
-                //});
-
                 hdesc = {
                     obj: model.event,
                     handler: {
@@ -553,24 +541,6 @@ define(
                 };
                 model.handlers.push(hdesc);
                 hdesc.obj.on(hdesc.handler);
-
-                //model.event.on({
-                //    type: 'mod%Name',
-                //    subscriber: this,
-                //    callback: this._getOnChangeModelReadOnlyProp(model, "Name")
-                //}).on({
-                //    type: 'mod%DataObjectGuid',
-                //    subscriber: this,
-                //    callback: this._getOnChangeModelReadOnlyProp(model, "DataObjectGuid")
-                //}).on({
-                //    type: 'mod%DataRootName',
-                //    subscriber: this,
-                //    callback: this._getOnChangeModelReadOnlyProp(model, "DataRootName")
-                //}).on({
-                //    type: 'mod%DataRootGuid',
-                //    subscriber: this,
-                //    callback: this._getOnChangeModelReadOnlyProp(model, "DataRootGuid")
-                //});
             },
 
             _onDeleteModel: function (args) {

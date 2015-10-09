@@ -53,6 +53,8 @@ define(
                         subscriber: this,
                         callback: this._onDeleteField
                     });
+
+                    this._dataObjectType = this.getParent()._dataObjectType;
                 };
             },
 
@@ -312,23 +314,39 @@ define(
                     });
                 };
 
-                field.event.on({
+                field.handlers = [];
+
+                var handler = {
                     type: 'mod%Name',
                     subscriber: this,
                     callback: this._getOnFieldNameChangeProc(field)
-                }).on({
+                };
+                field.event.on(handler);
+                field.handlers.push(handler);
+
+                handler = {
                     type: 'mod%FieldType',
                     subscriber: this,
                     callback: this._getOnFieldTypeChangeProc(field)
-                }).on({
+                };
+                field.event.on(handler);
+                field.handlers.push(handler);
+
+                handler = {
                     type: 'mod%Order',
                     subscriber: this,
                     callback: this._getOnFieldOrderChangeProc(field)
-                }).on({
+                };
+                field.event.on(handler);
+                field.handlers.push(handler);
+
+                handler = {
                     type: 'mod%Flags',
                     subscriber: this,
                     callback: this._getOnFieldFlagsChangeProc(field)
-                });
+                };
+                field.event.on(handler);
+                field.handlers.push(handler);
             },
 
             _onDeleteField: function (args) {
@@ -357,6 +375,8 @@ define(
                     });
                 };
 
+                for (var i = 0; i < field.handlers.length; i++)
+                    field.event.off(field.handlers[i]);
             }
         });
 

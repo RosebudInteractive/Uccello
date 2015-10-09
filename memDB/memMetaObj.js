@@ -211,6 +211,17 @@ define(
 			        this._finalizeModif(field, oldVal, newVal);
 			},
 
+			getFieldType: function (fld) {
+			    if (this.pvt.colsTypes === undefined)
+			        this._bldElemTable();
+			    var result = null;
+			    var fname = fld;
+			    if (typeof fname === "number")
+			        fname = this.pvt.fieldsArr[fld];
+			    if (fname && this.pvt.fieldsTable[fname])
+			        result = this.pvt.fieldsTable[fname].ftype;
+			    return result;
+			},
 
 			// КОЛЛЕКЦИИ
 					

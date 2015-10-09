@@ -12,7 +12,10 @@ define(
             },
             Field: {
                 PrimaryKey: 1,
-                AutoIncrement: 2
+                AutoIncrement: 2,
+                Hidden: 4,
+                Internal: 8,
+                System: 16
             }
         };
     }
