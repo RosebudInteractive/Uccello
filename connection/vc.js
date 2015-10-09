@@ -174,7 +174,6 @@ define(
 				}
 				// TODO!!! TEMPO
 				if (!onServer /*cb*/) { // подписываемся только на клиенте
-					//this.pvt.cm.resetModifLog('pd');
 					this.pvt.cm.event.on({
 						type: 'endTransaction',
 						subscriber: this,
@@ -224,13 +223,14 @@ define(
 			},
 
 			// меняет "видимость" у активного контекста, если он включен, если выключен ничего не делает
+			/*
 			setVisible: function(renderRoot) {
 				if (!this.isOn()) return false;
 				this.pvt.renderRoot = renderRoot;
 				if (renderRoot === undefined) this.pvt.isVisible = true;
 				else this.pvt.isVisible = false;
 				return true;
-			},
+			},*/
 
 			/**
 			 * Обработчик изменения параметра

@@ -266,12 +266,10 @@ define(
 
                 // находим рутовый объект к которому должна быть применена дельта
                 var db  = this.getDB(dbGuid);
-				var cdelta = delta;
-
-				if (cdelta.constructors) {
+				if (delta.constructors) {
 				    // Пришли конструкторы новых типов
 				    console.log("Constructors have been received with DELTA!");
-				    var constr = cdelta.constructors;
+				    var constr = delta.constructors;
 				    var constructHolder = (constr.length > 0) && db.getContext() ? db.getContext().getConstructorHolder() : null;
 				    if (constructHolder) {
 				        for (var i = 0; i < constr.length; i++) {
@@ -281,12 +279,12 @@ define(
 
 				} else {
 				    // VER проверка на применимость дельт				
-				    var ro = db.getObj(cdelta.rootGuid);
+				    var ro = db.getObj(delta.rootGuid);
 				    if (ro) {
 				        var lval = ro.getRootVersion("valid");
 						var lsent = ro.getRootVersion("sent");
 				        var ldraft = ro.getRootVersion();
-				        var dver = cdelta.ver;
+				        var dver = delta.ver;
 				        if (db.isMaster()) { // мы в мастер-базе (на сервере или на клиенте в клиентском контексте)
 				            if (lval > dver) { // на сервере подтвержденная версия не может быть больше пришедшей
 
@@ -313,11 +311,11 @@ define(
 				    }
 
 
-				    if (("items" in cdelta) && cdelta.items.length > 0) {
-				        var root = db.getRoot(cdelta.rootGuid);
+				    if (("items" in delta) && delta.items.length > 0) {
+				        var root = db.getRoot(delta.rootGuid);
 
-				        if (cdelta.items[0].newRoot)
-				            var rootObj = db.deserialize(cdelta.items[0].newRoot, {}, db.getDefaultCompCallback());
+				        if (delta.items[0].newRoot)
+				            var rootObj = db.deserialize(delta.items[0].newRoot, {}, db.getDefaultCompCallback());
 				        else {
 				            if (!root) {
 				                var msg = "Missing ROOT:\n" + JSON.stringify(delta);
@@ -327,19 +325,19 @@ define(
 				            rootObj = root.obj;
 				        };
 
-				        rootObj.getLog().applyDelta(cdelta);
+				        rootObj.getLog().applyDelta(delta);
 
 				        // Если это мета-информация, то необходимо ее перестроить,
                         //   поскольку могли добавиться новые типы
-				        if (cdelta.rootGuid === UCCELLO_CONFIG.guids.metaRootGuid)
+				        if (delta.rootGuid === UCCELLO_CONFIG.guids.metaRootGuid)
 				            db._buildMetaTables();
 				    }
 
-				    if (cdelta.rootGuid) 
-				        db.getObj(cdelta.rootGuid).setRootVersion("sent", cdelta.ver);
+				    if (delta.rootGuid) 
+				        db.getObj(delta.rootGuid).setRootVersion("sent", delta.ver);
 				};
 
-				this.propagateDeltas(dbGuid,srcDbGuid,[cdelta]);
+				this.propagateDeltas(dbGuid,srcDbGuid,[delta]);
 		
 				if (done) done();
 						

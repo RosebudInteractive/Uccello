@@ -1379,7 +1379,7 @@ define(
 						that.syncInTran(doBefore,doAfter); 
 					}
 					if (tran) that.tranCommit();					
-					if (doAfter && !that.inTran()) doAfter(); // постобработка (рендеинг) только если вышли из транзакции
+					if (doAfter && !that.inTran()) doAfter(); // постобработка (рендеринг) только если вышли из транзакции
 				}
 				
 				if (!rcargs.length) return;
