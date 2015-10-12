@@ -62,7 +62,25 @@ define(
                 return this._primaryKey;
             },
 
+            addInternalField: function (name, flags, order) {
+                if (this._dataObjectType) {
+                    var field_type = this._dataObjectType.getFieldType(name);
+                    if (field_type) {
+                        var new_flags = flags ? ((~(Meta.Field.System)) & (flags | Meta.Field.Internal)) : Meta.Field.Internal;
+                        return this._addField(name, field_type, new_flags, order, true);
+                    }
+                    else
+                        throw new Error("Can't find internal field \"" + name + "\".");
+                }
+                else
+                    throw new Error("addInternalField::[_dataObjectType] is undefined!!!");
+            },
+
             addField: function (name, field_type, flags, order) {
+                return this._addField(name, field_type, flags, order, false);
+            },
+
+            _addField: function (name, field_type, flags, order, is_internal) {
                 if (name && field_type) {
                     var params = {
                         ini: {
@@ -70,6 +88,7 @@ define(
                                 Name: name,
                                 FieldType: field_type,
                                 Order: (typeof order === "number") ? order : this._fields.length,
+                                Flags: is_internal ? Meta.Field.Internal : 0,
                             }
                         },
                         parent: this,
@@ -124,11 +143,11 @@ define(
 
             _getOnFieldFlagsChangeProc: function (fieldObj) {
                 var self = this;
-                var oldFlags = fieldObj._genericSetter("Flags");
+                var oldFlags = fieldObj.flags();
 
                 return function (args) {
-                    var fieldName = fieldObj._genericSetter("Name");
-                    var flags = fieldObj._genericSetter("Flags");
+                    var fieldName = fieldObj.name();
+                    var flags = fieldObj.flags();
 
                     if ((flags & Meta.Field.PrimaryKey) !== 0) {
 
@@ -138,11 +157,11 @@ define(
                             throw new Error("Primary key \"" + fieldName + "\" is already defined as \"" + self._primaryKey.name() + "\".");
                         };
                         self._primaryKey = fieldObj;
-                        var fieldType = fieldObj._genericSetter("FieldType");
+                        var fieldType = fieldObj.fieldType();
                         if (fieldType.allowNull()) {
                             var newType = fieldType.serialize();
                             newType.allowNull = false;
-                            fieldObj._genericSetter("FieldType", newType);
+                            fieldObj.fieldType(newType);
                         };
                     };
 
@@ -158,11 +177,11 @@ define(
 
             _getOnFieldOrderChangeProc: function (fieldObj) {
                 var self = this;
-                var oldOrder = fieldObj._genericSetter("Order");
+                var oldOrder = fieldObj.order();
 
                 return function (args) {
-                    var fieldName = fieldObj._genericSetter("Name");
-                    var order = fieldObj._genericSetter("Order");
+                    var fieldName = fieldObj.name();
+                    var order = fieldObj.order();
 
                     if ((order < 0) || (order >= self._fields.length)) {
                         fieldObj.set("Order", oldOrder);
@@ -184,12 +203,12 @@ define(
 
             _getOnFieldTypeChangeProc: function (fieldObj) {
                 var self = this;
-                var oldFieldType = fieldObj._genericSetter("FieldType");
+                var oldFieldType = fieldObj.fieldType();
 
                 return function (args) {
-                    var fieldName = fieldObj._genericSetter("Name");
-                    var fieldType = fieldObj._genericSetter("FieldType");
-                    var flags = fieldObj._genericSetter("Flags");
+                    var fieldName = fieldObj.name();
+                    var fieldType = fieldObj.fieldType();
+                    var flags = fieldObj.flags();
                     var isFired = false;
 
                     if (((flags & Meta.Field.PrimaryKey) !== 0) && fieldType.allowNull()) {
@@ -226,16 +245,16 @@ define(
 
             _getOnFieldNameChangeProc: function (fieldObj) {
                 var self = this;
-                var oldFieldName = fieldObj._genericSetter("Name");
+                var oldFieldName = fieldObj.name();
 
                 return function (args) {
-                    var fieldType = fieldObj._genericSetter("FieldType");
-                    var fieldName = fieldObj._genericSetter("Name");
+                    var fieldType = fieldObj.fieldType();
+                    var fieldName = fieldObj.name();
 
                     if (fieldName !== oldFieldName) {
 
                         if (self._fieldsByName[fieldName] !== undefined) {
-                            fieldObj._genericSetter("Name", oldFieldName);
+                            fieldObj.set("Name", oldFieldName);
                             throw new Error("Can't change field name from \"" +
                                 oldFieldName + "\" to \"" + fieldName + "\". Field \"" + fieldName + "\" is already defined.");
                         };
@@ -304,7 +323,7 @@ define(
                 if (isNewOrder)
                     field.set("Order", order);
 
-                var fieldType = field._genericSetter("FieldType");
+                var fieldType = field.fieldType();
                 if (fieldType instanceof MemMetaType.DataRefType) {
                     this.fire({
                         type: "addLink",
@@ -366,7 +385,7 @@ define(
                 if (this._primaryKey === field)
                     this._primaryKey = null;
 
-                var fieldType = field._genericSetter("FieldType");
+                var fieldType = field.fieldType();
                 if (fieldType instanceof MemMetaType.DataRefType) {
                     this.fire({
                         type: "removeLink",

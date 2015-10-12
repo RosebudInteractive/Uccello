@@ -205,10 +205,10 @@ define(
 
                     for (var i = 0; i < names.length; i++) {
                         var model = this._modelsByName[names[i]];
-                        var name = model.get("Name");
-                        var guid = model.get("DataObjectGuid");
-                        var rootName = model.get("DataRootName");
-                        var rootGuid = model.get("DataRootGuid");
+                        var name = model.name();
+                        var guid = model.dataObjectGuid();
+                        var rootName = model.dataRootName();
+                        var rootGuid = model.dataRootGuid();
                         var objConstr = { constr: this._getObjConstr(model), objGuid: null, rootGuid: rootGuid };
                         var rootConstr = { constr: this._getRootConstr(model), objGuid: guid, rootGuid: null };
                         this._constructors.byGuid[guid] = objConstr;
@@ -252,19 +252,27 @@ define(
                     "\t\tclassGuid: \"" + model.get("DataObjectGuid") + "\",\n" +
                     "\t\tmetaFields: [\n";
 
+                var is_first = true;
                 for (i = 0; i < fields.length; i++) {
-                    if (i > 0)
-                        constr += ",\n";
-                    constr += "\t\t\t{fname: \"" + fields[i].get("Name") + "\", ftype: " +
-                        JSON.stringify(fields[i].get("FieldType").serialize()) + "}";
+                    if ((fields[i].flags() & Meta.Field.Internal) === 0) {
+                        if (!is_first)
+                            constr += ",\n";
+                        is_first = false;
+                        constr += "\t\t\t{fname: \"" + fields[i].get("Name") + "\", ftype: " +
+                            JSON.stringify(fields[i].get("FieldType").serialize()) + "}";
+                    }
                 };
                 constr += "\n\t\t],\n";
 
+                is_first = true;
                 for (var i = 0; i < fields.length; i++) {
-                    if (i > 0)
-                        constr += ",\n";
-                    constr += "\n\t\t" + this._genGetterName(fields[i].get("Name")) + ": function (value) {\n" +
-                        "\t\t\treturn this._genericSetter(\"" + fields[i].get("Name") + "\", value);\n\t\t}";
+                    if ((fields[i].flags() & Meta.Field.Internal) === 0) {
+                        if (!is_first)
+                            constr += ",\n";
+                        is_first = false;
+                        constr += "\n\t\t" + this._genGetterName(fields[i].get("Name")) + ": function (value) {\n" +
+                            "\t\t\treturn this._genericSetter(\"" + fields[i].get("Name") + "\", value);\n\t\t}";
+                    };
                 };
 
                 return { parentGuid: UCCELLO_CONFIG.classGuids.DataObject, constrBody: constr + footer };
@@ -332,7 +340,7 @@ define(
                 this._isConstrReady = false;
 
                 var model = args.target;
-                var modelName = model._genericSetter("Name");
+                var modelName = model.name();
                 var dstName = args.link.model();
                 var fieldName = args.fieldName;
                 var link = {
@@ -359,15 +367,15 @@ define(
                 this._isConstrReady = false;
 
                 var model = args.target;
-                var modelName = model._genericSetter("Name");
+                var modelName = model.name();
                 var fieldName = args.fieldName;
                 var link = this._linksTo[modelName] && this._linksTo[modelName][fieldName] ? this._linksTo[modelName][fieldName] : null;
                 if (link) {
                     if (link.dst)
-                        delete this._linksFrom[link.dst._genericSetter("Name")][modelName + "_" + fieldName];
+                        delete this._linksFrom[link.dst.name()][modelName + "_" + fieldName];
                     else
                         delete this._linksUnresolved[modelName + "_" + fieldName];
-                    delete this._linksTo[link.src._genericSetter("Name")][fieldName];
+                    delete this._linksTo[link.src.name()][fieldName];
                 };
             },
 
@@ -382,7 +390,7 @@ define(
                         link.dst = model;
                         if (!linksFrom)
                             linksFrom = this._linksFrom[name] = {};
-                        linksFrom[link.src._genericSetter("Name") + "_" + link.field] = link;
+                        linksFrom[link.src.name() + "_" + link.field] = link;
                         delete this._linksUnresolved[links[i]];
                     };
                 };
@@ -398,7 +406,7 @@ define(
                     for (var i = 0; i < links.length; i++) {
                         var link = linksTo[links[i]];
                         if (link.dst) {
-                            var linksFrom = this._linksFrom[link.dst._genericSetter("Name")];
+                            var linksFrom = this._linksFrom[link.dst.name()];
                             if (linksFrom)
                                 delete linksFrom[name + "_" + links[i]];
                         } else
@@ -413,7 +421,7 @@ define(
                     for (var i = 0; i < links.length; i++) {
                         var link = linksFrom[links[i]];
                         link.dst = null;
-                        this._linksUnresolved[link.src._genericSetter("Name") + "_" + link.field] = link;
+                        this._linksUnresolved[link.src.name() + "_" + link.field] = link;
                     };
                     delete this._linksFrom[name];
                 };
@@ -424,11 +432,11 @@ define(
 
                 var model = args.obj;
 
-                var name = model.get("Name");
-                var guid = model.get("DataObjectGuid");
+                var name = model.name();
+                var guid = model.dataObjectGuid();
 
-                var root_name = model.get("DataRootName");
-                var root_guid = model.get("DataRootGuid");
+                var root_name = model.dataRootName();
+                var root_guid = model.dataRootGuid();
 
                 if ((this._modelsByName[name] !== undefined)
                         || (this._modelsByRootName[name] !== undefined)) {

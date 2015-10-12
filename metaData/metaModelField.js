@@ -18,6 +18,8 @@ define(
             ],
 
             name: function (value) {
+                if (value && ((this.flags() & (Meta.Field.Internal | Meta.Field.System)) !== 0))
+                    throw new Error("Can't change name of \"Internal\" or \"System\" field.");
                 return this._genericSetter("Name", value);
             },
 
@@ -25,6 +27,9 @@ define(
                 var oldVal = this._genericSetter("FieldType");
                 var result = oldVal;
                 if (value) {
+                    if ((this.flags() & (Meta.Field.Internal | Meta.Field.System)) !== 0)
+                        throw new Error("Can't change type of \"Internal\" or \"System\" field.");
+
                     result = this._genericSetter("FieldType", value);
                     var err = {};
                     if (!this._checkFlags(this.flags(), result, err)) {
@@ -40,13 +45,13 @@ define(
             },
 
             flags: function (value) {
+                if (value) {
+                    var type = this._genericSetter("FieldType");
+                    var err = {};
 
-                var type = this._genericSetter("FieldType");
-                var err = {};
-
-                if(!this._checkFlags(value,type,err))
-                    throw new Error(err.message);
-
+                    if (!this._checkFlags(value, type, err))
+                        throw new Error(err.message);
+                };
                 return this._genericSetter("Flags", value);
             },
 
@@ -57,8 +62,14 @@ define(
             _checkFlags: function (flags, type, err) {
                 var result = true;
                 var msg = "";
-
-                if (((flags & Meta.Field.AutoIncrement) !== 0) && (!type.canAutoIncrement)) {
+                var old_flags = this._genericSetter("Flags");
+                if ((flags & (Meta.Field.Internal | Meta.Field.System)) !==
+                    (old_flags & (Meta.Field.Internal | Meta.Field.System))) {
+                    var field_name = this.name();
+                    msg = "\"Internal\" or \"System\" flags of field \"" + field_name + "\" can't be changed.";
+                    result = false;
+                };
+                if (result && ((flags & Meta.Field.AutoIncrement) !== 0) && (!type.canAutoIncrement)) {
                     var table_name = this.getParent().name();
                     var field_name = this.name();
                     msg = "Field \"" + field_name + "\" (\"" + type.serialize().type + "\") can't be auto-increment.";
