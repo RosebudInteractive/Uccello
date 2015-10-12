@@ -27,6 +27,7 @@ define(
             },
             currentControl: function (value) {
                 if (value !== undefined) {
+                    console.log('TEST currentControl: '+value.name());
                     var curControl = this.currentControl();
                     if (curControl)
                         curControl._isRendered(false);

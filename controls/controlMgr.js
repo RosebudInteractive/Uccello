@@ -278,10 +278,10 @@ define(
 					if (!that.inTran() && vc) vc.renderAll();
 				}
 				
-				if (this.inTran()) {
+				/*if (this.inTran()) {
 					console.log("%c ALREADY IN TRANSACTION! "+this.getCurTranGuid(),"color: red");
 					return;
-				}				
+				}	*/
 				var vc = this.getContext(), nargs = [], that = this;
 				if (args)
 				  if (Array.isArray(args))
