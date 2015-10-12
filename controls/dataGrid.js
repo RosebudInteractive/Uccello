@@ -30,6 +30,10 @@ define(
              * @param options
              */
             irender: function(viewset, options) {
+				if (this.getControlMgr().getInitRender()) {
+					 viewset.render.apply(this, [options]);
+					 return;
+				}
 
                 // проверяем ширины столбцов
                 //var columns = this.getObj().getCol('Columns');
