@@ -206,6 +206,11 @@ define(
 				}
 
 				this.setToRendered(component,true);
+				this.pvt._initRender = false;
+			},
+			
+			getInitRender: function() {
+				return this.pvt._initRender;
 			},
 			
 			setToRendered: function(component, val) {
@@ -231,7 +236,8 @@ define(
 				for (var g in this.pvt.compByGuid) { 
 					if ("initRender" in this.pvt.compByGuid[g])
 						this.pvt.compByGuid[g].initRender();			// выставляем флаг рендеринга
-				}					
+				}		
+				this.pvt._initRender = true;
 			
 			},
 
