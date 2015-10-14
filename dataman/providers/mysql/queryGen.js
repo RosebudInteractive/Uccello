@@ -12,6 +12,35 @@ define(
                 UccelloClass.super.apply(this, [engine, options]);
             },
 
+            showForeignKeysQuery: function (src_name, dst_name) {
+                var params = {};
+                params.db = this.escapeValue(this._options.database);
+
+                var query = "SELECT DISTINCT k.CONSTRAINT_NAME AS fk_name, c.TABLE_NAME AS src_table, k.REFERENCED_TABLE_NAME AS dst_table\n"+
+                    " FROM information_schema.TABLE_CONSTRAINTS c\n" +
+                    " JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE k on k.TABLE_SCHEMA = c.TABLE_SCHEMA\n" +
+                    " AND k.CONSTRAINT_NAME = c.CONSTRAINT_NAME\n" +
+                    " WHERE c.CONSTRAINT_TYPE = 'FOREIGN KEY'\n" +
+                    " AND c.TABLE_SCHEMA = <%= db %>";
+
+                if (src_name) {
+                    query += "\n  AND c.TABLE_NAME = <%= src %>";
+                    params.src = this.escapeValue(src_name);
+                };
+
+                if (dst_name) {
+                    query += "\n  AND k.REFERENCED_TABLE_NAME = <%= dst %>";
+                    params.dst = this.escapeValue(dst_name);
+                };
+
+                return _.template(query)(params).trim() + ";";
+            },
+
+            dropForeignKeyQuery: function (table_name, fk_name) {
+                var query = "ALTER TABLE <%= table_name %> DROP FOREIGN KEY <%= fk_name %>";
+                return _.template(query)({ table_name: this.escapeId(table_name), fk_name: this.escapeId(fk_name) }).trim() + ";";
+            },
+
             dropTableQuery: function (model) {
                 var query = "DROP TABLE IF EXISTS <%= table %>";
                 return _.template(query)({ table: this.escapeId(model.name()) }).trim() + ";";

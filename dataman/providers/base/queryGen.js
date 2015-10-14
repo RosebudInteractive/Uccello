@@ -23,6 +23,14 @@ define(
                 return this._nativeLib;
             },
 
+            showForeignKeysQuery: function (src_name, dst_name) {
+                throw new Error("\"showForeignKeys\" wasn't implemented in descendant.");
+            },
+
+            dropForeignKeyQuery: function (table_name, fk_name) {
+                throw new Error("\"dropForeignKeyQuery\" wasn't implemented in descendant.");
+            },
+
             dropTableQuery: function (model) {
                 throw new Error("\"dropTableQuery\" wasn't implemented in descendant.");
             },
@@ -35,6 +43,42 @@ define(
                 if (!this._provider)
                     this._provider = this._engine.getProvider();
                 return this._provider;
+            },
+
+            createLinkQuery: function (ref) {
+                var query = "ALTER TABLE <%= table %> ADD CONSTRAINT <%= name %> FOREIGN KEY (<%= field %>) REFERENCES "+
+                    "<%= parent %> (<%= key %>) ON DELETE <%= parent_action %> ON UPDATE RESTRICT";
+                var ref_action = ref.type.refAction();
+                var parent_action = "NO ACTION";
+
+                switch (ref_action) {
+                    case "parentRestrict":
+                        parent_action = "RESTRICT";
+                        break;
+
+                    case "parentCascade":
+                        parent_action = "CASCADE";
+                        break;
+
+                    case "parentSetNull":
+                        parent_action = "SET NULL";
+                        break;
+
+                    default:
+                        throw new Error("Unknown ref-action: \"" + ref_action + "\".");
+                };
+
+                if (!ref.dst.getPrimaryKey())
+                    throw new Error("Referenced table \"" + ref.dst.name() + "\" has no PRIMARY KEY.");
+
+                return _.template(query)({
+                    table: this.escapeId(ref.src.name()),
+                    name: this.escapeId("FK_" + ref.src.name() + "_" + ref.field),
+                    field: this.escapeId(ref.field),
+                    parent: this.escapeId(ref.dst.name()),
+                    key: this.escapeId(ref.dst.getPrimaryKey().name()),
+                    parent_action: parent_action
+                }).trim() + ";";
             },
 
             selectQuery: function (model, predicate) {

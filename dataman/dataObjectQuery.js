@@ -34,6 +34,30 @@ define(
                 });
             },
 
+            showForeignKeys: function (src_name, dst_name) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    var sql = self._query_gen.showForeignKeysQuery(src_name, dst_name);
+                    resolve(self._runQuery(sql));
+                });
+            },
+
+            dropForeignKey: function (table_name, fk_name) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    var sql = self._query_gen.dropForeignKeyQuery(table_name, fk_name);
+                    resolve(self._runQuery(sql));
+                });
+            },
+
+            createLink: function (ref) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    var sql = self._query_gen.createLinkQuery(ref);
+                    resolve(self._runQuery(sql));
+                });
+            },
+
             select: function (model, predicate) {
                 var self = this;
                 return new Promise(function (resolve, reject) {

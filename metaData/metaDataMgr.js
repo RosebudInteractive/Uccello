@@ -197,8 +197,32 @@ define(
                 return this._modelsByRootGuid[guid];
             },
 
+            getModelByRootGuid: function (guid) {
+                return this._modelsByRootGuid[guid];
+            },
+
+            outgoingLinks: function (model) {
+                var result = {};
+                var keys = [];
+                if (!model)
+                    keys = Object.keys(this._linksTo)
+                else {
+                    var key = model.toString();
+                    if (model instanceof MetaModel)
+                        key = model.name();
+                    if (this._linksTo[key])
+                        keys.push(key);
+                };
+                for (var i = 0; i < keys.length; i++)
+                    result[keys[i]] = this._linksTo[keys[i]];
+                return result;
+            },
+
             _rebuildConstructors: function () {
                 if (!this._isConstrReady) {
+                    if (Object.keys(this._linksUnresolved).length > 0)
+                        throw new Error("Schema contains unresolved references.");
+
                     this._constructors = { byName: {}, byGuid: {} };
 
                     var names = Object.keys(this._modelsByName);
@@ -241,7 +265,7 @@ define(
 
                 for (var i = 0; i < fields.length; i++) {
                     footer += "\t\t\tthis._persFields[\"" + fields[i].get("Name") + "\"] = true;\n";
-                    if(fields[i].get("Flags") & Meta.Field.PrimaryKey)
+                    if (fields[i].get("Flags") & Meta.Field.PrimaryKey)
                         footer += "\t\t\tthis._keyField = \"" + fields[i].get("Name") + "\";\n";
                 };
 

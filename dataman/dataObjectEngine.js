@@ -268,12 +268,46 @@ define(
                     var opts = _.defaults(options || {}, { ext_filter: "json" });
                     var self = this;
 
-                    var promise = Promise.resolve();
+                    var promise = Promise.resolve([]);
                     if (opts.force === true) {
-                        promise = self.syncSchema({ force: true });
+                        promise = new Promise(function (resolve, reject) {
+                            resolve(self._query.showForeignKeys().then(function (result) {
+                                var curr_promise = Promise.resolve();
+                                if (result.length > 0) {
+                                    var models = self._metaDataMgr.models();
+                                    var fk_list = _.filter(result, function (fk) {
+                                        var tbl_name = fk.dst_table.toLowerCase();
+                                        var tbls = _.filter(models, function (model) {
+                                            return model.name().toLowerCase() === tbl_name;
+                                        });
+                                        return tbls.length > 0;
+                                    });
+                                    if (fk_list.length > 0) {
+                                        curr_promise = self._seqExec(fk_list, function (fk) {
+                                            return self._query.dropForeignKey(fk.src_table, fk.fk_name);
+                                        });
+                                    };
+                                };
+                                return curr_promise.then(function (result) {
+                                    return self.syncSchema({ force: true });
+                                });
+                            }));
+                        });
                     }
 
                     return promise.then(function (result) {
+
+                        var result_import = result;
+
+                        function createRefs(result) {
+                            result_import = result_import.concat(result);
+                            if (opts.force === true)
+                                return self._createAllReferences().then(function (result_ref) {
+                                    return result_import.concat(result_ref);
+                                });
+                            else
+                                return result_import;
+                        };
 
                         return new Promise(function (resolve, reject) {
                             var fs = require('fs');
@@ -324,11 +358,29 @@ define(
                                     return self._seqExec(_data, function (values, id) {
                                         return self._query.insert(_model, values);
                                     });
+                                }).then(function (result) {
+                                    return createRefs(result);
                                 }));
                             }
                             else
-                                return resolve();
+                                return resolve(createRefs([]));
                         });
+                    });
+                }
+                else
+                    return Promise.reject(new Error("DB connection wasn't defined."));
+            },
+
+            _createAllReferences: function () {
+                if (this.hasConnection()) {
+                    var self = this;
+                    return new Promise(function (resolve, reject) {
+                        var links = self._metaDataMgr.outgoingLinks();
+                        resolve(self._seqExec(links, function (model, key) {
+                            return self._seqExec(model, function (ref, key) {
+                                return self._query.createLink(ref);
+                            });
+                        }));
                     });
                 }
                 else

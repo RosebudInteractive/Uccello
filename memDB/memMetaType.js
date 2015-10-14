@@ -949,8 +949,30 @@ define(
                         this._allowNull = val.allowNull;
                 };
 
+                if ((this._refAction === "parentSetNull") && (!this._allowNull))
+                    throw new Error("Incompatible options: \"parentSetNull\" and [\"allowNull\" = false].");
+
                 if (this._model === null)
                     throw new Error("Undefined \"model\" in [dateRef] type.");
+            },
+
+            /**
+             * Returns Reference Action
+             *  possible values: {"none", "parentRestrict", "parentCascade", "parentSetNull"}
+             * 
+             * @return {String}
+             */
+            refAction: function () {
+                return this._refAction;
+            },
+
+            /**
+             * Returns the name of referenced model 
+             * 
+             * @return {String}
+             */
+            model: function () {
+                return this._model;
             },
 
             /**
