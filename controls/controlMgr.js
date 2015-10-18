@@ -278,10 +278,10 @@ define(
 					if (!that.inTran() && vc) vc.renderAll();
 				}
 				
-				/*if (this.inTran()) {
+				if (this.inTran()) {
 					console.log("%c ALREADY IN TRANSACTION! "+this.getCurTranGuid(),"color: red");
-					return;
-				}	*/
+					//return;
+				}	
 				var vc = this.getContext(), nargs = [], that = this;
 				if (args)
 				  if (Array.isArray(args))
@@ -295,6 +295,7 @@ define(
 				this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });	
 				this.syncInTran(doBefore,doAfter);
 				this.tranCommit();
+				console.log("END OF USERVENTHANDLER");
             },
 
 			remoteCallPlus: function(objGuid, func, aparams, cb) {
