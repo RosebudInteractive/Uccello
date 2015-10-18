@@ -82,9 +82,6 @@ define(
 		            var db=this;
 		            controller._subscribe(this,params.proxyMaster, function(result) {
 		                pvt.proxyMaster = controller.getProxy(params.proxyMaster.guid);
-		                /*pvt.version = result.data.dbVersion; // устанавливаем номер версии базы по версии мастера
-		                pvt.validVersion = pvt.version;
-		                pvt.sentVersion = pvt.version;*/
 		                controller.subscribeRoots(db, UCCELLO_CONFIG.guids.metaRootGuid, function(){
 		                    db._buildMetaTables();
 		                    if (cb !== undefined && (typeof cb == "function")) cb();
@@ -1363,6 +1360,20 @@ define(
 				}				
 			},
 			
+			// удалить элементы из лога удаленных вызовов
+			truncRcLog: function(guid) {
+				var rca = this.pvt.rca;
+				if (guid) {
+					for (var i=0; i<rca.length; i++) {
+						if (rca[rca.length-i-1].trGuid == guid) {
+							rca.splice(0,rca.length-i);
+							break;
+						}
+					}
+				}
+				else rca = [];
+			},
+			
 			getRcLog: function() {
 				return this.pvt.rca;
 			},
@@ -1486,18 +1497,13 @@ define(
 			
 			// почистить все транзакции до транзакции с гуидом guid (хронологически), если guid==undefined, то почистить все
 			truncTran: function(guid) {
-
 				var p = this.pvt;
 				if (guid) {
-
 					var roots = {};
 					for (var i=0; i<p.tha.length; i++) {
-
 						var tobj = p.tha[i];
 						for (var g in tobj.roots) 
-							roots[g] = roots[g] ? Math.max(roots[g],tobj.roots[g].max) : tobj.roots[g].max;
-						
-					
+							roots[g] = roots[g] ? Math.max(roots[g],tobj.roots[g].max) : tobj.roots[g].max;		
 						if (tobj.guid == guid) {
 							for (var g in roots) 
 								this.getObj(g).truncVer(roots[g]);
@@ -1507,7 +1513,7 @@ define(
 							if (p.tha.length>0) p.tha[0].prev = null;
 							break;
 						}
-					}
+					}				
 				}
 				else {
 					p.tha = [];
@@ -1515,9 +1521,8 @@ define(
 					var rg = this.getRootGuids();
 					for (i=0; i<rg.length; i++) 
 						this.getObj(rg[i]).truncVer();
-				
 				}
-
+				this.truncRcLog(guid);
 			},
 			
 			onRemoteCall3Plus: function(rc, srcDbGuid, trGuid, rootv, done) {
