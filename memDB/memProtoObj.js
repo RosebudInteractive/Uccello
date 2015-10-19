@@ -302,8 +302,6 @@ define(
 					var r = trobj.roots[robj.getGuid()];
 					if (!r) 
 						r = trobj.roots[robj.getGuid()] = {};
-						//r.max = 0;
-						//r.min = 1E7;
 					r.max = r.max ? Math.max(r.max,n) : n;
 					r.min = r.min ? Math.min(r.min,n) : n;
 				}	

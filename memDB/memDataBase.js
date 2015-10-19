@@ -64,7 +64,7 @@ define(
 
 		        this.event = new Event();
 				// транзакции
-				pvt.curTranGuid = undefined; // верси текущей транзакции БД
+				pvt.curTranGuid = undefined; // версия текущей транзакции БД
 				pvt.tranCounter = 0;		// счетчик транзакции
 				pvt.tho = {};
 				pvt.tha = [];
@@ -82,9 +82,6 @@ define(
 		            var db=this;
 		            controller._subscribe(this,params.proxyMaster, function(result) {
 		                pvt.proxyMaster = controller.getProxy(params.proxyMaster.guid);
-		                /*pvt.version = result.data.dbVersion; // устанавливаем номер версии базы по версии мастера
-		                pvt.validVersion = pvt.version;
-		                pvt.sentVersion = pvt.version;*/
 		                controller.subscribeRoots(db, UCCELLO_CONFIG.guids.metaRootGuid, function(){
 		                    db._buildMetaTables();
 		                    if (cb !== undefined && (typeof cb == "function")) cb();
@@ -1223,6 +1220,8 @@ define(
 						p.externalTran = false;
 					}
 					p.tranCounter=1;
+					this._setTranState(p.curTranGuid,'s',srcDbGuid);
+					/*
 					if (!p.tho[p.curTranGuid]) {
 						var ct = p.tho[p.curTranGuid] = {};
 						ct.guid = p.curTranGuid;
@@ -1235,6 +1234,7 @@ define(
 					var trobj = this.pvt.tho[p.curTranGuid];
 					trobj.guid = p.curTranGuid;
 					trobj.roots = {};
+					*/
 
 				}
 				//if (DEBUG) 
@@ -1267,7 +1267,7 @@ define(
 					if (isMaster) // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid					  
 					  this.subsRemoteCall("endTran",undefined,this.pvt.srcDbGuid); 
 					
-					this.getTranObj(p.curTranGuid).end = new Date();
+					//this.getTranObj(p.curTranGuid).end = new Date();
 					p.curTranGuid = undefined;
 					p.tranCounter = 0;
 					var memExternal = p.externalTran;
@@ -1282,8 +1282,8 @@ define(
 					}	
 				}
 				else p.tranCounter--;
-				if (DEBUG)				
-				    console.log("TRAN|COMMIT " + memTran + " " + p.tranCounter);
+				//if (DEBUG)				
+				    console.log("TRAN|COMMIT " + memTran + " | " + p.tranCounter);
 			},
 									
 			// синхронизировать в рамках транзакции
@@ -1358,6 +1358,20 @@ define(
 						
 					this.pvt.rca.push(o);
 				}				
+			},
+			
+			// удалить элементы из лога удаленных вызовов
+			truncRcLog: function(guid) {
+				var rca = this.pvt.rca;
+				if (guid) {
+					for (var i=0; i<rca.length; i++) {
+						if (rca[rca.length-i-1].trGuid == guid) {
+							rca.splice(0,rca.length-i);
+							break;
+						}
+					}
+				}
+				else rca = [];
 			},
 			
 			getRcLog: function() {
@@ -1438,12 +1452,28 @@ define(
 			},
 			
 			// установить состояние транзакции
-			_setTranState: function(guid,state) {
+			_setTranState: function(guid,state,srcDbGuid) {
+				var p = this.pvt;
 				var tobj = this.getTranObj(guid);
+				if (state == 's') {
+					if (!tobj) {				
+						var ct = p.tho[guid] = {};
+						ct.guid = guid;
+						ct.start = new Date();
+						ct.src = srcDbGuid ? srcDbGuid : this.getGuid();
+						ct.state = 's';
+						ct.prev = (p.tha.length>0) ? p.tha[p.tha.length-1] : null; // сослаться на предыдующую транзакцию
+						ct.roots = {};
+						p.tha.push(ct);
+					}
+					return;
+				}
+
 				if (!tobj) return;
 				if (state == 'p') { // установить в pre-commited
 					if (!tobj.prev || tobj.prev.state == 'p' || tobj.prev.state == 'c') {
 						tobj.state = 'p';
+						tobj.pend = new Date();
 						return true;
 					}
 					return false;
@@ -1455,6 +1485,7 @@ define(
 							var r = this.getObj(g);
 							r.setRootVersion("valid",tobj.roots[g].max);
 						}
+						tobj.end = new Date();
 						// удалить из истории последнюю подтвержденную транзакцию (может быть в комменте в целях тестирования)
 						// if (tobj.prev && tobj.prev.state == 'c') this.truncTran(tobj.prev.guid);
 						
@@ -1462,23 +1493,17 @@ define(
 					}
 					return false;
 				}
-				//TODO 10 сделать другие состояния
 			},
 			
 			// почистить все транзакции до транзакции с гуидом guid (хронологически), если guid==undefined, то почистить все
 			truncTran: function(guid) {
-
 				var p = this.pvt;
 				if (guid) {
-
 					var roots = {};
 					for (var i=0; i<p.tha.length; i++) {
-
 						var tobj = p.tha[i];
 						for (var g in tobj.roots) 
-							roots[g] = roots[g] ? Math.max(roots[g],tobj.roots[g].max) : tobj.roots[g].max;
-						
-					
+							roots[g] = roots[g] ? Math.max(roots[g],tobj.roots[g].max) : tobj.roots[g].max;		
 						if (tobj.guid == guid) {
 							for (var g in roots) 
 								this.getObj(g).truncVer(roots[g]);
@@ -1488,7 +1513,7 @@ define(
 							if (p.tha.length>0) p.tha[0].prev = null;
 							break;
 						}
-					}
+					}				
 				}
 				else {
 					p.tha = [];
@@ -1496,9 +1521,8 @@ define(
 					var rg = this.getRootGuids();
 					for (i=0; i<rg.length; i++) 
 						this.getObj(rg[i]).truncVer();
-				
 				}
-
+				this.truncRcLog(guid);
 			},
 			
 			onRemoteCall3Plus: function(rc, srcDbGuid, trGuid, rootv, done) {
