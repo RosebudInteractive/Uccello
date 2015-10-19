@@ -1061,6 +1061,194 @@ define(
 
         });
 
+        typedvalueTypeCodes = {
+            "int": { code: 0, constructor: IntegerType },
+            "string": { code: 1, constructor: StringType },
+            "float": { code: 2, constructor: FloatType },
+            "datetime": { code: 3, constructor: DateTimeType },
+            "decimal": { code: 5, constructor: DecimalType },
+            "boolean": { code: 6, constructor: BooleanType },
+            "integer": { code: 8, constructor: IntegerType },
+            "date": { code: 9, constructor: DateTimeType },
+            "time": { code: 10, constructor: DateTimeType },
+            "timestamp": { code: 11, constructor: DateTimeType }
+        };
+
+        var TypedValueVal = UccelloClass.extend({
+
+            /**
+             * The Value of TypedValue Type
+             *  represents value of typed value.
+             *
+             * @param {Object} type Type object
+             * @param {Object} value Value
+             * @constructor
+             */
+            init: function (type, value) {
+                this._type = type;
+                this._value = value;
+            },
+
+            type: function () {
+                return this._type;
+            },
+
+            value: function (val) {
+                if (val)
+                    this._value = this._type.setValue(val, null, null, true);
+                return this._value;
+            }
+        });
+
+        var TypedValueType = BaseType.extend({
+
+            key: "typedvalue",
+
+            /**
+             * The TypedValue Type
+             *  represents type of typed values.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends BaseType
+             * @constructor
+             */
+            init: function (typeObj, refResolver) {
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
+                this._is_complex = true;
+            },
+
+            /**
+             * Data Type hash code.
+             * Uniquely represents data type instance.
+             * 
+             * @return {Strng} The hash code
+             */
+            hash: function () {
+                var result = UccelloClass.super.apply(this, []);
+
+                if ((this._refResolver) &&
+                        (typeof (this._refResolver.getGuid) === "function"))
+                    result += "_" + this._refResolver.getGuid();
+
+                return result;
+            },
+
+            /**
+             * Converts a Value of this data type from the internal representation
+             * to the serialized one.
+             *
+             * @param {Any}     val An internal value
+             * @return {Object} Serialized representation of the value
+             */
+            getSerializedValue: function (val) {
+                if(!(val instanceof TypedValueVal))
+                    throw new Error("getSerializedValue::Inavlid value of \"typedvalue\" type.");
+                return {
+                    type: val.type().serialize(),
+                    value: val.type().getSerializedValue(val.value)
+                };
+            },
+
+            /**
+             * Checks if val1 is equal to val2.
+             * 
+             * @param {Any}       val1 First value (could be TypedValueVal or serialized type)
+             * @param {Any}       val2 Second value (could be TypedValueVal or serialized type)
+             * @return {Boolean} True if values are equal
+             */
+            isEqual: function (val1, val2) {
+                var val1_srlz = (val1 instanceof TypedValueVal) ? this.getSerializedValue(val1) : val1;
+                var val2_srlz = (val2 instanceof TypedValueVal) ? this.getSerializedValue(val2) : val2;
+                return JSON.stringify(val1_srlz) === JSON.stringify(val2_srlz);
+            },
+
+            /**
+             * Compares val1 and val2.
+             * 
+             * @param {Any}       val1 First value
+             * @param {Any}       val2 Second value
+             * @return {Integer} 0 - [val1===val2], 1- [val1 > val2], (-1) - [val1 < val2]
+             */
+            compare: function (val1, val2) {
+                var val1_srlz = (val1 instanceof TypedValueVal) ? this.getSerializedValue(val1) : val1;
+                var val2_srlz = (val2 instanceof TypedValueVal) ? this.getSerializedValue(val2) : val2;
+                return UccelloClass.super.apply(this, [JSON.stringify(val1_srlz), JSON.stringify(val2_srlz)]);
+            },
+
+            /**
+             * Checks if value is correct.
+             * 
+             * @param {Any}       val A value to be checked (could be TypedValueVal or serialized type)
+             * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
+             * @param {String}    errObj.errMsg Error message
+             * @param {String}    fldName A field name of the value
+             * @param {Object}    obj A MemProtoObject which [val] belongs to 
+             * @param {Object}    retVal Will contain converted value in [retVal.obj]
+             * @return {Boolean} True if value is corect
+             */
+            checkVal: function (val, errObj, fldName, obj, retVal) {
+                var result = true;
+                var msg;
+
+                if (val) {
+                    var _val = val;
+                    if (!(_val instanceof TypedValueVal))
+                        try {
+                            var tp, value;
+                            if (_val.type) {
+                                tp = MetaTypes.createTypeObject(_val.type, this._refResolver, typedvalueTypeCodes, false);
+                                if (_val.value !== undefined)
+                                    value = tp.setValue(val, null, null, true);
+                            }
+                            else {
+                                result = false;
+                                msg = "Type of \"typedvalue\" is undefined.";
+                            };
+
+                            if (result && retVal)
+                                retVal.obj = new TypedValueVal(tp, value);
+
+                        } catch (err) {
+                            result = false;
+                            msg = err.message;
+                        };
+                } else {
+                    result = false;
+                    msg = "Empty value is invalid.";
+                };
+
+                if ((!result) && errObj)
+                    errObj.errMsg = msg;
+                return result;
+            },
+
+            /**
+             * Converts a Value of this data type from the serialized
+             * or "end-user" representation to the internal one.
+             * 
+             * @param {Any}     val A value of this data type (could be TypedValueVal or serialized type)
+             * @param {String}  fldName A field name of the value
+             * @param {Object}  obj A MemProtoObject which [fldName] belongs to 
+             * @param {Boolean} withCheckVal True if the value needs to be checked
+             * @throws          Will throw an error if the value isn't correct
+             * @return {Object} Internal representation of the value
+             */
+            setValue: function (val, fldName, obj, withCheckVal) {
+
+                var result = val;
+                if (!(result instanceof TypedValueVal)) {
+                    var errObj = {};
+                    var retVal = {};
+                    if (this.checkVal(val, errObj, fldName, obj, retVal))
+                        result = retVal.obj;
+                    else
+                        throw new Error(errObj.errMsg);
+                }
+                return result;
+            }
+        });
+
         datafieldTypeCodes = {
             "int": { code: 0, constructor: IntegerType },
             "string": { code: 1, constructor: StringType },
@@ -1085,12 +1273,16 @@ define(
              *
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
+             * @param {Object}        [type_codes_table=datafieldTypeCodes] A table of allowed types
              * @extends BaseType
              * @constructor
              */
-            init: function (typeObj, refResolver) {
+            init: function (typeObj, refResolver, type_codes_table) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
                 this._is_complex = true;
+                this._typeCodesTable = type_codes_table;
+                if (!this._typeCodesTable)
+                    this._typeCodesTable = datafieldTypeCodes;
             },
 
             /**
@@ -1135,14 +1327,14 @@ define(
                     var is_correct_val = true;
                     if (!_val1 instanceof BaseType)
                         try {
-                            _val1 = MetaTypes.createTypeObject(_val1, this._refResolver, datafieldTypeCodes, true);
+                            _val1 = MetaTypes.createTypeObject(_val1, this._refResolver, this._typeCodesTable, true);
                         } catch (err) {
                             is_correct_val = false;
                         };
 
                     if (is_correct_val && (!_val2 instanceof BaseType))
                         try {
-                            _val2 = MetaTypes.createTypeObject(_val2, this._refResolver, datafieldTypeCodes, true);
+                            _val2 = MetaTypes.createTypeObject(_val2, this._refResolver, this._typeCodesTable, true);
                         } catch (err) {
                             is_correct_val = false;
                         };
@@ -1173,14 +1365,14 @@ define(
                         var is_correct_val = true;
                         if (!(_val1 instanceof BaseType))
                             try {
-                                _val1 = MetaTypes.createTypeObject(_val1, this._refResolver, datafieldTypeCodes, true);
+                                _val1 = MetaTypes.createTypeObject(_val1, this._refResolver, this._typeCodesTable, true);
                             } catch (err) {
                                 is_correct_val = false;
                             };
 
                         if (is_correct_val && (!(_val2 instanceof BaseType)))
                             try {
-                                _val2 = MetaTypes.createTypeObject(_val2, this._refResolver, datafieldTypeCodes, true);
+                                _val2 = MetaTypes.createTypeObject(_val2, this._refResolver, this._typeCodesTable, true);
                             } catch (err) {
                                 is_correct_val = false;
                             };
@@ -1214,7 +1406,7 @@ define(
                     var _val = val;
                     if (!(_val instanceof BaseType))
                         try {
-                            _val = MetaTypes.createTypeObject(_val, this._refResolver, datafieldTypeCodes, true);
+                            _val = MetaTypes.createTypeObject(_val, this._refResolver, this._typeCodesTable, true);
                         } catch (err) {
                             result = false;
                             msg = err.message;
@@ -1244,7 +1436,7 @@ define(
 
                 var result = val;
                 if (!(result instanceof BaseType))
-                    result = MetaTypes.createTypeObject(result, this._refResolver, datafieldTypeCodes, true);
+                    result = MetaTypes.createTypeObject(result, this._refResolver, this._typeCodesTable, true);
                 return result;
             }
         });
@@ -1313,7 +1505,8 @@ define(
             "timestamp": { code: 11, constructor: DateTimeType },
             "datatype": { code: 12, constructor: DataFieldType },
             "money": { code: 13, constructor: FloatType },
-            "dataRef": { code: 14, constructor: DataRefType }
+            "dataRef": { code: 14, constructor: DataRefType },
+            "typedvalue": { code: 15, constructor: TypedValueType }
         };
 
         function addDataType(typeTable, type) {
