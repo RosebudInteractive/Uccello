@@ -213,7 +213,7 @@ define(
 
                     if (((flags & Meta.Field.PrimaryKey) !== 0) && fieldType.allowNull()) {
                         fieldObj.set("FieldType", oldFieldType);
-                        throw new Error("Primary key \"" + fieldName + "\" can't allow NULL.");
+                        throw new Error("Primary key \"" + fieldName + "\" doesn't allow NULLs.");
                     };
 
                     if (oldFieldType instanceof MemMetaType.DataRefType) {

@@ -208,7 +208,19 @@ define(
 			    };
 
 			    if (is_modified)
-			        this._finalizeModif(field, oldVal, newVal);
+			        this._finalizeModif(field, oldVal, newVal, idx);
+			},
+
+		    /**
+             * Rollbacks changes in a field.
+             * 
+             * @param {String}  field Field name
+             * @param {Integer} idx Field index
+             * @param {Object}  old_value Old field value
+             * @private
+             */
+			_rollback: function (field, idx, old_value) {
+			    this.pvt.fields[idx] = old_value;
 			},
 
 			getFieldType: function (fld) {

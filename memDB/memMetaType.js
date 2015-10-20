@@ -857,7 +857,7 @@ define(
                         throw new Error(errObj.errMsg);
                 };
 
-                this._refResolver.addLink(obj, result, fldName, this);
+                result = this._refResolver.addLink(obj, result, fldName, this);
                 return result;
             }
         });

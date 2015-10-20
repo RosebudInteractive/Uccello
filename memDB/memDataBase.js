@@ -220,11 +220,13 @@ define(
              * @param {Object}  ref A value of the reference type
              * @param {String}  field A field name of the [ref] value
              * @param {Object}  type A reference type object
+             * @return {Object} A link
              */
 		    addLink: function (obj, ref, field, type) {
 		        var guid = obj.getGuid();
 		        var link = this.pvt.refTo[guid];
 		        var refFrom = null;
+		        var result = ref;
 
 		        if (link)
 		            link = link[field];
@@ -235,7 +237,7 @@ define(
 		            // Link already exists
 		            var old_ref = link.val;
 		            if (type.isEqual(old_ref, ref))
-		                return; // If values are equal we'll do nothing
+		                return old_ref; // If values are equal we'll do nothing
 
 		            if (old_ref.objRef) {
 		                refFrom = this.pvt.refFrom[old_ref.objRef.getGuid()];
@@ -261,6 +263,7 @@ define(
 		        }
 		        else
 		            this.pvt.uLinks[guid + "_" + field] = link;
+		        return result;
 		    },
 
 		    /**

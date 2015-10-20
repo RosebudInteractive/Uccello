@@ -194,14 +194,45 @@ define(
 			},
 
 	        /**
+             * Rollbacks changes in a field.
+             * 
+             * @param {String}  field Field name
+             * @param {Integer} idx Field index
+             * @param {Object}  old_value Old field value
+             * @throws          Always throws an error? ecause it should be overriden in descendant
+             * @private
+             */
+			_rollback: function (field, idx, old_value) {
+			    throw new Error("MemProtoObj._rollback wasn't overriden in descendant.");
+			},
+
+	        /**
              * Finalizes field modification: writes to log and fires events.
              * 
              * @param {String} field Field name
              * @param {Object} oldVal Old field value
              * @param {Object} newVal New field value
+             * @param {Object} idx Field index
              * @private
              */
-			_finalizeModif: function (field, oldVal, newVal) {
+			_finalizeModif: function (field, oldVal, newVal, idx) {
+
+			    try {
+			        this.event.fire({
+			            type: "beforeMod",
+			            target: this,
+			            field: field
+			        });
+
+			        this.event.fire({
+			            type: "beforeMod%" + field,
+			            target: this,
+			        });
+			    } catch (err) {
+			        this._rollback(field, idx, oldVal);
+			        throw err;
+			    };
+
 			    if (this.getLog().getActive()) {
 			        var o = { flds: {}, obj: this, type: "mp" };
 			        o.flds[field] = { old: oldVal, new: newVal };

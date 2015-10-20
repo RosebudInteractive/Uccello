@@ -201,18 +201,39 @@ define(
 				if (is_complex || withCheckVal)
 				    newValue = fldType.setValue(value, field, this, withCheckVal);
 
+				this.pvt.fields[i] = newValue;
 				if (fldType.isEqual(oldValue, newValue)) return;
 
-				this.pvt.fields[i] = newValue;
 				var oldSerialized = oldValue;
 				var newSerialized = newValue;
 
 				if (is_complex) {
 				    oldSerialized = fldType.getSerializedValue(oldValue);
 				    newSerialized = fldType.getSerializedValue(newValue);
-				}
+				};
 
-				this._finalizeModif(field, oldSerialized, newSerialized);
+				this._finalizeModif(field, oldSerialized, newSerialized, i);
+			},
+
+		    /**
+             * Rollbacks changes in a field.
+             * 
+             * @param {String}  field Field name
+             * @param {Integer} idx Field index
+             * @param {Object}  old_value Old field value
+             * @private
+             */
+			_rollback: function (field, idx, old_value) {
+			    var objType = this.pvt.objType.pvt;
+
+			    var fldType = objType.fieldsTypes[idx];
+			    var is_complex = fldType.is_complex;
+			    fldType = fldType.type;
+			    var oldValue = old_value;
+			    if (is_complex || withCheckVal)
+			        oldValue = fldType.setValue(old_value, field, this, false);
+
+			    this.pvt.fields[idx] = oldValue;
 			},
 
 		    /**
