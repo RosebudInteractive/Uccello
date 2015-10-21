@@ -277,6 +277,8 @@ define(
 				function doAfter() {
 					if (!that.inTran() && vc) vc.renderAll();
 				}
+				console.log("START OF USEREVENTHANDLER");
+				console.trace();
 				
 				if (this.inTran()) {
 					console.log("%c ALREADY IN TRANSACTION! "+this.getCurTranGuid(),"color: red");
@@ -295,7 +297,7 @@ define(
 				this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });	
 				this.syncInTran(doBefore,doAfter);
 				this.tranCommit();
-				console.log("END OF USERVENTHANDLER");
+				console.log("END OF USEREVENTHANDLER");
             },
 
 			remoteCallPlus: function(objGuid, func, aparams, cb) {
