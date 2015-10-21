@@ -807,11 +807,6 @@ define(
 						res.setRootVersion("draft",sobj.ver);
 						res.setRootVersion("sent",sobj.ver);
 						res.setRootVersion("valid",sobj.ver);
-						/*
-						rholder.vver = sobj.ver; 
-						rholder.sver = sobj.ver; // НАЗНАЧЕНИЕ ВЕРСИЙ ВЫНЕСТИ ЗА ПРЕДЕЛЫ ДЕСЕРИАЛАЙЗА
-						rholder.dver = sobj.ver;
-						*/
 					}
 
 				this.resolveAllRefs();
@@ -1241,7 +1236,7 @@ define(
 
 				}
 				//if (DEBUG) 
-				console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
+				//console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
 				return p.curTranGuid;
 				
 			},
@@ -1269,8 +1264,7 @@ define(
 					}
 					if (isMaster) // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid					  
 					  this.subsRemoteCall("endTran",undefined,this.pvt.srcDbGuid); 
-					
-					//this.getTranObj(p.curTranGuid).end = new Date();
+
 					p.curTranGuid = undefined;
 					p.tranCounter = 0;
 					var memExternal = p.externalTran;
@@ -1286,7 +1280,7 @@ define(
 				}
 				else p.tranCounter--;
 				//if (DEBUG)				
-				    console.log("TRAN|COMMIT " + memTran + " | " + p.tranCounter);
+				    //console.log("TRAN|COMMIT " + memTran + " | " + p.tranCounter);
 			},
 									
 			// синхронизировать в рамках транзакции
@@ -1294,7 +1288,7 @@ define(
 
 				if (!this.inTran()) return;
 				if (!this.pvt._memFunc || !this.pvt._memFunc.length) {
-					console.log("%c NO DATA TO SYNC","color:red");
+					//console.log("%c NO DATA TO SYNC","color:red");
 					return;
 				} 				
 
@@ -1334,7 +1328,7 @@ define(
 				}	
 				var that = this, memTr = this.getCurTranGuid();
 				var args = {objGuid: undefined, func:"endTran", aparams:undefined };
-				console.log("***************ENDTRAN ",this.getCurTranGuid());
+				//console.log("***************ENDTRAN ",this.getCurTranGuid());
 				this._rc([args],[icb]);
 			},
 			
@@ -1374,7 +1368,7 @@ define(
 						}
 					}
 				}
-				else rca = [];
+				else this.pvt.rca = [];
 			},
 			
 			getRcLog: function() {
@@ -1419,11 +1413,11 @@ define(
 				}		
 				this.logRemoteCall(data,'c');
 				socket.send(data,icb,data.trGuid);
-				
+				/*
 				if (this.pvt.name!="System") {
 					for (var i=0, s = ""; i<rcargs.length; i++) s += rcargs[i].func + " ";
 					console.log("%c SEND DATA ("+s+")  ","color: blue", data.args, " trGuid: ",data.trGuid);
-				}					
+				}					*/
 			},
 						
 			inTran: function() {
