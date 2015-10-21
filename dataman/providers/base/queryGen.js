@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['lodash'],
-    function (_) {
+    ['lodash', '../../../predicate/predicate'],
+    function (_, Predicate) {
 
         var TICK_CHAR= '`';
 
@@ -91,18 +91,9 @@ define(
                 var values = { table: this.escapeId(model.name()), fields: attrs.join(", ") };
                 var result = _.template(query)(values).trim();
                 if (predicate) {
-                    var escVals = this._escapeValues(model, predicate);
-                    var self = this;
-                    var conditions = [];
-                    _.forEach(escVals, function (value, key) {
-                        if (model.getField(key)) {
-                            conditions.push("(" + value.id + " = " + value.val + ")");
-                        } else
-                            throw new Error("Predicate error: Unknown field \"" + key + "\" in model \"" + model.name() + "\".");
-                    });
-                    if (conditions.length > 0) {
-                        result += " WHERE " + conditions.join(" AND ");
-                    };
+                    var cond_sql = this._predicateToSql(model, predicate);
+                    if (cond_sql.length > 0)
+                        result += " WHERE " + cond_sql;
                 };
                 return result + ";";
             },
@@ -118,17 +109,9 @@ define(
                 var values = { table: this.escapeId(model.name()), fields: attrs.join(", ") };
                 var result = _.template(query)(values).trim();
                 if (predicate) {
-                    escVals = this._escapeValues(model, predicate);
-                    var conditions = [];
-                    _.forEach(escVals, function (value, key) {
-                        if (model.getField(key)) {
-                            conditions.push("(" + value.id + " = " + value.val + ")");
-                        } else
-                            throw new Error("Predicate error: Unknown field \"" + key + "\" in model \"" + model.name() + "\".");
-                    });
-                    if (conditions.length > 0) {
-                        result += " WHERE " + conditions.join(" AND ");
-                    };
+                    var cond_sql = this._predicateToSql(model, predicate);
+                    if (cond_sql.length > 0)
+                        result += " WHERE " + cond_sql;
                 };
                 return result + ";";
             },
@@ -156,6 +139,79 @@ define(
 
             escapeValue: function (model, vals) {
                 throw new Error("\"escapeValue\" wasn't implemented in descendant.");
+            },
+
+            _predicateToSql: function (model, predicate) {
+                var result = "";
+                var cond_arr = [];
+
+                var conds = predicate.getCol("Conditions");
+
+                for (var i = 0; i < conds.count() ; i++) {
+                    var cond = conds.get(i);
+                    var res = "";
+                    if (cond instanceof Predicate)
+                        res = predicateToString(cond);
+                    else {
+
+                        var field = model.getField(cond.fieldName());
+                        if (!field)
+                            throw new Error("Predicate error: Unknown field \"" + cond.fieldName() + "\" in model \"" + model.name() + "\".");
+
+                        var res_vals = "";
+                        var vals = cond.getCol("Values");
+                        var val_arr = [];
+
+                        for (var j = 0; j < vals.count() ; j++) {
+                            var value = vals.get(j).valValue();
+                            if (value !== undefined)
+                                val_arr.push(this._escapeValue(field, value));
+                        }
+                        if (val_arr.length > 0) {
+                            if (cond.isNegative())
+                                res += "(NOT ";
+                            res += "(";
+                            res += this.escapeId(cond.fieldName()) + " " + cond.op() + " ";
+                            if (val_arr.length > 1)
+                                res += "(";
+                            for (j = 0; j < val_arr.length ; j++) {
+                                if (j > 0)
+                                    res += ", ";
+                                res += JSON.stringify(val_arr[j]);
+                            };
+                            if (val_arr.length > 1)
+                                res += ")";
+                            res += ")";
+                            if (cond.isNegative())
+                                res += ")";
+                        };
+                    };
+                    if (res.length > 0)
+                        cond_arr.push(res);
+                };
+
+                if (cond_arr.length > 0) {
+                    if (predicate.isNegative())
+                        result += "(NOT ";
+                    if (cond_arr.length > 1)
+                        result += "(";
+                    var op = predicate.isDisjunctive() ? " OR " : " AND ";
+                    for (i = 0; i < cond_arr.length; i++) {
+                        if (i > 0)
+                            result += op;
+                        result += cond_arr[i];
+                    };
+                    if (cond_arr.length > 1)
+                        result += ")";
+                    if (predicate.isNegative())
+                        result += ")";
+                };
+                return result;
+            },
+
+            _escapeValue: function (field, val) {
+                var value = field.fieldType().isComplex() ? field.fieldType().setValue(val, field.name(), null, true) : val;
+                return this.escapeValue(value);
             },
 
             _escapeValues: function (model, vals) {

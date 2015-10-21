@@ -5,8 +5,9 @@
 
 define(
     ['../controls/controlMgr', '../metaData/metaDataMgr', '../metaData/metaModel',
-        '../metaData/metaModelField', '../metaData/metaDefs', 'bluebird', 'lodash', './dataObjectQuery'],
-    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Meta, Promise, _, Query) {
+        '../metaData/metaModelField', '../metaData/metaDefs', 'bluebird', 'lodash',
+        './dataObjectQuery', '../predicate/predicate'],
+    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Meta, Promise, _, Query, Predicate) {
 
         var METADATA_FILE_NAME = UCCELLO_CONFIG.dataPath + "meta/metaTables.json";
 
@@ -53,6 +54,7 @@ define(
 
                 this._provider = null;
                 this._query = null;
+                this._tmpPredicate = this.newPredicate();
 
                 if (opts.connection && opts.connection.provider) {
                     try {
@@ -126,6 +128,10 @@ define(
                 return this._dataBase;
             },
 
+            newPredicate: function () {
+                return new Predicate(this._dataBase, {});;
+            },
+
             execBatch: function (batch, callback) {
                 console.log("execBatch: " + JSON.stringify(batch));
 
@@ -156,10 +162,8 @@ define(
                                 var key = model.getPrimaryKey();
                                 if (!key)
                                     throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
-                                var predicate = {};
-                                predicate[key.name()] = val.data.key;
-
-                                promise = self._query.update(model, val.data.fields, predicate);
+                                self._tmpPredicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
+                                promise = self._query.update(model, val.data.fields, self._tmpPredicate);
                                 break;
                         };
                         return promise;

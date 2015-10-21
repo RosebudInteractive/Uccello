@@ -1093,9 +1093,7 @@ define(
                 return this._type;
             },
 
-            value: function (val) {
-                if (val)
-                    this._value = this._type.setValue(val, null, null, true);
+            value: function () {
                 return this._value;
             }
         });
@@ -1142,8 +1140,11 @@ define(
              * @return {Object} Serialized representation of the value
              */
             getSerializedValue: function (val) {
-                if(!(val instanceof TypedValueVal))
-                    throw new Error("getSerializedValue::Inavlid value of \"typedvalue\" type.");
+                if (!(val instanceof TypedValueVal))
+                    if (val === undefined)
+                        return undefined
+                    else
+                        throw new Error("getSerializedValue::Inavlid value of \"typedvalue\" type.");
                 return {
                     type: val.type().serialize(),
                     value: val.type().getSerializedValue(val.value)
@@ -1199,7 +1200,7 @@ define(
                             if (_val.type) {
                                 tp = MetaTypes.createTypeObject(_val.type, this._refResolver, typedvalueTypeCodes, false);
                                 if (_val.value !== undefined)
-                                    value = tp.setValue(val, null, null, true);
+                                    value = tp.setValue(_val.value, null, null, true);
                             }
                             else {
                                 result = false;

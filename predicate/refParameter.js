@@ -3,10 +3,10 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['./baseParameter'],
-    function (BaseParameter) {
+    ['./baseParameter', './valueProp'],
+    function (BaseParameter, ValueProp) {
 
-        var RefParameter = BaseParameter.extend({
+        var RefParameter = BaseParameter.extend([new ValueProp(true)], {
 
             className: "RefParameter",
             classGuid: UCCELLO_CONFIG.classGuids.RefParameter,

@@ -3,10 +3,10 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['./baseParameter'],
-    function (BaseParameter) {
+    ['./baseParameter', './valueProp'],
+    function (BaseParameter, ValueProp) {
 
-        var Parameter = BaseParameter.extend({
+        var Parameter = BaseParameter.extend([new ValueProp(false)], {
 
             className: "Parameter",
             classGuid: UCCELLO_CONFIG.classGuids.Parameter,
@@ -18,14 +18,6 @@ define(
 
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
-            },
-
-            name: function (value) {
-                return this._genericSetter("Name", value);
-            },
-
-            value: function (value) {
-                return this._genericSetter("Value", value);
             }
         });
 

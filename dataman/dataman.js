@@ -26,6 +26,8 @@ define(
 				this.pvt.dataObjectEngine = new DataObjectEngine(router, controller,
                     construct_holder, rpc, UCCELLO_CONFIG.dataman);
 
+				this.pvt.predicate = this.pvt.dataObjectEngine.newPredicate();
+
 				this.pvt.dataSource = 'local'; // 'local' or 'mysql'
                 router.add('query', function(){ return that.query.apply(that, arguments); });
 
@@ -76,25 +78,25 @@ define(
                         this.getList(gr, 'company_tst', done);
                         break;
                     case UCCELLO_CONFIG.guids.rootContact:
-                        this.getList(gr, 'contact', done, 'CompanyId=?', [expression], { CompanyId: expression });
+                        this.getList(gr, 'contact', done, 'CompanyId=?', [expression], { field: "CompanyId", op: "=", value: expression });
                         break;
                     case UCCELLO_CONFIG.guids.rootTstContact:
-                        this.getList(gr, 'contact_tst', done, 'parent=?', [expression], { parent: expression });
+                        this.getList(gr, 'contact_tst', done, 'parent=?', [expression], { field: "parent", op: "=", value: expression });
                         break;
                     case UCCELLO_CONFIG.guids.rootContract:
-                        this.getList(gr, 'contract', done, 'parent=?', [expression], { parent: expression });
+                        this.getList(gr, 'contract', done, 'parent=?', [expression], { field: "parent", op: "=", value: expression });
                         break;
                     case UCCELLO_CONFIG.guids.rootAddress:
-                        this.getList(gr, 'address', done, 'parent=?', [expression], { parent: expression });
+                        this.getList(gr, 'address', done, 'parent=?', [expression], { field: "parent", op: "=", value: expression });
                         break;
                     case UCCELLO_CONFIG.guids.rootLead:
                         this.getList(gr, 'lead', done);
                         break;
                     case UCCELLO_CONFIG.guids.rootLeadLog:
-                        this.getList(gr, 'lead_log', done, 'LeadId=?', [expression], { LeadId: expression });
+                        this.getList(gr, 'lead_log', done, 'LeadId=?', [expression], { field: "LeadId", op: "=", value: expression });
                         break;
                     case UCCELLO_CONFIG.guids.rootIncomeplan:
-                        this.getList(gr, 'incomeplan', done, 'leadId=?', [expression], { LeadId: expression });
+                        this.getList(gr, 'incomeplan', done, 'leadId=?', [expression], { field: "LeadId", op: "=", value: expression });
                         break;
                     case UCCELLO_CONFIG.guids.rootOpportunity:
                         this.getList(gr, 'opportunity', done);
@@ -168,7 +170,7 @@ define(
                 });
             },
 
-            getList: function (typeGuid, table, done, where, whereParams, predicate, num) {
+            getList: function (typeGuid, table, done, where, whereParams, condition, num) {
                 var guidRoots = {
                     'ab573a02-b888-b3b4-36a7-38629a5fe6b7': '59583572-20fa-1f58-8d3f-5114af0f2c51', // DataCompany
                     '5f9e649d-43c4-d1e6-2778-ff4f58cd7c53': '34c6f03d-f6ba-2203-b32b-c7d54cd0185a', // DataTstCompany
@@ -187,8 +189,8 @@ define(
                 if (this.pvt.dataObjectEngine.hasConnection()) {
 
                     var query = { dataObject: { guid: guidRoots[typeGuid] }, dataGuid: typeGuid };
-                    if (predicate)
-                        query.predicate = predicate;
+                    if (condition)
+                        query.predicate = this.pvt.predicate.addConditionWithClear(condition);
 
                     this.pvt.dataObjectEngine.loadQuery(query)
                     .then(function (result) {
