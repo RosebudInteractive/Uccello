@@ -6,6 +6,17 @@ define(
     ['./baseCondition', './refParameter', './staticValue'],
     function (BaseCondition, RefParameter, StaticValue) {
 
+        var allowedArgs = {
+            "=": { min: 1, max: 1 },
+            ">": { min: 1, max: 1 },
+            "<": { min: 1, max: 1 },
+            ">=": { min: 1, max: 1 },
+            "<=": { min: 1, max: 1 },
+            "like": { min: 1, max: 1 },
+            "between": { min: 2, max: 2 },
+            "in": { min: 1, max: 0 }
+        };
+
         var Condition = BaseCondition.extend({
 
             className: "Condition",
@@ -13,11 +24,29 @@ define(
             metaCols: [{ "cname": "Values", "ctype": "BaseValue" }],
             metaFields: [
                 { fname: "FieldName", ftype: "string" },
-                { fname: "Op", ftype: "string" }
+                {
+                    fname: "Op", ftype: {
+                        type: "enum",
+                        values: [
+                            "=",
+                            ">",
+                            "<",
+                            ">=",
+                            "<=",
+                            "like",
+                            "between",
+                            "in"
+                        ]
+                    }
+                }
             ],
 
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
+            },
+
+            allowedArgNumber: function () {
+                return allowedArgs[this.op()];
             },
 
             fieldName: function (value) {

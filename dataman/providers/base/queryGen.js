@@ -6,7 +6,7 @@ define(
     ['lodash', '../../../predicate/predicate'],
     function (_, Predicate) {
 
-        var TICK_CHAR= '`';
+        var TICK_CHAR = '`';
 
         var QueryGen = UccelloClass.extend({
 
@@ -46,7 +46,7 @@ define(
             },
 
             createLinkQuery: function (ref) {
-                var query = "ALTER TABLE <%= table %> ADD CONSTRAINT <%= name %> FOREIGN KEY (<%= field %>) REFERENCES "+
+                var query = "ALTER TABLE <%= table %> ADD CONSTRAINT <%= name %> FOREIGN KEY (<%= field %>) REFERENCES " +
                     "<%= parent %> (<%= key %>) ON DELETE <%= parent_action %> ON UPDATE RESTRICT";
                 var ref_action = ref.type.refAction();
                 var parent_action = "NO ACTION";
@@ -141,7 +141,7 @@ define(
                 throw new Error("\"escapeValue\" wasn't implemented in descendant.");
             },
 
-            _predicateToSql: function (model, predicate) {
+            _predicateToSql: function predicateToString(model, predicate) {
                 var result = "";
                 var cond_arr = [];
 
@@ -151,7 +151,7 @@ define(
                     var cond = conds.get(i);
                     var res = "";
                     if (cond instanceof Predicate)
-                        res = predicateToString(cond);
+                        res = this._predicateToSql(model, cond);
                     else {
 
                         var field = model.getField(cond.fieldName());
@@ -168,23 +168,31 @@ define(
                                 val_arr.push(this._escapeValue(field, value));
                         }
                         if (val_arr.length > 0) {
+                            var arg_num = cond.allowedArgNumber();
+                            var is_between = cond.op() === "between";
+                            var sep = is_between ? " and " : ", ";
                             if (cond.isNegative())
                                 res += "(NOT ";
                             res += "(";
                             res += this.escapeId(cond.fieldName()) + " " + cond.op() + " ";
-                            if (val_arr.length > 1)
+                            var num = arg_num.max === 0 ? val_arr.length : (arg_num.max > val_arr.length ? val_arr.length : arg_num.max);
+                            if (arg_num.min > num)
+                                throw new Error("Invalid number of arguments: " + num + " for operation \"" + cond.op() + "\".");
+                            if ((num > 1) && (!is_between))
                                 res += "(";
-                            for (j = 0; j < val_arr.length ; j++) {
+                            for (j = 0; j < num ; j++) {
                                 if (j > 0)
-                                    res += ", ";
-                                res += JSON.stringify(val_arr[j]);
+                                    res += sep;
+                                res += val_arr[j];
                             };
-                            if (val_arr.length > 1)
+                            if ((num > 1) && (!is_between))
                                 res += ")";
                             res += ")";
                             if (cond.isNegative())
                                 res += ")";
-                        };
+                        }
+                        else
+                            throw new Error("There are no arguments for operation \"" + cond.op() + "\".");
                     };
                     if (res.length > 0)
                         cond_arr.push(res);

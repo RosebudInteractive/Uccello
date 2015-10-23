@@ -51,7 +51,8 @@ define(
 
             clearConditions: function () {
                 var conds = this.getCol("Conditions");
-                for (var i = 0; i < conds.count() ; i++)
+                var nconds = conds.count();
+                for (var i = 0; i < nconds; i++)
                     conds._del(conds.get(0));
             },
 
@@ -101,7 +102,6 @@ define(
                         fields: {
                             IsNegative: IsNegative,
                             FieldName: condition.field,
-                            Op: condition.op
                         }
                     },
                     parent: this,
@@ -111,6 +111,7 @@ define(
 
                 try {
 
+                    cond.op(condition.op);
                     cond.value(condition.value);
 
                 } catch (err) {
