@@ -75,12 +75,10 @@ define(
 	                        target: this,
 	                        obj: obj
 	                    });
+						delete this._guidIndex[obj.getGuid()];
 	                    return;
 	                }
 	            }
-
-				delete this._guidIndex[obj.getGuid()];
-
 	        },
 
 	        getName: function () {

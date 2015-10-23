@@ -178,7 +178,12 @@ define(
 
                     // Если следующий элемент разрешает таб-стоп, то нашли то, что искали
                     // иначе возвращаем, результат вычислений следующего контрола
-                    var nextTabStop = (nextControl.tabStop() === undefined ? true : nextControl.tabStop()) || (!checkTabStop);
+                    var nextTabStop =
+                        ((nextControl.tabStop() === undefined ? true : nextControl.tabStop()) &&
+                            (nextControl.visible() === undefined || nextControl.visible()) &&
+                            (nextControl.enabled() === undefined || nextControl.enabled())
+                        )
+                        || (!checkTabStop);
                     if (nextTabStop) {
                         var nextIsContainer = nextControl.isInstanceOf(UCCELLO_CONFIG.classGuids.Container, false);
                         // Но если это контейнер, то надо спросить первого дитя
@@ -222,8 +227,14 @@ define(
                         if (reverce)
                             child = thisChildren.get(thisChildren.count() - 2);
                     }
+
                     var tabStop = ("tabStop" in child) &&
-                        ((child.tabStop() === undefined ? true : child.tabStop()) || (!checkTabStop));
+                        (
+                            ((child.tabStop() === undefined ? true : child.tabStop()) &&
+                                (child.visible() === undefined || child.visible()) &&
+                                (child.enabled() === undefined || child.enabled())
+                            )
+                        || (!checkTabStop));
                     if (tabStop) {
                         var isContainer = child.isInstanceOf(UCCELLO_CONFIG.classGuids.Container, false);
                         if (isContainer) return child._firstChild(startedAt, rootPassed, checkTabStop, reverce);
