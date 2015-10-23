@@ -12,14 +12,16 @@ define(
         //
         MetaTypes.makeDescendant("int", types, { prefix: "SQL", toSql: function () { return "INTEGER"; } });
         MetaTypes.makeDescendant("dataRef", types, { prefix: "SQL", toSql: function () { return "INTEGER"; } });
-        MetaTypes.makeDescendant("string", types, {
+        var string_type = {
             prefix: "SQL",
             toSql: function () {
                 if (this._length === Infinity)
                     throw new Error("Length of string type can't be unlimited.");
                 return "VARCHAR(" + this._length + ")";
             }
-        });
+        };
+        MetaTypes.makeDescendant("string", types, string_type);
+        MetaTypes.makeDescendant("enum", types, string_type);
         MetaTypes.makeDescendant("float", types, { prefix: "SQL", toSql: function () { return "FLOAT"; } });
         MetaTypes.makeDescendant("datetime", types, { prefix: "SQL", toSql: function () { return "DATETIME"; } });
         MetaTypes.makeDescendant("decimal", types, {

@@ -50,9 +50,10 @@ define(
                 var query = "CREATE TABLE IF NOT EXISTS <%= table %> (<%= fields%>) ENGINE=<%= engine%>";
                 var self = this;
                 var attrs = [];
+                var provider = this.getProvider();
                 _.forEach(model.fields(), function (field) {
                     var flags = field.flags() | 0;
-                    attrs.push(self.escapeId(field.name()) + " " + field.fieldType().toSql() +
+                    attrs.push(self.escapeId(field.name()) + " " + field.fieldType().toSql(provider) +
                         ((((flags & self.Meta.Field.PrimaryKey) !== 0) || (!field.fieldType().allowNull())) ? " NOT NULL" : "") +
                         (((flags & self.Meta.Field.AutoIncrement) !== 0) ? " auto_increment" : ""));
                 });

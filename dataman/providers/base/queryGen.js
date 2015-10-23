@@ -137,7 +137,7 @@ define(
                 return this._addTicks(s);
             },
 
-            escapeValue: function (model, vals) {
+            escapeValue: function (s) {
                 throw new Error("\"escapeValue\" wasn't implemented in descendant.");
             },
 

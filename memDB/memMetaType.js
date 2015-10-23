@@ -294,7 +294,111 @@ define(
                         throw new Error("Invalid value of string \"length\": " + val.length + ".");
             }
         });
-        
+
+        var EnumType = StringType.extend({
+
+            key: "enum",
+
+            /**
+             * The Enum Type.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends StringType
+             * @constructor
+             */
+            init: function (typeObj, refResolver) {
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
+            },
+
+            /**
+             * Data Type hash code.
+             * Uniquely represents data type instance.
+             * 
+             * @return {Strng} The hash code
+             */
+            hash: function () {
+                var result = UccelloClass.super.apply(this, []);
+                return result + "[" + this._values.join(",") + "]";
+            },
+
+            /**
+             * Returns a serialized representation of the data type
+             * 
+             * @return {Object} Serialized representation
+             */
+            serialize: function () {
+                var result = UccelloClass.super.apply(this, []);
+                delete result.length;
+                result.values = [].concat(this._values);
+                return result;
+            },
+
+            /**
+             * Checks if value is correct.
+             * 
+             * @param {Any}       val A value to be checked
+             * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
+             * @param {String}    errObj.errMsg Error message
+             * @param {String}    fldName A field name of the value
+             * @param {Object}    obj A MemProtoObject which [val] belongs to 
+             * @return {Boolean} True if value is corect
+             */
+            checkVal: function (val, errObj, fldName, obj) {
+                var result = (typeof (val) === "string") && (this._names[val] !== undefined);
+                if ((!result) && errObj)
+                    errObj.errMsg = "Invalid \"enum\" value: " + JSON.stringify(val) + ".";
+                return result;
+            },
+
+            /**
+             * The values of ENUM type.
+             * 
+             * @return {Array}
+             */
+            values: function () {
+                return [].concat(this._values);
+            },
+
+            /**
+             * Converts this data type from the serialized representation 
+             * to the internal one (only constructor can invoke it)
+             * 
+             * @param {Object} val Serialized representation of this data type
+             * @private
+             */
+            _deserialize: function (val) {
+                var result = UccelloClass.super.apply(this, [val]);
+
+                this._length = Infinity;
+                this._values = [];
+                this._names = {};
+
+                if ((val instanceof Object) && val.values)
+                    if (Array.isArray(val.values)) {
+                        this._length = 0;
+                        for (var i = 0; i < val.values.length; i++) {
+                            var enum_val = val.values[i];
+                            if (typeof (enum_val) !== "string")
+                                throw new Error("Invalid \"enum\" value: " + JSON.stringify(enum_val) + ".");
+                            if (this._names[enum_val] !== undefined)
+                                throw new Error("Duplicate \"enum\" value: " + JSON.stringify(enum_val) + ".");
+                            var length = enum_val.length;
+                            if (length > this._length)
+                                this._length = length;
+                            this._names[enum_val] = this._values.length;
+                            this._values.push(enum_val);
+                        };
+                        if (this._values.length < 1)
+                            throw new Error("Invalid \"enum\" definition: " + JSON.stringify(val) + ". Empty list of values.");
+                    }
+                    else
+                        throw new Error("Invalid \"enum\" definition: " + JSON.stringify(val) + ".");
+                else
+                    throw new Error("Invalid \"enum\" definition: " + JSON.stringify(val) + ".");
+            }
+        });
+
         var FloatType = BaseType.extend({
 
             key: "float",
@@ -1071,7 +1175,8 @@ define(
             "integer": { code: 8, constructor: IntegerType },
             "date": { code: 9, constructor: DateTimeType },
             "time": { code: 10, constructor: DateTimeType },
-            "timestamp": { code: 11, constructor: DateTimeType }
+            "timestamp": { code: 11, constructor: DateTimeType },
+            "enum": { code: 16, constructor: EnumType }
         };
 
         var TypedValueVal = UccelloClass.extend({
@@ -1261,7 +1366,8 @@ define(
             "date": { code: 9, constructor: DateTimeType },
             "time": { code: 10, constructor: DateTimeType },
             "timestamp": { code: 11, constructor: DateTimeType },
-            "dataRef": { code: 14, constructor: DataRefType }
+            "dataRef": { code: 14, constructor: DataRefType },
+            "enum": { code: 16, constructor: EnumType }
         };
 
         var DataFieldType = BaseType.extend({
@@ -1507,7 +1613,8 @@ define(
             "datatype": { code: 12, constructor: DataFieldType },
             "money": { code: 13, constructor: FloatType },
             "dataRef": { code: 14, constructor: DataRefType },
-            "typedvalue": { code: 15, constructor: TypedValueType }
+            "typedvalue": { code: 15, constructor: TypedValueType },
+            "enum": { code: 16, constructor: EnumType }
         };
 
         function addDataType(typeTable, type) {
@@ -1535,6 +1642,7 @@ define(
         addDataType(typeTable, RefType);
         addDataType(typeTable, DataFieldType);
         addDataType(typeTable, DataRefType);
+        addDataType(typeTable, EnumType);
 
         var MetaTypes = {
             createTypeObject: GetFldTypeUniq,

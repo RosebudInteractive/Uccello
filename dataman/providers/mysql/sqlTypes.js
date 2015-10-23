@@ -3,16 +3,27 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    [UCCELLO_CONFIG.uccelloPath + '/memDB/memMetaType', '../base/sqlTypes'],
-    function (MetaTypes, Base) {
+    ['lodash', UCCELLO_CONFIG.uccelloPath + '/memDB/memMetaType', '../base/sqlTypes'],
+    function (_, MetaTypes, Base) {
 
         // «десь переопредел€ем базовые типы
         //
         var mysqlTypes = {};
 
-        // Ќапример, тип "int" можно переопределить так:
+        // Ќапример, тип "enum" можно переопределить так:
         //
-        //MetaTypes.makeDescendant("int", types, { prefix: "MySQL", toSql: function () { return "INT"; } });
+        MetaTypes.makeDescendant("enum", mysqlTypes, {
+            prefix: "MySQL",
+            toSql: function (provider) {
+                var enumDef = "ENUM(<%= vals%>)";
+                var qGen = provider.queryGen();
+                var enums = [];
+                _.forEach(this.values(), function (val) {
+                    enums.push(qGen.escapeValue(val));
+                });
+                return _.template(enumDef)({ vals: enums.join(", ") }).trim();
+            }
+        });
 
         // »спользуем базовые, там где не было переопределени€
         //

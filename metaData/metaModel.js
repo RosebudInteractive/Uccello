@@ -37,6 +37,7 @@ define(
                 this._fieldsByName = {};
                 this._fields = [];
                 this._primaryKey = null;
+                this._orderChangCounter = 0;
 
                 if (params)
                     this.eventsInit();  // WARNING !!! This line is essential !!! It initializes "Event" mixin.
@@ -183,21 +184,32 @@ define(
                     var fieldName = fieldObj.name();
                     var order = fieldObj.order();
 
-                    if ((order < 0) || (order >= self._fields.length)) {
-                        fieldObj.set("Order", oldOrder);
-                        throw new Error("Invalid order (" + order + ") of field \"" + fieldName + "\".");
+                    if (this._orderChangCounter > 0) {
+                        oldOrder = order;
+                        return;
                     };
-                    self._fieldsByName[fieldName] = order;
-                    self._fields.splice(oldOrder, 1);
-                    self._fields.splice(order, 0, fieldObj);
-                    self._reindexFields();
+                    this._orderChangCounter++;
+                    try {
+                        if ((order < 0) || (order >= self._fields.length)) {
+                            fieldObj.set("Order", oldOrder);
+                            throw new Error("Invalid order (" + order + ") of field \"" + fieldName + "\".");
+                        };
+                        self._fieldsByName[fieldName] = order;
+                        self._fields.splice(oldOrder, 1);
+                        self._fields.splice(order, 0, fieldObj);
+                        self._reindexFields();
 
-                    oldOrder = order;
+                        oldOrder = order;
 
-                    self.fire({
-                        type: "modelModified",
-                        target: self
-                    });
+                        self.fire({
+                            type: "modelModified",
+                            target: self
+                        });
+                    } catch (e) {
+                        throw e;
+                    } finally {
+                        this._orderChangCounter--;
+                    };
                 };
             },
 
@@ -287,8 +299,12 @@ define(
             },
 
             _reindexFields: function () {
-                for (var i = 0; i < this._fields.length; i++)
+                this._orderChangCounter++;
+                for (var i = 0; i < this._fields.length; i++) {
                     this._fieldsByName[this._fields[i].name()] = i;
+                    this._fields[i].set("Order", i);
+                };
+                this._orderChangCounter--;
             },
 
             _onAddField: function (args) {
@@ -296,11 +312,9 @@ define(
                 var name = field.get("Name");
                 var order = field.get("Order");
                 var flags = field.get("Flags");
-                var isNewOrder = false;
-                if (order === undefined) {
+                if (order === undefined)
                     order = this._fields.length;
-                    isNewOrder = true;
-                }
+
                 if (this._fieldsByName[name] !== undefined) {
                     this._fieldsCol._del(field);
                     throw new Error("Field \"" + name + "\" is already defined.");
@@ -319,9 +333,6 @@ define(
 
                 this._fields.splice(order, 0, field);
                 this._reindexFields();
-
-                if (isNewOrder)
-                    field.set("Order", order);
 
                 var fieldType = field.fieldType();
                 if (fieldType instanceof MemMetaType.DataRefType) {
@@ -366,6 +377,10 @@ define(
                 };
                 field.event.on(handler);
                 field.handlers.push(handler);
+                this.fire({
+                    type: "modelModified",
+                    target: this
+                });
             },
 
             _onDeleteField: function (args) {
@@ -373,11 +388,8 @@ define(
                 var name = field.get("Name");
                 var idx = this._fieldsByName[name];
                 if (typeof idx === "number") {
-                    if ((idx >= 0) && (idx < this._fields.length)) {
-                        for (var i = idx + 1; i < this._fields.length; i++)
-                            this._fields[i].set("Order", i - 1);
+                    if ((idx >= 0) && (idx < this._fields.length))
                         this._fields.splice(idx, 1);
-                    }
                     delete this._fieldsByName[name];
                     this._reindexFields();
                 };
@@ -396,6 +408,11 @@ define(
 
                 for (var i = 0; i < field.handlers.length; i++)
                     field.event.off(field.handlers[i]);
+
+                this.fire({
+                    type: "modelModified",
+                    target: this
+                });
             }
         });
 
