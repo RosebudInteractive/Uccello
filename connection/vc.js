@@ -30,7 +30,7 @@ define(
 			init: function(cm, params,cb) {
 				UccelloClass.super.apply(this, [cm, params, cb]);
 				this.pvt.isOn = false;
-				this.pvt.isVisible = false;
+				//this.pvt.isVisible = false;
 				this.pvt.vcrCounter = 0;
 			},
 
@@ -124,7 +124,7 @@ define(
 						return comp;
 					}
 				
-				if (this.isMaster()) { // главная (master) TODO разобраться с KIND
+				if (this.isMaster()) { 
 					this.pvt.cm = this.pvt.cdb = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
 					// подписываемся на добавление нового рута
 					this.pvt.cdb.event.on( {
@@ -133,24 +133,24 @@ define(
 						callback: this.onNewRoot
 					});
 					this.pvt.cdb.setDefaultCompCallback(createCompCallback);
-					
-					
+									
 					function cb3(res) {
 						that.dataBase(that.pvt.cdb.getGuid());
 						that.contextGuid(that.getGuid());
 						that.pvt.isOn = true;
-						if (that.pvt.renderRoot) that.pvt.isVisible = true;	
+						//if (that.pvt.renderRoot) that.pvt.isVisible = true;	
 						if (!onServer) that.allDataInit();
 						cm2.tranCommit();
 						if (cb) cb(res);
-					}
-					
+					};					
+					function gr() {
+						cm2.tranStart();
+						cm2.getRoots(params.formGuids, { rtype: "res"  }, cb3);
+					};
 					var cm2 = this.getContextCM();
-					cm2.tranStart();
-					if (onServer)
-						cm2.getRoots(params.formGuids, { rtype: "res" },cb3);
+					if (onServer) gr();
 					else
-						cm2.userEventHandler(cm2,cm2.getRoots, [params.formGuids, { rtype: "res"  },cb3]);
+						cm2.userEventHandler(cm2,gr, []); //cm2.userEventHandler(cm2,cm2.getRoots, [params.formGuids, { rtype: "res"  },cb3]);
 				}
 				else { // подписка (slave)			
 					guid = this.dataBase();
@@ -190,7 +190,7 @@ define(
 				var that = this;
 				function cb2() {
 					that.pvt.isOn = false;
-					that.pvt.isVisible = false;
+					//that.pvt.isVisible = false;
 					if ((cb !== undefined) && (typeof cb == "function")) cb();
 				}
 
@@ -223,9 +223,9 @@ define(
 			/**
 			 * Возвращает true если контекст активен и рендерится в DOM
 			 */
-			isVisible: function() {
+			/*isVisible: function() {
 				return this.pvt.isVisible;
-			},
+			},*/
 
 			// меняет "видимость" у активного контекста, если он включен, если выключен ничего не делает
 			/*
