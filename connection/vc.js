@@ -41,32 +41,30 @@ define(
 			 * @renderRoot - содержит колбэк для рендеринга
 			 */
 			on: function(cm, params,cb, renderRoot, onServer) {
+				var p = this.pvt;
 				if (this.isOn()) {
 					var guids = this.pvt.cm.getRootGuids("res")
-					this.pvt.cm.initRender(guids);
+					p.cm.initRender(guids);
 					if (!onServer) this.renderAll();
 					cb(guids);
 					return;
 				}
-				this.pvt.cdb = null;
-
 
 				if (params == undefined) return;
 
 				var controller = cm.getController();
-				this.pvt.proxyServer = params.proxyServer;
-				this.pvt.proxyWfe = params.proxyWfe;
-				this.pvt.constructHolder = params.constructHolder;
-				this.pvt.renderRoot = renderRoot;
-				this.pvt.formParams = {};
-				this.pvt.memParams = [];
-				this.pvt.socket = params.socket;
-				this.pvt.cmsys = cm;
-				this.pvt.onServer = onServer;
+				p.proxyServer = params.proxyServer;
+				p.proxyWfe = params.proxyWfe;
+				p.constructHolder = params.constructHolder;
+				p.renderRoot = renderRoot;
+				p.formParams = {};
+				p.memParams = [];
+				p.socket = params.socket;
+				p.cmsys = cm;
+				p.onServer = onServer;
 
 				var that = this;
-				if (onServer) {// если нет колбэка значит на сервере - но это надо поменять TODO
-					//var createCompCallback = function (obj) {
+				if (onServer) {
 					// подписаться на событие завершения applyDelta в контроллере, чтобы переприсвоить параметры 
 					controller.event.on({
 						type: 'end2ApplyDeltas',
@@ -75,110 +73,73 @@ define(
 					});
 
 					var createCompCallback = function (typeObj, parent, sobj) {
-
-
-						//var timeStart = perfomance.now();
 						var obj =  that.createComponent.apply(that, [typeObj, parent, sobj]);
-						//var timeEnd = perfomance.now() - timeStart;
-						//logger.info('createComponent;'+timeEnd);
-
-						// TODOR2 переделать в соответствии с новыми реалиями
 						if (obj.getTypeGuid() == UCCELLO_CONFIG.classGuids.FormParam) { // Form Param
 							obj.event.on({
 								type: "mod", // TODO не забыть про отписку
 								subscriber: that,
 								callback: that._onModifParam
 							});
-
-							if (!that.pvt.formParams[obj.name()])  // добавить в список параметров
-								that.pvt.formParams[obj.name()] = [];
-							that.pvt.formParams[obj.name()].push(obj);
-
+							if (!p.formParams[obj.name()])  // добавить в список параметров
+								p.formParams[obj.name()] = [];
+							p.formParams[obj.name()].push(obj);
 						}
-						
 						return obj;
 					}
-						
 				}
 				else
-					createCompCallback = function (typeObj, parent, sobj) {
-						if (sobj.$sys.typeGuid == UCCELLO_CONFIG.classGuids.DataCompany) {
-							if (!that.timeDataCompany)
-								that.timeDataCompany = 0;
-							if (DEBUG)
-								var start = performance.now();
-						}
-
-						var comp =  that.createComponent.apply(that, [typeObj, parent, sobj]);
-
-						if (false) {
-							if (sobj.$sys.typeGuid == UCCELLO_CONFIG.classGuids.DataCompany) {
-								var end = performance.now();
-								var time = end - start;
-								that.timeDataCompany += time;
-								console.log('timeOneDataCompany', time);
-								console.log('timeAllDataCompany', that.timeDataCompany);
-							}
-						}
-
-						return comp;
-					}
+					createCompCallback = function (typeObj, parent, sobj) { return that.createComponent.apply(that, [typeObj, parent, sobj]); }
 				
 				if (this.isMaster()) { 
-					this.pvt.cm = this.pvt.cdb = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
+					p.cm = this.createDb(controller,{name: "VisualContextDB", kind: "master"});
 					// подписываемся на добавление нового рута
-					this.pvt.cdb.event.on( {
+					p.cm.event.on( {
 						type: "newRoot",
 						subscriber: this,
 						callback: this.onNewRoot
 					});
-					this.pvt.cdb.setDefaultCompCallback(createCompCallback);
+					p.cm.setDefaultCompCallback(createCompCallback);
 									
 					function cb3(res) {
-						that.dataBase(that.pvt.cdb.getGuid());
+						that.dataBase(p.cm.getGuid());
 						that.contextGuid(that.getGuid());
-						that.pvt.isOn = true;
-						//if (that.pvt.renderRoot) that.pvt.isVisible = true;	
+						p.isOn = true;	
 						if (!onServer) that.allDataInit();
-						cm2.tranCommit();
+						p.cm.tranCommit();
 						if (cb) cb(res);
 					};					
 					function gr() {
-						cm2.tranStart();
-						cm2.getRoots(params.formGuids, { rtype: "res"  }, cb3);
+						p.cm.tranStart();
+						p.cm.getRoots(params.formGuids, { rtype: "res"  }, cb3);
 					};
-					var cm2 = this.getContextCM();
 					if (onServer) gr();
-					else
-						cm2.userEventHandler(cm2,gr, []); //cm2.userEventHandler(cm2,cm2.getRoots, [params.formGuids, { rtype: "res"  },cb3]);
+					else p.cm.userEventHandler(p.cm,gr, []); //cm2.userEventHandler(cm2,cm2.getRoots, [params.formGuids, { rtype: "res"  },cb3]);
 				}
 				else { // подписка (slave)			
 					guid = this.dataBase();
 					function cb2(res) {
 						if (!onServer) that.allDataInit();
-						that.pvt.isOn = true;
-						if (that.pvt.renderRoot) that.pvt.isVisible = true;
+						p.isOn = true;
 						cb(res);
 					}
 
 					var dbp = {name:"Slave"+guid, proxyMaster : { connect: params.socket, guid: guid}};
 					
-					this.pvt.cdb = this.pvt.cm = new ControlMgr( { controller: controller, dbparams: dbp}, that,that.pvt.socket, function(){
-						that.pvt.cdb.setDefaultCompCallback(createCompCallback);
+					p.cm = new ControlMgr( { controller: controller, dbparams: dbp}, that,p.socket, function(){
+						p.cm.setDefaultCompCallback(createCompCallback);
 						var forms = params.formGuids;
 						if (forms == null) forms = "all";
 						else if (forms == "") forms = [];
-						// that.getContentDB().subscribeRoots(forms, cb2, createCompCallback);
-						var cm2 = that.getContextCM();
-						cm2.userEventHandler(cm2,cm2.getRoots, [forms, { rtype: "res"  },cb2]);
+						//var cm2 = that.getContextCM();
+						p.cm.userEventHandler(p.cm,p.cm.getRoots, [forms, { rtype: "res"  },cb2]);
 					},this.pvt.proxyServer);
 
 				}
 				if (!onServer) { // подписываемся только на клиенте
 					this.pvt.cm.event.on({
 						type: 'commit',
-						subscriber: this,
-						callback: function(args) {  if (args.external) that.getContextCM().processDelta(); that.renderAll(); }
+						subscriber: this, // processDelta вызываем только если транзакция "внешняя" (+ на клиенте, на сервере не подписаны)
+						callback: function(args) {  if (args.external) p.cm.processDelta(); that.renderAll(); }
 					});
 				}
 				
@@ -190,10 +151,8 @@ define(
 				var that = this;
 				function cb2() {
 					that.pvt.isOn = false;
-					//that.pvt.isVisible = false;
 					if ((cb !== undefined) && (typeof cb == "function")) cb();
 				}
-
 				this._dispose(cb2);
 			},
 
@@ -204,7 +163,7 @@ define(
 			_dispose: function(cb) {
 				if (!this.isMaster()) {
 					var controller = this.getControlMgr().getController();
-					controller.delDataBase(this.getContentDB().getGuid(), cb);
+					controller.delDataBase(this.getContextCM().getGuid(), cb);
 				}
 				else cb();
 			},
@@ -219,23 +178,6 @@ define(
 			isOnServer: function() {
 				return this.pvt.onServer;
 			},
-
-			/**
-			 * Возвращает true если контекст активен и рендерится в DOM
-			 */
-			/*isVisible: function() {
-				return this.pvt.isVisible;
-			},*/
-
-			// меняет "видимость" у активного контекста, если он включен, если выключен ничего не делает
-			/*
-			setVisible: function(renderRoot) {
-				if (!this.isOn()) return false;
-				this.pvt.renderRoot = renderRoot;
-				if (renderRoot === undefined) this.pvt.isVisible = true;
-				else this.pvt.isVisible = false;
-				return true;
-			},*/
 
 			/**
 			 * Обработчик изменения параметра
@@ -255,7 +197,7 @@ define(
 					}
 				}
 				this.pvt.memParams = [];
-				this.getContextCM().getController().genDeltas(this.getContentDB().getGuid());
+				this.getContextCM().getController().genDeltas(this.getContextCM().getGuid());
 			},
 
 			/**
@@ -355,11 +297,7 @@ define(
 					if (root)
 						this.pvt.cm.render(root,renderItem);
 				}
-				this.getContentDB().resetModifLog();
-			},
-
-			getContentDB: function() {
-				return this.pvt.cdb;
+				this.getContextCM().resetModifLog();
 			},
 
 			getSysCM: function() {
@@ -382,7 +320,6 @@ define(
 				return this._genericSetter("Kind", value);
 			},
 
-
 			contextGuid: function (value) {
 				return this._genericSetter("ContextGuid", value, "MASTER");
 			},
@@ -401,7 +338,7 @@ define(
 					if (found || !title) title += id;
 
 					var vcResource = new Vcresource(this.getControlMgr(), {parent: this, colName: "Resources",  ini: { fields: { Id: id, Name: 'vcr'+id, Title:title, ResGuid:result.target.getGuid() } }});
-					var db = this.getContentDB();
+					var db = this.getContextCM();
 					db.getController().genDeltas(db.getGuid());
 					var dbSys = this.getSysCM();
 					dbSys.getController().genDeltas(dbSys.getGuid());
