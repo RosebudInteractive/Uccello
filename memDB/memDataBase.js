@@ -1236,7 +1236,8 @@ define(
 
 				}
 				//if (DEBUG) 
-				//console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
+				console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
+				console.trace();
 				return p.curTranGuid;
 				
 			},
@@ -1277,14 +1278,19 @@ define(
 						this.pvt.execQ.splice(0,1);
 						this.pvt.memTranIdx++;			
 					}	
+					this.event.fire({
+						type: 'commit',
+						external: memExternal			
+					});					
 				}
 				else p.tranCounter--;
 				//if (DEBUG)				
-				    //console.log("TRAN|COMMIT " + memTran + " | " + p.tranCounter);
+				    console.log("TRAN|COMMIT " + memTran + " | " + p.tranCounter);
+					console.trace();
 			},
 									
 			// синхронизировать в рамках транзакции
-			syncInTran: function(doBefore,doAfter) {	
+			syncInTran: function() {	
 
 				if (!this.inTran()) return;
 				if (!this.pvt._memFunc || !this.pvt._memFunc.length) {
@@ -1292,17 +1298,32 @@ define(
 					return;
 				} 				
 
-				this._rc(this.pvt._memFunc,this.pvt._memFuncDone,doBefore,doAfter,true);
+				this._rc(this.pvt._memFunc,this.pvt._memFuncDone,true);
 				this.pvt._memFunc = [];
 				this.pvt._memFuncDone = [];
 			},
+			
+			rc2: function(obj, func, aparams, cb) {	
+				function rpc_cb(result) {
+					
+					cb(result);
+					that.tranCommit();
+				}	
+				var that = this;
+				aparams.push(rpc_cb);
+				this.tranStart();
+				func.apply(obj,aparams);		
+			},
 
 			rc: function(objGuid, func, aparams, cb) {
+
 				if (this.isMaster()) {
 					// TODO кинуть исключение
 					return;
-				}			
-				if (this.inTran()) { // запомнить удаленный вызов на клиенте в транзакции
+				}
+				
+				if (this.inTran()) { // запомнить удаленный вызов на клиенте в транзакции		
+				
 					if (objGuid && !this.get(objGuid)) {
 						console.log("Объект не принадлежит базе ",objGuid);
 						return;
@@ -1328,7 +1349,6 @@ define(
 				}	
 				var that = this, memTr = this.getCurTranGuid();
 				var args = {objGuid: undefined, func:"endTran", aparams:undefined };
-				//console.log("***************ENDTRAN ",this.getCurTranGuid());
 				this._rc([args],[icb]);
 			},
 			
@@ -1375,10 +1395,9 @@ define(
 				return this.pvt.rca;
 			},
 			
-			_rc: function(rcargs,rccbs,doBefore,doAfter,tran) { // TODO 10 - если есть удаленный вызов кроме дельты, то установить lock
+			_rc: function(rcargs,rccbs,tran) { // TODO 10 - если есть удаленный вызов кроме дельты, то установить lock
 				function icb(result) {			
 					var actDone = false;
-					if (doBefore) doBefore();	
 					for (var i=0; i<result.cbres.length; i++) 
 						if (rccbs[i]) {
 							rccbs[i](result.cbres[i]);
@@ -1387,10 +1406,9 @@ define(
 					that.logRemoteCall(result.cbres,'r',data.trGuid);					
 					if (actDone) {
 						that.getController().genDeltas(that.getGuid(),undefined, function(res,cb1) { that.sendDataBaseDelta(res,cb1); });
-						that.syncInTran(doBefore,doAfter); 
+						that.syncInTran(); 
 					}
 					if (tran) that.tranCommit();					
-					if (doAfter && !that.inTran()) doAfter(); // постобработка (рендеринг) только если вышли из транзакции
 				}
 				
 				if (!rcargs.length) return;
@@ -1417,7 +1435,7 @@ define(
 				if (this.pvt.name!="System") {
 					for (var i=0, s = ""; i<rcargs.length; i++) s += rcargs[i].func + " ";
 					console.log("%c SEND DATA ("+s+")  ","color: blue", data.args, " trGuid: ",data.trGuid);
-				}					*/
+				}*/
 			},
 						
 			inTran: function() {
@@ -1484,8 +1502,8 @@ define(
 						}
 						tobj.end = new Date();
 						// удалить из истории последнюю подтвержденную транзакцию (может быть в комменте в целях тестирования)
-						// if (tobj.prev && tobj.prev.state == 'c') this.truncTran(tobj.prev.guid);
-						
+						if (tobj.prev && tobj.prev.state == 'c' && tobj.prev.prev && tobj.prev.prev.prev) 		
+							this.truncTran(tobj.prev.prev.prev.guid);			
 						return true;
 					}
 					return false;
@@ -1618,11 +1636,7 @@ define(
 						//db.subsRemoteCall("endTran",undefined, srcDbGuid); // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid
 						if (db.isExternalTran()) // закрываем только "внешние" транзакции (созданные внутри remoteCallExec)
 							db.tranCommit();   // TODO 10 -	isExternalTran должна возвр тру, эта проверка лишняя?
-						db.event.fire({
-							type: 'endTransaction',
-							target: db
-						});
-						
+
 						if (done) done(res);
 						
 						delete trans[memTranGuid];
@@ -1647,7 +1661,7 @@ define(
 						else 
 							db.pvt.execFst = false;
 					}
-					//console.log("RCEXEC DONE ",args.func,args,trGuid,auto,commit, queue);
+					console.log("RCEXEC DONE ",args.func,args,trGuid,auto,commit, queue);
 				}
 				var aparams = args.aparams || [];
 				aparams.push(done2); // добавить колбэк последним параметром

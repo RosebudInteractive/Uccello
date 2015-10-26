@@ -62,6 +62,7 @@ define(
 				this.pvt.memParams = [];
 				this.pvt.socket = params.socket;
 				this.pvt.cmsys = cm;
+				this.pvt.onServer = onServer;
 
 				var that = this;
 				if (onServer) {// если нет колбэка значит на сервере - но это надо поменять TODO
@@ -139,21 +140,22 @@ define(
 						that.contextGuid(that.getGuid());
 						that.pvt.isOn = true;
 						if (that.pvt.renderRoot) that.pvt.isVisible = true;	
+						if (!onServer) that.allDataInit();
+						cm2.tranCommit();
 						if (cb) cb(res);
 					}
-
+					
+					var cm2 = this.getContextCM();
+					cm2.tranStart();
 					if (onServer)
-						this.getContextCM().getRoots(params.formGuids, { rtype: "res" },cb3);
-					else {
-						var cm2 = that.getContextCM();
+						cm2.getRoots(params.formGuids, { rtype: "res" },cb3);
+					else
 						cm2.userEventHandler(cm2,cm2.getRoots, [params.formGuids, { rtype: "res"  },cb3]);
-					}
-					    			
-
 				}
 				else { // подписка (slave)			
 					guid = this.dataBase();
 					function cb2(res) {
+						if (!onServer) that.allDataInit();
 						that.pvt.isOn = true;
 						if (that.pvt.renderRoot) that.pvt.isVisible = true;
 						cb(res);
@@ -172,12 +174,11 @@ define(
 					},this.pvt.proxyServer);
 
 				}
-				// TODO!!! TEMPO
-				if (!onServer /*cb*/) { // подписываемся только на клиенте
+				if (!onServer) { // подписываемся только на клиенте
 					this.pvt.cm.event.on({
-						type: 'endTransaction',
+						type: 'commit',
 						subscriber: this,
-						callback: function(args) { that.allDataInit(); that.renderAll(); }
+						callback: function(args) {  if (args.external) that.getContextCM().processDelta(); that.renderAll(); }
 					});
 				}
 				
@@ -213,6 +214,10 @@ define(
 			 */
 			isOn: function() {
 				return this.pvt.isOn;
+			},
+			
+			isOnServer: function() {
+				return this.pvt.onServer;
 			},
 
 			/**

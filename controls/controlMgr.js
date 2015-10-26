@@ -190,7 +190,7 @@ define(
 					this.pvt.dataInitFlag[cg] = true;
 				}
 				
-				this.processDelta();						
+				//this.processDelta();						
 			},
 
             /**
@@ -260,8 +260,6 @@ define(
                 return new ViewSet(this, ini);
             },
 
-			
-			// REFACTORING 10 -------------------------------------------------------------------------------------------------------
             /**
              * Функция-оболочка в которой выполняются системные действия. Должна вызываться компонентами
 			 * в ответ на действия пользователя, содержательные методы передаются в функцию f
@@ -271,12 +269,7 @@ define(
 			 * @param nots {boolean) true - не стартовать транзакцию дб
              */
             userEventHandler: function(context, f, args) {
-				function doBefore() {	
-					if (that.incDeltaFlag()<2 && vc) vc.allDataInit();
-				}		
-				function doAfter() {
-					if (!that.inTran() && vc) vc.renderAll();
-				}
+
 				console.log("START OF USEREVENTHANDLER");
 				console.trace();
 				
@@ -295,8 +288,9 @@ define(
 				if (f) f.apply(context, nargs);		
 				this.resetModifLog('pd');					
 				this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });	
-				this.syncInTran(doBefore,doAfter);
+				this.syncInTran();
 				this.tranCommit();
+					
 				console.log("END OF USEREVENTHANDLER");
             },
 
@@ -318,7 +312,6 @@ define(
 			buildMetaInfo: function(type, done){
 				var ctrls = UCCELLO_CONFIG.controls;
 
-				//if (!side || side == 'server') {
 				if (this._isNode) {
 				    for (var i in ctrls) {
 				        if ((!ctrls[i].metaType && type == 'content') || (ctrls[i].metaType && ctrls[i].metaType.indexOf(type) != -1)) {
@@ -353,8 +346,7 @@ define(
 			// params.rtype = "res" | "data"
 			// params.compcb - только в случае ресурсов (может использоваться дефолтный)
 			// params.expr - выражение для данных
-			getRoots: function(rootGuids,params, cb) {
-				//var db = this.getContentDB();				
+			getRoots: function(rootGuids,params, cb) {			
 				var that = this;
 				if (this.isMaster()) {
 
@@ -368,9 +360,13 @@ define(
 						};
 
 						if (cb) {
-							// TODO 10 ИСПРАВИТЬ ДЛЯ КК
+							// TODO 10 ИСПРАВИТЬ ДЛЯ КК 
 							//that._execMethod(that,that.addRemoteComps,[objArr, localCallback]);
-							that.addRemoteComps(objArr, localCallback);
+							if (that.getContext() && !that.getContext().isOnServer())
+								that.rc2(that,that.addRemoteComps, [objArr],localCallback);
+							else
+								that.addRemoteComps(objArr, localCallback);
+								
 						}
 						else {
 							that.addLocalComps(objArr);
@@ -397,14 +393,20 @@ define(
 					if (rg.length>0) {
 						if (params.rtype == "res") {
 							// TODO 10 ИСПРАВИТЬ ДЛЯ КК
-							// this._execMethod(this.pvt.proxySrv,this.pvt.proxySrv.loadResources, [rg,icb]);
-							this.pvt.proxySrv.loadResources(rg, icb);
+							//this._execMethod(this.pvt.proxySrv,this.pvt.proxySrv.loadResources, [rg,icb]);
+							if (this.getContext().isOnServer())
+								this.pvt.proxySrv.loadResources(rg, icb);
+							else
+								this.rc2(this.pvt.proxySrv,this.pvt.proxySrv.loadResources, [rg],icb);
 							return;
 						}
 						if (params.rtype == "data") {
 							// TODO 10 ИСПРАВИТЬ ДЛЯ КК
 							//this._execMethod(this.pvt.proxySrv,this.pvt.proxySrv.queryDatas, [rg, params.expr, icb]);
-							this.pvt.proxySrv.queryDatas(rg, params.expr, icb);
+							if (this.getContext().isOnServer())
+								this.pvt.proxySrv.queryDatas(rg, params.expr, icb);
+							else
+								this.rc2(this.pvt.proxySrv,this.pvt.proxySrv.queryDatas, [rg, params.expr],icb);
 							return;
 						}
 					}
