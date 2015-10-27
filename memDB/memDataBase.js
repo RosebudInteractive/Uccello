@@ -1661,7 +1661,7 @@ define(
 						else 
 							db.pvt.execFst = false;
 					}
-					console.log("RCEXEC DONE ",args.func,args,trGuid,auto,commit, queue);
+					//console.log("RCEXEC DONE ",args.func,args,trGuid,auto,commit, queue);
 				}
 				var aparams = args.aparams || [];
 				aparams.push(done2); // добавить колбэк последним параметром

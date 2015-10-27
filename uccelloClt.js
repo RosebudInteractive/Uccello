@@ -138,7 +138,8 @@ define(
                      */
                     r: function() {
                         var cm = that.getContextCM();
-                        cm.userEventHandler(that, function () {});
+						
+                        cm.userEventHandler(that, function () {  that.getContext().allDataInit(); });
                     }
                 };
             },

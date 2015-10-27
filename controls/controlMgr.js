@@ -48,32 +48,6 @@ define(
                     
 			},
 
-           /**
-			 * Инициализация подписки - делается 1 раз при загрузке нового ресурса
-             * @param component {AComponent} - корневой элемент
-             */				
-			subsInit: function(component) {
-				component.subsInit();
-				for (var j=0, countCol=component.countCol(); j<countCol ; j++) {
-					var col = component.getCol(j);
-					for (var i=0, cnt=col.count(); i<cnt; i++)
-						this.subsInit(col.get(i));
-				}
-			},
-
-           /**
-			 * Инициализация данных - делается 1 раз при загрузке нового ресурса
-             * @param component {AComponent} - корневой элемент
-             */				
-			dataInit: function(component) {
-				component.dataInit();
-				for (var j = 0, countCol=component.countCol() ; j < countCol ; j++) {
-					var col = component.getCol(j);
-					for (var i=0, cnt=col.count(); i<cnt; i++) 
-						this.dataInit(col.get(i));
-				}
-			},
-
             /**
 			 * Добавить компонент component в список менеджера контролов
              * @param component {AComponent} - добавляемый компонент
@@ -176,21 +150,47 @@ define(
 				for (g in this.pvt.compByGuid) this.pvt.compByGuid[g]._isProcessed(false);
 				this.incDeltaFlag(2);
 			},
-			
+
+           /**
+			 * Инициализация подписки - делается 1 раз при загрузке нового ресурса
+             * @param component {AComponent} - корневой элемент
+             */				
+			subsInit: function(component) {
+				if (!component.isSubsInit()) {
+					component.subsInit();
+					component.isSubsInit(true);
+				}
+				for (var j=0, countCol=component.countCol(); j<countCol ; j++) {
+					var col = component.getCol(j);
+					for (var i=0, cnt=col.count(); i<cnt; i++)
+						this.subsInit(col.get(i));
+				}
+			},
+
+           /**
+			 * Инициализация данных - делается 1 раз при загрузке нового ресурса
+             * @param component {AComponent} - корневой элемент
+             */				
+			dataInit: function(component) {
+				if (!component.isDataInit()) {
+					component.dataInit();
+					component.isDataInit(true);
+				}
+				//component.dataInit();
+				for (var j = 0, countCol=component.countCol() ; j < countCol ; j++) {
+					var col = component.getCol(j);
+					for (var i=0, cnt=col.count(); i<cnt; i++) 
+						this.dataInit(col.get(i));
+				}
+			},
+	
 			allDataInit: function(component) {
+		
+				this.subsInit(component);  // если не выполнена постинициализация, то запустить
 				var cg = component.getGuid();
-				if (!this.pvt.subsInitFlag[cg]) {
-					this.subsInit(component);  // если не выполнена постинициализация, то запустить
-					this.pvt.subsInitFlag[cg] = true;
-				}
-				if (!this.pvt.dataInitFlag[cg]) {
-					this.tranStart();
-					this.dataInit(component);
-					this.tranCommit();
-					this.pvt.dataInitFlag[cg] = true;
-				}
-				
-				//this.processDelta();						
+
+				this.dataInit(component);
+				this.pvt.dataInitFlag[cg] = true;
 			},
 
             /**
@@ -271,7 +271,7 @@ define(
             userEventHandler: function(context, f, args) {
 
 				console.log("START OF USEREVENTHANDLER");
-				console.trace();
+				//console.trace();
 				
 				if (this.inTran()) {
 					console.log("%c ALREADY IN TRANSACTION! "+this.getCurTranGuid(),"color: red");
