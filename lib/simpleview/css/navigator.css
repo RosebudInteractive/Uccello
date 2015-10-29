@@ -1,18 +1,19 @@
 .navigator .dbDiv {overflow: auto; height: 475px;min-height: 475px;width:100%;}
 .navigator {position: absolute; background-color: #fff;font-size: 12px;padding:10px;width:100%;height: 100%;box-sizing: border-box;}
 .navigator .left {width:240px;overflow: auto;}
+.navigator .tree {overflow: auto; height: 405px;}
 .navigator a {text-decoration: none; color:#000000;}
 .navigator a:hover {text-decoration: none;}
 .navigator a.active {background-color: #333;color:#fff;}
 .navigator .centerTop {width:240px;overflow: auto;height: 60px;}
 .navigator .centerBottom {width:240px;overflow: auto;}
-.navigator .right {width:260px;overflow: auto;}
+.navigator .right {width:300px;overflow: auto; height: 405px;}
 .navigator td {border:1px solid #999;padding:5px;}
 .navigator input.value {width:100px;}
 .navigator input.save {}
 .navigator .right span {display: inline-block;}
-.navigator .right span.name {width:70px;}
-.navigator .right span.type {width:40px;}
+.navigator .right span.name {width:90px;}
+.navigator .right span.type {width:50px;}
 .navigator .right input {display: inline-block;}
 .navigator .levels .level{padding:5px;margin:5px;border:1px solid #999;}
 
@@ -71,3 +72,5 @@
 .remoteCallsDiv .trGuid2 { /*background-color: #5eb4e8;*/  }
 .remoteCallsDiv .time1 { background-color: #000;  }
 .remoteCallsDiv .time2 { background-color: #fff;  }
+
+.jstree-default .jstree-themeicon.collection { background-image: url(../js/jstree/themes/default/coll.png);}
