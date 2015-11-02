@@ -9,10 +9,10 @@
 .navigator .centerBottom {width:240px;overflow: auto;}
 .navigator .right {width:395px;overflow: auto; height: 100%;}
 .navigator td {border:1px solid #999;padding:5px;}
-.navigator input.value {width:168px;}
+.navigator input.value {width:200px;}
 .navigator input.save {}
 .navigator .right span {display: inline-block;}
-.navigator .right span.name {width:120px;}
+.navigator .right span.name {width:90px;}
 .navigator .right span.type {width:50px;}
 .navigator .right input {display: inline-block;}
 .navigator .levels .level{padding:5px;margin:5px;border:1px solid #999;}
