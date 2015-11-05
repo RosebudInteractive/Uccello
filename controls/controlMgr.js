@@ -189,7 +189,9 @@ define(
 				this.subsInit(component);  // если не выполнена постинициализация, то запустить
 				var cg = component.getGuid();
 
+				//this.tranStart();
 				this.dataInit(component);
+				//this.tranCommit();
 				this.pvt.dataInitFlag[cg] = true;
 			},
 

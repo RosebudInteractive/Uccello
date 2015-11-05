@@ -1237,7 +1237,7 @@ define(
 				}
 				//if (DEBUG) 
 				console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
-				console.trace();
+				//console.trace();
 				return p.curTranGuid;
 				
 			},
@@ -1286,7 +1286,7 @@ define(
 				else p.tranCounter--;
 				//if (DEBUG)				
 				    console.log("TRAN|COMMIT " + memTran + " | " + p.tranCounter);
-					console.trace();
+					//console.trace();
 			},
 									
 			// синхронизировать в рамках транзакции
