@@ -79,7 +79,9 @@ define([], function () {
             { className: 'ToolbarButton', isUccello: true, component: 'controls/toolbarButton', viewset: false, metaType: ['content'] },
             { className: 'ToolbarSeparator', isUccello: true, component: 'controls/toolbarSeparator', viewset: false, metaType: ['content'] },
             { className: 'LayersContainer', isUccello: true, component: 'controls/layersContainer', viewset: false, metaType: ['content'] },
-            { className: 'DbNavigator', isUccello: true, component: 'lib/dbNavigator', viewset: false, metaType: ['content'] }
+            { className: 'DbNavigator', isUccello: true, component: 'lib/dbNavigator', viewset: false, metaType: ['content'] },
+            { className: 'TreeView', isUccello: true, component: 'controls/treeView', viewset: false, metaType: ['content'] },
+            { className: 'TreeViewItem', isUccello: true, component: 'controls/treeViewItem', viewset: false, metaType: ['content'] }
         ],
 
         // остальные гуиды
@@ -166,7 +168,9 @@ define([], function () {
             'ToolbarButton': '6ddef43f-252a-46e3-bb68-2a5a52f0702e',
             'ToolbarSeparator': '050fd0ed-873a-4637-916b-145cb71e425f',
             'LayersContainer': '005f4241-7cb4-45ea-bf7d-5cb047eadac1',
-            'DbNavigator': '38aec981-30ae-ec1d-8f8f-5004958b4cfa'
+            'DbNavigator': '38aec981-30ae-ec1d-8f8f-5004958b4cfa',
+            'TreeView': '35400d0c-5465-00e8-c770-a1b04b4b8180',
+            'TreeViewItem': '16eb3a02-7f2a-3001-096a-14c1b38586db'
         },
 
         REMOTE_RESULT: "XXX",
