@@ -81,7 +81,9 @@ define([], function () {
             { className: 'LayersContainer', isUccello: true, component: 'controls/layersContainer', viewset: false, metaType: ['content'] },
             { className: 'DbNavigator', isUccello: true, component: 'lib/dbNavigator', viewset: false, metaType: ['content'] },
             { className: 'TreeView', isUccello: true, component: 'controls/treeView', viewset: false, metaType: ['content'] },
-            { className: 'TreeViewItem', isUccello: true, component: 'controls/treeViewItem', viewset: false, metaType: ['content'] }
+            { className: 'TreeViewItem', isUccello: true, component: 'controls/treeViewItem', viewset: false, metaType: ['content'] },
+            { className: 'DbTreeView', isUccello: true, component: 'controls/dbTreeView', viewset: false, metaType: ['content'] },
+            { className: 'DbTreeViewItemType', isUccello: true, component: 'controls/dbTreeViewItemType', viewset: false, metaType: ['content'] }
         ],
 
         // остальные гуиды
@@ -170,7 +172,9 @@ define([], function () {
             'LayersContainer': '005f4241-7cb4-45ea-bf7d-5cb047eadac1',
             'DbNavigator': '38aec981-30ae-ec1d-8f8f-5004958b4cfa',
             'TreeView': '35400d0c-5465-00e8-c770-a1b04b4b8180',
-            'TreeViewItem': '16eb3a02-7f2a-3001-096a-14c1b38586db'
+            'TreeViewItem': '16eb3a02-7f2a-3001-096a-14c1b38586db',
+            'DbTreeView': 'f91349d1-2254-cc67-07b3-792674725650',
+            'DbTreeViewItemType': '024cdaa7-9e63-5cb1-65a1-caaec6b93140'
         },
 
         REMOTE_RESULT: "XXX",
