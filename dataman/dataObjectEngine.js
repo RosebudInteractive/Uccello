@@ -6,8 +6,8 @@
 define(
     ['../controls/controlMgr', '../metaData/metaDataMgr', '../metaData/metaModel',
         '../metaData/metaModelField', '../metaData/metaDefs', 'bluebird', 'lodash',
-        './dataObjectQuery', '../predicate/predicate'],
-    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Meta, Promise, _, Query, Predicate) {
+        './dataObjectQuery', '../predicate/predicate', './transaction'],
+    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Meta, Promise, _, Query, Predicate, Transaction) {
 
         var METADATA_FILE_NAME = UCCELLO_CONFIG.dataPath + "meta/metaTables.json";
 
@@ -119,6 +119,10 @@ define(
                 return this._provider;
             },
 
+            getQuery: function () {
+                return this._query;
+            },
+
             deleteSchema: function (name) {
                 // Здесь пока не хватает удаления из memDB
                 delete this._schemas[name];
@@ -132,6 +136,31 @@ define(
                 return new Predicate(this._dataBase, {});;
             },
 
+            transaction: function (batch, options) {
+                var tran = new Transaction(this, options);
+                var result;
+                if (batch) {
+                    result = tran.start()
+                        .then(function(){
+                            return batch(tran);
+                        })
+                        .then(function (res) {
+                            return tran.commit()
+                                .then(function () {
+                                    return res;
+                                });
+                        }, function (err) {
+                            return tran.rollback()
+                                .then(function () {
+                                    return Promise.reject(err);
+                                });
+                        });
+                }
+                else
+                    result = tran.start().then(function () { return tran; });
+                return result;
+            },
+
             execBatch: function (batch, callback) {
                 console.log("execBatch: " + JSON.stringify(batch));
 
@@ -140,34 +169,39 @@ define(
                 var self = this;
 
                 if (this.hasConnection() && (batch.length > 0)) {
-                    res_promise = this._seqExec(batch, function (val) {
 
-                        var promise = Promise.resolve();
-                        var model = self._metaDataMgr.getModel(val.model);
-                        if (!model)
-                            throw new Error("execBatch::Model \"" + val.model + "\" doesn't exist.");
+                    function batchFunc(transaction) {
+                        return self._seqExec(batch, function (val) {
 
-                        switch (val.op) {
+                            var promise = Promise.resolve();
+                            var model = self._metaDataMgr.getModel(val.model);
+                            if (!model)
+                                throw new Error("execBatch::Model \"" + val.model + "\" doesn't exist.");
 
-                            case "insert":
+                            switch (val.op) {
 
-                                promise = self._query.insert(model, val.data.fields);
-                                break;
+                                case "insert":
 
-                            case "update":
+                                    promise = self._query.insert(model, val.data.fields, { transaction: transaction });
+                                    break;
 
-                                if ((!val.data) || (!val.data.key))
-                                    throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
+                                case "update":
 
-                                var key = model.getPrimaryKey();
-                                if (!key)
-                                    throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
-                                self._tmpPredicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
-                                promise = self._query.update(model, val.data.fields, self._tmpPredicate);
-                                break;
-                        };
-                        return promise;
-                    });
+                                    if ((!val.data) || (!val.data.key))
+                                        throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
+
+                                    var key = model.getPrimaryKey();
+                                    if (!key)
+                                        throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
+                                    self._tmpPredicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
+                                    promise = self._query.update(model, val.data.fields, self._tmpPredicate, { transaction: transaction });
+                                    break;
+                            };
+                            return promise;
+                        });
+                    };
+
+                    res_promise = this.transaction(batchFunc);
                 };
 
                 res_promise

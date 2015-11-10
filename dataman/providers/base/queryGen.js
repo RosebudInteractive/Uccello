@@ -133,6 +133,26 @@ define(
                 return _.template(query)(data).trim() + ";";
             },
 
+            commitTransactionQuery: function () {
+                return "COMMIT;";
+            },
+
+            rollbackTransactionQuery: function () {
+                return "ROLLBACK;";
+            },
+
+            startTransactionQuery: function () {
+                return "START TRANSACTION;";
+            },
+
+            setIsolationLevelQuery: function (isolationLevel) {
+                return "SET SESSION TRANSACTION ISOLATION LEVEL " + isolationLevel + ";";
+            },
+
+            setAutocommitQuery: function (autocommit) {
+                return "SET autocommit = " + (!!autocommit ? 1 : 0) + ";";
+            },
+
             escapeId: function (s) {
                 return this._addTicks(s);
             },

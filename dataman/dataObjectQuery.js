@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['bluebird', 'lodash'],
-    function (Promise, _) {
+    ['bluebird', 'lodash', './transaction'],
+    function (Promise, _, Transaction) {
 
         var Query = UccelloClass.extend({
 
@@ -18,51 +18,51 @@ define(
                 this._trace = this._options.trace || {};
             },
 
-            dropTable: function (model) {
+            dropTable: function (model, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
                     var sql = self._query_gen.dropTableQuery(model);
-                    resolve(self._runQuery(sql));
+                    resolve(self._runQuery(sql, options));
                 });
             },
 
-            createTable: function (model) {
+            createTable: function (model, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
                     var sql = self._query_gen.createTableQuery(model);
-                    resolve(self._runQuery(sql));
+                    resolve(self._runQuery(sql, options));
                 });
             },
 
-            showForeignKeys: function (src_name, dst_name) {
+            showForeignKeys: function (src_name, dst_name, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
                     var sql = self._query_gen.showForeignKeysQuery(src_name, dst_name);
-                    resolve(self._runQuery(sql));
+                    resolve(self._runQuery(sql, options));
                 });
             },
 
-            dropForeignKey: function (table_name, fk_name) {
+            dropForeignKey: function (table_name, fk_name, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
                     var sql = self._query_gen.dropForeignKeyQuery(table_name, fk_name);
-                    resolve(self._runQuery(sql));
+                    resolve(self._runQuery(sql, options));
                 });
             },
 
-            createLink: function (ref) {
+            createLink: function (ref, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
                     var sql = self._query_gen.createLinkQuery(ref);
-                    resolve(self._runQuery(sql));
+                    resolve(self._runQuery(sql, options));
                 });
             },
 
-            select: function (model, predicate) {
+            select: function (model, predicate, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
                     var sql = self._query_gen.selectQuery(model, predicate);
-                    resolve(self._runQuery(sql).then(function (result) {
+                    resolve(self._runQuery(sql, options).then(function (result) {
                             //console.log(JSON.stringify(result));
                             return result;
                         })
@@ -70,11 +70,11 @@ define(
                 });
             },
 
-            update: function (model, values, predicate) {
+            update: function (model, values, predicate, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
                     var sql = self._query_gen.updateQuery(model, values, predicate);
-                    resolve(self._runQuery(sql).then(function (result) {
+                    resolve(self._runQuery(sql, options).then(function (result) {
                             //console.log(JSON.stringify(result));
                             return result;
                         })
@@ -82,30 +82,90 @@ define(
                 });
             },
 
-            insert: function (model, values) {
+            insert: function (model, values, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
                     var sql = self._query_gen.insertQuery(model, values);
-                    resolve(self._runQuery(sql));
+                    resolve(self._runQuery(sql, options));
                 });
             },
 
-            _runQuery: function (sql) {
+            commitTransaction: function (transaction) {
                 var self = this;
-                return Promise.resolve(this._connection_mgr.getConnection())
+                return new Promise(function (resolve, reject) {
+                    if (!transaction || !(transaction instanceof Transaction)) {
+                        throw new Error('Unable to commit a transaction without transaction object!');
+                    };
+                    var sql = self._query_gen.commitTransactionQuery();
+                    resolve(self._runQuery(sql, { transaction: transaction }));
+                });
+            },
+
+            rollbackTransaction: function (transaction) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    if (!transaction || !(transaction instanceof Transaction)) {
+                        throw new Error('Unable to rollback a transaction without transaction object!');
+                    };
+                    var sql = self._query_gen.rollbackTransactionQuery();
+                    resolve(self._runQuery(sql, { transaction: transaction }));
+                });
+            },
+
+            startTransaction: function (transaction) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    if (!transaction || !(transaction instanceof Transaction)) {
+                        throw new Error('Unable to start a transaction without transaction object!');
+                    };
+                    var sql = self._query_gen.startTransactionQuery();
+                    resolve(self._runQuery(sql, { transaction: transaction }));
+                });
+            },
+
+            setIsolationLevel: function (transaction, isolationLevel) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    if (!transaction || !(transaction instanceof Transaction)) {
+                        throw new Error('Unable to set isolation level for a transaction without transaction object!');
+                    };
+                    var sql = self._query_gen.setIsolationLevelQuery(isolationLevel);
+                    if (sql)
+                        resolve(self._runQuery(sql, { transaction: transaction }));
+                    else resolve();
+                });
+            },
+
+            setAutocommit: function (transaction, autocommit) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    if (!transaction || !(transaction instanceof Transaction)) {
+                        throw new Error('Unable to set autocommit for a transaction without transaction object!');
+                    };
+                    var sql = self._query_gen.setAutocommitQuery(autocommit);
+                    if (sql)
+                        resolve(self._runQuery(sql, { transaction: transaction }));
+                    else resolve();
+                });
+            },
+
+            _runQuery: function (sql, options) {
+                var self = this;
+                var transaction = options && options.transaction ? options.transaction : null;
+                return Promise.resolve(transaction ? transaction.getConnection() : this._connection_mgr.getConnection())
                 .then(function (connection) {
                     var query = new self._query(self._engine, connection, self._query_options);
                     if (self._trace.sqlCommands)
                         console.log("Started: " + sql);
                     return query.run(sql).then(function (result) {
-                        return (self._connection_mgr.releaseConnection(connection))
-                            .then(function(){
+                        return (transaction ? Promise.resolve() : self._connection_mgr.releaseConnection(connection))
+                            .then(function () {
                                 if (self._trace.sqlCommands)
                                     console.log("Finished: " + sql);
                                 return Promise.resolve(result);
                             });
                     }, function (err) {
-                        return (self._connection_mgr.releaseConnection(connection))
+                        return (transaction ? Promise.resolve() : self._connection_mgr.releaseConnection(connection))
                             .then(function () {
                                 return Promise.reject(err)
                             });
