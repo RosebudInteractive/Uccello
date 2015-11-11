@@ -10,7 +10,9 @@ define(
 
             className: "TreeView",
             classGuid: UCCELLO_CONFIG.classGuids.TreeView,
-            metaFields: [],
+            metaFields: [
+                {fname:"Cursor", ftype:"string"}
+            ],
             metaCols: [{"cname": "Items", "ctype": "TreeViewItem"}],
 
             /**
@@ -36,6 +38,10 @@ define(
              */
             irender: function(viewset, options) {
                 viewset.render.apply(this, [options]);
+            },
+
+            cursor: function(value) {
+                return this._genericSetter("Cursor", value);
             }
         });
         return TreeView;

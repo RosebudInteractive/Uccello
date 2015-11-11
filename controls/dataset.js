@@ -186,6 +186,15 @@ define(
 				return newVal;
             },
 
+			first: function() {
+				var dataRoot = this.root();
+				if (dataRoot) {
+					var col = dataRoot.getCol("DataElements");
+					if (col.count() > 0)
+						this.cursor(col.get(0).id());
+				}
+			},
+
 			prev: function() {
 				var dataRoot = this.root();
 				if (dataRoot) {
