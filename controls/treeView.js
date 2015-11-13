@@ -13,7 +13,9 @@ define(
             metaFields: [
                 {fname:"Cursor", ftype:"string"}
             ],
-            metaCols: [{"cname": "Items", "ctype": "TreeViewItem"}],
+            metaCols: [
+                {"cname": "Items", "ctype": "TreeViewItem"}
+            ],
 
             /**
              * Инициализация объекта
