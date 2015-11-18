@@ -14,12 +14,13 @@ define(
         //
         MetaTypes.makeDescendant("enum", mysqlTypes, {
             prefix: "MySQL",
-            toSql: function (provider) {
+            toSql: function (provider, field) {
                 var enumDef = "ENUM(<%= vals%>)";
                 var qGen = provider.queryGen();
                 var enums = [];
+                var self = this;
                 _.forEach(this.values(), function (val) {
-                    enums.push(qGen.escapeValue(val));
+                    enums.push(qGen.escapeValue(val, self, []));
                 });
                 return _.template(enumDef)({ vals: enums.join(", ") }).trim();
             }

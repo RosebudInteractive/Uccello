@@ -1,9 +1,9 @@
 /**
- *  ќбеспечивает работу [dataObjectEngine] с MySQL RDBMS,
+ *  ќбеспечивает работу [dataObjectEngine] с MSSQL RDBMS,
  *    переопредел€€ поведение базового класса [baseProvider].
  *
- *    »спользует https://github.com/felixge/node-mysql
- *      »нсталл€ци€: npm install mysql
+ *    »спользует http://pekim.github.io/tedious/index.html
+ *      »нсталл€ци€: npm install tedious
  *
  */
 if (typeof define !== 'function') {
@@ -14,34 +14,51 @@ define(
     ['lodash', '../base/baseProvider', './connectionMgr', './queryExec', './queryGen', './sqlTypes'],
     function (_, Base, ConnectionMgr, QueryExec, QueryGen, SqlTypes) {
 
-        var PROVIDER_ID = "mysql";
+        var PROVIDER_ID = "mssql";
 
         var supports = _.merge(_.cloneDeep(Base.prototype.supports), {
-            'VALUES ()': true,
+            'DEFAULT': true,
+            'DEFAULT VALUES': true,
             'LIMIT ON UPDATE': true,
-            'IGNORE': ' IGNORE',
-            lock: true,
-            forShare: 'LOCK IN SHARE MODE',
+            'ORDER NULLS': false,
+            lock: false,
+            transactions: false,
+            migrations: false,
+            upserts: false,
+            returnValues: {
+                output: true
+            },
+            schemas: true,
+            autoIncrement: {
+                identityInsert: true,
+                defaultValue: false,
+                update: false
+            },
+            constraints: {
+                restrict: false
+            },
             index: {
                 collate: false,
-                length: true,
-                parser: true,
+                length: false,
+                parser: false,
                 type: true,
-                using: 1,
+                using: false,
             },
 
-            TICK_CHAR: '`'
+            TICK_CHAR: '"',
+            TICK_CHAR_LEFT: '[',
+            TICK_CHAR_RIGHT: ']'
         });
 
         var defaultMySqlConfig = {
-            port: 3306,
-            provider_options: {
-                engine: "InnoDB"
-            },
-            timezone: "+00:00"
+            port: 1433,
+            connection_options: {
+                connectTimeout: 15000,
+                requestTimeout: 15000
+            }
         };
 
-        var MySqlProvider = Base.extend({
+        var MSSQLProvider = Base.extend({
 
             providerId: PROVIDER_ID,
 
@@ -66,6 +83,6 @@ define(
                 return new SqlTypes(this._engine, this._options);
             }
         });
-        return MySqlProvider;
+        return MSSQLProvider;
     }
 );

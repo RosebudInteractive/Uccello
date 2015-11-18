@@ -156,12 +156,12 @@ define(
                 .then(function (connection) {
                     var query = new self._query(self._engine, connection, self._query_options);
                     if (self._trace.sqlCommands)
-                        console.log("Started: " + sql);
+                        console.log("Started: " + sql.sqlCmd);
                     return query.run(sql).then(function (result) {
                         return (transaction ? Promise.resolve() : self._connection_mgr.releaseConnection(connection))
                             .then(function () {
                                 if (self._trace.sqlCommands)
-                                    console.log("Finished: " + sql);
+                                    console.log("Finished: " + sql.sqlCmd);
                                 return Promise.resolve(result);
                             });
                     }, function (err) {

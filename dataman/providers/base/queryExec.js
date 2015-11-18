@@ -14,6 +14,10 @@ define(
                 this._options = options || {};
             },
 
+            getEngine: function () { return this._engine; },
+            getConnection: function () { return this._connection; },
+            getOptions: function () { return this._options; },
+
             run: function (sql) {
                 throw new Error("\"run\" wasn't implemented in descendant.");
             },

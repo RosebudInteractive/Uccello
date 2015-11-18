@@ -35,7 +35,7 @@ define(
 
                     if (config.connection_options) {
                         Object.keys(config.connection_options).forEach(function (key) {
-                            connectionConfig[key] = config.provider_options[key];
+                            connectionConfig[key] = config.connection_options[key];
                         });
                     }
 

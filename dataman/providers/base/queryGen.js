@@ -10,6 +10,13 @@ define(
 
         var QueryGen = UccelloClass.extend({
 
+            queryTypes: {
+                START_TRAN: 1,
+                COMMIT_TRAN: 2,
+                ROLLBACK_TRAN: 3,
+                INSERT: 4
+            },
+
             init: function (engine, options) {
                 this._engine = engine;
                 this._provider = engine.getProvider();
@@ -45,6 +52,10 @@ define(
                 return this._provider;
             },
 
+            getEngine: function () {
+                return this._engine;
+            },
+
             createLinkQuery: function (ref) {
                 var query = "ALTER TABLE <%= table %> ADD CONSTRAINT <%= name %> FOREIGN KEY (<%= field %>) REFERENCES " +
                     "<%= parent %> (<%= key %>) ON DELETE <%= parent_action %> ON UPDATE RESTRICT";
@@ -71,19 +82,23 @@ define(
                 if (!ref.dst.getPrimaryKey())
                     throw new Error("Referenced table \"" + ref.dst.name() + "\" has no PRIMARY KEY.");
 
-                return _.template(query)({
-                    table: this.escapeId(ref.src.name()),
-                    name: this.escapeId("FK_" + ref.src.name() + "_" + ref.field),
-                    field: this.escapeId(ref.field),
-                    parent: this.escapeId(ref.dst.name()),
-                    key: this.escapeId(ref.dst.getPrimaryKey().name()),
-                    parent_action: parent_action
-                }).trim() + ";";
+                return {
+                    sqlCmd: _.template(query)({
+                        table: this.escapeId(ref.src.name()),
+                        name: this.escapeId("FK_" + ref.src.name() + "_" + ref.field),
+                        field: this.escapeId(ref.field),
+                        parent: this.escapeId(ref.dst.name()),
+                        key: this.escapeId(ref.dst.getPrimaryKey().name()),
+                        parent_action: parent_action
+                    }).trim() + ";",
+                    params: []
+                };
             },
 
             selectQuery: function (model, predicate) {
                 var query = "SELECT <%= fields%> FROM <%= table %>";
                 var attrs = [];
+                var params = [];
                 var self = this;
                 _.forEach(model.fields(), function (field) {
                     attrs.push(self.escapeId(field.name()));
@@ -91,34 +106,36 @@ define(
                 var values = { table: this.escapeId(model.name()), fields: attrs.join(", ") };
                 var result = _.template(query)(values).trim();
                 if (predicate) {
-                    var cond_sql = this._predicateToSql(model, predicate);
+                    var cond_sql = this._predicateToSql(model, predicate, params);
                     if (cond_sql.length > 0)
                         result += " WHERE " + cond_sql;
                 };
-                return result + ";";
+                return { sqlCmd: result + ";", params: params };
             },
 
             updateQuery: function (model, vals, predicate) {
                 var query = "UPDATE <%= table %> SET <%= fields%>";
                 var attrs = [];
                 var self = this;
-                var escVals = this._escapeValues(model, vals);
+                var params = [];
+                var escVals = this._escapeValues(model, vals, params);
                 _.forEach(escVals, function (value, key) {
                     attrs.push(value.id + " = " + value.val);
                 });
                 var values = { table: this.escapeId(model.name()), fields: attrs.join(", ") };
                 var result = _.template(query)(values).trim();
                 if (predicate) {
-                    var cond_sql = this._predicateToSql(model, predicate);
+                    var cond_sql = this._predicateToSql(model, predicate, params);
                     if (cond_sql.length > 0)
                         result += " WHERE " + cond_sql;
                 };
-                return result + ";";
+                return { sqlCmd: result + ";", params: params };
             },
 
-            insertQuery: function (model, vals) {
-                var query = "INSERT INTO <%= table %> (<%= fields%>) VALUES (<%= values%>)";
-                var escVals = this._escapeValues(model, vals);
+            insertQuery: function (model, vals, options) {
+                var query = "<%= before %>INSERT INTO <%= table %> (<%= fields%>)<%= output %> VALUES (<%= values%>)<%= after %>";
+                var params = [];
+                var escVals = this._escapeValues(model, vals, params);
                 var attrs = [];
                 var values = [];
                 var self = this;
@@ -129,39 +146,46 @@ define(
                         values.push(idValPair.val);
                     }
                 });
-                var data = { table: this.escapeId(model.name()), fields: attrs.join(", "), values: values.join(", ") };
-                return _.template(query)(data).trim() + ";";
+                var data = {
+                    before: options && options.before ? options.before : "",
+                    output: options && options.output ? options.output : "",
+                    after: options && options.after ? options.after : "",
+                    table: this.escapeId(model.name()),
+                    fields: attrs.join(", "),
+                    values: values.join(", ")
+                };
+                return { sqlCmd: _.template(query)(data).trim() + ";", params: params, type: this.queryTypes.INSERT };
             },
 
             commitTransactionQuery: function () {
-                return "COMMIT;";
+                return { sqlCmd: "COMMIT;", params: [] };
             },
 
             rollbackTransactionQuery: function () {
-                return "ROLLBACK;";
+                return { sqlCmd: "ROLLBACK;", params: [] };
             },
 
             startTransactionQuery: function () {
-                return "START TRANSACTION;";
+                return { sqlCmd: "START TRANSACTION;", params: [] };
             },
 
             setIsolationLevelQuery: function (isolationLevel) {
-                return "SET SESSION TRANSACTION ISOLATION LEVEL " + isolationLevel + ";";
+                return { sqlCmd: "SET SESSION TRANSACTION ISOLATION LEVEL " + isolationLevel + ";", params: [] };
             },
 
             setAutocommitQuery: function (autocommit) {
-                return "SET autocommit = " + (!!autocommit ? 1 : 0) + ";";
+                return { sqlCmd: "SET autocommit = " + (!!autocommit ? 1 : 0) + ";", params: [] };
             },
 
             escapeId: function (s) {
                 return this._addTicks(s);
             },
 
-            escapeValue: function (s) {
+            escapeValue: function (s, type, params) {
                 throw new Error("\"escapeValue\" wasn't implemented in descendant.");
             },
 
-            _predicateToSql: function predicateToString(model, predicate) {
+            _predicateToSql: function predicateToString(model, predicate, params) {
                 var result = "";
                 var cond_arr = [];
 
@@ -171,7 +195,7 @@ define(
                     var cond = conds.get(i);
                     var res = "";
                     if (cond instanceof Predicate)
-                        res = this._predicateToSql(model, cond);
+                        res = this._predicateToSql(model, cond, params);
                     else {
 
                         var field = model.getField(cond.fieldName());
@@ -185,7 +209,7 @@ define(
                         for (var j = 0; j < vals.count() ; j++) {
                             var value = vals.get(j).valValue();
                             if (value !== undefined)
-                                val_arr.push(this._escapeValue(field, value));
+                                val_arr.push(this._escapeValue(field, value, params));
                         }
                         if (val_arr.length > 0) {
                             var arg_num = cond.allowedArgNumber();
@@ -237,12 +261,12 @@ define(
                 return result;
             },
 
-            _escapeValue: function (field, val) {
+            _escapeValue: function (field, val, params) {
                 var value = field.fieldType().isComplex() ? field.fieldType().setValue(val, field.name(), null, true) : val;
-                return this.escapeValue(value);
+                return this.escapeValue(value, field.fieldType(), params);
             },
 
-            _escapeValues: function (model, vals) {
+            _escapeValues: function (model, vals, params) {
                 var result = _.cloneDeep(vals);
                 var self = this;
                 _.forEach(vals, function (val, key) {
@@ -251,7 +275,7 @@ define(
                         var value = field.fieldType().isComplex() ? field.fieldType().setValue(val, key, null, true) : val;
                         result[key] = {
                             id: self.escapeId(key),
-                            val: self.escapeValue(value),
+                            val: self.escapeValue(value, field.fieldType(), params),
                         };
                     };
                 });

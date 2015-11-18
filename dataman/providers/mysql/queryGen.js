@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../base/queryGen', 'lodash'],
-    function (Base, _) {
+    ['../base/queryGen', 'lodash', UCCELLO_CONFIG.uccelloPath + '/memDB/memMetaType'],
+    function (Base, _, MemMetaType) {
 
         var MySqlQueryGen = Base.extend({
 
@@ -14,7 +14,9 @@ define(
 
             showForeignKeysQuery: function (src_name, dst_name) {
                 var params = {};
-                params.db = this.escapeValue(this._options.database);
+                var sql_params = [];
+                var stringType = MemMetaType.createTypeObject({ type: "string", length: 255 }, null);
+                params.db = this.escapeValue(this._options.database, stringType, sql_params);
 
                 var query = "SELECT DISTINCT k.CONSTRAINT_NAME AS fk_name, c.TABLE_NAME AS src_table, k.REFERENCED_TABLE_NAME AS dst_table\n"+
                     " FROM information_schema.TABLE_CONSTRAINTS c\n" +
@@ -25,25 +27,31 @@ define(
 
                 if (src_name) {
                     query += "\n  AND c.TABLE_NAME = <%= src %>";
-                    params.src = this.escapeValue(src_name);
+                    params.src = this.escapeValue(src_name, stringType, sql_params);
                 };
 
                 if (dst_name) {
                     query += "\n  AND k.REFERENCED_TABLE_NAME = <%= dst %>";
-                    params.dst = this.escapeValue(dst_name);
+                    params.dst = this.escapeValue(dst_name, stringType, sql_params);
                 };
 
-                return _.template(query)(params).trim() + ";";
+                return { sqlCmd: _.template(query)(params).trim() + ";", params: sql_params };
             },
 
             dropForeignKeyQuery: function (table_name, fk_name) {
                 var query = "ALTER TABLE <%= table_name %> DROP FOREIGN KEY <%= fk_name %>";
-                return _.template(query)({ table_name: this.escapeId(table_name), fk_name: this.escapeId(fk_name) }).trim() + ";";
+                return {
+                    sqlCmd: _.template(query)({ table_name: this.escapeId(table_name), fk_name: this.escapeId(fk_name) }).trim() + ";",
+                    params: []
+                };
             },
 
             dropTableQuery: function (model) {
                 var query = "DROP TABLE IF EXISTS <%= table %>";
-                return _.template(query)({ table: this.escapeId(model.name()) }).trim() + ";";
+                return {
+                    sqlCmd: _.template(query)({ table: this.escapeId(model.name()) }).trim() + ";",
+                    params: []
+                };
             },
 
             createTableQuery: function (model) {
@@ -53,7 +61,7 @@ define(
                 var provider = this.getProvider();
                 _.forEach(model.fields(), function (field) {
                     var flags = field.flags() | 0;
-                    attrs.push(self.escapeId(field.name()) + " " + field.fieldType().toSql(provider) +
+                    attrs.push(self.escapeId(field.name()) + " " + field.fieldType().toSql(provider, field) +
                         ((((flags & self.Meta.Field.PrimaryKey) !== 0) || (!field.fieldType().allowNull())) ? " NOT NULL" : "") +
                         (((flags & self.Meta.Field.AutoIncrement) !== 0) ? " auto_increment" : ""));
                 });
@@ -65,10 +73,10 @@ define(
                     fields: attrs.join(", "),
                     engine: this._options.provider_options.engine
                 };
-                return _.template(query)(values).trim() + ";";
+                return { sqlCmd: _.template(query)(values).trim() + ";", params: [] };
             },
 
-            escapeValue: function (s) {
+            escapeValue: function (s, type, params) {
                 return this.getNativeLib().escape(s);
             },
 
