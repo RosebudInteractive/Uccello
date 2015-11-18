@@ -126,6 +126,10 @@ define(
 
 			indexOf: function(obj) {
 				return this._guidIndex[obj.getGuid()];
+			},
+
+			indexOfGuid: function(guid) {
+				return this._guidIndex[guid];
 			}
 
 

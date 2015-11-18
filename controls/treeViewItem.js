@@ -16,7 +16,15 @@ define(
                     type: "ref",
                     res_elem_type: UCCELLO_CONFIG.classGuids.TreeViewItem
                 }},
-                {fname:"Kind",ftype:"string"} // item | coll
+                {fname:"Kind",ftype:"string"}, // item | coll
+                {fname: "Dataset", ftype: {
+                    type: "ref",
+                    res_elem_type: UCCELLO_CONFIG.classGuids.Dataset
+                }},
+                {fname:"Text",ftype:"string"},
+                {fname:"ObjectId",ftype:"string"},
+                {fname:"ObjectGuid",ftype:"string"},
+                {fname:"IsOpen",ftype:"boolean"}
             ],
 
             init: function(cm,params){
@@ -30,6 +38,26 @@ define(
 
             kind: function (value) {
                 return this._genericSetter("Kind", value);
+            },
+
+            dataset: function (value) {
+                return this._genericSetter("Dataset", value);
+            },
+
+            text: function (value) {
+                return this._genericSetter("Text", value);
+            },
+
+            objectId: function (value) {
+                return this._genericSetter("ObjectId", value);
+            },
+
+            objectGuid: function (value) {
+                return this._genericSetter("ObjectGuid", value);
+            },
+
+            isOpen: function (value) {
+                return this._genericSetter("IsOpen", value);
             },
 
             _onDirtyRender: function(result) {
