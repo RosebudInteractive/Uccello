@@ -10,7 +10,11 @@ define(
 
             className: "DbTreeView",
             classGuid: UCCELLO_CONFIG.classGuids.DbTreeView,
-            metaFields: [],
+            metaFields: [
+                // [OneWay | null] - при перемещении по дереву устанавливается курсор в датасете,
+                // [TwoWays] - при перемещении по датасету у дерева устанавливается курсор тоже
+                {fname:"CursorSyncMode", ftype:"string"}
+            ],
             metaCols: [{"cname": "Datasets", "ctype": "DbTreeViewItemType"}],
 
             /**
@@ -27,6 +31,10 @@ define(
                     subscriber: this,
                     callback: this._onDirtyRender
                 });
+            },
+
+            сursorSyncMode: function(value) {
+                return this._genericSetter("CursorSyncMode", value);
             },
 
             /**
