@@ -33,7 +33,7 @@ define(
                 });
             },
 
-            сursorSyncMode: function(value) {
+            cursorSyncMode: function(value) {
                 return this._genericSetter("CursorSyncMode", value);
             },
 
