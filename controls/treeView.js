@@ -11,7 +11,10 @@ define(
             className: "TreeView",
             classGuid: UCCELLO_CONFIG.classGuids.TreeView,
             metaFields: [
-                {fname:"Cursor", ftype:"string"}
+                {fname:"Cursor", ftype:{
+                    type: "ref",
+                    res_elem_type: UCCELLO_CONFIG.classGuids.TreeViewItem
+                }}
             ],
             metaCols: [
                 {"cname": "Items", "ctype": "TreeViewItem"}
