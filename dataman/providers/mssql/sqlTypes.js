@@ -13,6 +13,8 @@ define(
         // MSSQL типы:
         //
 
+        var MAX_NVARCHAR_LEN = 4000;
+
         MetaTypes.makeDescendant("int", mssqlTypes, {
             prefix: "MSSQL",
             addParameter: function (TYPES, request, name, val) {
@@ -52,9 +54,12 @@ define(
                 request.addParameter(name, TYPES.NVarChar, val, { length: this.length() });
             },
             toSql: function (provider, field) {
-                if (this._length === Infinity)
-                    throw new Error("Length of string type can't be unlimited.");
-                return "NVARCHAR(" + this._length + ")";
+                var result;
+                if (this._length > MAX_NVARCHAR_LEN)
+                    result = "NVARCHAR(MAX)";
+                else
+                    result = "NVARCHAR(" + this._length + ")";
+                return result;
             }
         });
         MetaTypes.makeDescendant("enum", mssqlTypes, {
@@ -63,8 +68,8 @@ define(
                 request.addParameter(name, TYPES.NVarChar, val, { length: this.length() });
             },
             toSql: function (provider, field) {
-                if (this._length === Infinity)
-                    throw new Error("Length of string type can't be unlimited.");
+                if (this._length > MAX_NVARCHAR_LEN)
+                    throw new Error("Length of string in ENUM type can't be greater than" + MAX_NVARCHAR_LEN + ".");
 
                 function escapeEnumVal(s) {
                     return "'" + s.replace(new RegExp("'", 'g'), "''") + "'";

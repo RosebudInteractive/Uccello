@@ -10,6 +10,8 @@ define(
         //
         var mysqlTypes = {};
 
+        var MAX_NVARCHAR_LEN = 4000;
+
         // Ќапример, тип "enum" можно переопределить так:
         //
         MetaTypes.makeDescendant("enum", mysqlTypes, {
@@ -23,6 +25,18 @@ define(
                     enums.push(qGen.escapeValue(val, self, []));
                 });
                 return _.template(enumDef)({ vals: enums.join(", ") }).trim();
+            }
+        });
+
+        MetaTypes.makeDescendant("string", mysqlTypes, {
+            prefix: "MySQL",
+            toSql: function (provider, field) {
+                var result;
+                if (this._length > MAX_NVARCHAR_LEN)
+                    result = "LONGTEXT";
+                else
+                    result = "VARCHAR(" + this._length + ")";
+                return result;
             }
         });
 
