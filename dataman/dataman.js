@@ -114,10 +114,23 @@ define(
 
             createResult: function(typeGuid, rows, objTypeGuid) {
 
+                var dataRoots = {
+                    "5f9e649d-43c4-d1e6-2778-ff4f58cd7c53": "c4d626bf-1639-2d27-16df-da3ec0ee364e",
+                    '3618f084-7f99-ebe9-3738-4af7cf53dc49' : "de984440-10bd-f1fd-2d50-9af312e1cd4f",
+                    "8583ee1d-6936-19da-5ef0-9025fb7d1d8d": "4f7d9441-8fcc-ba71-2a1d-39c1a284fc9b",
+                    "edca46bc-3389-99a2-32c0-a59665fcb6a7": "07e64ce0-4a6c-978e-077d-8f6810bf9386",
+                    "bb48579c-808e-291e-0242-0facc4876051": "bedf1851-cd51-657e-48a0-10ac45e31e20",
+                    "8770f400-fd42-217c-90f5-507ca52943c2": "194fbf71-2f84-b763-eb9c-177bf9ac565d",
+                    "f988a1cb-4be0-06c3-4eaa-4ae8b554f6b3": "3fe7cd6f-b146-8898-7215-e89a2d8ea702",
+                    "ab573a02-b888-b3b4-36a7-38629a5fe6b7": "0c2f3ec8-ad4a-c311-a6fa-511609647747",
+                    "b49d39c9-b903-cccd-7d32-b84beb1b76dc": "ad17cab2-f41a-36ef-37da-aac967bbe356",
+                    "c170c217-e519-7c23-2811-ff75cd4bfe81": "31c99003-c0fc-fbe6-55eb-72479c255556"
+                };
+
                 var result = {
                     "$sys": {
                         "guid": typeGuid,
-                        "typeGuid": UCCELLO_CONFIG.classGuids.DataRoot
+                        "typeGuid": dataRoots[typeGuid]
                     },
                     "fields": {
                         "Id": 1000,
@@ -165,7 +178,7 @@ define(
                             done(JSON.parse(data));
                         });
                     } else {
-                        done(that.createResult(typeGuid, {}));
+                        done(that.createResult(typeGuid, []));
                     }
                 });
             },

@@ -29,7 +29,7 @@ define(
 				pvt.isModified = {};
 				pvt.cntFldModif = {};
 				pvt.cntColModif = {};
-				this.resetModifFldLog(this.dfltLogName);
+				this.resetModifFldLog(this.dfltLogName, true);
 
 				pvt.$rootId = -1;
 
@@ -490,12 +490,12 @@ define(
 					return undefined;
 			},
 			
-			resetModifFldLog: function (log_name) {
+			resetModifFldLog: function (log_name, trueFlag) {
 			    var logName = log_name ? log_name : this.dfltLogName;
 			    this.pvt.fldLog[logName] = {};
 			    this.pvt.colLog[logName] = {};
 
-				this.pvt.isModified[logName] = false;
+				this.pvt.isModified[logName] = (trueFlag == undefined) ? false : true;
 				this.pvt.cntColModif[logName] = 0;
 				this.pvt.cntFldModif[logName] = 0;
 				
