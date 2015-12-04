@@ -3,13 +3,17 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../system/uobject', './metaModelField', './metaDefs', '../system/event', '../memDB/memMetaType'],
-    function (UObject, MetaModelField, Meta, Event, MemMetaType) {
+    ['../system/uobject', './metaModelField', './metaDefs', './metaLinkRef', '../system/event',
+        '../memDB/memMetaType', '../dataman/dataobject'],
+    function (UObject, MetaModelField, Meta, MetaLinkRef, Event, MemMetaType, DataObject) {
         var MetaModel = UObject.extend([new Event()], {
 
             className: "MetaModel",
             classGuid: UCCELLO_CONFIG.classGuids.MetaModel,
-            metaCols: [{ "cname": "Fields", "ctype": "MetaModelField" }],
+            metaCols: [
+                { "cname": "Fields", "ctype": "MetaModelField" },
+                { "cname": "Refs", "ctype": "MetaLinkRef" }
+            ],
             metaFields: [
                 { fname: "Name", ftype: "string" },
                 { fname: "DataObjectGuid", ftype: "string" },
@@ -38,6 +42,7 @@ define(
                 this._fields = [];
                 this._primaryKey = null;
                 this._orderChangCounter = 0;
+                this._refs = {};
 
                 if (params)
                     this.eventsInit();  // WARNING !!! This line is essential !!! It initializes "Event" mixin.
@@ -55,7 +60,19 @@ define(
                         callback: this._onDeleteField
                     });
 
-                    this._dataObjectType = this.getParent()._dataObjectType;
+                    this._refsCol = this.getCol("Refs");
+                    this._refsCol.on({
+                        type: 'add',
+                        subscriber: this,
+                        callback: this._onAddRef
+                    }).on({
+                        type: 'del',
+                        subscriber: this,
+                        callback: this._onDeleteRef
+                    });
+
+                    new DataObject(this.getDB());
+                    this._dataObjectType = this.getDB().getObj(DataObject.prototype.classGuid);
                 };
             },
 
@@ -221,7 +238,6 @@ define(
                     var fieldName = fieldObj.name();
                     var fieldType = fieldObj.fieldType();
                     var flags = fieldObj.flags();
-                    var isFired = false;
 
                     if (((flags & Meta.Field.PrimaryKey) !== 0) && fieldType.allowNull()) {
                         fieldObj.set("FieldType", oldFieldType);
@@ -234,23 +250,14 @@ define(
                             target: self,
                             fieldName: fieldName
                         });
-                        isFired = true;
                     };
 
-                    if (fieldType instanceof MemMetaType.DataRefType) {
-                        self.fire({
-                            type: "addLink",
-                            target: self,
-                            fieldName: fieldName,
-                            link: fieldType
-                        });
-                        isFired = true;
-                    };
-                    if (!isFired)
-                        self.fire({
-                            type: "modelModified",
-                            target: self
-                        });
+                    self._addLinkIfRef(fieldObj);
+
+                    self.fire({
+                        type: "modelModified",
+                        target: self
+                    });
                     oldFieldType = fieldType;
                 };
             },
@@ -281,17 +288,12 @@ define(
                                 target: self,
                                 fieldName: oldFieldName
                             });
-                            self.fire({
-                                type: "addLink",
-                                target: self,
-                                fieldName: fieldName,
-                                link: fieldType
-                            });
-                        } else
-                            self.fire({
-                                type: "modelModified",
-                                target: self
-                            });
+                            self._addLinkIfRef(fieldObj);
+                        };
+                        self.fire({
+                            type: "modelModified",
+                            target: self
+                        });
 
                         oldFieldName = fieldName;
                     };
@@ -305,6 +307,21 @@ define(
                     this._fields[i].set("Order", i);
                 };
                 this._orderChangCounter--;
+            },
+
+            _addLinkIfRef: function (field) {
+                var res = false;
+                var fieldType = field.fieldType();
+                if (fieldType instanceof MemMetaType.DataRefType) {
+                    this.fire({
+                        type: "addLink",
+                        target: this,
+                        fieldName: field.name(),
+                        link: fieldType
+                    });
+                    res = true;
+                };
+                return res;
             },
 
             _onAddField: function (args) {
@@ -333,16 +350,7 @@ define(
 
                 this._fields.splice(order, 0, field);
                 this._reindexFields();
-
-                var fieldType = field.fieldType();
-                if (fieldType instanceof MemMetaType.DataRefType) {
-                    this.fire({
-                        type: "addLink",
-                        target: this,
-                        fieldName: name,
-                        link: fieldType
-                    });
-                };
+                this._addLinkIfRef(field);
 
                 field.handlers = [];
 
@@ -413,6 +421,48 @@ define(
                     type: "modelModified",
                     target: this
                 });
+            },
+
+            _addRef: function (src_field, model_name, dst_model) {
+                var ref = this._refs[src_field + "|" + model_name];
+                var table_ref = {
+                    guidInstanceRes: dst_model ? dst_model.getGuid() : null,
+                    guidInstanceElem: dst_model ? dst_model.getGuid() : null
+                };
+                if (ref) {
+                    ref.tableRef(table_ref);
+                }
+                else
+                    new MetaLinkRef(this.getDB(), {
+                        ini: {
+                            fields: {
+                                FieldName: src_field,
+                                TableName: model_name,
+                                TableRef: table_ref
+                            }
+                        },
+                        parent: this,
+                        colName: "Refs"
+                    });
+            },
+
+            _deleteRef: function (src_field, model_name) {
+                var ref = this._refs[src_field + "|" + model_name];
+                if (ref)
+                    this._refsCol._del(ref);
+            },
+
+            _onAddRef: function (args) {
+                var ref = args.obj;
+                var key = ref.fieldName() + "|" + ref.tableName();
+                this._refs[key] = ref;
+            },
+
+            _onDeleteRef: function (args) {
+                var field = args.obj;
+                var ref = args.obj;
+                var key = ref.fieldName() + "|" + ref.tableName();
+                delete this._refs[key];
             }
         });
 

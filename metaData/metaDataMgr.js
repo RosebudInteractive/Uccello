@@ -3,8 +3,9 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../system/uobject', './metaModel', '../dataman/dataobject', '../dataman/dataRoot', './metaDefs'],
-    function (UObject, MetaModel, DataObject, DataRoot, Meta) {
+    ['../system/uobject', './metaModel', '../dataman/dataobject', '../dataman/dataRoot',
+        './metaDefs', './metaModelRef', './metaLinkRef'],
+    function (UObject, MetaModel, DataObject, DataRoot, Meta, MetaModelRef, MetaLinkRef) {
 
         var REMOTE_RESULT = "XXX";
 
@@ -22,7 +23,7 @@ define(
 
             className: "MetaDataMgr",
             classGuid: UCCELLO_CONFIG.classGuids.MetaDataMgr,
-            metaCols: [{ "cname": "Models", "ctype": "MetaModel" }],
+            metaCols: [{ "cname": "ModelRefs", "ctype": "MetaModelRef" }],
             metaFields: [],
 
             init: function (cm, params) {
@@ -31,6 +32,7 @@ define(
 
                 this._modelsByRootName = {};
                 this._modelsByRootGuid = {};
+                this._modelRefs = {};
 
                 this._router = null;
 
@@ -44,20 +46,31 @@ define(
                 UccelloClass.super.apply(this, [cm, params]);
 
                 if (params) {
-                    this._modelsCol = this.getCol("Models");
+
+                    this._modelsCol = this.getCol("ModelRefs");
                     this._modelsCol.on({
                         type: 'add',
                         subscriber: this,
-                        callback: this._onAddModel
+                        callback: this._onAddModelRef
                     }).on({
                         type: 'del',
                         subscriber: this,
-                        callback: this._onDeleteModel
+                        callback: this._onDeleteModelRef
+                    });
+                    
+                    this.getDB().event.on({
+                        type: 'addRoot',
+                        subscriber: this,
+                        callback: this._onAddModel
+                    }).on({
+                        type: 'beforeDelRoot',
+                        subscriber: this,
+                        callback: this._onBeforeDelModel
                     });
 
                     new DataObject(this.getDB());
                     this._dataObjectType = this.getDB().getObj(DataObject.prototype.classGuid);
-
+                    this._addExistingModels();
                 };
             },
 
@@ -138,17 +151,6 @@ define(
                 return callback ? REMOTE_RESULT : constrArr;
             },
 
-            _createObj: function (code, params, name) {
-                var obj = null;
-                if (code) {
-                    var constr = this._buildConstr(code);
-                    if (constr) {
-                        obj = new constr(this.getDB(), params);
-                    };
-                };
-                return obj;
-            },
-
             addModel: function (name, guid, rootName, rootGuid) {
                 if (name) {
                     var params = {
@@ -159,26 +161,27 @@ define(
                                 DataRootName: rootName ? rootName : "Root" + name,
                                 DataRootGuid: rootGuid ? rootGuid : this.getDB().getController().guid(),
                             }
-                        },
-                        parent: this,
-                        colName: "Models"
+                        }
                     };
-                    return new MetaModel(this.getDB(), params);
+                    var model = new MetaModel(this.getDB(), params);
+                    return model;
 
                 } else
                     throw new Error("Model name is undefined.");
             },
 
             deleteModel: function (model) {
+                var _model;
                 if (typeof model === "string") {
-                    var _model = this.getModel(model);
-                    if (_model)
-                        this._modelsCol._del(_model);
+                    _model = this.getModel(model);
                 } else
                     if (model instanceof MetaModel) {
-                        this._modelsCol._del(model);
+                        _model = model;
                     } else
                         throw new Error("MetaDataMgr::deleteModel: Invalid argument type.");
+                if(_model)
+                    // TODO: вместо этого здесь д.б. удаление root-а memDB
+                    this._modelsCol._del(this._getModelRef(_model));
             },
 
             getModel: function (name) {
@@ -216,6 +219,33 @@ define(
                 for (var i = 0; i < keys.length; i++)
                     result[keys[i]] = this._linksTo[keys[i]];
                 return result;
+            },
+
+            _addExistingModels: function () {
+                var db = this.getDB();
+                var root_count = db.countRoot();
+                for (var i = 0; i < root_count; i++) {
+                    this._onAddModel({
+                        type: "addRoot",
+                        target: this.getDB(),
+                        obj: db.getRoot(i).obj
+                    });
+                };
+            },
+
+            _createObj: function (code, params, name) {
+                var obj = null;
+                if (code) {
+                    var constr = this._buildConstr(code);
+                    if (constr) {
+                        obj = new constr(this.getDB(), params);
+                    };
+                };
+                return obj;
+            },
+
+            _getModelRef: function (model) {
+                 return this._modelRefs[model.dataObjectGuid()];
             },
 
             _rebuildConstructors: function () {
@@ -371,6 +401,7 @@ define(
                     src: model,
                     type: args.link,
                     field: fieldName,
+                    dstName: dstName,
                     dst: this._modelsByName[dstName] ? this._modelsByName[dstName] : null
                 };
                 var linksTo = this._linksTo[modelName];
@@ -383,8 +414,10 @@ define(
                         linksFrom = this._linksFrom[dstName] = {};
                     linksFrom[modelName + "_" + fieldName] = link;
                 }
-                else
+                else {
                     this._linksUnresolved[modelName + "_" + fieldName] = link;
+                };
+                link.src._addRef(link.field, link.dstName, link.dst);
             },
 
             _removeLink: function (args) {
@@ -395,6 +428,7 @@ define(
                 var fieldName = args.fieldName;
                 var link = this._linksTo[modelName] && this._linksTo[modelName][fieldName] ? this._linksTo[modelName][fieldName] : null;
                 if (link) {
+                    link.src._deleteRef(link.field, link.dstName);
                     if (link.dst)
                         delete this._linksFrom[link.dst.name()][modelName + "_" + fieldName];
                     else
@@ -416,6 +450,7 @@ define(
                             linksFrom = this._linksFrom[name] = {};
                         linksFrom[link.src.name() + "_" + link.field] = link;
                         delete this._linksUnresolved[links[i]];
+                        link.src._addRef(link.field, link.dstName, link.dst);
                     };
                 };
             },
@@ -446,15 +481,77 @@ define(
                         var link = linksFrom[links[i]];
                         link.dst = null;
                         this._linksUnresolved[link.src.name() + "_" + link.field] = link;
+                        link.src._addRef(link.field, link.dstName); // —сылка становитс€ неопределенной
                     };
                     delete this._linksFrom[name];
                 };
             },
 
             _onAddModel: function (args) {
+                var model = args.obj;
+                if (model instanceof MetaModel) {
+                    var name = model.name();
+                    var guid = model.dataObjectGuid();
+
+                    var root_name = model.dataRootName();
+                    var root_guid = model.dataRootGuid();
+
+                    if ((this._modelsByName[name] !== undefined)
+                            || (this._modelsByRootName[name] !== undefined)) {
+                        this.getDB()._deleteRoot(model);
+                        throw new Error("Model \"" + name + "\" is already defined.");
+                    };
+                    if ((this._modelsByGuid[guid] !== undefined)
+                            || (this._modelsByRootGuid[guid] !== undefined)) {
+                        this.getDB()._deleteRoot(model);
+                        throw new Error("Model \"" + guid + "\" is already defined.");
+                    };
+
+                    if ((this._modelsByName[root_name] !== undefined)
+                            || (this._modelsByRootName[root_name] !== undefined)) {
+                        this.getDB()._deleteRoot(model);
+                        throw new Error("Model with Root Name: \"" + root_name + "\" is already defined.");
+                    };
+                    if ((this._modelsByGuid[root_guid] !== undefined)
+                            || (this._modelsByRootGuid[root_guid] !== undefined)) {
+                        this.getDB()._deleteRoot(model);
+                        throw new Error("Model with Root Guid: \"" + root_guid + "\" is already defined.");
+                    };
+                    new MetaModelRef(this.getDB(), {
+                        ini: {
+                            fields: {
+                                TableName: name,
+                                TableRef: {
+                                    guidInstanceRes: model.getGuid(),
+                                    guidInstanceElem: model.getGuid()
+                                }
+                            }
+                        },
+                        parent: this,
+                        colName: "ModelRefs"
+                    });
+                    var fields = model.fields();
+                    for (var i = 0; i < fields.length; i++)
+                        model._addLinkIfRef(fields[i]);
+                };
+            },
+
+            _onBeforeDelModel: function (args) {
+                var model = args.obj;
+                if (model instanceof MetaModel) {
+                    var guid = model.dataObjectGuid();
+                    var ref = this._modelRefs[guid];
+                    if (ref)
+                        this._modelsCol._del(ref);
+                };
+            },
+
+            _onAddModelRef: function (args) {
                 this._isConstrReady = false;
 
-                var model = args.obj;
+                var model = args.obj.tableRef();
+                if(!model)
+                    throw new Error("MetaDataMgr::_onAddModelRef: Empty or unresolved table reference.");
 
                 var name = model.name();
                 var guid = model.dataObjectGuid();
@@ -462,30 +559,9 @@ define(
                 var root_name = model.dataRootName();
                 var root_guid = model.dataRootGuid();
 
-                if ((this._modelsByName[name] !== undefined)
-                        || (this._modelsByRootName[name] !== undefined)) {
-                    this._modelsCol._del(model);
-                    throw new Error("Model \"" + name + "\" is already defined.");
-                };
-                if ((this._modelsByGuid[guid] !== undefined)
-                        || (this._modelsByRootGuid[guid] !== undefined)) {
-                    this._modelsCol._del(model);
-                    throw new Error("Model \"" + guid + "\" is already defined.");
-                };
-
-                if ((this._modelsByName[root_name] !== undefined)
-                        || (this._modelsByRootName[root_name] !== undefined)) {
-                    this._modelsCol._del(model);
-                    throw new Error("Model with Root Name: \"" + root_name + "\" is already defined.");
-                };
-                if ((this._modelsByGuid[root_guid] !== undefined)
-                        || (this._modelsByRootGuid[root_guid] !== undefined)) {
-                    this._modelsCol._del(model);
-                    throw new Error("Model with Root Guid: \"" + root_guid + "\" is already defined.");
-                };
-
                 this._modelsByName[name] = model;
                 this._modelsByGuid[guid] = model;
+                this._modelRefs[guid] = args.obj;
 
                 this._modelsByRootName[root_name] = model;
                 this._modelsByRootGuid[root_guid] = model;
@@ -575,10 +651,13 @@ define(
                 hdesc.obj.on(hdesc.handler);
             },
 
-            _onDeleteModel: function (args) {
+            _onDeleteModelRef: function (args) {
                 this._isConstrReady = false;
 
-                var model = args.obj;
+                var model = args.obj.tableRef();
+                if (!model)
+                    throw new Error("MetaDataMgr::_onAddModelRef: Empty or unresolved table reference.");
+
                 var name = model.get("Name");
                 var guid = model.get("DataObjectGuid");
 
@@ -589,6 +668,7 @@ define(
 
                 delete this._modelsByName[name];
                 delete this._modelsByGuid[guid];
+                delete this._modelRefs[guid];
 
                 delete this._modelsByRootName[root_name];
                 delete this._modelsByRootGuid[root_guid];

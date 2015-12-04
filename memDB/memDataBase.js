@@ -103,6 +103,7 @@ define(
              * @private
              */
 		    _addRoot: function(obj,opt) {
+
 		        var root = this.getRoot(obj.getGuid());
 		        if (root) {
 		            // TODO проверить, что root.obj==null?
@@ -124,10 +125,41 @@ define(
 		            this.pvt.robjs.push(root);
 		            this.pvt.rcoll[obj.getGuid()] = root;
 		        }
-
 		    },
 
-		    /**
+	        /**
+             * Удалить корневой объект в БД
+             *  !!! Пока работает некорректно: не логгируется удаление и не учитываются
+             *    возможные подписчики
+             * @param obj
+             * @private
+             */
+	        _deleteRoot: function(obj) {
+
+	            this.event.fire({
+	                type: "beforeDelRoot",
+	                target: this,
+	                obj: obj
+	            });
+
+	            this.clearObjRefs(obj);
+
+	            for (var i = 0; i < this.pvt.robjs.length; i++) {
+	                if (this.pvt.robjs === obj) {
+	                    this.pvt.robjs.splice(i, 1);
+	                    break;
+	                }
+	            }
+	            delete this.pvt.rcoll[obj.getGuid()];
+
+	            this.event.fire({
+	                type: "delRoot",
+	                target: this,
+	                obj: obj
+	            });
+	        },
+
+	        /**
              * зарегистрировать объект в списке по гуидам
              * @param obj
              * @private
