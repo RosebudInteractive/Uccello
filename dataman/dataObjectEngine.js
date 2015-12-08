@@ -76,7 +76,6 @@ define(
                 new MetaDataMgr(this._dataBase);
 
                 //this._metaDataMgr = this._loadMetaDataMgr();
-                this._loadMetaInfo(METADATA_DIR_NAME);
                 this._metaDataMgr = this._dataBase.deserialize(
                     {
                         "$sys": {
@@ -87,6 +86,8 @@ define(
                     {},
                     this._createComponent);
                 //this._metaDataMgr = new MetaDataMgr(this._dataBase, {});
+                this._loadMetaInfo(METADATA_DIR_NAME);
+
                 this._metaDataMgr.router(this._router);
                 if (rpc) {
                     var remote = rpc._publ(this._metaDataMgr, this._metaDataMgr.getInterface());

@@ -71,6 +71,9 @@ define(
                     new DataObject(this.getDB());
                     this._dataObjectType = this.getDB().getObj(DataObject.prototype.classGuid);
                     this._addExistingModels();
+                    if (!this.getDB()._metaDataMgr)
+                        this.getDB()._metaDataMgr = this;
+
                 };
             },
 

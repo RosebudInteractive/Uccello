@@ -2,10 +2,12 @@ if (typeof define !== 'function') {
     var define = require('amdefine')(module);
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
+
 define(
     ['../system/uobject', './metaModelField', './metaDefs', './metaLinkRef', '../system/event',
         '../memDB/memMetaType', '../dataman/dataobject'],
     function (UObject, MetaModelField, Meta, MetaLinkRef, Event, MemMetaType, DataObject) {
+
         var MetaModel = UObject.extend([new Event()], {
 
             className: "MetaModel",
@@ -73,6 +75,9 @@ define(
 
                     new DataObject(this.getDB());
                     this._dataObjectType = this.getDB().getObj(DataObject.prototype.classGuid);
+
+                    if (!this.getDB()._metaDataMgr)
+                        new this.getDB().getMetaDataMgrConstructor(this.getDB(), {});
                 };
             },
 

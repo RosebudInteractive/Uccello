@@ -8,8 +8,9 @@
  * @module MemDataBase
  */
 define(
-	["../system/event","../system/utils", "./memCol", "./memObj", "./memMetaRoot", "./memMetaObj", "./memMetaObjFields", "./memMetaObjCols"],
-	function(Event,Utils, MemCollection,MemObj,MemMetaRoot,MemMetaObj,MemMetaObjFields,MemMetaObjCols) {
+	["../system/event", "../system/utils", "./memCol", "./memObj", "./memMetaRoot", "./memMetaObj",
+        "./memMetaObjFields", "./memMetaObjCols", "../metaData/MetaDataMgr"],
+	function (Event, Utils, MemCollection, MemObj, MemMetaRoot, MemMetaObj, MemMetaObjFields, MemMetaObjCols, MetaDataMgr) {
 
 
 		var metaObjFieldsGuid =  UCCELLO_CONFIG.guids.metaObjFieldsGuid;
@@ -33,7 +34,7 @@ define(
 			 *		params.proxyMaster - прокси мастер-базы (для kind = "slave")
              * @param cb
              */
-		    init: function(controller, params, cb) {
+		    init: function (controller, params, cb) {
 		        var pvt = this.pvt = {};
 		        pvt.name = params.name;
 		        pvt.robjs = [];				// корневые объекты базы данных
@@ -63,26 +64,26 @@ define(
 		        pvt.sentVersion = 0;
 
 		        this.event = new Event();
-				// транзакции
-				pvt.curTranGuid = undefined; // версия текущей транзакции БД
-				pvt.tranCounter = 0;		// счетчик транзакции
-				pvt.tho = {};
-				pvt.tha = [];
-				// лог удаленных вызовов и входящих
-				pvt.rco = {};
-				pvt.rca = [];
-				pvt.rexeco = {};
-				pvt.rexeca = [];
+		        // транзакции
+		        pvt.curTranGuid = undefined; // версия текущей транзакции БД
+		        pvt.tranCounter = 0;		// счетчик транзакции
+		        pvt.tho = {};
+		        pvt.tha = [];
+		        // лог удаленных вызовов и входящих
+		        pvt.rco = {};
+		        pvt.rca = [];
+		        pvt.rexeco = {};
+		        pvt.rexeca = [];
 
-				pvt.execQ = [];
-				pvt.execTr = {};
-				pvt.memTranIdx = 0;
+		        pvt.execQ = [];
+		        pvt.execTr = {};
+		        pvt.memTranIdx = 0;
 
-				if (params.kind != "master") {
-		            var db=this;
-		            controller._subscribe(this,params.proxyMaster, function(result) {
+		        if (params.kind != "master") {
+		            var db = this;
+		            controller._subscribe(this, params.proxyMaster, function (result) {
 		                pvt.proxyMaster = controller.getProxy(params.proxyMaster.guid);
-		                controller.subscribeRoots(db, UCCELLO_CONFIG.guids.metaRootGuid, function(){
+		                controller.subscribeRoots(db, UCCELLO_CONFIG.guids.metaRootGuid, function () {
 		                    db._buildMetaTables();
 		                    if (cb !== undefined && (typeof cb == "function")) cb();
 		                });
@@ -91,7 +92,7 @@ define(
 		        }
 		        else { // master base
 		            // Создать объект с коллекцией метаинфо
-		            pvt.meta = new MemMetaRoot( { db: this },{});
+		            pvt.meta = new MemMetaRoot({ db: this }, {});
 		            if (cb !== undefined && (typeof cb == "function")) cb(this);
 		        }
 		    },
@@ -102,7 +103,7 @@ define(
              * @param opt - опции opt.type - тип (res|data), opt.mode - режим ("RO"|"RW")
              * @private
              */
-		    _addRoot: function(obj,opt) {
+		    _addRoot: function (obj, opt) {
 
 		        var root = this.getRoot(obj.getGuid());
 		        if (root) {
@@ -119,47 +120,47 @@ define(
 		            root.dver = 0; 			// версии корневого объекта: draft / sent / valid
 		            root.sver = 0;
 		            root.vver = 0;
-					root.vho = {};			// история версий
-					root.vha = [];
+		            root.vho = {};			// история версий
+		            root.vha = [];
 		            root.event = new Event();
 		            this.pvt.robjs.push(root);
 		            this.pvt.rcoll[obj.getGuid()] = root;
 		        }
 		    },
 
-	        /**
+		    /**
              * Удалить корневой объект в БД
              *  !!! Пока работает некорректно: не логгируется удаление и не учитываются
              *    возможные подписчики
              * @param obj
              * @private
              */
-	        _deleteRoot: function(obj) {
+		    _deleteRoot: function (obj) {
 
-	            this.event.fire({
-	                type: "beforeDelRoot",
-	                target: this,
-	                obj: obj
-	            });
+		        this.event.fire({
+		            type: "beforeDelRoot",
+		            target: this,
+		            obj: obj
+		        });
 
-	            this.clearObjRefs(obj);
+		        this.clearObjRefs(obj);
 
-	            for (var i = 0; i < this.pvt.robjs.length; i++) {
-	                if (this.pvt.robjs === obj) {
-	                    this.pvt.robjs.splice(i, 1);
-	                    break;
-	                }
-	            }
-	            delete this.pvt.rcoll[obj.getGuid()];
+		        for (var i = 0; i < this.pvt.robjs.length; i++) {
+		            if (this.pvt.robjs === obj) {
+		                this.pvt.robjs.splice(i, 1);
+		                break;
+		            }
+		        }
+		        delete this.pvt.rcoll[obj.getGuid()];
 
-	            this.event.fire({
-	                type: "delRoot",
-	                target: this,
-	                obj: obj
-	            });
-	        },
+		        this.event.fire({
+		            type: "delRoot",
+		            target: this,
+		            obj: obj
+		        });
+		    },
 
-	        /**
+		    /**
              * зарегистрировать объект в списке по гуидам
              * @param obj
              * @private
@@ -167,7 +168,7 @@ define(
 		    _addObj: function (obj) {
 
 		        var root = obj.getRoot();
-		        var is_root = ! obj.getParent();
+		        var is_root = !obj.getParent();
 		        var guid = obj.getGuid();
 		        var guidRes = obj.getGuidRes();
 
@@ -228,7 +229,7 @@ define(
 		                    delete this.pvt.uLinks[guid + "_" + links[i]];
 		            };
 		            delete this.pvt.refTo[guid];
-                };
+		        };
 		        var refFrom = this.pvt.refFrom[guid];
 		        if (refFrom) {
 		            var links = Object.keys(refFrom);
@@ -332,72 +333,72 @@ define(
              * @param {Object} obj A MemProtoObject which [ref] belongs to
              */
 		    resolveRef: function (ref, obj) {
-			    ref.objRef = null;
-			    var objRef = null;
+		        ref.objRef = null;
+		        var objRef = null;
 
 		        // Backup initial state
-			    var oldGuidInstanceRes = ref.guidInstanceRes;
-			    var isChanged = false;
+		        var oldGuidInstanceRes = ref.guidInstanceRes;
+		        var isChanged = false;
 
-			    if (ref.guidInstanceElem) {
-			        objRef = this.getObj(ref.guidInstanceElem);
-			        if (objRef)
-			            ref.objRef = objRef;
-                } else {
-			        if (ref.is_external) {
-			            // External ref
-			            var objResBase = this.pvt.resMap[ref.guidRes];
-			            if (objResBase) {
-			                if (ref.guidInstanceRes) {
-			                    objRef = objResBase[ref.guidInstanceRes];
-			                } else
-			                    // Try to get resorce with GuidInstance == GuidResource
-			                    objRef = objResBase[ref.guidRes];
-			            };
-			            if ((!ref.guidInstanceRes) && objResBase && (!objRef)) {
-			                // Resorce with GuidInstance == GuidResource doesn't exist,
-			                //   then try to get another resorce with that Guid
-			                var guids = Object.keys(objResBase);
-			                if (guids.length == 1) {
-			                    // There should be the only resource
-			                    objRef = objResBase[guids[0]];
-			                };
-			            };
-			            if ((!ref.guidInstanceRes) && objRef) {
-			                ref.guidInstanceRes = objRef.root.getGuid();
-			                isChanged = true;
-			            };
-			        } else {
-			            // Internal ref
+		        if (ref.guidInstanceElem) {
+		            objRef = this.getObj(ref.guidInstanceElem);
+		            if (objRef)
+		                ref.objRef = objRef;
+		        } else {
+		            if (ref.is_external) {
+		                // External ref
+		                var objResBase = this.pvt.resMap[ref.guidRes];
+		                if (objResBase) {
+		                    if (ref.guidInstanceRes) {
+		                        objRef = objResBase[ref.guidInstanceRes];
+		                    } else
+		                        // Try to get resorce with GuidInstance == GuidResource
+		                        objRef = objResBase[ref.guidRes];
+		                };
+		                if ((!ref.guidInstanceRes) && objResBase && (!objRef)) {
+		                    // Resorce with GuidInstance == GuidResource doesn't exist,
+		                    //   then try to get another resorce with that Guid
+		                    var guids = Object.keys(objResBase);
+		                    if (guids.length == 1) {
+		                        // There should be the only resource
+		                        objRef = objResBase[guids[0]];
+		                    };
+		                };
+		                if ((!ref.guidInstanceRes) && objRef) {
+		                    ref.guidInstanceRes = objRef.root.getGuid();
+		                    isChanged = true;
+		                };
+		            } else {
+		                // Internal ref
 
-			            if (obj && (typeof (obj.getRoot) === "function")) {
-			                if (!(ref.guidInstanceRes && ref.guidRes)) {
-			                    // Set root of current object to resource reference
-			                    var root = obj.getRoot();
-			                    ref.guidRes = root.getGuidRes();
-			                    ref.guidInstanceRes = root.getGuid();
-			                };
-			                objRef = this.pvt.resMap[ref.guidRes];
-			                if (objRef)
-			                    objRef = objRef[ref.guidInstanceRes];
-			            };
-			        };
+		                if (obj && (typeof (obj.getRoot) === "function")) {
+		                    if (!(ref.guidInstanceRes && ref.guidRes)) {
+		                        // Set root of current object to resource reference
+		                        var root = obj.getRoot();
+		                        ref.guidRes = root.getGuidRes();
+		                        ref.guidInstanceRes = root.getGuid();
+		                    };
+		                    objRef = this.pvt.resMap[ref.guidRes];
+		                    if (objRef)
+		                        objRef = objRef[ref.guidInstanceRes];
+		                };
+		            };
 
-			        if (objRef)
-			            if (ref.guidElem == ref.guidRes)
-			                objRef = objRef.root; // Ref to the root object
-			            else
-			                objRef = objRef.elems[ref.guidElem];
-			        if (objRef) {
-			            ref.guidInstanceElem = objRef.getGuid();
-			            ref.objRef = objRef;
-			        } else
-			            // Restore initial state
-			            if (isChanged)
-			                ref.guidInstanceRes = oldGuidInstanceRes;
-                };
+		            if (objRef)
+		                if (ref.guidElem == ref.guidRes)
+		                    objRef = objRef.root; // Ref to the root object
+		                else
+		                    objRef = objRef.elems[ref.guidElem];
+		            if (objRef) {
+		                ref.guidInstanceElem = objRef.getGuid();
+		                ref.objRef = objRef;
+		            } else
+		                // Restore initial state
+		                if (isChanged)
+		                    ref.guidInstanceRes = oldGuidInstanceRes;
+		        };
 
-			},
+		    },
 
 		    /**
              * Will set new maximal root id if a parameter value is greater than current one.
@@ -422,246 +423,246 @@ define(
              * @param item
              * @private
              */
-			_addLogItem: function(item) {
-				this.pvt.logIdx.push(item);
-			},
+		    _addLogItem: function (item) {
+		        this.pvt.logIdx.push(item);
+		    },
 
 
-            /**
+		    /**
              * buildMetaTables description
              * @private
              */
-			_buildMetaTables: function() {
-				var metacol = this.getMeta().getCol("MetaObjects");
-				for (var i=0; i<metacol.count(); i++) {
-					var o = metacol.get(i);
-					if ((o.pvt.fieldsTable == undefined) || (o.pvt.colsTable == undefined))
-						o._bldElemTable();
-				}
-			},
+		    _buildMetaTables: function () {
+		        var metacol = this.getMeta().getCol("MetaObjects");
+		        for (var i = 0; i < metacol.count() ; i++) {
+		            var o = metacol.get(i);
+		            if ((o.pvt.fieldsTable == undefined) || (o.pvt.colsTable == undefined))
+		                o._bldElemTable();
+		        }
+		    },
 
-            /**
+		    /**
              * вернуть список гуидов корневых объектов за исключением метаинфо
 			 * @param rootKind - "res"|"data" - тип рута, если не передается или "all", то все
              */
-			getRootGuids: function(rootKind) {
-				var guids = [];
-				if (Array.isArray(rootKind))
-					var guids = rootKind;
-				else {
-					if ((rootKind == "res") || (rootKind == "data") || (rootKind == "all") || (!rootKind)) {
-						var ro = this.pvt.robjs;
-						for (var i=0; i<ro.length; i++) {
-							var cguid = ro[i].obj.getGuid();
-							if ((cguid!=metaRootGuid) && ((ro[i].type==rootKind) || (rootKind===undefined) || (rootKind==="all"))) 
-								guids.push(cguid);
-						}
-					}
-					else
-						guids.push(rootKind);
-				}
-				return guids;
-			},
+		    getRootGuids: function (rootKind) {
+		        var guids = [];
+		        if (Array.isArray(rootKind))
+		            var guids = rootKind;
+		        else {
+		            if ((rootKind == "res") || (rootKind == "data") || (rootKind == "all") || (!rootKind)) {
+		                var ro = this.pvt.robjs;
+		                for (var i = 0; i < ro.length; i++) {
+		                    var cguid = ro[i].obj.getGuid();
+		                    if ((cguid != metaRootGuid) && ((ro[i].type == rootKind) || (rootKind === undefined) || (rootKind === "all")))
+		                        guids.push(cguid);
+		                }
+		            }
+		            else
+		                guids.push(rootKind);
+		        }
+		        return guids;
+		    },
 
 		    /**
              * Deletes object [obj] from all the reference lists in memDB .
              * 
              * @param {Object} obj
              */
-			_clearSingleObjRefs: function (obj) {
-			    var root = this.getRoot(obj.getRoot().getGuid());
+		    _clearSingleObjRefs: function (obj) {
+		        var root = this.getRoot(obj.getRoot().getGuid());
 
-			    var is_root = !obj.getParent();
-			    var guid = obj.getGuid();
-			    var guidRes = obj.getGuidRes();
-			    var rootGuid = root.obj.getGuid();
-			    var rootGuidRes = root.obj.getGuidRes();
+		        var is_root = !obj.getParent();
+		        var guid = obj.getGuid();
+		        var guidRes = obj.getGuidRes();
+		        var rootGuid = root.obj.getGuid();
+		        var rootGuidRes = root.obj.getGuidRes();
 
-			    this._deleteRefs(guid);
+		        this._deleteRefs(guid);
 
-			    delete this.pvt.objs[guid];
+		        delete this.pvt.objs[guid];
 
-			    if (this.pvt.resMap[rootGuidRes]) {
-			        if (is_root) {
-			            delete this.pvt.resMap[rootGuidRes][guid];
-			            if (Object.keys(this.pvt.resMap[rootGuidRes]).length == 0)
-			                delete this.pvt.resMap[rootGuidRes];
-			        } else {
-			            if (this.pvt.resMap[rootGuidRes][rootGuid])
-			                delete this.pvt.resMap[rootGuidRes][rootGuid].elems[guidRes];
-			        };
-			    };
-			},
+		        if (this.pvt.resMap[rootGuidRes]) {
+		            if (is_root) {
+		                delete this.pvt.resMap[rootGuidRes][guid];
+		                if (Object.keys(this.pvt.resMap[rootGuidRes]).length == 0)
+		                    delete this.pvt.resMap[rootGuidRes];
+		            } else {
+		                if (this.pvt.resMap[rootGuidRes][rootGuid])
+		                    delete this.pvt.resMap[rootGuidRes][rootGuid].elems[guidRes];
+		            };
+		        };
+		    },
 
-			 /**
-             * вызывается коллекциями при удалении объекта, генерирует событие, на которое можно подписаться
-             */
-			onDeleteObject: function (obj) {
-			    var root = this.getRoot(obj.getRoot().getGuid());
+		    /**
+            * вызывается коллекциями при удалении объекта, генерирует событие, на которое можно подписаться
+            */
+		    onDeleteObject: function (obj) {
+		        var root = this.getRoot(obj.getRoot().getGuid());
 
-			    this._clearSingleObjRefs(obj);
+		        this._clearSingleObjRefs(obj);
 
-			    // TODO проверить не корневой ли объект - и тогда тоже удалить его со всей обработкой
-				this.event.fire({
-                    type: 'delObj',
-                    target: obj
-                });
-				root.event.fire({
-                    type: 'delObj',
-                    target: obj
-				});
-			},
+		        // TODO проверить не корневой ли объект - и тогда тоже удалить его со всей обработкой
+		        this.event.fire({
+		            type: 'delObj',
+		            target: obj
+		        });
+		        root.event.fire({
+		            type: 'delObj',
+		            target: obj
+		        });
+		    },
 
-            /**
+		    /**
              * подписаться у мастер-базы на корневой объект, идентифицированный гуидом rootGuid
              * метод вызывается у подчиненной (slave) базы.
              * @param rootGuid
              * @param callback - вызывается после того, как подписка произошла и данные сериализовались в базе
 			 * @param callback2 - вызывается по ходу создания объектов
 	         */
-			subscribeRoots: function(rootGuid,callback,callback2) {
-				this.pvt.controller.subscribeRoots(this,rootGuid,callback,callback2);
-			},
+		    subscribeRoots: function (rootGuid, callback, callback2) {
+		        this.pvt.controller.subscribeRoots(this, rootGuid, callback, callback2);
+		    },
 
-            /**
+		    /**
              * Стать подписчиком базы данных
              * @param proxy
              */
-			onSubscribe: function(proxy) {
-				//var g = (proxy.db) ? proxy.dataBase.getGuid() : proxy.guid;
-				this.pvt.subscribers[proxy.guid] = proxy;
-				if (DEBUG) console.log(this.getGuid());
-				this.prtSub(this.pvt);
-			},
+		    onSubscribe: function (proxy) {
+		        //var g = (proxy.db) ? proxy.dataBase.getGuid() : proxy.guid;
+		        this.pvt.subscribers[proxy.guid] = proxy;
+		        if (DEBUG) console.log(this.getGuid());
+		        this.prtSub(this.pvt);
+		    },
 
-            /**
+		    /**
              * isSubscribed
              * @param dbGuid
              * @returns {object|null}
              */
-			isSubscribed: function(dbGuid) {
-				var s= this.pvt.subscribers[dbGuid];
-				return (s) ? s : null;
-			},
+		    isSubscribed: function (dbGuid) {
+		        var s = this.pvt.subscribers[dbGuid];
+		        return (s) ? s : null;
+		    },
 
-            /**
+		    /**
              * onUnsubscribe
              * @param connectId
              */
-			onUnsubscribe: function(connectId) {
-				//var g = (subProxy.dataBase) ? subProxy.dataBase.getGuid() : subProxy.guid;
-				for (var g in this.pvt.subscribers) {
-					var p = this.pvt.subscribers[g];
-					if (p.connect.getId() == connectId)
-						delete this.pvt.subscribers[g]; // убрать из общего списка подписчиков
-				}
-				for (g in this.pvt.rcoll) {
-					var p=this.pvt.rcoll[g];
-					for (var g2 in p.subscribers) {
-						if (p.subscribers[g2].connect.getId() == connectId)
-							delete p.subscribers[g2];
+		    onUnsubscribe: function (connectId) {
+		        //var g = (subProxy.dataBase) ? subProxy.dataBase.getGuid() : subProxy.guid;
+		        for (var g in this.pvt.subscribers) {
+		            var p = this.pvt.subscribers[g];
+		            if (p.connect.getId() == connectId)
+		                delete this.pvt.subscribers[g]; // убрать из общего списка подписчиков
+		        }
+		        for (g in this.pvt.rcoll) {
+		            var p = this.pvt.rcoll[g];
+		            for (var g2 in p.subscribers) {
+		                if (p.subscribers[g2].connect.getId() == connectId)
+		                    delete p.subscribers[g2];
 
-					}
-				}
-				// TODO удалить из остальных мест
+		            }
+		        }
+		        // TODO удалить из остальных мест
 
-			},
+		    },
 
-            /**
+		    /**
              * Стать подписчиком корневого объекта с гуидом rootGuid
              * @param dbGuid - гуид базы данных подписчика
              * @param rootGuids - 1 гуид или массив гуидов либо селектор - "res" для ресурсов, "data" для данных, "all" для всех
              * @returns {*}
              */
-			onSubscribeRoots: function(dbGuid, rootGuids) {
-				// TODO проверить что база подписана на базу
-				var rg = [];
-				var res = [];
+		    onSubscribeRoots: function (dbGuid, rootGuids) {
+		        // TODO проверить что база подписана на базу
+		        var rg = [];
+		        var res = [];
 
-				this.pvt.controller.genDeltas(this.getGuid());
-				
-				rg  = this.getRootGuids(rootGuids);
+		        this.pvt.controller.genDeltas(this.getGuid());
 
-				for (var i=0; i<rg.length; i++) {
-					if (this.pvt.robjs.length > 0) {
-						var ro = this._onSubscribeRoot(dbGuid,rg[i]);
-						res.push(this.serialize(ro.obj)); 
-					}
-				}
-				return res;
-			},
+		        rg = this.getRootGuids(rootGuids);
 
-            /**
+		        for (var i = 0; i < rg.length; i++) {
+		            if (this.pvt.robjs.length > 0) {
+		                var ro = this._onSubscribeRoot(dbGuid, rg[i]);
+		                res.push(this.serialize(ro.obj));
+		            }
+		        }
+		        return res;
+		    },
+
+		    /**
              * Подписать клиента на рут
              * @param dbGuid
              * @param rootGuid - 1 гуид 
              * @returns {*}
-             */			
-			_onSubscribeRoot: function(dbGuid, rootGuid, inLog) {
-				var ro = this.pvt.rcoll[rootGuid];
-				if (ro) {
-					// добавляем подписчика
-					var subProxy = this.pvt.subscribers[dbGuid];
-					if (subProxy) {
-						var clog = ro.obj.getLog();
-						if (!clog.getActive()) clog.setActive(true); // если лог неактивен, то активировать и записывать в него изменения
-						ro.subscribers[dbGuid] = subProxy;
-						if (inLog) { // запоминаем в sobj копию объекта на момент подписки
-							var sobj = this.serialize(ro.obj);
-							clog.add({ obj:ro.obj, sobj: sobj, type:"subscribe", subscriber: dbGuid });
-						}
-						return ro;
-					}
-				}			
-				return null;
-			},
+             */
+		    _onSubscribeRoot: function (dbGuid, rootGuid, inLog) {
+		        var ro = this.pvt.rcoll[rootGuid];
+		        if (ro) {
+		            // добавляем подписчика
+		            var subProxy = this.pvt.subscribers[dbGuid];
+		            if (subProxy) {
+		                var clog = ro.obj.getLog();
+		                if (!clog.getActive()) clog.setActive(true); // если лог неактивен, то активировать и записывать в него изменения
+		                ro.subscribers[dbGuid] = subProxy;
+		                if (inLog) { // запоминаем в sobj копию объекта на момент подписки
+		                    var sobj = this.serialize(ro.obj);
+		                    clog.add({ obj: ro.obj, sobj: sobj, type: "subscribe", subscriber: dbGuid });
+		                }
+		                return ro;
+		            }
+		        }
+		        return null;
+		    },
 
-			prtSub: function(root) {
-				if (DEBUG) {
-					console.log("***");
-					for (var guid  in root.subscribers) {
-						console.log(guid+"  "+root.subscribers[guid].connect.name());
-					}
-				}
-			},
+		    prtSub: function (root) {
+		        if (DEBUG) {
+		            console.log("***");
+		            for (var guid in root.subscribers) {
+		                console.log(guid + "  " + root.subscribers[guid].connect.name());
+		            }
+		        }
+		    },
 
 
-            /**
+		    /**
              * "сериализация" объекта базы
              * @param {object}  obj
              * @param {boolean} [use_resource_guid = false] использовать гуид ресурса вместо гуида инстанса
              * @returns {*}
              */
-			serialize: function(obj, use_resource_guid) {
-				// проверить, что объект принадлежит базе
-				if (!("getDB" in obj) || (obj.getDB()!=this)) return null;
+		    serialize: function (obj, use_resource_guid) {
+		        // проверить, что объект принадлежит базе
+		        if (!("getDB" in obj) || (obj.getDB() != this)) return null;
 
-				var newObj = {};
-				newObj.$sys = {};
+		        var newObj = {};
+		        newObj.$sys = {};
 
-				if (use_resource_guid)
-				    newObj.$sys.guid = obj.getGuidRes();
-                else
-				    newObj.$sys.guid = obj.getGuid();
+		        if (use_resource_guid)
+		            newObj.$sys.guid = obj.getGuidRes();
+		        else
+		            newObj.$sys.guid = obj.getGuid();
 
-				newObj.ver = obj.getRootVersion();
+		        newObj.ver = obj.getRootVersion();
 
-				newObj.$sys.typeGuid = obj.getTypeGuid();
-				newObj.fields = {};
-				for (var i = 0; i < obj.count() ; i++)
-				    newObj.fields[obj.getFieldName(i)] = obj.getSerialized(i, use_resource_guid);
-				// коллекции
-				newObj.collections = {};
-				for (i=0; i<obj.countCol(); i++) {
-					var cc=obj.getCol(i);
-					var cc2=newObj.collections[cc.getName()] = {};
-					for (var j=0; j<cc.count(); j++) {
-					    var o2 = this.serialize(cc.get(j), use_resource_guid);
-						cc2[j] = o2;
-					}
-				}
-				return newObj;	// TODO? делать stringify тут?
-			},
+		        newObj.$sys.typeGuid = obj.getTypeGuid();
+		        newObj.fields = {};
+		        for (var i = 0; i < obj.count() ; i++)
+		            newObj.fields[obj.getFieldName(i)] = obj.getSerialized(i, use_resource_guid);
+		        // коллекции
+		        newObj.collections = {};
+		        for (i = 0; i < obj.countCol() ; i++) {
+		            var cc = obj.getCol(i);
+		            var cc2 = newObj.collections[cc.getName()] = {};
+		            for (var j = 0; j < cc.count() ; j++) {
+		                var o2 = this.serialize(cc.get(j), use_resource_guid);
+		                cc2[j] = o2;
+		            }
+		        }
+		        return newObj;	// TODO? делать stringify тут?
+		    },
 
 		    /**
              * Splits "full" GUID into 2 parts:
@@ -674,18 +675,18 @@ define(
              * @return {String} retval.guid - GUID part
              * @return {Integer} retval.rootId - root id part (=-1 if missing)
              */
-			parseGuid: function (aGuid) {
-			    var ret = { guid: aGuid, rootId: -1 };
-			    var i = aGuid.lastIndexOf(csFullGuidDelimiter);
-			    if (i != -1) {
-			        ret.guid = aGuid.substring(0, i);
-			        var id = aGuid.substring(i + 1);
-			        if (!isNaN(parseInt(id)) && isFinite(id)) {
-			            ret.rootId = parseInt(id);
-			        };
-			    };
-			    return ret;
-			},
+		    parseGuid: function (aGuid) {
+		        var ret = { guid: aGuid, rootId: -1 };
+		        var i = aGuid.lastIndexOf(csFullGuidDelimiter);
+		        if (i != -1) {
+		            ret.guid = aGuid.substring(0, i);
+		            var id = aGuid.substring(i + 1);
+		            if (!isNaN(parseInt(id)) && isFinite(id)) {
+		                ret.rootId = parseInt(id);
+		            };
+		        };
+		        return ret;
+		    },
 
 		    /**
              * Makes "full" GUID from guid structure:
@@ -698,9 +699,9 @@ define(
              * @param {String} aGuid.rootId root id
              * @return {String} "full" GUID
              */
-			makeGuid: function (aGuid) {
-			    return aGuid.guid + ((aGuid.rootId > 0) ? csFullGuidDelimiter + aGuid.rootId : "");
-			},
+		    makeGuid: function (aGuid) {
+		        return aGuid.guid + ((aGuid.rootId > 0) ? csFullGuidDelimiter + aGuid.rootId : "");
+		    },
 
 		    /**
              * Deletes object [obj] (and it's childs as well)
@@ -708,49 +709,49 @@ define(
              *
              * @param {Object} obj
              */
-			clearObjRefs: function (obj) {
-			    for (var i = 0; i < obj.countCol() ; i++) {
-			        var cc = obj.getCol(i);
-			        for (var j = 0; j < cc.count() ; j++) {
-			            this.clearObjRefs(cc.get(j));
-			        };
-                };
-			    this._clearSingleObjRefs(obj);
-			},
+		    clearObjRefs: function (obj) {
+		        for (var i = 0; i < obj.countCol() ; i++) {
+		            var cc = obj.getCol(i);
+		            for (var j = 0; j < cc.count() ; j++) {
+		                this.clearObjRefs(cc.get(j));
+		            };
+		        };
+		        this._clearSingleObjRefs(obj);
+		    },
 
-			getListOfTypes: function (obj, types, notCheck) {
-			    var objTypeGuid = null;
-			    if (!types.list)
-			        types.list = {};
-			    switch (obj.$sys.typeGuid) {
+		    getListOfTypes: function (obj, types, notCheck) {
+		        var objTypeGuid = null;
+		        if (!types.list)
+		            types.list = {};
+		        switch (obj.$sys.typeGuid) {
 
-			        case metaObjFieldsGuid:
-			            break;
+		            case metaObjFieldsGuid:
+		                break;
 
-                    case metaObjColsGuid:
-			            break;
+		            case metaObjColsGuid:
+		                break;
 
-                    case metaRootGuid:
-			            break;
+		            case metaRootGuid:
+		                break;
 
-                    case metaObjGuid:
-			            objTypeGuid = obj.$sys.guid;
-			            break;
+		            case metaObjGuid:
+		                objTypeGuid = obj.$sys.guid;
+		                break;
 
-			        default:
-			            objTypeGuid = obj.$sys.typeGuid;
-			    }
-			    for (var cn in obj.collections) {
-			        for (var co in obj.collections[cn])
-			            this.getListOfTypes(obj.collections[cn][co], types, notCheck);
-			    };
-			    var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
-			    if (objTypeGuid && constructHolder && (!types.list[objTypeGuid])
+		            default:
+		                objTypeGuid = obj.$sys.typeGuid;
+		        }
+		        for (var cn in obj.collections) {
+		            for (var co in obj.collections[cn])
+		                this.getListOfTypes(obj.collections[cn][co], types, notCheck);
+		        };
+		        var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
+		        if (objTypeGuid && constructHolder && (!types.list[objTypeGuid])
                     && ((!constructHolder.getComponent(objTypeGuid)) || notCheck)) {
-			        types.list[objTypeGuid] = true;
-			        types.arrTypes.push(objTypeGuid);
-			    };
-			},
+		            types.list[objTypeGuid] = true;
+		            types.arrTypes.push(objTypeGuid);
+		        };
+		    },
 
 		    /**
              * десериализация в объект
@@ -760,99 +761,99 @@ define(
 			 * @param {boolean} keep_guid сохранять ли оригинальные GUID-ы при десериализации?
              * @returns {*}
              */
-			deserialize: function (sobj, parent, cb, keep_guid, instGuid) {
+		    deserialize: function (sobj, parent, cb, keep_guid, instGuid) {
 
-                // TEMPORARY SOLUTION (will be deleted) !!!
-			    //if (keep_guid === undefined)
-			    //    keep_guid = true;
+		        // TEMPORARY SOLUTION (will be deleted) !!!
+		        //if (keep_guid === undefined)
+		        //    keep_guid = true;
 
-			    function ideser(that, sobj, parent) {
-					if (!("obj" in parent)) parent.db = that;
-					if (keep_guid)
-					    sobj.$sys.keep_guid = true;
-					switch (sobj.$sys.typeGuid) {
-						case metaObjFieldsGuid:
-							var o = new MemMetaObjFields(parent,sobj);
-							break;
-						case metaObjColsGuid:
-							o = new MemMetaObjCols(parent,sobj);
-							break;
-						case metaRootGuid:
-							//o = that.getObj(metaRootGuid);
-							that.pvt.meta = new MemMetaRoot(parent,sobj);
-							o = that.pvt.meta;
-							break;
-						case metaObjGuid:
-							o = new MemMetaObj(parent,sobj);
-							break;
-						default:
-						    var typeObj = that.getObj(sobj.$sys.typeGuid);
+		        function ideser(that, sobj, parent) {
+		            if (!("obj" in parent)) parent.db = that;
+		            if (keep_guid)
+		                sobj.$sys.keep_guid = true;
+		            switch (sobj.$sys.typeGuid) {
+		                case metaObjFieldsGuid:
+		                    var o = new MemMetaObjFields(parent, sobj);
+		                    break;
+		                case metaObjColsGuid:
+		                    o = new MemMetaObjCols(parent, sobj);
+		                    break;
+		                case metaRootGuid:
+		                    //o = that.getObj(metaRootGuid);
+		                    that.pvt.meta = new MemMetaRoot(parent, sobj);
+		                    o = that.pvt.meta;
+		                    break;
+		                case metaObjGuid:
+		                    o = new MemMetaObj(parent, sobj);
+		                    break;
+		                default:
+		                    var typeObj = that.getObj(sobj.$sys.typeGuid);
 
-						    if (!typeObj) {
-						        var constructHolder = that.getContext() ? that.getContext().getConstructorHolder() : null;
-						        if (constructHolder) {
-						            var constr = constructHolder.getComponent(sobj.$sys.typeGuid);
-						            if (constr)
-						                constr = constr.constr;
-						            if (constr) {
-						                new constr(that);
-						                typeObj = that.getObj(sobj.$sys.typeGuid);
-                                    }
-						        };
-						    };
+		                    if (!typeObj) {
+		                        var constructHolder = that.getContext() ? that.getContext().getConstructorHolder() : null;
+		                        if (constructHolder) {
+		                            var constr = constructHolder.getComponent(sobj.$sys.typeGuid);
+		                            if (constr)
+		                                constr = constr.constr;
+		                            if (constr) {
+		                                new constr(that);
+		                                typeObj = that.getObj(sobj.$sys.typeGuid);
+		                            }
+		                        };
+		                    };
 
-							if (typeObj) {
-								if (cb!=undefined) o = cb(typeObj, parent, sobj);
-								if (!o) 
-								  console.log("BAD GUID === "+sobj.$sys.typeGuid);
-							}
-							break;
-					}
-					for (var cn in sobj.collections) {
-						for (var co in sobj.collections[cn])
-							ideser(that,sobj.collections[cn][co],{obj:o, colName:cn});
-					}
-					return o;
-				};
-				// TODO пока предполагаем что такого объекта нет, но если он есть что делаем?
+		                    if (typeObj) {
+		                        if (cb != undefined) o = cb(typeObj, parent, sobj);
+		                        if (!o)
+		                            console.log("BAD GUID === " + sobj.$sys.typeGuid);
+		                    }
+		                    break;
+		            }
+		            for (var cn in sobj.collections) {
+		                for (var co in sobj.collections[cn])
+		                    ideser(that, sobj.collections[cn][co], { obj: o, colName: cn });
+		            }
+		            return o;
+		        };
+		        // TODO пока предполагаем что такого объекта нет, но если он есть что делаем?
 
-			    if ("obj" in parent) parent.obj.getLog().setActive(false); // отключить лог на время десериализации
+		        if ("obj" in parent) parent.obj.getLog().setActive(false); // отключить лог на время десериализации
 
-				// заменить гуид ресурса на гуид экземпляра
-				if (instGuid) sobj.$sys.guid = instGuid;
-				
-                // Очистить все ссылки на объект, если он уже существует
-				if (sobj.$sys.guid) {
-				    if ((this.parseGuid(sobj.$sys.guid).rootId != -1)
+		        // заменить гуид ресурса на гуид экземпляра
+		        if (instGuid) sobj.$sys.guid = instGuid;
+
+		        // Очистить все ссылки на объект, если он уже существует
+		        if (sobj.$sys.guid) {
+		            if ((this.parseGuid(sobj.$sys.guid).rootId != -1)
                             || keep_guid) {
-				        var currObj = this.getObj(sobj.$sys.guid);
-				        if (currObj)
-				            this.clearObjRefs(currObj);
-				    }
-				};
+		                var currObj = this.getObj(sobj.$sys.guid);
+		                if (currObj)
+		                    this.clearObjRefs(currObj);
+		            }
+		        };
 
-				var res = ideser(this, sobj, parent);
-				var rholder = this.getRoot(res.getGuid());
-				
-				if (rholder)   // VER инициализация номеров версий рута
-					if (("ver" in sobj)) {
-						res.setRootVersion("draft",sobj.ver);
-						res.setRootVersion("sent",sobj.ver);
-						res.setRootVersion("valid",sobj.ver);
-					}
+		        var res = ideser(this, sobj, parent);
+		        var rholder = this.getRoot(res.getGuid());
 
-				this.resolveAllRefs();
-				res.getLog().setActive(true);
-				return res;
-			},
+		        if (rholder)   // VER инициализация номеров версий рута
+		            if (("ver" in sobj)) {
+		                res.setRootVersion("draft", sobj.ver);
+		                res.setRootVersion("sent", sobj.ver);
+		                res.setRootVersion("valid", sobj.ver);
+		            }
 
-			setDefaultCompCallback: function(cb) {
-				this.pvt.defaultCompCallback = cb;
-			},
+		        this.resolveAllRefs();
+		        res.getLog().setActive(true);
+		        return res;
+		    },
 
-			getDefaultCompCallback: function() {
-				return this.pvt.defaultCompCallback;
-			},
+		    setDefaultCompCallback: function (cb) {
+		        this.pvt.defaultCompCallback = cb;
+		    },
+
+		    getDefaultCompCallback: function () {
+		        return this.pvt.defaultCompCallback;
+		    },
 
 		    /**
              * Добавляет конструкторы компонентов от УДАЛЕННЫХ провайдеров,
@@ -862,33 +863,33 @@ define(
              * @param  {Array}    objArr    Массив объектов, которые предстоит десериализовать
              * @param  {Function} callback  Вызывается по завершении операции (аргумент: массив(Guid) типов, для которых конструкторы не найдены)
              */
-			addRemoteComps: function (objArr, callback) {
-			    var callbackNow = callback ? true : false;
-			    var self = this;
-			    var types = { arrTypes: [] };
+		    addRemoteComps: function (objArr, callback) {
+		        var callbackNow = callback ? true : false;
+		        var self = this;
+		        var types = { arrTypes: [] };
 
-			    function localCallback(missingTypes) {
+		        function localCallback(missingTypes) {
 
-			        if (callback)
-			            setTimeout(callback, 0);
-			    };
+		            if (callback)
+		                setTimeout(callback, 0);
+		        };
 
-			    if (objArr) {
-			        for (var i = 0; i < objArr.length; i++) {
-			            this.getListOfTypes(objArr[i], types);
-			        };
-			        if (types.arrTypes.length > 0) {
-			            var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
-			            if (constructHolder) {
-			                callbackNow = false;
-			                constructHolder.addRemoteComps(types.arrTypes, this, localCallback);
-			            };
-			        };
-			    };
-			    if (callbackNow)
-			        setTimeout(callback, 0);
+		        if (objArr) {
+		            for (var i = 0; i < objArr.length; i++) {
+		                this.getListOfTypes(objArr[i], types);
+		            };
+		            if (types.arrTypes.length > 0) {
+		                var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
+		                if (constructHolder) {
+		                    callbackNow = false;
+		                    constructHolder.addRemoteComps(types.arrTypes, this, localCallback);
+		                };
+		            };
+		        };
+		        if (callbackNow)
+		            setTimeout(callback, 0);
 
-			},
+		    },
 
 		    /**
              * Добавляет конструкторы компонентов от ЛОКАЛЬНЫХ провайдеров,
@@ -897,20 +898,20 @@ define(
              *
              * @param  {Array}  objArr    Массив объектов, которые предстоит десериализовать
              */
-			addLocalComps: function (objArr) {
-			    if (objArr) {
-			        var types = { arrTypes: [] };
-			        for (var i = 0; i < objArr.length; i++) {
-			            this.getListOfTypes(objArr[i], types);
-			        };
-			        if (types.arrTypes.length > 0) {
-			            var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
-			            if (constructHolder) {
-			                var missingTypes = constructHolder.addLocalComps(types.arrTypes, this);
-                        };
-			        };
-			    };
-			},
+		    addLocalComps: function (objArr) {
+		        if (objArr) {
+		            var types = { arrTypes: [] };
+		            for (var i = 0; i < objArr.length; i++) {
+		                this.getListOfTypes(objArr[i], types);
+		            };
+		            if (types.arrTypes.length > 0) {
+		                var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
+		                if (constructHolder) {
+		                    var missingTypes = constructHolder.addLocalComps(types.arrTypes, this);
+		                };
+		            };
+		        };
+		    },
 
 		    /**
              * добавить корневые объекты путем десериализации
@@ -919,152 +920,152 @@ define(
 			 * @param override - true - перезагрузить рут, false - только подписать
              * @returns {*} - возвращает массив корневых гуидов - либо созданных рутов либо уже существующих но на которые не были подписаны
              */
-			addRoots: function(sobjs, params, rg, rgsubs) {
-				if (!this.isMaster()) return null; // Работает только на мастер-базе. Слейв добавляет рут через мастер.
+		    addRoots: function (sobjs, params, rg, rgsubs) {
+		        if (!this.isMaster()) return null; // Работает только на мастер-базе. Слейв добавляет рут через мастер.
 
-				this.getController().genDeltas(this.getGuid());		// рассылаем дельты
+		        this.getController().genDeltas(this.getGuid());		// рассылаем дельты
 
-				var subDbGuid = params.subDbGuid;
-				var cb = this.getDefaultCompCallback();
-				
-				var res = [];
+		        var subDbGuid = params.subDbGuid;
+		        var cb = this.getDefaultCompCallback();
 
-				var allSubs = this.getSubscribers();
+		        var res = [];
 
-				for (var i=0; i<rg.length; i++) {
-					var root = null;
-					if (rg[i].length>36) {
-						root = this.getRoot(rg[i]);
-						var croot = this.deserialize(sobjs[i], { }, cb, false, rg[i]);
-					}
-					else croot = this.deserialize(sobjs[i], { }, cb);
-						
-					croot.getCurVersion();					
+		        var allSubs = this.getSubscribers();
 
-					// возвращаем гуид если рута не было, или был, но не были подписаны
-					if (!root || (root && !(root.subscribers[subDbGuid])) ) res.push(croot.getGuid());		
+		        for (var i = 0; i < rg.length; i++) {
+		            var root = null;
+		            if (rg[i].length > 36) {
+		                root = this.getRoot(rg[i]);
+		                var croot = this.deserialize(sobjs[i], {}, cb, false, rg[i]);
+		            }
+		            else croot = this.deserialize(sobjs[i], {}, cb);
 
-					// форсированная подписка для данных (не для ресурсов) - в будущем скорее всего понадобится управлять этим
-					// если добавляются новые ДАННЫЕ, то все подписчики этого корня также будут на них подписаны
-					// Альтернатива: можно запрашивать их с клиента при изменении rootInstance, несколько проще, но придется посылать их много раз
-					// что хуже с точки зрения нагрузки на сервер и трафика
-			
-					for (var guid in allSubs) {
-						var subscriber = allSubs[guid];
-						if (subscriber.kind == 'remote') {
-							// Подписываем либо данные (тогда всех) либо подписчика
-							if (croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid)
-								this._onSubscribeRoot(guid,croot.getGuid(),true);
-						}
-					}			
+		            croot.getCurVersion();
 
-					if (params.expr) {
-						root = this.getRoot(croot.getGuid()); 
-						root.hash = params.expr;
-					}
-				}	
-				
-				// просто подписать остальные руты
-				for (i=0; i<rgsubs.length; i++) {
-					root = this.getRoot(rgsubs[i]);
-					if (root) {
-						croot = root.obj;		
-						// возвращаем гуид если не были подписаны
-						if (!(root.subscribers[subDbGuid]))  res.push(croot.getGuid());	
-						for (guid in allSubs) { // то же, что и выше TODO отрефакторить
-							subscriber = allSubs[guid];
-							if (subscriber.kind == 'remote') {
-								// Подписываем либо данные (тогда всех) либо подписчика (если ресурс), но только если еще не подписан!
-								var subs2 = this.pvt.rcoll[croot.getGuid()].subscribers;
-								if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid==subscriber.guid) && !(subs2[subscriber.guid])) 
-									this._onSubscribeRoot(guid,croot.getGuid(),true);
-							}
-						}			
-					}
-					else {
-						var ggs = this.getRootGuids();
-						console.log("ERROR ROOT SUBSCRIPTION", ggs.length, ggs, rg, rgsubs, this.pvt.rcoll);
-					}
-					
-				}
-/*
-				if (!this.getCurTranGuid()) {
-					// TODO 10
-					// this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
-					this.getController().genDeltas(this.getGuid());		// рассылаем дельты
-				}
-*/
-				return res;
-			},
+		            // возвращаем гуид если рута не было, или был, но не были подписаны
+		            if (!root || (root && !(root.subscribers[subDbGuid]))) res.push(croot.getGuid());
 
-			addObj: function(objType, parent, flds) {
-				return new MemObj(objType, parent, flds);
-			},
+		            // форсированная подписка для данных (не для ресурсов) - в будущем скорее всего понадобится управлять этим
+		            // если добавляются новые ДАННЫЕ, то все подписчики этого корня также будут на них подписаны
+		            // Альтернатива: можно запрашивать их с клиента при изменении rootInstance, несколько проще, но придется посылать их много раз
+		            // что хуже с точки зрения нагрузки на сервер и трафика
 
-            /**
+		            for (var guid in allSubs) {
+		                var subscriber = allSubs[guid];
+		                if (subscriber.kind == 'remote') {
+		                    // Подписываем либо данные (тогда всех) либо подписчика
+		                    if (croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid == subscriber.guid)
+		                        this._onSubscribeRoot(guid, croot.getGuid(), true);
+		                }
+		            }
+
+		            if (params.expr) {
+		                root = this.getRoot(croot.getGuid());
+		                root.hash = params.expr;
+		            }
+		        }
+
+		        // просто подписать остальные руты
+		        for (i = 0; i < rgsubs.length; i++) {
+		            root = this.getRoot(rgsubs[i]);
+		            if (root) {
+		                croot = root.obj;
+		                // возвращаем гуид если не были подписаны
+		                if (!(root.subscribers[subDbGuid])) res.push(croot.getGuid());
+		                for (guid in allSubs) { // то же, что и выше TODO отрефакторить
+		                    subscriber = allSubs[guid];
+		                    if (subscriber.kind == 'remote') {
+		                        // Подписываем либо данные (тогда всех) либо подписчика (если ресурс), но только если еще не подписан!
+		                        var subs2 = this.pvt.rcoll[croot.getGuid()].subscribers;
+		                        if ((croot.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot) || subDbGuid == subscriber.guid) && !(subs2[subscriber.guid]))
+		                            this._onSubscribeRoot(guid, croot.getGuid(), true);
+		                    }
+		                }
+		            }
+		            else {
+		                var ggs = this.getRootGuids();
+		                console.log("ERROR ROOT SUBSCRIPTION", ggs.length, ggs, rg, rgsubs, this.pvt.rcoll);
+		            }
+
+		        }
+		        /*
+                                if (!this.getCurTranGuid()) {
+                                    // TODO 10
+                                    // this.setVersion("valid",this.getVersion());			// сразу подтверждаем изменения в мастере (вне транзакции)
+                                    this.getController().genDeltas(this.getGuid());		// рассылаем дельты
+                                }
+                */
+		        return res;
+		    },
+
+		    addObj: function (objType, parent, flds) {
+		        return new MemObj(objType, parent, flds);
+		    },
+
+		    /**
              * вернуть ссылку на контроллер базы данных
              * @returns {*}
              */
-			getController: function() {
-				return this.pvt.controller;
-			},
-			
-            /**
+		    getController: function () {
+		        return this.pvt.controller;
+		    },
+
+		    /**
              * Вернуть название БД
              * @returns {*}
              */
-			getName: function() {
-				return this.pvt.name;
-			},
-			
-            /**
+		    getName: function () {
+		        return this.pvt.name;
+		    },
+
+		    /**
              * Вернуть версию БД
              */
-			 /*
-			getVersion: function(verType) {
-				switch (verType) {
-					case "sent": return this.pvt.sentVersion;
-					case "valid": return this.pvt.validVersion;
-					default: return this.pvt.version;
-				}
-			},
-			
-			_getVersion: function(verType) {
-				return this.getVersion(verType);
-			},
+		    /*
+           getVersion: function(verType) {
+               switch (verType) {
+                   case "sent": return this.pvt.sentVersion;
+                   case "valid": return this.pvt.validVersion;
+                   default: return this.pvt.version;
+               }
+           },
+           
+           _getVersion: function(verType) {
+               return this.getVersion(verType);
+           },
 
-			setVersion: function(verType,val) {
-				switch (verType) {
-					case "sent":
-						if ((val<=this.pvt.version)) this.pvt.sentVersion=val;
-						else {
-							//if (DEBUG) console.log("*** sent setversion error");
-							//if (DEBUG) console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
-						}
+           setVersion: function(verType,val) {
+               switch (verType) {
+                   case "sent":
+                       if ((val<=this.pvt.version)) this.pvt.sentVersion=val;
+                       else {
+                           //if (DEBUG) console.log("*** sent setversion error");
+                           //if (DEBUG) console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
+                       }
 
-						break;
-					case "valid":
-						this.pvt.validVersion=val;
-						//if (DEBUG) console.log("*** valid setversion "+val);
-						if (this.pvt.version<this.pvt.validVersion) this.pvt.version = this.pvt.validVersion;
-						break;
-					default:
-						if ((val>=this.pvt.validVersion) && (val>=this.pvt.sentVersion)) this.pvt.version=val;
-						else {
-							if (DEBUG) console.log("*** draft setversion error");
-							if (DEBUG) console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
-						}
-						break;
-				}
-			},
-			
-			_setVersion: function(verType,val) {
-				return this.setVersion(verType,val);
-			},*/
+                       break;
+                   case "valid":
+                       this.pvt.validVersion=val;
+                       //if (DEBUG) console.log("*** valid setversion "+val);
+                       if (this.pvt.version<this.pvt.validVersion) this.pvt.version = this.pvt.validVersion;
+                       break;
+                   default:
+                       if ((val>=this.pvt.validVersion) && (val>=this.pvt.sentVersion)) this.pvt.version=val;
+                       else {
+                           if (DEBUG) console.log("*** draft setversion error");
+                           if (DEBUG) console.log("VALID:"+this.getVersion("valid")+"draft:"+this.getVersion()+"sent:"+this.getVersion("sent"));
+                       }
+                       break;
+               }
+           },
+           
+           _setVersion: function(verType,val) {
+               return this.setVersion(verType,val);
+           },*/
 
-			// вернуть "текущую" версию, которой маркируются изменения в логах
-			
-			/*
+		    // вернуть "текущую" версию, которой маркируются изменения в логах
+
+		    /*
 			getCurrentVersion: function() {
 
 				var sver = this.getVersion("sent");
@@ -1074,97 +1075,97 @@ define(
 			},*/
 
 
-            /**
+		    /**
              * countRoot
              * @returns {Number}
              */
-			countRoot: function() {
-				return this.pvt.robjs.length;
-			},
+		    countRoot: function () {
+		        return this.pvt.robjs.length;
+		    },
 
-            /**
+		    /**
              * вернуть корневой объект по его Guid или по порядковому номеру
              * @param {number} id
              * @returns {*}
              */
-			getRoot: function(id) {
-				if (typeof id == "number")
-					return this.pvt.robjs[id];
-				else
-					return this.pvt.rcoll[id];
-			},
+		    getRoot: function (id) {
+		        if (typeof id == "number")
+		            return this.pvt.robjs[id];
+		        else
+		            return this.pvt.rcoll[id];
+		    },
 
 
 
-            /**
+		    /**
              * Является ли мастер базой
              * @returns {boolean}
              */
-			isMaster: function() {
-				if (this.pvt.proxyMaster == undefined)
-					return true;
-				else
-					return false;
-			},
+		    isMaster: function () {
+		        if (this.pvt.proxyMaster == undefined)
+		            return true;
+		        else
+		            return false;
+		    },
 
-            /**
+		    /**
              * вернуть мастер-базу если локальна
              * @returns {dbsl.proxyMaster|*|dbs2.proxyMaster}
              */
-			getProxyMaster: function() {
-				return this.pvt.proxyMaster;
-			},
+		    getProxyMaster: function () {
+		        return this.pvt.proxyMaster;
+		    },
 
-            /**
+		    /**
              * вернуть корневой объект метаинфо
              * @returns {key.meta|*|memMetaRoot}
              */
-			getMeta: function() {
-				return this.pvt.meta;
-			},
+		    getMeta: function () {
+		        return this.pvt.meta;
+		    },
 
-            /**
+		    /**
              * Получить следующий local id
              * @returns {number}
              */
-			getNewLid: function() {  // TODO сделать DataBaseController и перенести туда?
-				return this.pvt.$idCnt++;
-			},
+		    getNewLid: function () {  // TODO сделать DataBaseController и перенести туда?
+		        return this.pvt.$idCnt++;
+		    },
 
-            /**
+		    /**
              * вернуть счетчик изменения для БД (в логе)
              * @returns {number}
              */
-			getNewCounter: function() {
-				return this.pvt.counter++;
-			},
+		    getNewCounter: function () {
+		        return this.pvt.counter++;
+		    },
 
 
-            /**
+		    /**
              * вернуть подписчиков на БД
              * @returns {object}
              */
-			getSubscribers: function() {
-				return this.pvt.subscribers;
-			},
+		    getSubscribers: function () {
+		        return this.pvt.subscribers;
+		    },
 
-            /**
+		    /**
              * получить объект по его гуиду
              * @param {string} guid
              * @returns {*}
              */
-			getObj: function(guid) {
-				return this.pvt.objs[guid];
-			},
+		    getObj: function (guid) {
+		        return this.pvt.objs[guid];
+		    },
 
-            /**
+		    /**
              * Проиграть назад изменения по логам базы данных
 			 * @param {number} version - номер версии, до которого нужно откатить
              */
-			undo: function(version) {
-				if (DEBUG) console.log("****************************************  UNDO MODIFICATIONS!!!!!!!!!!");
-				// TODO 10 -  ПЕРЕПИСАТЬ
-				/*
+		    undo: function (version) {
+		        if (DEBUG) console.log("****************************************  UNDO MODIFICATIONS!!!!!!!!!!");
+		        // TODO 10 -  ПЕРЕПИСАТЬ
+		        /*
 				if (version<this.XgetVersion("valid"))
 					return false;
 				for (var i=0; i<this.countRoot(); i++)
@@ -1173,85 +1174,85 @@ define(
 				if (this.XgetVersion("sent")>version) this.XsetVersion("sent",version);
 				this.XsetVersion("draft",version);
 				*/
-				return true;
-			},
+		        return true;
+		    },
 
-            /**
+		    /**
              * Сгенерировать "дельты" по логу изменений
              * (для сервера нужно будет передавать ИД подписчика)
              * @returns {Array}
              */
-			genDeltas: function() {
-			    var allDeltas = [];
+		    genDeltas: function () {
+		        var allDeltas = [];
 
-			    for (var i = 0; i < this.countRoot() ; i++) {
-			        var log = this.getRoot(i).obj.getLog();
-			        var d = log.genDelta();
-					if (d != null) {
-					    if (d.rootGuid === metaRootGuid) {
-                            // Мета-данные д.б. впереди всех дельт
-					        allDeltas.unshift(d);
-					        /////////////////////////////////////////////////////////////////////////////////////////////////
-					        // Добавление кода конструкторов для новых типов из metaRoot
-					        //
-					        var constructorHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
-					        if (constructorHolder) {
-					            var types = log.getListOfTypes(d, types);
-				                if (types.arrTypes.length > 0) {
-				                    var res = constructorHolder.getLocalComps(types.arrTypes);
-				                    if (res.constr.length > 0)
-				                        // Конструкторы должны идти сразу за мета-данными
-				                        allDeltas.splice(1, 0, { rootGuid: metaRootGuid, constructors: res.constr });
-                                };
-					        };
-					    } 
-						else
-					        allDeltas.push(d);
-					}
-				}
+		        for (var i = 0; i < this.countRoot() ; i++) {
+		            var log = this.getRoot(i).obj.getLog();
+		            var d = log.genDelta();
+		            if (d != null) {
+		                if (d.rootGuid === metaRootGuid) {
+		                    // Мета-данные д.б. впереди всех дельт
+		                    allDeltas.unshift(d);
+		                    /////////////////////////////////////////////////////////////////////////////////////////////////
+		                    // Добавление кода конструкторов для новых типов из metaRoot
+		                    //
+		                    var constructorHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
+		                    if (constructorHolder) {
+		                        var types = log.getListOfTypes(d, types);
+		                        if (types.arrTypes.length > 0) {
+		                            var res = constructorHolder.getLocalComps(types.arrTypes);
+		                            if (res.constr.length > 0)
+		                                // Конструкторы должны идти сразу за мета-данными
+		                                allDeltas.splice(1, 0, { rootGuid: metaRootGuid, constructors: res.constr });
+		                        };
+		                    };
+		                }
+		                else
+		                    allDeltas.push(d);
+		            }
+		        }
 
-				return allDeltas;
-			},
+		        return allDeltas;
+		    },
 
-            /**
+		    /**
              * получить guid
              * @returns {guid}
              */
-            getGuid: function() {
-                return this.pvt.guid;
-            },
+		    getGuid: function () {
+		        return this.pvt.guid;
+		    },
 
 
-			resetModifLog: function(log_name) {
-				for (var g in this.pvt.objs)
-					this.getObj(g).resetModifFldLog(log_name);
-			},
+		    resetModifLog: function (log_name) {
+		        for (var g in this.pvt.objs)
+		            this.getObj(g).resetModifFldLog(log_name);
+		    },
 
-			// Транзакции
-			// - только 1 транзакция в единицу времени на memDB			
-			tranStart: function(guid, srcDbGuid) {	
-				var p = this.pvt;
-				if (p.curTranGuid) {
-					if ((p.curTranGuid == guid) || (!guid)) 
-						p.tranCounter++;
-					else return;
-				}
-				else {
-					p._memFunc = [];
-					p._memFuncDone = [];
-					if (guid) {
-						p.curTranGuid = guid;
-						p.srcDbGuid = srcDbGuid;
-						//console.log("EXTERNAL TRAN START ",srcDbGuid);
-						p.externalTran = true;
-					}
-					else {
-						p.curTranGuid = Utils.guid();
-						p.externalTran = false;
-					}
-					p.tranCounter=1;
-					this._setTranState(p.curTranGuid,'s',srcDbGuid);
-					/*
+		    // Транзакции
+		    // - только 1 транзакция в единицу времени на memDB			
+		    tranStart: function (guid, srcDbGuid) {
+		        var p = this.pvt;
+		        if (p.curTranGuid) {
+		            if ((p.curTranGuid == guid) || (!guid))
+		                p.tranCounter++;
+		            else return;
+		        }
+		        else {
+		            p._memFunc = [];
+		            p._memFuncDone = [];
+		            if (guid) {
+		                p.curTranGuid = guid;
+		                p.srcDbGuid = srcDbGuid;
+		                //console.log("EXTERNAL TRAN START ",srcDbGuid);
+		                p.externalTran = true;
+		            }
+		            else {
+		                p.curTranGuid = Utils.guid();
+		                p.externalTran = false;
+		            }
+		            p.tranCounter = 1;
+		            this._setTranState(p.curTranGuid, 's', srcDbGuid);
+		            /*
 					if (!p.tho[p.curTranGuid]) {
 						var ct = p.tho[p.curTranGuid] = {};
 						ct.guid = p.curTranGuid;
@@ -1266,368 +1267,368 @@ define(
 					trobj.roots = {};
 					*/
 
-				}
-				//if (DEBUG) 
-				console.log("TRANSTART "+p.curTranGuid+" | " + p.tranCounter," Ext:",p.externalTran);
-				//console.trace();
-				return p.curTranGuid;
-				
-			},
+		        }
+		        //if (DEBUG) 
+		        console.log("TRANSTART " + p.curTranGuid + " | " + p.tranCounter, " Ext:", p.externalTran);
+		        //console.trace();
+		        return p.curTranGuid;
 
-			tranCommit: function() {				
-				var that = this, p = this.pvt, memTran = p.curTranGuid; 
-				if (p.tranCounter==0) 
-					return;
-				if (p.tranCounter==1) {	// Счетчик вложенности = 1, закрываем транзакцию
-					var guids = this.getRootGuids(), isMaster = this.isMaster();
-					
-					// сгенерировать и разослать дельты (либо на сервер либо подписчикам)
-					if (isMaster)
-						this.getController().genDeltas(this.getGuid());
-					else
-					  if (!p.externalTran)
-						this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });
-					 
-					var memTr = p.curTranGuid;
-					if (isMaster || p.externalTran) // TODO 10 точно ли так нужно обрабатывать externalTran?
-						this._setTranState(memTr,'c');
-					else { 								// клиент, который инициировал транзакцию
-						this._setTranState(memTr,'p'); 	// установить транзакцию в pre-commit 
-						this._rcCommit();
-					}
-					if (isMaster) // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid					  
-					  this.subsRemoteCall("endTran",undefined,this.pvt.srcDbGuid); 
+		    },
 
-					p.curTranGuid = undefined;
-					p.tranCounter = 0;
-					var memExternal = p.externalTran;
-					p.externalTran = false;		
-					p._memFunc = [];
-					p._memFuncDone = [];
-						
-					if (memTran && !this.inTran()) {
-						delete this.pvt.execTr[memTran]; // почистить очередь транзакции
-						this.pvt.execQ.splice(0,1);
-						this.pvt.memTranIdx++;			
-					}	
-					this.event.fire({
-						type: 'commit',
-						external: memExternal			
-					});					
-				}
-				else p.tranCounter--;
-				//if (DEBUG)				
-				    console.log("TRAN|COMMIT " + memTran + " | " + p.tranCounter);
-					//console.trace();
-			},
-									
-			// синхронизировать в рамках транзакции
-			syncInTran: function() {	
+		    tranCommit: function () {
+		        var that = this, p = this.pvt, memTran = p.curTranGuid;
+		        if (p.tranCounter == 0)
+		            return;
+		        if (p.tranCounter == 1) {	// Счетчик вложенности = 1, закрываем транзакцию
+		            var guids = this.getRootGuids(), isMaster = this.isMaster();
 
-				if (!this.inTran()) return;
-				if (!this.pvt._memFunc || !this.pvt._memFunc.length) {
-					//console.log("%c NO DATA TO SYNC","color:red");
-					return;
-				} 				
+		            // сгенерировать и разослать дельты (либо на сервер либо подписчикам)
+		            if (isMaster)
+		                this.getController().genDeltas(this.getGuid());
+		            else
+		                if (!p.externalTran)
+		                    this.getController().genDeltas(this.getGuid(), undefined, function (res, cb) { that.sendDataBaseDelta(res, cb); });
 
-				this._rc(this.pvt._memFunc,this.pvt._memFuncDone,true);
-				this.pvt._memFunc = [];
-				this.pvt._memFuncDone = [];
-			},
-			
-			rc2: function(obj, func, aparams, cb) {	
-				function rpc_cb(result) {
-					
-					cb(result);
-					that.tranCommit();
-				}	
-				var that = this;
-				aparams.push(rpc_cb);
-				this.tranStart();
-				func.apply(obj,aparams);		
-			},
+		            var memTr = p.curTranGuid;
+		            if (isMaster || p.externalTran) // TODO 10 точно ли так нужно обрабатывать externalTran?
+		                this._setTranState(memTr, 'c');
+		            else { 								// клиент, который инициировал транзакцию
+		                this._setTranState(memTr, 'p'); 	// установить транзакцию в pre-commit 
+		                this._rcCommit();
+		            }
+		            if (isMaster) // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid					  
+		                this.subsRemoteCall("endTran", undefined, this.pvt.srcDbGuid);
 
-			rc: function(objGuid, func, aparams, cb) {
+		            p.curTranGuid = undefined;
+		            p.tranCounter = 0;
+		            var memExternal = p.externalTran;
+		            p.externalTran = false;
+		            p._memFunc = [];
+		            p._memFuncDone = [];
 
-				if (this.isMaster()) {
-					// TODO кинуть исключение
-					return;
-				}
-				
-				if (this.inTran()) { // запомнить удаленный вызов на клиенте в транзакции		
-				
-					if (objGuid && !this.get(objGuid)) {
-						console.log("Объект не принадлежит базе ",objGuid);
-						return;
-					}
-					var args = {objGuid: objGuid, func:func, aparams:aparams };
-					if (func == "sendDataBaseDelta") { // Дельты в пакете всегда перед вызовами других методов, поэтому вставляем в начало массива
-						this.pvt._memFunc.splice(0,0,args);
-						this.pvt._memFuncDone.splice(0,0,cb);
-					}
-					else {
-						this.pvt._memFunc.push(args);
-						this.pvt._memFuncDone.push(cb);
-					}
-				}
-				else
-					this._rc([{objGuid: objGuid, func:func, aparams:aparams }],[cb]); // Эта ветка сейчас не работает. 
-			},
-						
-			// команда завершения транзакции
-			_rcCommit: function() {
-				function icb(result) {	
-					that._setTranState(memTr,'c');
-				}	
-				var that = this, memTr = this.getCurTranGuid();
-				var args = {objGuid: undefined, func:"endTran", aparams:undefined };
-				this._rc([args],[icb]);
-			},
-			
-			logRemoteCall: function(data,ctype,trGuid) {
-				var t = new Date();
-				if (ctype == 'c')
-					var ar = data.args.rc;
-				else
-					ar = data;
-				for (var i=0; i<ar.length; i++) {
-					var o = {};
-					o.time = t;
-					o.type = ctype == 'c' ? 'out' : 'rsp';
-					o.trGuid = trGuid;
-					if (ctype=='c') {
-						o.trGuid = data.trGuid;
-						o.src = data.srcDbGuid;
-						o.rc = ar[i];
-					}
-					else {
-						o.rc = {};
-						o.rc.aparams = ar[i];
-					}
-						
-					this.pvt.rca.push(o);
-				}				
-			},
-			
-			// удалить элементы из лога удаленных вызовов
-			truncRcLog: function(guid) {
-				var rca = this.pvt.rca;
-				if (guid) {
-					for (var i=0; i<rca.length; i++) {
-						if (rca[rca.length-i-1].trGuid == guid) {
-							rca.splice(0,rca.length-i);
-							break;
-						}
-					}
-				}
-				else this.pvt.rca = [];
-			},
-			
-			getRcLog: function() {
-				return this.pvt.rca;
-			},
-			
-			_rc: function(rcargs,rccbs,tran) { // TODO 10 - если есть удаленный вызов кроме дельты, то установить lock
-				function icb(result) {			
-					var actDone = false;
-					for (var i=0; i<result.cbres.length; i++) 
-						if (rccbs[i]) {
-							rccbs[i](result.cbres[i]);
-							actDone = true;
-						}
-					that.logRemoteCall(result.cbres,'r',data.trGuid);					
-					if (actDone) {
-						that.getController().genDeltas(that.getGuid(),undefined, function(res,cb1) { that.sendDataBaseDelta(res,cb1); });
-						that.syncInTran(); 
-					}
-					if (tran) that.tranCommit();					
-				}
-				
-				if (!rcargs.length) return;
-				var that = this;
-				var socket = this.getSocket();
-				var pg = this.getProxyMaster().guid;
-				var data = {action:"remoteCall3",type:"method",args: { masterGuid: pg, rc: rcargs } };
-			
-				if (tran) this.tranStart();
-				
-				if (this.getCurTranGuid()) {
-					data.trGuid = this.getCurTranGuid();		
-					data.srcDbGuid = this.getGuid();
-					/*
+		            if (memTran && !this.inTran()) {
+		                delete this.pvt.execTr[memTran]; // почистить очередь транзакции
+		                this.pvt.execQ.splice(0, 1);
+		                this.pvt.memTranIdx++;
+		            }
+		            this.event.fire({
+		                type: 'commit',
+		                external: memExternal
+		            });
+		        }
+		        else p.tranCounter--;
+		        //if (DEBUG)				
+		        console.log("TRAN|COMMIT " + memTran + " | " + p.tranCounter);
+		        //console.trace();
+		    },
+
+		    // синхронизировать в рамках транзакции
+		    syncInTran: function () {
+
+		        if (!this.inTran()) return;
+		        if (!this.pvt._memFunc || !this.pvt._memFunc.length) {
+		            //console.log("%c NO DATA TO SYNC","color:red");
+		            return;
+		        }
+
+		        this._rc(this.pvt._memFunc, this.pvt._memFuncDone, true);
+		        this.pvt._memFunc = [];
+		        this.pvt._memFuncDone = [];
+		    },
+
+		    rc2: function (obj, func, aparams, cb) {
+		        function rpc_cb(result) {
+
+		            cb(result);
+		            that.tranCommit();
+		        }
+		        var that = this;
+		        aparams.push(rpc_cb);
+		        this.tranStart();
+		        func.apply(obj, aparams);
+		    },
+
+		    rc: function (objGuid, func, aparams, cb) {
+
+		        if (this.isMaster()) {
+		            // TODO кинуть исключение
+		            return;
+		        }
+
+		        if (this.inTran()) { // запомнить удаленный вызов на клиенте в транзакции		
+
+		            if (objGuid && !this.get(objGuid)) {
+		                console.log("Объект не принадлежит базе ", objGuid);
+		                return;
+		            }
+		            var args = { objGuid: objGuid, func: func, aparams: aparams };
+		            if (func == "sendDataBaseDelta") { // Дельты в пакете всегда перед вызовами других методов, поэтому вставляем в начало массива
+		                this.pvt._memFunc.splice(0, 0, args);
+		                this.pvt._memFuncDone.splice(0, 0, cb);
+		            }
+		            else {
+		                this.pvt._memFunc.push(args);
+		                this.pvt._memFuncDone.push(cb);
+		            }
+		        }
+		        else
+		            this._rc([{ objGuid: objGuid, func: func, aparams: aparams }], [cb]); // Эта ветка сейчас не работает. 
+		    },
+
+		    // команда завершения транзакции
+		    _rcCommit: function () {
+		        function icb(result) {
+		            that._setTranState(memTr, 'c');
+		        }
+		        var that = this, memTr = this.getCurTranGuid();
+		        var args = { objGuid: undefined, func: "endTran", aparams: undefined };
+		        this._rc([args], [icb]);
+		    },
+
+		    logRemoteCall: function (data, ctype, trGuid) {
+		        var t = new Date();
+		        if (ctype == 'c')
+		            var ar = data.args.rc;
+		        else
+		            ar = data;
+		        for (var i = 0; i < ar.length; i++) {
+		            var o = {};
+		            o.time = t;
+		            o.type = ctype == 'c' ? 'out' : 'rsp';
+		            o.trGuid = trGuid;
+		            if (ctype == 'c') {
+		                o.trGuid = data.trGuid;
+		                o.src = data.srcDbGuid;
+		                o.rc = ar[i];
+		            }
+		            else {
+		                o.rc = {};
+		                o.rc.aparams = ar[i];
+		            }
+
+		            this.pvt.rca.push(o);
+		        }
+		    },
+
+		    // удалить элементы из лога удаленных вызовов
+		    truncRcLog: function (guid) {
+		        var rca = this.pvt.rca;
+		        if (guid) {
+		            for (var i = 0; i < rca.length; i++) {
+		                if (rca[rca.length - i - 1].trGuid == guid) {
+		                    rca.splice(0, rca.length - i);
+		                    break;
+		                }
+		            }
+		        }
+		        else this.pvt.rca = [];
+		    },
+
+		    getRcLog: function () {
+		        return this.pvt.rca;
+		    },
+
+		    _rc: function (rcargs, rccbs, tran) { // TODO 10 - если есть удаленный вызов кроме дельты, то установить lock
+		        function icb(result) {
+		            var actDone = false;
+		            for (var i = 0; i < result.cbres.length; i++)
+		                if (rccbs[i]) {
+		                    rccbs[i](result.cbres[i]);
+		                    actDone = true;
+		                }
+		            that.logRemoteCall(result.cbres, 'r', data.trGuid);
+		            if (actDone) {
+		                that.getController().genDeltas(that.getGuid(), undefined, function (res, cb1) { that.sendDataBaseDelta(res, cb1); });
+		                that.syncInTran();
+		            }
+		            if (tran) that.tranCommit();
+		        }
+
+		        if (!rcargs.length) return;
+		        var that = this;
+		        var socket = this.getSocket();
+		        var pg = this.getProxyMaster().guid;
+		        var data = { action: "remoteCall3", type: "method", args: { masterGuid: pg, rc: rcargs } };
+
+		        if (tran) this.tranStart();
+
+		        if (this.getCurTranGuid()) {
+		            data.trGuid = this.getCurTranGuid();
+		            data.srcDbGuid = this.getGuid();
+		            /*
 					data.rootv = {}; // добавить версии рутов
 					var guids = this.getRootGuids();
 					for (var i=0; i<guids.length; i++)
 						data.rootv[guids[i]]=this.getObj(guids[i]).getRootVersion("valid");	
-					*/						
-				}		
-				this.logRemoteCall(data,'c');
-				socket.send(data,icb,data.trGuid);
-				/*
+					*/
+		        }
+		        this.logRemoteCall(data, 'c');
+		        socket.send(data, icb, data.trGuid);
+		        /*
 				if (this.pvt.name!="System") {
 					for (var i=0, s = ""; i<rcargs.length; i++) s += rcargs[i].func + " ";
 					console.log("%c SEND DATA ("+s+")  ","color: blue", data.args, " trGuid: ",data.trGuid);
 				}*/
-			},
-						
-			inTran: function() {
-				if (this.pvt.tranCounter>0) return true;
-				else return false;
-			},
-			
-			isExternalTran: function() {
-				return (this.inTran() && this.pvt.externalTran);
-			},
-						
-			tranRollback: function() {
-			},
-			
-			getCurTranGuid: function() {
-				return this.pvt.curTranGuid;
-			},
-			
-			getCurTranCounter: function() {
-				return this.pvt.tranCounter;
-			},
-			
-			getTranObj: function(guid) {
-				return this.pvt.tho[guid];
-			},
+		    },
 
-			getTranList: function(guid) { // TODO 10 лучше скопировать?
-				return this.pvt.tha;
-			},
-			
-			// установить состояние транзакции
-			_setTranState: function(guid,state,srcDbGuid) {
-				var p = this.pvt;
-				var tobj = this.getTranObj(guid);
-				if (state == 's') {
-					if (!tobj) {				
-						var ct = p.tho[guid] = {};
-						ct.guid = guid;
-						ct.start = new Date();
-						ct.src = srcDbGuid ? srcDbGuid : this.getGuid();
-						ct.state = 's';
-						ct.prev = (p.tha.length>0) ? p.tha[p.tha.length-1] : null; // сослаться на предыдующую транзакцию
-						ct.roots = {};
-						p.tha.push(ct);
-					}
-					return;
-				}
+		    inTran: function () {
+		        if (this.pvt.tranCounter > 0) return true;
+		        else return false;
+		    },
 
-				if (!tobj) return;
-				if (state == 'p') { // установить в pre-commited
-					if (!tobj.prev || tobj.prev.state == 'p' || tobj.prev.state == 'c') {
-						tobj.state = 'p';
-						tobj.pend = new Date();
-						return true;
-					}
-					return false;
-				}
-				if (state == 'c') { // установить в commited
-					if (!tobj.prev || tobj.prev.state == 'p' || tobj.prev.state == 'c') { // проверить предыдущую транзакцию
-						tobj.state = 'c';
-						for (var g in tobj.roots) {
-							var r = this.getObj(g);
-							r.setRootVersion("valid",tobj.roots[g].max);
-						}
-						tobj.end = new Date();
-						// удалить из истории последнюю подтвержденную транзакцию (может быть в комменте в целях тестирования)
-						if (tobj.prev && tobj.prev.state == 'c' && tobj.prev.prev && tobj.prev.prev.prev) 		
-							this.truncTran(tobj.prev.prev.prev.guid);			
-						return true;
-					}
-					return false;
-				}
-			},
-			
-			// почистить все транзакции до транзакции с гуидом guid (хронологически), если guid==undefined, то почистить все
-			truncTran: function(guid) {
-				var p = this.pvt;
-				if (guid) {
-					var roots = {};
-					for (var i=0; i<p.tha.length; i++) {
-						var tobj = p.tha[i];
-						for (var g in tobj.roots) 
-							roots[g] = roots[g] ? Math.max(roots[g],tobj.roots[g].max) : tobj.roots[g].max;		
-						if (tobj.guid == guid) {
-							for (var g in roots) 
-								this.getObj(g).truncVer(roots[g]);
-							for (var j=0; j<i; j++) 
-								delete p.tho[p.tha[j].guid];
-							p.tha.splice(0,i+1);	
-							if (p.tha.length>0) p.tha[0].prev = null;
-							break;
-						}
-					}				
-				}
-				else {
-					p.tha = [];
-					p.tho = {};
-					var rg = this.getRootGuids();
-					for (i=0; i<rg.length; i++) 
-						this.getObj(rg[i]).truncVer();
-				}
-				this.truncRcLog(guid);
-			},
-			
-			onRemoteCall3Plus: function(rc, srcDbGuid, trGuid, rootv, done) {
-				var l = rc.length;
-				var l2 = l;
-				var globres = [];
-				function idone(res) {
-					l2--;
-					globres.push(res);
-					if (!l2) {
-						done( { cbres: globres } );
-					}
-				};
-				for (var i=0; i<l; i++) {
-					var c = rc[i];
-					var uobj = (c.objGuid) ?  this.getObj(c.objGuid) : this;
-					this.remoteCallExec(uobj, c, srcDbGuid, trGuid, undefined, idone);
-				}
-			},
-			
-			// временный вариант ф-ции для рассылки оповещений подписантам, используется для рассылки признака конца транзакции
-			subsRemoteCall: function(func, aparams, excludeGuid) {		
-				var subs = this.getSubscribers();	
-				var trGuid = this.getCurTranGuid();
-				for(var guid in subs) {
-					var csub = subs[guid];
-					if (excludeGuid!=guid) // для всех ДБ кроме исключенной (та, которая инициировала вызов)
-						csub.connect.send({action:func, trGuid: trGuid, dbGuid:guid, srcDbGuid:excludeGuid }); //TODO TRANS2 сделать вызов любого метода
-				}
-			},
-			
-            /**
+		    isExternalTran: function () {
+		        return (this.inTran() && this.pvt.externalTran);
+		    },
+
+		    tranRollback: function () {
+		    },
+
+		    getCurTranGuid: function () {
+		        return this.pvt.curTranGuid;
+		    },
+
+		    getCurTranCounter: function () {
+		        return this.pvt.tranCounter;
+		    },
+
+		    getTranObj: function (guid) {
+		        return this.pvt.tho[guid];
+		    },
+
+		    getTranList: function (guid) { // TODO 10 лучше скопировать?
+		        return this.pvt.tha;
+		    },
+
+		    // установить состояние транзакции
+		    _setTranState: function (guid, state, srcDbGuid) {
+		        var p = this.pvt;
+		        var tobj = this.getTranObj(guid);
+		        if (state == 's') {
+		            if (!tobj) {
+		                var ct = p.tho[guid] = {};
+		                ct.guid = guid;
+		                ct.start = new Date();
+		                ct.src = srcDbGuid ? srcDbGuid : this.getGuid();
+		                ct.state = 's';
+		                ct.prev = (p.tha.length > 0) ? p.tha[p.tha.length - 1] : null; // сослаться на предыдующую транзакцию
+		                ct.roots = {};
+		                p.tha.push(ct);
+		            }
+		            return;
+		        }
+
+		        if (!tobj) return;
+		        if (state == 'p') { // установить в pre-commited
+		            if (!tobj.prev || tobj.prev.state == 'p' || tobj.prev.state == 'c') {
+		                tobj.state = 'p';
+		                tobj.pend = new Date();
+		                return true;
+		            }
+		            return false;
+		        }
+		        if (state == 'c') { // установить в commited
+		            if (!tobj.prev || tobj.prev.state == 'p' || tobj.prev.state == 'c') { // проверить предыдущую транзакцию
+		                tobj.state = 'c';
+		                for (var g in tobj.roots) {
+		                    var r = this.getObj(g);
+		                    r.setRootVersion("valid", tobj.roots[g].max);
+		                }
+		                tobj.end = new Date();
+		                // удалить из истории последнюю подтвержденную транзакцию (может быть в комменте в целях тестирования)
+		                if (tobj.prev && tobj.prev.state == 'c' && tobj.prev.prev && tobj.prev.prev.prev)
+		                    this.truncTran(tobj.prev.prev.prev.guid);
+		                return true;
+		            }
+		            return false;
+		        }
+		    },
+
+		    // почистить все транзакции до транзакции с гуидом guid (хронологически), если guid==undefined, то почистить все
+		    truncTran: function (guid) {
+		        var p = this.pvt;
+		        if (guid) {
+		            var roots = {};
+		            for (var i = 0; i < p.tha.length; i++) {
+		                var tobj = p.tha[i];
+		                for (var g in tobj.roots)
+		                    roots[g] = roots[g] ? Math.max(roots[g], tobj.roots[g].max) : tobj.roots[g].max;
+		                if (tobj.guid == guid) {
+		                    for (var g in roots)
+		                        this.getObj(g).truncVer(roots[g]);
+		                    for (var j = 0; j < i; j++)
+		                        delete p.tho[p.tha[j].guid];
+		                    p.tha.splice(0, i + 1);
+		                    if (p.tha.length > 0) p.tha[0].prev = null;
+		                    break;
+		                }
+		            }
+		        }
+		        else {
+		            p.tha = [];
+		            p.tho = {};
+		            var rg = this.getRootGuids();
+		            for (i = 0; i < rg.length; i++)
+		                this.getObj(rg[i]).truncVer();
+		        }
+		        this.truncRcLog(guid);
+		    },
+
+		    onRemoteCall3Plus: function (rc, srcDbGuid, trGuid, rootv, done) {
+		        var l = rc.length;
+		        var l2 = l;
+		        var globres = [];
+		        function idone(res) {
+		            l2--;
+		            globres.push(res);
+		            if (!l2) {
+		                done({ cbres: globres });
+		            }
+		        };
+		        for (var i = 0; i < l; i++) {
+		            var c = rc[i];
+		            var uobj = (c.objGuid) ? this.getObj(c.objGuid) : this;
+		            this.remoteCallExec(uobj, c, srcDbGuid, trGuid, undefined, idone);
+		        }
+		    },
+
+		    // временный вариант ф-ции для рассылки оповещений подписантам, используется для рассылки признака конца транзакции
+		    subsRemoteCall: function (func, aparams, excludeGuid) {
+		        var subs = this.getSubscribers();
+		        var trGuid = this.getCurTranGuid();
+		        for (var guid in subs) {
+		            var csub = subs[guid];
+		            if (excludeGuid != guid) // для всех ДБ кроме исключенной (та, которая инициировала вызов)
+		                csub.connect.send({ action: func, trGuid: trGuid, dbGuid: guid, srcDbGuid: excludeGuid }); //TODO TRANS2 сделать вызов любого метода
+		        }
+		    },
+
+		    /**
              * Метод для отправки дельт - инкапсуляция аналогичного метода контроллера БД
 			 * (требуется для проведения посылки дельт через транзакционный механизм)
              * @param data
 			 * @param cb
-             */			
-			sendDataBaseDelta: function(data, cb) {
-				if (this.isMaster()) {	
-					var cdb = this.getController();
-					var res=cdb.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
-					if (cb) cb({data: { /*dbVersion: cdb.getDB(data.dbGuid).getVersion() */}});
-				}
-				else {
-					this.rc(undefined, 'sendDataBaseDelta',[data],cb);
-				}
-			},			
-			
-			_checkRootVer: function (rootv) {
-			    if (DEBUG)
-			        console.log("CHECK ROOT VERSIONS");
-				for (var guid in rootv) console.log(guid, rootv[guid],this.getObj(guid).getRootVersion("valid"));
-				for (var guid in rootv) 
-					if (rootv[guid] != this.getObj(guid).getRootVersion("valid")) return false;
-				return true;
-			},
-			
-            /**
+             */
+		    sendDataBaseDelta: function (data, cb) {
+		        if (this.isMaster()) {
+		            var cdb = this.getController();
+		            var res = cdb.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
+		            if (cb) cb({ data: { /*dbVersion: cdb.getDB(data.dbGuid).getVersion() */ } });
+		        }
+		        else {
+		            this.rc(undefined, 'sendDataBaseDelta', [data], cb);
+		        }
+		    },
+
+		    _checkRootVer: function (rootv) {
+		        if (DEBUG)
+		            console.log("CHECK ROOT VERSIONS");
+		        for (var guid in rootv) console.log(guid, rootv[guid], this.getObj(guid).getRootVersion("valid"));
+		        for (var guid in rootv)
+		            if (rootv[guid] != this.getObj(guid).getRootVersion("valid")) return false;
+		        return true;
+		    },
+
+		    /**
              * Ответ на вызов удаленного метода. Ставит вызовы в очередь по транзакциям
              * @param uobj {object}
              * @param args [array] 
@@ -1636,90 +1637,90 @@ define(
 			 * @param rootv {object} - версии рутов
 			 * @callback done - колбэк
              */
-			remoteCallExec: function(uobj, args, srcDbGuid, trGuid, rootv, done) {
-				var db = this;
-				var trans = this.pvt.execTr;
-				var queue = this.pvt.execQ;
-				var auto = false;				
-				// пропускаем "конец" транзакции если клиент был сам ее инициатором
-				if (trGuid && (db.getCurTranGuid() == trGuid) && !(db.isExternalTran()) && (args.func=="endTran")) 
-					return;
-				if (!trGuid) {	// "автоматическая" транзакция, создается если нет гуида транзакции
-					trGuid = Utils.guid();
-					auto=true;
-				}
-				if (!(trGuid in trans)) { // создать новую транзакцию и поставить в очередь
-					var qElem = {};
-					qElem.tr = trGuid;
-					qElem.src = srcDbGuid
-					qElem.q = [];
-					qElem.a = auto;
-					queue.push(qElem);
-					trans[trGuid] = this.pvt.memTranIdx+queue.length-1; // "индекс" для быстрого доступа в очередь
-				}
-				var tqueue = queue[trans[trGuid]-this.pvt.memTranIdx].q;
+		    remoteCallExec: function (uobj, args, srcDbGuid, trGuid, rootv, done) {
+		        var db = this;
+		        var trans = this.pvt.execTr;
+		        var queue = this.pvt.execQ;
+		        var auto = false;
+		        // пропускаем "конец" транзакции если клиент был сам ее инициатором
+		        if (trGuid && (db.getCurTranGuid() == trGuid) && !(db.isExternalTran()) && (args.func == "endTran"))
+		            return;
+		        if (!trGuid) {	// "автоматическая" транзакция, создается если нет гуида транзакции
+		            trGuid = Utils.guid();
+		            auto = true;
+		        }
+		        if (!(trGuid in trans)) { // создать новую транзакцию и поставить в очередь
+		            var qElem = {};
+		            qElem.tr = trGuid;
+		            qElem.src = srcDbGuid
+		            qElem.q = [];
+		            qElem.a = auto;
+		            queue.push(qElem);
+		            trans[trGuid] = this.pvt.memTranIdx + queue.length - 1; // "индекс" для быстрого доступа в очередь
+		        }
+		        var tqueue = queue[trans[trGuid] - this.pvt.memTranIdx].q;
 
-				function done2(res,endTran) { // коллбэк-обертка для завершения транзакции				
-					var memTranGuid = db.getCurTranGuid();
-					tq = queue[trans[memTranGuid]-db.pvt.memTranIdx];		
-					db.getController().genDeltas(db.getGuid()); // сгенерировать дельты и разослать подписчикам
-					var commit = tq.a || endTran; // конец транзакции - либо автоматическая либо признак конца
-					if (commit) { 
-						//db.subsRemoteCall("endTran",undefined, srcDbGuid); // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid
-						if (db.isExternalTran()) // закрываем только "внешние" транзакции (созданные внутри remoteCallExec)
-							db.tranCommit();   // TODO 10 -	isExternalTran должна возвр тру, эта проверка лишняя?
+		        function done2(res, endTran) { // коллбэк-обертка для завершения транзакции				
+		            var memTranGuid = db.getCurTranGuid();
+		            tq = queue[trans[memTranGuid] - db.pvt.memTranIdx];
+		            db.getController().genDeltas(db.getGuid()); // сгенерировать дельты и разослать подписчикам
+		            var commit = tq.a || endTran; // конец транзакции - либо автоматическая либо признак конца
+		            if (commit) {
+		                //db.subsRemoteCall("endTran",undefined, srcDbGuid); // разослать маркер конца транзакции всем подписчикам кроме srcDbGuid
+		                if (db.isExternalTran()) // закрываем только "внешние" транзакции (созданные внутри remoteCallExec)
+		                    db.tranCommit();   // TODO 10 -	isExternalTran должна возвр тру, эта проверка лишняя?
 
-						if (done) done(res);
-						
-						delete trans[memTranGuid];
-						queue.splice(0,1);
-						db.pvt.memTranIdx++;
-						db.pvt.execFst = false;
-						
-						if (queue.length>0) { // Если есть другие транзакции в очереди, то перейти к их выполнению
-							db._checkRootVer(rootv);
-							db.tranStart(queue[0].tr, queue[0].src);
-							db.pvt.execFst = true;
-							var f=queue[0].q[0];
-							f(); 
-						}										
-					}			
-					else {
-						if (done) done(res); // сейчас срабатывает только на сервере, чтобы вернуть ответ на клиент
-						
-						tq.q.splice(0,1);				
-						if (tq.q.length>0) 
-							tq.q[0]();
-						else 
-							db.pvt.execFst = false;
-					}
-					//console.log("RCEXEC DONE ",args.func,args,trGuid,auto,commit, queue);
-				}
-				var aparams = args.aparams || [];
-				aparams.push(done2); // добавить колбэк последним параметром
+		                if (done) done(res);
 
-				function exec1() {
-					if (args.func == "endTran")  // если получили маркер конца транзакции, то коммит
-						done2(null,true);		
-					else
-						uobj[args.func].apply(uobj,aparams); // выполняем соответствующий метод uobj.func(aparams)		
-				}	
-				// ставим в очередь
-				tqueue.push(function() { exec1(); });
-				//console.log("RCEXEC PUSH TO QUEUE ",args.func,args,trGuid,auto, queue);
-							
-				if (!db.inTran()) {
-					this._checkRootVer(rootv);
-					db.tranStart(trGuid,srcDbGuid); // Если не в транзакции, то заходим в нее
-				}
+		                delete trans[memTranGuid];
+		                queue.splice(0, 1);
+		                db.pvt.memTranIdx++;
+		                db.pvt.execFst = false;
 
-				if (trGuid == db.getCurTranGuid()) { // Если мемДБ в той же транзакции, что и метод, можем попробовать его выполнить, но только		
-					if (!this.pvt.execFst) { 		// если первый вызов не исполняется в данный момент
-						this.pvt.execFst = true;
-						tqueue[0](); // выполнить первый в очереди метод
-					}				
-				}
-			},
+		                if (queue.length > 0) { // Если есть другие транзакции в очереди, то перейти к их выполнению
+		                    db._checkRootVer(rootv);
+		                    db.tranStart(queue[0].tr, queue[0].src);
+		                    db.pvt.execFst = true;
+		                    var f = queue[0].q[0];
+		                    f();
+		                }
+		            }
+		            else {
+		                if (done) done(res); // сейчас срабатывает только на сервере, чтобы вернуть ответ на клиент
+
+		                tq.q.splice(0, 1);
+		                if (tq.q.length > 0)
+		                    tq.q[0]();
+		                else
+		                    db.pvt.execFst = false;
+		            }
+		            //console.log("RCEXEC DONE ",args.func,args,trGuid,auto,commit, queue);
+		        }
+		        var aparams = args.aparams || [];
+		        aparams.push(done2); // добавить колбэк последним параметром
+
+		        function exec1() {
+		            if (args.func == "endTran")  // если получили маркер конца транзакции, то коммит
+		                done2(null, true);
+		            else
+		                uobj[args.func].apply(uobj, aparams); // выполняем соответствующий метод uobj.func(aparams)		
+		        }
+		        // ставим в очередь
+		        tqueue.push(function () { exec1(); });
+		        //console.log("RCEXEC PUSH TO QUEUE ",args.func,args,trGuid,auto, queue);
+
+		        if (!db.inTran()) {
+		            this._checkRootVer(rootv);
+		            db.tranStart(trGuid, srcDbGuid); // Если не в транзакции, то заходим в нее
+		        }
+
+		        if (trGuid == db.getCurTranGuid()) { // Если мемДБ в той же транзакции, что и метод, можем попробовать его выполнить, но только		
+		            if (!this.pvt.execFst) { 		// если первый вызов не исполняется в данный момент
+		                this.pvt.execFst = true;
+		                tqueue[0](); // выполнить первый в очереди метод
+		            }
+		        }
+		    },
 
 		    /**
              * Регистрирует dataRoot по имени в списке
@@ -1728,9 +1729,9 @@ define(
              * @param {Object}  dataRoot Сам dataRoot
              * @return {String}
              */
-			registerDataRoot: function (name, dataRoot) {
-			    this.pvt.dataRoots[name] = dataRoot;
-			},
+		    registerDataRoot: function (name, dataRoot) {
+		        this.pvt.dataRoots[name] = dataRoot;
+		    },
 
 		    /**
              * Проверяет, существует ли объект по ссылке
@@ -1742,21 +1743,21 @@ define(
              * @param {DataRefType}  refType Описание типа ссылки
              * @return {Boolean}
              */
-			checkDataObjectRef: function (val, errObj, fldName, dataObj, refType) {
-			    var result = false;
-			    var name = refType.model();
-			    var dataRoot = this.pvt.dataRoots[name];
-			    if (dataRoot) {
-			        result = dataRoot.getCol("DataElements").getObjById(val) ? true : false; // Пока не используем индексы
-			        if ((!result) && errObj)
-			            errObj.errMsg = "Object \"" + name + "\" (Id = " + val + ") doesn't exist.";
-                }
-			    else
-			        if (errObj)
-			            errObj.errMsg = "Data Root \"" + name + "\" doesn't exist.";
+		    checkDataObjectRef: function (val, errObj, fldName, dataObj, refType) {
+		        var result = false;
+		        var name = refType.model();
+		        var dataRoot = this.pvt.dataRoots[name];
+		        if (dataRoot) {
+		            result = dataRoot.getCol("DataElements").getObjById(val) ? true : false; // Пока не используем индексы
+		            if ((!result) && errObj)
+		                errObj.errMsg = "Object \"" + name + "\" (Id = " + val + ") doesn't exist.";
+		        }
+		        else
+		            if (errObj)
+		                errObj.errMsg = "Data Root \"" + name + "\" doesn't exist.";
 
-			    return result;
-			},
+		        return result;
+		    },
 
 		    /**
              * Возвращает объект по ссылке
@@ -1767,15 +1768,15 @@ define(
              * @param {DataRefType}  refType Описание типа ссылки
              * @return {DataObject}
              */
-			getRefDataObject: function (val, fldName, dataObj, refType) {
-			    var result = null;
-			    var name = refType.model();
-			    var dataRoot = this.pvt.dataRoots[name];
-			    if (dataRoot)
-			        result = dataRoot.getCol("DataElements").getObjById(val); // Пока не используем индексы
+		    getRefDataObject: function (val, fldName, dataObj, refType) {
+		        var result = null;
+		        var name = refType.model();
+		        var dataRoot = this.pvt.dataRoots[name];
+		        if (dataRoot)
+		            result = dataRoot.getCol("DataElements").getObjById(val); // Пока не используем индексы
 
-			    return result ? result : null;
-			},
+		        return result ? result : null;
+		    },
 
 		    /**
              * Инсталляция типов данных СУБД (вызывается провайдером)
@@ -1783,17 +1784,17 @@ define(
              * @param {Object} sqlTypes Таблица типов
              * @param {Object} provider Провайдер
              */
-			installSqlTypes: function (sqlTypes, provider) {
-			    this.pvt.sqlTypes = { types: sqlTypes, provider: provider };
-			},
+		    installSqlTypes: function (sqlTypes, provider) {
+		        this.pvt.sqlTypes = { types: sqlTypes, provider: provider };
+		    },
 
 		    /**
              * Деинсталляция типов данных СУБД
              * 
              */
-			removeSqlTypes: function () {
-			    this.pvt.sqlTypes = undefined;
-			},
+		    removeSqlTypes: function () {
+		        this.pvt.sqlTypes = undefined;
+		    },
 
 		    /**
              * Заменяет конструктор "обычного" типа данных на тип
@@ -1803,16 +1804,24 @@ define(
              * @throws Генерирует прерывание, если провайдер не поддерживает запрошенный конструктор
              * @return {Constructor} Конструктор типа данных СУБД
              */
-			resolveSqlType: function (dataType) {
-			    var result = dataType;
-			    if (this.pvt.sqlTypes) {
-			        result = this.pvt.sqlTypes.types[dataType.prototype.key];
-			        if (!result)
-			            throw new Error("Provider: \"" + this.pvt.sqlTypes.provider.providerId +
+		    resolveSqlType: function (dataType) {
+		        var result = dataType;
+		        if (this.pvt.sqlTypes) {
+		            result = this.pvt.sqlTypes.types[dataType.prototype.key];
+		            if (!result)
+		                throw new Error("Provider: \"" + this.pvt.sqlTypes.provider.providerId +
                             "\" doesn't support type \"" + dataType.prototype.key + "\".");
-			    }
-			    return result;
-			}
+		        }
+		        return result;
+		    },
+
+		    /**
+             * Возвращает конструктор MetaDataMgr
+             * 
+             */
+		    getMetaDataMgrConstructor: function () {
+		        return MetaDataMgr;
+		    }
 
 		});
 		return MemDataBase;
