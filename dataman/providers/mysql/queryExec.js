@@ -15,9 +15,9 @@ define(
             run: function (sql) {
                 var self = this;
                 var promise = new this._options.Promise(function (resolve, reject) {
-                    self._connection.query(sql, function (err, results, fields) {
+                    self._connection.query(sql.sqlCmd, function (err, results, fields) {
                         if (err) {
-                            err.sql = sql;
+                            err.sql = sql.sqlCmd;
 
                             reject(self._formatError(err));
                         } else {

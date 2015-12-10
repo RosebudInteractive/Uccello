@@ -29,7 +29,7 @@ define(
 				pvt.isModified = {};
 				pvt.cntFldModif = {};
 				pvt.cntColModif = {};
-				this.resetModifFldLog(this.dfltLogName);
+				this.resetModifFldLog(this.dfltLogName, true);
 
 				pvt.$rootId = -1;
 
@@ -111,7 +111,12 @@ define(
 				if (this.pvt.col)
 					this.pvt.col._add(this);
 				//this.pvt.state = 1;
-				
+				if (!this.getParent())
+				    this.getDB().event.fire({
+				        type: "addRoot",
+				        target: this.getDB(),
+				        obj: this
+				    });
 			},
 			
 			// Добавляем логгер
@@ -194,14 +199,45 @@ define(
 			},
 
 	        /**
+             * Rollbacks changes in a field.
+             * 
+             * @param {String}  field Field name
+             * @param {Integer} idx Field index
+             * @param {Object}  old_value Old field value
+             * @throws          Always throws an error? ecause it should be overriden in descendant
+             * @private
+             */
+			_rollback: function (field, idx, old_value) {
+			    throw new Error("MemProtoObj._rollback wasn't overriden in descendant.");
+			},
+
+	        /**
              * Finalizes field modification: writes to log and fires events.
              * 
              * @param {String} field Field name
              * @param {Object} oldVal Old field value
              * @param {Object} newVal New field value
+             * @param {Object} idx Field index
              * @private
              */
-			_finalizeModif: function (field, oldVal, newVal) {
+			_finalizeModif: function (field, oldVal, newVal, idx) {
+
+			    try {
+			        this.event.fire({
+			            type: "beforeMod",
+			            target: this,
+			            field: field
+			        });
+
+			        this.event.fire({
+			            type: "beforeMod%" + field,
+			            target: this,
+			        });
+			    } catch (err) {
+			        this._rollback(field, idx, oldVal);
+			        throw err;
+			    };
+
 			    if (this.getLog().getActive()) {
 			        var o = { flds: {}, obj: this, type: "mp" };
 			        o.flds[field] = { old: oldVal, new: newVal };
@@ -302,8 +338,6 @@ define(
 					var r = trobj.roots[robj.getGuid()];
 					if (!r) 
 						r = trobj.roots[robj.getGuid()] = {};
-						//r.max = 0;
-						//r.min = 1E7;
 					r.max = r.max ? Math.max(r.max,n) : n;
 					r.min = r.min ? Math.min(r.min,n) : n;
 				}	
@@ -456,12 +490,12 @@ define(
 					return undefined;
 			},
 			
-			resetModifFldLog: function (log_name) {
+			resetModifFldLog: function (log_name, trueFlag) {
 			    var logName = log_name ? log_name : this.dfltLogName;
 			    this.pvt.fldLog[logName] = {};
 			    this.pvt.colLog[logName] = {};
 
-				this.pvt.isModified[logName] = false;
+				this.pvt.isModified[logName] = (trueFlag == undefined) ? false : true;
 				this.pvt.cntColModif[logName] = 0;
 				this.pvt.cntFldModif[logName] = 0;
 				

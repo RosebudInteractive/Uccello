@@ -21,6 +21,8 @@ define(
             init: function(cm, params){
 				UccelloClass.super.apply(this, [cm, params]);
 				this.pvt.isRendered = false;
+				this.pvt.isSubsInit = false;
+				this.pvt.isDataInit = false;
 
 				if (params===undefined) return; // в этом режиме только создаем метаинфо
 				this.event.on({ // подписка на изменение объекта свойств, чтобы сбрасывать флаг рендеринга (TODO коллекции тоже)
@@ -53,6 +55,26 @@ define(
 				else
 				  this.pvt.isRendered = false;
 				return this.pvt.isRendered;
+			},
+			
+			isDataInit: function(value) {
+				 if (value!==undefined) {
+					if (value) 
+						this.pvt.isDataInit = true;
+					else 
+						this.pvt.isDataInit = false;
+				 }
+				 return this.pvt.isDataInit;
+			},
+			
+			isSubsInit: function(value) {
+				 if (value!==undefined) {
+					if (value) 
+						this.pvt.isSubsInit = true;
+					else 
+						this.pvt.isSubsInit = false;
+				 }
+				 return this.pvt.isSubsInit;
 			},
 			
 			// no op - сброс состояния рендеринга, вызывается если активный в памяти контекст хочет заново отрисовать себя

@@ -41,7 +41,7 @@ define(
             timezone: "+00:00"
         };
 
-        var BaseProvider = Base.extend({
+        var MySqlProvider = Base.extend({
 
             providerId: PROVIDER_ID,
 
@@ -66,6 +66,6 @@ define(
                 return new SqlTypes(this._engine, this._options);
             }
         });
-        return BaseProvider;
+        return MySqlProvider;
     }
 );

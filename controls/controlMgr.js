@@ -48,32 +48,6 @@ define(
                     
 			},
 
-           /**
-			 * Инициализация подписки - делается 1 раз при загрузке нового ресурса
-             * @param component {AComponent} - корневой элемент
-             */				
-			subsInit: function(component) {
-				component.subsInit();
-				for (var j=0, countCol=component.countCol(); j<countCol ; j++) {
-					var col = component.getCol(j);
-					for (var i=0, cnt=col.count(); i<cnt; i++)
-						this.subsInit(col.get(i));
-				}
-			},
-
-           /**
-			 * Инициализация данных - делается 1 раз при загрузке нового ресурса
-             * @param component {AComponent} - корневой элемент
-             */				
-			dataInit: function(component) {
-				component.dataInit();
-				for (var j = 0, countCol=component.countCol() ; j < countCol ; j++) {
-					var col = component.getCol(j);
-					for (var i=0, cnt=col.count(); i<cnt; i++) 
-						this.dataInit(col.get(i));
-				}
-			},
-
             /**
 			 * Добавить компонент component в список менеджера контролов
              * @param component {AComponent} - добавляемый компонент
@@ -176,21 +150,49 @@ define(
 				for (g in this.pvt.compByGuid) this.pvt.compByGuid[g]._isProcessed(false);
 				this.incDeltaFlag(2);
 			},
-			
+
+           /**
+			 * Инициализация подписки - делается 1 раз при загрузке нового ресурса
+             * @param component {AComponent} - корневой элемент
+             */				
+			subsInit: function(component) {
+				if (!component.isSubsInit()) {
+					component.subsInit();
+					component.isSubsInit(true);
+				}
+				for (var j=0, countCol=component.countCol(); j<countCol ; j++) {
+					var col = component.getCol(j);
+					for (var i=0, cnt=col.count(); i<cnt; i++)
+						this.subsInit(col.get(i));
+				}
+			},
+
+           /**
+			 * Инициализация данных - делается 1 раз при загрузке нового ресурса
+             * @param component {AComponent} - корневой элемент
+             */				
+			dataInit: function(component) {
+				if (!component.isDataInit()) {
+					component.dataInit();
+					component.isDataInit(true);
+				}
+				//component.dataInit();
+				for (var j = 0, countCol=component.countCol() ; j < countCol ; j++) {
+					var col = component.getCol(j);
+					for (var i=0, cnt=col.count(); i<cnt; i++) 
+						this.dataInit(col.get(i));
+				}
+			},
+	
 			allDataInit: function(component) {
+		
+				this.subsInit(component);  // если не выполнена постинициализация, то запустить
 				var cg = component.getGuid();
-				if (!this.pvt.subsInitFlag[cg]) {
-					this.subsInit(component);  // если не выполнена постинициализация, то запустить
-					this.pvt.subsInitFlag[cg] = true;
-				}
-				if (!this.pvt.dataInitFlag[cg]) {
-					this.tranStart();
-					this.dataInit(component);
-					this.tranCommit();
-					this.pvt.dataInitFlag[cg] = true;
-				}
-				
-				this.processDelta();						
+
+				//this.tranStart();
+				this.dataInit(component);
+				//this.tranCommit();
+				this.pvt.dataInitFlag[cg] = true;
 			},
 
             /**
@@ -260,8 +262,6 @@ define(
                 return new ViewSet(this, ini);
             },
 
-			
-			// REFACTORING 10 -------------------------------------------------------------------------------------------------------
             /**
              * Функция-оболочка в которой выполняются системные действия. Должна вызываться компонентами
 			 * в ответ на действия пользователя, содержательные методы передаются в функцию f
@@ -271,17 +271,14 @@ define(
 			 * @param nots {boolean) true - не стартовать транзакцию дб
              */
             userEventHandler: function(context, f, args) {
-				function doBefore() {	
-					if (that.incDeltaFlag()<2 && vc) vc.allDataInit();
-				}		
-				function doAfter() {
-					if (!that.inTran() && vc) vc.renderAll();
-				}
+
+				console.log("START OF USEREVENTHANDLER");
+				//console.trace();
 				
-				/*if (this.inTran()) {
+				if (this.inTran()) {
 					console.log("%c ALREADY IN TRANSACTION! "+this.getCurTranGuid(),"color: red");
-					return;
-				}	*/
+					//return;
+				}	
 				var vc = this.getContext(), nargs = [], that = this;
 				if (args)
 				  if (Array.isArray(args))
@@ -293,8 +290,10 @@ define(
 				if (f) f.apply(context, nargs);		
 				this.resetModifLog('pd');					
 				this.getController().genDeltas(this.getGuid(),undefined, function(res,cb) { that.sendDataBaseDelta(res,cb); });	
-				this.syncInTran(doBefore,doAfter);
+				this.syncInTran();
 				this.tranCommit();
+					
+				console.log("END OF USEREVENTHANDLER");
             },
 
 			remoteCallPlus: function(objGuid, func, aparams, cb) {
@@ -315,7 +314,6 @@ define(
 			buildMetaInfo: function(type, done){
 				var ctrls = UCCELLO_CONFIG.controls;
 
-				//if (!side || side == 'server') {
 				if (this._isNode) {
 				    for (var i in ctrls) {
 				        if ((!ctrls[i].metaType && type == 'content') || (ctrls[i].metaType && ctrls[i].metaType.indexOf(type) != -1)) {
@@ -350,8 +348,7 @@ define(
 			// params.rtype = "res" | "data"
 			// params.compcb - только в случае ресурсов (может использоваться дефолтный)
 			// params.expr - выражение для данных
-			getRoots: function(rootGuids,params, cb) {
-				//var db = this.getContentDB();				
+			getRoots: function(rootGuids,params, cb) {			
 				var that = this;
 				if (this.isMaster()) {
 
@@ -365,9 +362,13 @@ define(
 						};
 
 						if (cb) {
-							// TODO 10 ИСПРАВИТЬ ДЛЯ КК
+							// TODO 10 ИСПРАВИТЬ ДЛЯ КК 
 							//that._execMethod(that,that.addRemoteComps,[objArr, localCallback]);
-							that.addRemoteComps(objArr, localCallback);
+							if (that.getContext() && !that.getContext().isOnServer())
+								that.rc2(that,that.addRemoteComps, [objArr],localCallback);
+							else
+								that.addRemoteComps(objArr, localCallback);
+								
 						}
 						else {
 							that.addLocalComps(objArr);
@@ -394,14 +395,20 @@ define(
 					if (rg.length>0) {
 						if (params.rtype == "res") {
 							// TODO 10 ИСПРАВИТЬ ДЛЯ КК
-							// this._execMethod(this.pvt.proxySrv,this.pvt.proxySrv.loadResources, [rg,icb]);
-							this.pvt.proxySrv.loadResources(rg, icb);
+							//this._execMethod(this.pvt.proxySrv,this.pvt.proxySrv.loadResources, [rg,icb]);
+							if (this.getContext().isOnServer())
+								this.pvt.proxySrv.loadResources(rg, icb);
+							else
+								this.rc2(this.pvt.proxySrv,this.pvt.proxySrv.loadResources, [rg],icb);
 							return;
 						}
 						if (params.rtype == "data") {
 							// TODO 10 ИСПРАВИТЬ ДЛЯ КК
 							//this._execMethod(this.pvt.proxySrv,this.pvt.proxySrv.queryDatas, [rg, params.expr, icb]);
-							this.pvt.proxySrv.queryDatas(rg, params.expr, icb);
+							if (this.getContext().isOnServer())
+								this.pvt.proxySrv.queryDatas(rg, params.expr, icb);
+							else
+								this.rc2(this.pvt.proxySrv,this.pvt.proxySrv.queryDatas, [rg, params.expr],icb);
 							return;
 						}
 					}
@@ -420,73 +427,6 @@ define(
 				this.pvt.incDeltaFlag = flag;
 				return this.pvt.incDeltaFlag;
 			}
-			/*
-			remoteCallTranStart: function(dbTran) {
-				if (this.inRemoteCallTran()) return;
-				this.pvt._memFuncTran = true;
-				this.pvt._memFunc = [];
-				this.pvt._memFuncDone = [];
-				if (dbTran)
-					this.tranStart();
-			},
-
-			remoteCallTranCommit: function() {
-				if (!this.inRemoteCallTran()) return;				
-				
-				if (this.pvt._memFunc.length>0) 
-					this.remoteCallNow(); //else if (this.getCurTranCounter()==1) {
-				var memGuid = this.getCurTranGuid();
-				this.tranCommit();
-				this.pvt._memFunc = [];
-				this.pvt._memFuncDone = [];
-				this.pvt._memFuncTran = false;
-				
-				if (memGuid && !this.inTran()) {
-					delete this.pvt.execTr[memGuid]; // почистить очередь транзакции
-					this.pvt.execQ.splice(0,1);
-					this.pvt.memTranIdx++;			
-				}		
-			},
-			
-			inRemoteCallTran: function() {
-				return this.pvt._memFuncTran;
-			},
-			
-			remoteCallNow: function() {	
-				if (!this.pvt._memFunc) return; 				
-				var endTran = (this.pvt._memFunc[0].func === "endTran");
-				var that = this;
-				
-				function icb(result) {				
-					var vc = that.getContext();
-					if (vc) vc.XXXallDataInit();
-					function i2cb() {
-						for (var i=0; i<result.cbres.length; i++) 
-							if (cbs[i]) cbs[i](result.cbres[i]);
-					}
-					// TODO 10 первый параметр под вопросом - контекст может быть чем-то другим
-					if (!endTran)
-						that.userEventHandler(that,i2cb,undefined, true);
-					else i2cb();
-				}
-
-				var socket = this.getSocket();
-				var pg = this.getProxyMaster().guid;
-				var cbs = this.pvt._memFuncDone;
-							
-				var data={action:"remoteCall3",type:"method",args: { masterGuid: pg, rc: this.pvt._memFunc } };
-				if (this.getCurTranGuid()) {
-					data.trGuid = this.getCurTranGuid();		
-					data.srcDbGuid = this.getGuid();
-						
-				}
-				if (this.inTran() && !endTran) // Если не в транзакции, то инкрементировать счетчик не нужно
-					this.tranStart();
-				socket.send(data,icb); 
-				if (this.pvt.name!="System")
-					console.log("SEND DATA ",data);
-			},
-*/
 
 		});
 		return ControlMgr;

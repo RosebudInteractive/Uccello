@@ -124,6 +124,7 @@ define(
 					var col = dataRoot.getCol("DataElements");
 					if (!dataRoot.getCol("DataElements").getObjById(this.cursor())) {
 					    if (col.count() > 0) this.cursor(col.get(0).id()); // установить курсор в новую позицию (наверх)
+						else this.cursor(null);
 					}
 					else {
 						this._setDataObj(this.cursor());
@@ -173,7 +174,7 @@ define(
             cursor: function (value) {
 				var oldVal = this._genericSetter("Cursor");
                 var newVal=this._genericSetter("Cursor", value);
-				if (newVal!=oldVal) {
+				if (newVal !== oldVal) {
 					this._setDataObj(value);
 					if ("onMoveCursor" in this) this.onMoveCursor(newVal);
 
@@ -185,6 +186,15 @@ define(
 
 				return newVal;
             },
+
+			first: function() {
+				var dataRoot = this.root();
+				if (dataRoot) {
+					var col = dataRoot.getCol("DataElements");
+					if (col.count() > 0)
+						this.cursor(col.get(0).id());
+				}
+			},
 
 			prev: function() {
 				var dataRoot = this.root();

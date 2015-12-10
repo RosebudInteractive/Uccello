@@ -138,7 +138,8 @@ define(
                      */
                     r: function() {
                         var cm = that.getContextCM();
-                        cm.userEventHandler(that, function () {});
+						
+                        cm.userEventHandler(that, function () {  that.getContext().allDataInit(); });
                     }
                 };
             },
@@ -266,8 +267,7 @@ define(
 
                 function cbfinal2(result2){
                     result2 = result2 && result2.guids ? result2.guids : result2;
-                    // that.getContext().xxxrenderForms(result2, false);
-					//that.getContext().xxxallDataInit();
+
                     if (cbfinal)
                         cbfinal(result2);
                 }

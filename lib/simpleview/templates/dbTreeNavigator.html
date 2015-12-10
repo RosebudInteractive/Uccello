@@ -1,0 +1,70 @@
+<!-- template: navigator -->
+<div class="navigator control">
+    <div class="tabsNavi">
+        <ul>
+            <li><a href="#tabs-1">Базы данных</a></li>
+            <li><a href="#tabs-2">Транзакции</a></li>
+            <li><a href="#tabs-3">Версии рута</a></li>
+            <li><a href="#tabs-4">Remote Calls</a></li>
+        </ul>
+        <div id="tabs-1">
+            <div class="dbDiv">
+            <table cellspacing="0" cellpadding="0" width="100%" height="100%">
+                <tr>
+                    <td style="height: 31px;" colspan="10">База данных: <select class="dbSelector"></select> <!--<input type="button" class="tranButton" value="транзакции" /> <input type="button" class="verHistButton" value="версии рута" />--> <span class="dbVersionSpan"></span>
+    
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <td><div class="tree"></div></td>
+                    <td style="display: none;"><u>список объектов</u><div class="left"></div></td>
+                    <td style="display: none;">
+                        <table width="100%" height="100%">
+                            <tr valign="top">
+                                <td>
+                                    <div class="levels"></div>
+                                </td>
+                            </tr>
+                            <tr valign="top">
+                                <td colspan="100">
+                                    <input type="button" class="dragRight" value="сдвинуть влево">
+                                    <input type="button" class="dragLeft" value="сдвинуть вправо">
+                                    <input type="button" class="refresh" value="обновить">
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td width="375"><div class="right"></div></td>
+                </tr>
+            </table>
+            </div>
+        </div>
+        <div id="tabs-2">
+            <div class="tranDiv"></div>
+        </div>
+        <div id="tabs-3">
+            <div class="rootVerDiv"></div>
+        </div>
+        <div id="tabs-4">
+            <div class="remoteCallsDiv"></div>
+        </div>
+    </div>
+</div>
+
+<!-- template: levelCol -->
+<div class="level">
+    <u>коллекции объекта</u><div class="centerTop"></div>
+    <u>субэлементы коллекции объекта</u><div class="centerBottom"></div>
+</div>
+
+<!-- template: left -->
+<p><a href="#"></a></p>
+
+<!-- template: centerTop -->
+<p><a href="#"></a></p>
+
+<!-- template: right -->
+<p><span class="name"></span> <span class="type"></span> <input class="value" /> <input class="save" type="button" value="*"></p>
+
+<!-- template: rightRef -->
+<p><span class="name"></span> <span class="type"></span> <a class="ref" href="#">open</a> </p>

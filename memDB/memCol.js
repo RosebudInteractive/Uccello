@@ -21,7 +21,13 @@ define(
 
 	        // добавить объект в коллекцию
 	        _add: function (obj) {
-	            // TODO проверить корректность типа
+
+	            this.fire({
+	                type: "beforeAdd",
+	                target: this,
+	                obj: obj
+	            });
+
 	            this._elems.push(obj);
 
 				this._guidIndex[obj.getGuid()] = this._elems.length - 1;
@@ -46,6 +52,13 @@ define(
 	            // TODO временный вариант - необходимо будет сделать нормально как можно быстрее
 	            for (var i = 0; i < this._elems.length; i++) {
 	                if (this._elems[i] == obj) {
+
+	                    this.fire({
+	                        type: "beforeDel",
+	                        target: this,
+	                        obj: obj
+	                    });
+
 	                    this._elems.splice(i, 1);
 
 	                    if (this._obj.getLog().getActive()) { // записать в лог если активен
@@ -62,12 +75,10 @@ define(
 	                        target: this,
 	                        obj: obj
 	                    });
+						delete this._guidIndex[obj.getGuid()];
 	                    return;
 	                }
 	            }
-
-				delete this._guidIndex[obj.getGuid()];
-
 	        },
 
 	        getName: function () {
@@ -115,6 +126,10 @@ define(
 
 			indexOf: function(obj) {
 				return this._guidIndex[obj.getGuid()];
+			},
+
+			indexOfGuid: function(guid) {
+				return this._guidIndex[guid];
 			}
 
 

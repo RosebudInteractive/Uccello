@@ -5,10 +5,14 @@
 
 define(
     ['../controls/controlMgr', '../metaData/metaDataMgr', '../metaData/metaModel',
-        '../metaData/metaModelField', '../metaData/metaDefs', 'bluebird', 'lodash', './dataObjectQuery'],
-    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Meta, Promise, _, Query) {
+        '../metaData/metaModelField', '../metaData/metaDefs', '../metaData/metaModelRef', '../metaData/metaLinkRef',
+        'bluebird', 'lodash', './dataObjectQuery', '../predicate/predicate', './transaction'],
+    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Meta, MetaModelRef, MetaLinkRef,
+        Promise, _, Query, Predicate, Transaction) {
 
         var METADATA_FILE_NAME = UCCELLO_CONFIG.dataPath + "meta/metaTables.json";
+        var METADATA_DIR_NAME = UCCELLO_CONFIG.dataPath + "meta";
+        var META_DATA_MGR_GUID = "77153254-7f08-6810-017b-c99f7ea8cddf@2009";
 
         var iDataObjectEngine = {
 
@@ -16,7 +20,7 @@ define(
             classGuid: UCCELLO_CONFIG.guids.iDataObjectEngine,
 
             execBatch: "function"
-        }
+        };
 
         var DataObjectEngine = UccelloClass.extend({
 
@@ -53,6 +57,7 @@ define(
 
                 this._provider = null;
                 this._query = null;
+                this._tmpPredicate = this.newPredicate();
 
                 if (opts.connection && opts.connection.provider) {
                     try {
@@ -64,11 +69,25 @@ define(
                     this._query = new Query(this, this._provider, this._options);
                 };
 
+                new MetaModelRef(this._dataBase);
+                new MetaLinkRef(this._dataBase);
                 new MetaModelField(this._dataBase);
                 new MetaModel(this._dataBase);
                 new MetaDataMgr(this._dataBase);
 
-                this._metaDataMgr = this._loadMetaDataMgr();
+                //this._metaDataMgr = this._loadMetaDataMgr();
+                this._metaDataMgr = this._dataBase.deserialize(
+                    {
+                        "$sys": {
+                            "guid": META_DATA_MGR_GUID,
+                            "typeGuid": UCCELLO_CONFIG.classGuids.MetaDataMgr
+                        }
+                    },
+                    {},
+                    this._createComponent);
+                //this._metaDataMgr = new MetaDataMgr(this._dataBase, {});
+                this._loadMetaInfo(METADATA_DIR_NAME);
+
                 this._metaDataMgr.router(this._router);
                 if (rpc) {
                     var remote = rpc._publ(this._metaDataMgr, this._metaDataMgr.getInterface());
@@ -100,14 +119,27 @@ define(
                 return this._provider && this._query;
             },
 
-            getSchema: function () {
-                return this._metaDataMgr;
+            getSchema: function (schema_name) {
+                return schema_name ? this._schemas[schema_name] : this._metaDataMgr;
             },
 
             createSchema: function (name) {
                 var schema = null;
                 if (typeof (name) === "string") {
-                    schema = new MetaDataMgr(this._dataBase, {});
+                    var db = new ControlMgr(
+                    {
+                        controller: this._controller,
+                        dbparams: {
+                            name: name,
+                            kind: "master",
+                            guid: this._controller.guid()
+                        }
+                    });
+                    new MetaModelRef(db);
+                    new MetaLinkRef(db);
+                    new MetaModelField(db);
+                    new MetaModel(db);
+                    schema = new MetaDataMgr(db, {});
                     this._schemas[name] = schema;
                 };
                 return schema;
@@ -115,6 +147,10 @@ define(
 
             getProvider: function () {
                 return this._provider;
+            },
+
+            getQuery: function () {
+                return this._query;
             },
 
             deleteSchema: function (name) {
@@ -126,6 +162,49 @@ define(
                 return this._dataBase;
             },
 
+            newPredicate: function () {
+                return new Predicate(this._dataBase, {});
+            },
+
+            saveSchemaToFile: function (dir, schema_name) {
+                var fs = require('fs');
+                var path = require('path');
+                var models = this.getSchema(schema_name) ? this.getSchema(schema_name).models() : null;
+                if (!models)
+                    throw new Error("Schema \"" + schema_name + "\" doesn't exist.");
+
+                _.forEach(models, function (model) {
+                    fs.writeFileSync(path.format({ dir: dir, base: model.name() + ".json" }),
+                        JSON.stringify(model.getDB().serialize(model)),
+                        { encoding: "utf8" })
+                }, this);
+            },
+
+            transaction: function (batch, options) {
+                var tran = new Transaction(this, options);
+                var result;
+                if (batch) {
+                    result = tran.start()
+                        .then(function () {
+                            return batch(tran);
+                        })
+                        .then(function (res) {
+                            return tran.commit()
+                                .then(function () {
+                                    return res;
+                                });
+                        }, function (err) {
+                            return tran.rollback()
+                                .then(function () {
+                                    return Promise.reject(err);
+                                });
+                        });
+                }
+                else
+                    result = tran.start().then(function () { return tran; });
+                return result;
+            },
+
             execBatch: function (batch, callback) {
                 console.log("execBatch: " + JSON.stringify(batch));
 
@@ -134,36 +213,39 @@ define(
                 var self = this;
 
                 if (this.hasConnection() && (batch.length > 0)) {
-                    res_promise = this._seqExec(batch, function (val) {
 
-                        var promise = Promise.resolve();
-                        var model = self._metaDataMgr.getModel(val.model);
-                        if (!model)
-                            throw new Error("execBatch::Model \"" + val.model + "\" doesn't exist.");
+                    function batchFunc(transaction) {
+                        return self._seqExec(batch, function (val) {
 
-                        switch (val.op) {
+                            var promise = Promise.resolve();
+                            var model = self._metaDataMgr.getModel(val.model);
+                            if (!model)
+                                throw new Error("execBatch::Model \"" + val.model + "\" doesn't exist.");
 
-                            case "insert":
+                            switch (val.op) {
 
-                                promise = self._query.insert(model, val.data.fields);
-                                break;
+                                case "insert":
 
-                            case "update":
+                                    promise = self._query.insert(model, val.data.fields, { transaction: transaction });
+                                    break;
 
-                                if ((!val.data) || (!val.data.key))
-                                    throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
+                                case "update":
 
-                                var key = model.getPrimaryKey();
-                                if (!key)
-                                    throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
-                                var predicate = {};
-                                predicate[key.name()] = val.data.key;
+                                    if ((!val.data) || (!val.data.key))
+                                        throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
 
-                                promise = self._query.update(model, val.data.fields, predicate);
-                                break;
-                        };
-                        return promise;
-                    });
+                                    var key = model.getPrimaryKey();
+                                    if (!key)
+                                        throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
+                                    self._tmpPredicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
+                                    promise = self._query.update(model, val.data.fields, self._tmpPredicate, { transaction: transaction });
+                                    break;
+                            };
+                            return promise;
+                        });
+                    };
+
+                    res_promise = this.transaction(batchFunc);
                 };
 
                 res_promise
@@ -467,6 +549,28 @@ define(
                     .deserialize(JSON.parse(fs.readFileSync(METADATA_FILE_NAME, { encoding: "utf8" })),
                         {}, this._createComponent);
                 return metaDataMgr;
+            },
+
+            _loadMetaInfo: function (dir, options) {
+                var opts = _.defaults(options || {}, { ext_filter: "json" });
+                var fs = require('fs');
+                var path = require('path');
+                var allFiles = fs.readdirSync(dir);
+                var allData = {};
+
+                if (allFiles.length > 0) {
+                    var files = allFiles;
+                    if (opts.ext_filter !== "*")
+                        files = _.filter(allFiles, function (file) {
+                            return _.endsWith(file, "." + opts.ext_filter);
+                        });
+
+                    _.forEach(files, function (file) {
+                        var fname = path.format({ dir: dir, base: file });
+                        this._dataBase.deserialize(JSON.parse(fs.readFileSync(fname, { encoding: "utf8" })),
+                            {}, this._createComponent);
+                    }, this);
+                };
             }
         });
 

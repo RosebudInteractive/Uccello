@@ -204,17 +204,12 @@ define(
             _genericSetter: function(fldName,fldVal, kind) {
                 //console.log(fldName, fldVal, this.getObj())
                 if (fldVal!==undefined) {
-                    //var val=this.getObj().get(fldName);
-					////var val=this.get(fldName);
-                   ////if (val!=fldVal) {
 						if (this.isMaster() || !(kind=="MASTER"))
 						    this.set(fldName, fldVal, true);
-							//this.pvt.obj.set(fldName,fldVal);
 						else if (DEBUG) console.log("ERROR SET PROP"); // TODO заменить на exception
                     ////}
                 }
 				return this.get(fldName);
-                //return this.pvt.obj.get(fldName);
             }
 
         });
