@@ -938,7 +938,7 @@ define(
 					if (root) {
 						croot = root.obj;		
 						// возвращаем гуид если не были подписаны
-						if (!(root.subscribers[subDbGuid]))  res.push(croot.getGuid());	
+						if (!(root.subscribers[subDbGuid]) && root.type == "res")  res.push(croot.getGuid());
 						for (guid in allSubs) { // то же, что и выше TODO отрефакторить
 							subscriber = allSubs[guid];
 							if (subscriber.kind == 'remote') {
