@@ -1252,7 +1252,7 @@ define(
                         throw new Error("getSerializedValue::Inavlid value of \"typedvalue\" type.");
                 return {
                     type: val.type().serialize(),
-                    value: val.type().getSerializedValue(val.value)
+                    value: val.type().getSerializedValue(val.value())
                 };
             },
 
