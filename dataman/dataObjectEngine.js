@@ -5,11 +5,14 @@
 
 define(
     ['../controls/controlMgr', '../metaData/metaDataMgr', '../metaData/metaModel',
-        '../metaData/metaModelField', '../metaData/metaDefs', 'bluebird', 'lodash',
-        './dataObjectQuery', '../predicate/predicate', './transaction'],
-    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Meta, Promise, _, Query, Predicate, Transaction) {
+        '../metaData/metaModelField', '../metaData/metaDefs', '../metaData/metaModelRef', '../metaData/metaLinkRef',
+        'bluebird', 'lodash', './dataObjectQuery', '../predicate/predicate', './transaction'],
+    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Meta, MetaModelRef, MetaLinkRef,
+        Promise, _, Query, Predicate, Transaction) {
 
         var METADATA_FILE_NAME = UCCELLO_CONFIG.dataPath + "meta/metaTables.json";
+        var METADATA_DIR_NAME = UCCELLO_CONFIG.dataPath + "meta";
+        var META_DATA_MGR_GUID = "77153254-7f08-6810-017b-c99f7ea8cddf@2009";
 
         var iDataObjectEngine = {
 
@@ -17,7 +20,7 @@ define(
             classGuid: UCCELLO_CONFIG.guids.iDataObjectEngine,
 
             execBatch: "function"
-        }
+        };
 
         var DataObjectEngine = UccelloClass.extend({
 
@@ -66,11 +69,25 @@ define(
                     this._query = new Query(this, this._provider, this._options);
                 };
 
+                new MetaModelRef(this._dataBase);
+                new MetaLinkRef(this._dataBase);
                 new MetaModelField(this._dataBase);
                 new MetaModel(this._dataBase);
                 new MetaDataMgr(this._dataBase);
 
-                this._metaDataMgr = this._loadMetaDataMgr();
+                //this._metaDataMgr = this._loadMetaDataMgr();
+                this._metaDataMgr = this._dataBase.deserialize(
+                    {
+                        "$sys": {
+                            "guid": META_DATA_MGR_GUID,
+                            "typeGuid": UCCELLO_CONFIG.classGuids.MetaDataMgr
+                        }
+                    },
+                    {},
+                    this._createComponent);
+                //this._metaDataMgr = new MetaDataMgr(this._dataBase, {});
+                this._loadMetaInfo(METADATA_DIR_NAME);
+
                 this._metaDataMgr.router(this._router);
                 if (rpc) {
                     var remote = rpc._publ(this._metaDataMgr, this._metaDataMgr.getInterface());
@@ -102,14 +119,27 @@ define(
                 return this._provider && this._query;
             },
 
-            getSchema: function () {
-                return this._metaDataMgr;
+            getSchema: function (schema_name) {
+                return schema_name ? this._schemas[schema_name] : this._metaDataMgr;
             },
 
             createSchema: function (name) {
                 var schema = null;
                 if (typeof (name) === "string") {
-                    schema = new MetaDataMgr(this._dataBase, {});
+                    var db = new ControlMgr(
+                    {
+                        controller: this._controller,
+                        dbparams: {
+                            name: name,
+                            kind: "master",
+                            guid: this._controller.guid()
+                        }
+                    });
+                    new MetaModelRef(db);
+                    new MetaLinkRef(db);
+                    new MetaModelField(db);
+                    new MetaModel(db);
+                    schema = new MetaDataMgr(db, {});
                     this._schemas[name] = schema;
                 };
                 return schema;
@@ -133,7 +163,21 @@ define(
             },
 
             newPredicate: function () {
-                return new Predicate(this._dataBase, {});;
+                return new Predicate(this._dataBase, {});
+            },
+
+            saveSchemaToFile: function (dir, schema_name) {
+                var fs = require('fs');
+                var path = require('path');
+                var models = this.getSchema(schema_name) ? this.getSchema(schema_name).models() : null;
+                if (!models)
+                    throw new Error("Schema \"" + schema_name + "\" doesn't exist.");
+
+                _.forEach(models, function (model) {
+                    fs.writeFileSync(path.format({ dir: dir, base: model.name() + ".json" }),
+                        JSON.stringify(model.getDB().serialize(model)),
+                        { encoding: "utf8" })
+                }, this);
             },
 
             transaction: function (batch, options) {
@@ -141,7 +185,7 @@ define(
                 var result;
                 if (batch) {
                     result = tran.start()
-                        .then(function(){
+                        .then(function () {
                             return batch(tran);
                         })
                         .then(function (res) {
@@ -505,6 +549,28 @@ define(
                     .deserialize(JSON.parse(fs.readFileSync(METADATA_FILE_NAME, { encoding: "utf8" })),
                         {}, this._createComponent);
                 return metaDataMgr;
+            },
+
+            _loadMetaInfo: function (dir, options) {
+                var opts = _.defaults(options || {}, { ext_filter: "json" });
+                var fs = require('fs');
+                var path = require('path');
+                var allFiles = fs.readdirSync(dir);
+                var allData = {};
+
+                if (allFiles.length > 0) {
+                    var files = allFiles;
+                    if (opts.ext_filter !== "*")
+                        files = _.filter(allFiles, function (file) {
+                            return _.endsWith(file, "." + opts.ext_filter);
+                        });
+
+                    _.forEach(files, function (file) {
+                        var fname = path.format({ dir: dir, base: file });
+                        this._dataBase.deserialize(JSON.parse(fs.readFileSync(fname, { encoding: "utf8" })),
+                            {}, this._createComponent);
+                    }, this);
+                };
             }
         });
 

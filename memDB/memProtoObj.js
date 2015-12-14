@@ -111,7 +111,12 @@ define(
 				if (this.pvt.col)
 					this.pvt.col._add(this);
 				//this.pvt.state = 1;
-				
+				if (!this.getParent())
+				    this.getDB().event.fire({
+				        type: "addRoot",
+				        target: this.getDB(),
+				        obj: this
+				    });
 			},
 			
 			// Добавляем логгер
