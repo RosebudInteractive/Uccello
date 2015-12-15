@@ -9,7 +9,7 @@
  */
 define(
 	["../system/event", "../system/utils", "./memCol", "./memObj", "./memMetaRoot", "./memMetaObj",
-        "./memMetaObjFields", "./memMetaObjCols", "../metaData/MetaDataMgr"],
+        "./memMetaObjFields", "./memMetaObjCols", "../metaData/metaDataMgr"],
 	function (Event, Utils, MemCollection, MemObj, MemMetaRoot, MemMetaObj, MemMetaObjFields, MemMetaObjCols, MetaDataMgr) {
 
 

@@ -358,7 +358,13 @@ define(
 
 						function localCallback() {
 							var res = that.addRoots(objArr, params, rg, rgsubs);							
-							if (cb) cb({ guids: res });
+							if (cb) {
+							    var types = [];
+                                // Добавляем типы root- ов.
+							    for (var i = 0; i < res.length; i++)
+							        types[i] = that.getObj(res[i]).getObjType().getGuid();
+							    cb({ guids: res, types: types });
+							}
 						};
 
 						if (cb) {
