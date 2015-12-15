@@ -94,11 +94,12 @@ define(
 				}
 
 				var dataRoot = this.root();
+				var dataRootGuid = this.getSerialized("Root") ? this.getSerialized("Root").guidInstanceRes : undefined;
 				var rg = this.objtype(); // R2305 почему guidRes, а не guidElem
 
 				//var rgi = dataRoot ? dataRoot.getGuid() : null;
 				// R2305 инстанс все время загружается новые ветки, а должны быть те же самые
-				var rgi = dataRoot ? dataRoot.getGuid() :this.objtype();
+				var rgi = dataRootGuid || rg; //this.objtype();
 
 
 				var master = this.master();
