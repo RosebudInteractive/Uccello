@@ -126,6 +126,7 @@ define(
                             newTreeViewItem.name(ds.name());
                             newTreeViewItem.parent(parentItem);
                             newTreeViewItem.dataset(ds);
+                            newTreeViewItem.kind("coll")
                         } else
                             newTreeViewItem = itemsCol.get(idx);
                         var newNode = {
