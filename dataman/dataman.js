@@ -79,7 +79,7 @@ define(
                             );
                     };
 
-                    var query = { dataObject: expression.model, dataGuid: expression.dataGuid, predicate: predicate };
+                    var query = { dataObject: expression.model, dataGuid: guidRoot, predicate: predicate };
                     this._loadData(query, done);
                 }
                 else {
