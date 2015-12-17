@@ -265,6 +265,13 @@ define(
 			setContext: function(params, cbfinal, renderRoot) {
                 var that = this;
 
+                function cbfinal2(result2) {
+                    result2 = result2 && result2.guids ? result2.guids : result2;
+
+                    if (cbfinal)
+                        cbfinal(result2);
+                }
+
                 var s = this.pvt.clientConnection.socket;
                 var p = { socket: s, proxyServer: this.pvt.proxyServer, proxyWfe: this.pvt.proxyWfe }
                 p.formGuids = params.formGuids;
@@ -272,10 +279,10 @@ define(
 
                 if (params.side == 'client') {
                     this.pvt.vc = this.pvt.cmclient.get(params.vc);
-                    if (this.pvt.vc) this.pvt.vc.on(this.pvt.cmclient, p, cbfinal, renderRoot);
+                    if (this.pvt.vc) this.pvt.vc.on(this.pvt.cmclient, p, cbfinal2, renderRoot);
                 } else {
                     this.pvt.vc = this.pvt.cmsys.get(params.vc);
-                    if (this.pvt.vc) this.pvt.vc.on(this.pvt.cmsys, p, cbfinal, renderRoot);
+                    if (this.pvt.vc) this.pvt.vc.on(this.pvt.cmsys, p, cbfinal2, renderRoot);
                 }
 			},
 
