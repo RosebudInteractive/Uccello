@@ -257,7 +257,7 @@ define(
                         }, this, p);
 
                         var handler = {
-                            type: 'moveCursor',
+                            type: 'refreshData',
                             subscriber: this,
                             callback: callback
                         };
