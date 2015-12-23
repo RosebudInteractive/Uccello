@@ -82,10 +82,10 @@ define([], function () {
             { className: 'ToolbarSeparator', isUccello: true, component: 'controls/toolbarSeparator', viewset: false, metaType: ['content'] },
             { className: 'LayersContainer', isUccello: true, component: 'controls/layersContainer', viewset: false, metaType: ['content'] },
             { className: 'DbNavigator', isUccello: true, component: 'lib/dbNavigator', viewset: false, metaType: ['content'] },
-            { className: 'TreeView', isUccello: true, component: 'controls/treeView', viewset: false, metaType: ['content'] },
             { className: 'TreeViewItem', isUccello: true, component: 'controls/treeViewItem', viewset: false, metaType: ['content'] },
-            { className: 'DbTreeView', isUccello: true, component: 'controls/dbTreeView', viewset: false, metaType: ['content'] },
-            { className: 'DbTreeViewItemType', isUccello: true, component: 'controls/dbTreeViewItemType', viewset: false, metaType: ['content'] }
+            { className: 'TreeView', isUccello: true, component: 'controls/treeView', viewset: false, metaType: ['content'] },
+            { className: 'DbTreeViewItemType', isUccello: true, component: 'controls/dbTreeViewItemType', viewset: false, metaType: ['content'] },
+            { className: 'DbTreeView', isUccello: true, component: 'controls/dbTreeView', viewset: false, metaType: ['content'] }
         ],
 
         // остальные гуиды
