@@ -94,12 +94,8 @@ define(
 				}
 
 				var dataRoot = this.root();
-				var rg = this.objtype(); // R2305 почему guidRes, а не guidElem
-
-				//var rgi = dataRoot ? dataRoot.getGuid() : null;
-				// R2305 инстанс все время загружается новые ветки, а должны быть те же самые
-				var rgi = dataRoot ? dataRoot.getGuid() :this.objtype();
-
+				var dataRootGuid = this.getSerialized("Root") ? this.getSerialized("Root").guidInstanceRes : undefined;
+				var rg = this.objtype(), rgi = dataRootGuid || rg;
 
 				var master = this.master();
 				if (rg) {
@@ -124,12 +120,13 @@ define(
 					var col = dataRoot.getCol("DataElements");
 					if (!dataRoot.getCol("DataElements").getObjById(this.cursor())) {
 					    if (col.count() > 0) this.cursor(col.get(0).id()); // установить курсор в новую позицию (наверх)
-						else this.cursor(null);
+						else this.cursor(null);	
 					}
 					else {
 						this._setDataObj(this.cursor());
-						if (forceRefresh) this.event.fire({type: 'refreshData', target: this });
+						//if (forceRefresh) this.event.fire({type: 'refreshData', target: this });
 					}
+					if (forceRefresh) this.event.fire({type: 'refreshData', target: this });
 				};
 			},
 

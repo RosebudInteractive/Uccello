@@ -358,7 +358,9 @@ define(
 
 						function localCallback() {
 							var res = that.addRoots(objArr, params, rg, rgsubs);							
-							if (cb) cb({ guids: res });
+							if (cb) {
+							    cb({ guids: res });
+							}
 						};
 
 						if (cb) {
@@ -385,7 +387,7 @@ define(
 					for (var i=0; i<rootGuids.length; i++) {
 						if (rootGuids[i].length > 36) { // instance Guid
 							var cr = this.getRoot(rootGuids[i]); 
-							if (cr && (params.expr &&  params.expr!=cr.hash)) 
+							if (params.refresh || (cr && (params.expr && params.expr != cr.hash)))
 									rg.push(rootGuids[i]);
 							else rgsubs.push(rootGuids[i]);
 						}
@@ -396,7 +398,7 @@ define(
 						if (params.rtype == "res") {
 							// TODO 10 ИСПРАВИТЬ ДЛЯ КК
 							//this._execMethod(this.pvt.proxySrv,this.pvt.proxySrv.loadResources, [rg,icb]);
-							if (this.getContext().isOnServer())
+						    if ((!this.getContext()) || this.getContext().isOnServer())
 								this.pvt.proxySrv.loadResources(rg, icb);
 							else
 								this.rc2(this.pvt.proxySrv,this.pvt.proxySrv.loadResources, [rg],icb);
@@ -405,7 +407,7 @@ define(
 						if (params.rtype == "data") {
 							// TODO 10 ИСПРАВИТЬ ДЛЯ КК
 							//this._execMethod(this.pvt.proxySrv,this.pvt.proxySrv.queryDatas, [rg, params.expr, icb]);
-							if (this.getContext().isOnServer())
+						    if ((!this.getContext()) || this.getContext().isOnServer())
 								this.pvt.proxySrv.queryDatas(rg, params.expr, icb);
 							else
 								this.rc2(this.pvt.proxySrv,this.pvt.proxySrv.queryDatas, [rg, params.expr],icb);

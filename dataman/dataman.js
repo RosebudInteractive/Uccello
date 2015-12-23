@@ -69,39 +69,54 @@ define(
              */
             loadQuery: function (guidRoot, expression, done) {
                 var hehe = {};
-				var gr = guidRoot.slice(0,36);
-                switch (gr) {
-                    case UCCELLO_CONFIG.guids.rootCompany:
-                        this.getList(gr, 'company', done);
-                        break;
-                    case UCCELLO_CONFIG.guids.rootTstCompany:
-                        this.getList(gr, 'company_tst', done);
-                        break;
-                    case UCCELLO_CONFIG.guids.rootContact:
-                        this.getList(gr, 'contact', done, 'CompanyId=?', [expression], { field: "CompanyId", op: "=", value: expression });
-                        break;
-                    case UCCELLO_CONFIG.guids.rootTstContact:
-                        this.getList(gr, 'contact_tst', done, 'parent=?', [expression], { field: "parent", op: "=", value: expression });
-                        break;
-                    case UCCELLO_CONFIG.guids.rootContract:
-                        this.getList(gr, 'contract', done, 'parent=?', [expression], { field: "parent", op: "=", value: expression });
-                        break;
-                    case UCCELLO_CONFIG.guids.rootAddress:
-                        this.getList(gr, 'address', done, 'parent=?', [expression], { field: "parent", op: "=", value: expression });
-                        break;
-                    case UCCELLO_CONFIG.guids.rootLead:
-                        this.getList(gr, 'lead', done);
-                        break;
-                    case UCCELLO_CONFIG.guids.rootLeadLog:
-                        this.getList(gr, 'lead_log', done, 'LeadId=?', [expression], { field: "LeadId", op: "=", value: expression });
-                        break;
-                    case UCCELLO_CONFIG.guids.rootIncomeplan:
-                        this.getList(gr, 'incomeplan', done, 'leadId=?', [expression], { field: "LeadId", op: "=", value: expression });
-                        break;
-                    case UCCELLO_CONFIG.guids.rootOpportunity:
-                        this.getList(gr, 'opportunity', done);
-                        break;
+                if (expression && expression.model) {
+                    var predicate;
+                    if (expression.predicate) {
+                        predicate = this.pvt.predicate =
+                            this.pvt.dataObjectEngine.deserializePredicate(
+                                expression.predicate,
+                                this.pvt.predicate
+                            );
+                    };
+
+                    var query = { dataObject: expression.model, dataGuid: guidRoot, predicate: predicate };
+                    this._loadData(query, done);
                 }
+                else {
+                    var gr = guidRoot.slice(0, 36);
+                    switch (gr) {
+                        case UCCELLO_CONFIG.guids.rootCompany:
+                            this.getList(gr, 'company', done);
+                            break;
+                        case UCCELLO_CONFIG.guids.rootTstCompany:
+                            this.getList(gr, 'company_tst', done);
+                            break;
+                        case UCCELLO_CONFIG.guids.rootContact:
+                            this.getList(gr, 'contact', done, 'CompanyId=?', [expression], { field: "CompanyId", op: "=", value: expression });
+                            break;
+                        case UCCELLO_CONFIG.guids.rootTstContact:
+                            this.getList(gr, 'contact_tst', done, 'parent=?', [expression], { field: "parent", op: "=", value: expression });
+                            break;
+                        case UCCELLO_CONFIG.guids.rootContract:
+                            this.getList(gr, 'contract', done, 'parent=?', [expression], { field: "parent", op: "=", value: expression });
+                            break;
+                        case UCCELLO_CONFIG.guids.rootAddress:
+                            this.getList(gr, 'address', done, 'parent=?', [expression], { field: "parent", op: "=", value: expression });
+                            break;
+                        case UCCELLO_CONFIG.guids.rootLead:
+                            this.getList(gr, 'lead', done);
+                            break;
+                        case UCCELLO_CONFIG.guids.rootLeadLog:
+                            this.getList(gr, 'lead_log', done, 'LeadId=?', [expression], { field: "LeadId", op: "=", value: expression });
+                            break;
+                        case UCCELLO_CONFIG.guids.rootIncomeplan:
+                            this.getList(gr, 'incomeplan', done, 'leadId=?', [expression], { field: "LeadId", op: "=", value: expression });
+                            break;
+                        case UCCELLO_CONFIG.guids.rootOpportunity:
+                            this.getList(gr, 'opportunity', done);
+                            break;
+                    }
+                };
             },
 
             getDataSource: function() {
@@ -183,6 +198,20 @@ define(
                 });
             },
 
+            _loadData: function (query, done) {
+                if (this.pvt.dataObjectEngine.hasConnection()) {
+
+                    this.pvt.dataObjectEngine.loadQuery(query)
+                    .then(function (result) {
+                        done(result);
+                    })
+                    .catch(function (err) {
+                        throw err;
+                    });
+                } else
+                    done({});
+            },
+
             getList: function (typeGuid, table, done, where, whereParams, condition, num) {
                 var guidRoots = {
                     'ab573a02-b888-b3b4-36a7-38629a5fe6b7': '59583572-20fa-1f58-8d3f-5114af0f2c51', // DataCompany
@@ -200,18 +229,10 @@ define(
                 var source = this.getDataSource();
                 var that = this;
                 if (this.pvt.dataObjectEngine.hasConnection()) {
-
                     var query = { dataObject: { guid: guidRoots[typeGuid] }, dataGuid: typeGuid };
                     if (condition)
                         query.predicate = this.pvt.predicate.addConditionWithClear(condition);
-
-                    this.pvt.dataObjectEngine.loadQuery(query)
-                    .then(function (result) {
-                        done(result);
-                    })
-                    .catch(function (err) {
-                        console.log("loadQuery failed. Error: " + err);
-                    });
+                    this._loadData(query, done);
                 } else
                     if (source == 'mysql') {
                         var conn = this.getMysqlConnection();

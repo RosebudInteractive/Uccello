@@ -9,7 +9,7 @@
  */
 define(
 	["../system/event", "../system/utils", "./memCol", "./memObj", "./memMetaRoot", "./memMetaObj",
-        "./memMetaObjFields", "./memMetaObjCols", "../metaData/MetaDataMgr"],
+        "./memMetaObjFields", "./memMetaObjCols", "../metaData/metaDataMgr"],
 	function (Event, Utils, MemCollection, MemObj, MemMetaRoot, MemMetaObj, MemMetaObjFields, MemMetaObjCols, MetaDataMgr) {
 
 
@@ -37,6 +37,8 @@ define(
 		    init: function (controller, params, cb) {
 		        var pvt = this.pvt = {};
 		        pvt.name = params.name;
+		        pvt.constructHolder = params.constructHolder ? params.constructHolder : null;
+
 		        pvt.robjs = [];				// корневые объекты базы данных
 		        pvt.rcoll = {};
 		        pvt.objs = {};				// все объекты по гуидам
@@ -57,7 +59,20 @@ define(
 		        pvt.counter = 0;
 		        pvt.controller = controller; //TODO  если контроллер не передан, то ДБ может быть неактивна
 		        pvt.controller.createLocalProxy(this);
+
 		        pvt.defaultCompCallback = null; // коллбэк по умолчанию для создания компонентов
+		        if (pvt.constructHolder) {
+		            var self = this;
+		            pvt.defaultCompCallback = function (typeObj, parent, sobj) {
+		                var newObj = null;
+		                var constr = self.pvt.constructHolder.getComponent(typeObj.getGuid());
+		                if (constr && constr.constr) {
+		                    var params = { ini: sobj, parent: parent.obj, colName: parent.colName };
+		                    newObj = new constr.constr(self, params);
+		                };
+		                return newObj;
+		            };
+		        };
 
 		        pvt.version = 0;
 		        pvt.validVersion = 0;
@@ -745,7 +760,8 @@ define(
 		            for (var co in obj.collections[cn])
 		                this.getListOfTypes(obj.collections[cn][co], types, notCheck);
 		        };
-		        var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
+		        var constructHolder = this.pvt.constructHolder ? this.pvt.constructHolder :
+                    (this.getContext() ? this.getContext().getConstructorHolder() : null);
 		        if (objTypeGuid && constructHolder && (!types.list[objTypeGuid])
                     && ((!constructHolder.getComponent(objTypeGuid)) || notCheck)) {
 		            types.list[objTypeGuid] = true;
@@ -790,7 +806,8 @@ define(
 		                    var typeObj = that.getObj(sobj.$sys.typeGuid);
 
 		                    if (!typeObj) {
-		                        var constructHolder = that.getContext() ? that.getContext().getConstructorHolder() : null;
+		                        var constructHolder = that.pvt.constructHolder ? that.pvt.constructHolder :
+                                    (that.getContext() ? that.getContext().getConstructorHolder() : null);
 		                        if (constructHolder) {
 		                            var constr = constructHolder.getComponent(sobj.$sys.typeGuid);
 		                            if (constr)
@@ -879,7 +896,8 @@ define(
 		                this.getListOfTypes(objArr[i], types);
 		            };
 		            if (types.arrTypes.length > 0) {
-		                var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
+		                var constructHolder = this.pvt.constructHolder ? this.pvt.constructHolder :
+                            (this.getContext() ? this.getContext().getConstructorHolder() : null);
 		                if (constructHolder) {
 		                    callbackNow = false;
 		                    constructHolder.addRemoteComps(types.arrTypes, this, localCallback);
@@ -905,7 +923,8 @@ define(
 		                this.getListOfTypes(objArr[i], types);
 		            };
 		            if (types.arrTypes.length > 0) {
-		                var constructHolder = this.getContext() ? this.getContext().getConstructorHolder() : null;
+		                var constructHolder = this.pvt.constructHolder ? this.pvt.constructHolder :
+                            (this.getContext() ? this.getContext().getConstructorHolder() : null);
 		                if (constructHolder) {
 		                    var missingTypes = constructHolder.addLocalComps(types.arrTypes, this);
 		                };

@@ -35,23 +35,14 @@ define(
                 this.Meta = Meta;
 
                 var self = this;
-                this._createComponent = function (typeObj, parent, sobj) {
-                    var newObj = null;
-                    var constr = self._constructHolder.getComponent(typeObj.getGuid());
-                    if (constr && constr.constr) {
-                        var params = { ini: sobj, parent: parent.obj, colName: parent.colName };
-                        newObj = new constr.constr(self._dataBase, params);
-                    };
-                    return newObj;
-                };
-
                 this._dataBase = new ControlMgr(
                     {
                         controller: this._controller,
                         dbparams: {
                             name: Meta.Db.Name,
                             kind: "master",
-                            guid: Meta.Db.Guid
+                            guid: Meta.Db.Guid,
+                            constructHolder: construct_holder
                         }
                     });
 
@@ -84,7 +75,7 @@ define(
                         }
                     },
                     {},
-                    this._createComponent);
+                    this._dataBase.getDefaultCompCallback());
                 //this._metaDataMgr = new MetaDataMgr(this._dataBase, {});
                 this._loadMetaInfo(METADATA_DIR_NAME);
 
@@ -164,6 +155,14 @@ define(
 
             newPredicate: function () {
                 return new Predicate(this._dataBase, {});
+            },
+
+            deserializePredicate: function (serialized_obj, predicate) {
+                var result = predicate ? predicate : new Predicate(this._dataBase, {});
+                var so = _.cloneDeep(serialized_obj);
+                so.$sys.guid = result.getGuid();
+                result = this._dataBase.deserialize(so, {}, this._dataBase.getDefaultCompCallback());
+                return result;
             },
 
             saveSchemaToFile: function (dir, schema_name) {
@@ -547,7 +546,7 @@ define(
                 var metaDataMgr = null;
                 metaDataMgr = this._dataBase
                     .deserialize(JSON.parse(fs.readFileSync(METADATA_FILE_NAME, { encoding: "utf8" })),
-                        {}, this._createComponent);
+                        {}, this._dataBase.getDefaultCompCallback());
                 return metaDataMgr;
             },
 
@@ -568,7 +567,7 @@ define(
                     _.forEach(files, function (file) {
                         var fname = path.format({ dir: dir, base: file });
                         this._dataBase.deserialize(JSON.parse(fs.readFileSync(fname, { encoding: "utf8" })),
-                            {}, this._createComponent);
+                            {}, this._dataBase.getDefaultCompCallback());
                     }, this);
                 };
             }

@@ -265,7 +265,7 @@ define(
 			setContext: function(params, cbfinal, renderRoot) {
                 var that = this;
 
-                function cbfinal2(result2){
+                function cbfinal2(result2) {
                     result2 = result2 && result2.guids ? result2.guids : result2;
 
                     if (cbfinal)
