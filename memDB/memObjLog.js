@@ -186,7 +186,7 @@ define(
 						}
 						var o2 = db.getObj(c.guid);
 						if (o2) 
-							for (var cf in c.fields) o2.set(cf,c.fields[cf]);
+							for (var cf in c.fields) o2.set(cf,c.fields[cf], false, true);
 					}
 				}
 				this.setActive(true);

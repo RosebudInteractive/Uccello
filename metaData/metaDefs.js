@@ -5,7 +5,8 @@ if (typeof define !== 'function') {
 define(
     [],
     function () {
-        return {
+        var Meta = {
+            DATA_LOG_NAME: "data_log",
             Db: {
                 Name: "DataEngineDB",
                 Guid: "66d43749-223a-48cb-9143-122381b9ed3c"
@@ -16,7 +17,38 @@ define(
                 Hidden: 4,
                 Internal: 8,
                 System: 16
+            },
+            State: {
+                Browse: 0,
+                Insert: 1,
+                Edit: 2,
+                Delete: 3,
+                Pending: 4
             }
         };
+
+        Meta.stateToString = function (state) {
+            var state_str = "Unknown";
+            switch (state) {
+                case Meta.State.Browse:
+                    state_str = "Browse";
+                    break;
+                case Meta.State.Edit:
+                    state_str = "Edit";
+                    break;
+                case Meta.State.Insert:
+                    state_str = "Insert";
+                    break;
+                case Meta.State.Delete:
+                    state_str = "Delete";
+                    break;
+                case Meta.State.Pending:
+                    state_str = "Pending";
+                    break;
+            };
+            return state_str;
+        };
+
+        return Meta;
     }
 );
