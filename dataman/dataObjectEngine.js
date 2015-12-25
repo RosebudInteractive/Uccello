@@ -423,6 +423,8 @@ define(
                                                         modelData = { model: model, data: {} };
                                                         allData[modelGuid] = modelData;
                                                     };
+                                                    if (dataObj.$sys.guid)
+                                                        dataObj.fields.Guid = dataObj.$sys.guid;
                                                     modelData.data[dataObj.fields.Id] = dataObj.fields;
                                                 };
                                             };
@@ -528,9 +530,18 @@ define(
                 };
 
                 _.forEach(rawData, function (data) {
+                    var guid;
+
+                    if (data.Guid) {
+                        guid = data.Guid;
+                        delete data.Guid;
+                    }
+                    else
+                        guid = controller.guid();
+
                     result.collections.DataElements.push({
                         "$sys": {
-                            "guid": controller.guid(),
+                            "guid": guid,
                             "typeGuid": objTypeGuid
                         },
                         "fields": data,

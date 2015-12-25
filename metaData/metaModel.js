@@ -111,7 +111,7 @@ define(
                                 Name: name,
                                 FieldType: field_type,
                                 Order: (typeof order === "number") ? order : this._fields.length,
-                                Flags: is_internal ? Meta.Field.Internal : 0,
+                                Flags: (is_internal ? Meta.Field.Internal : 0) | ((flags | 0) & Meta.Field.System),
                             }
                         },
                         parent: this,
@@ -133,15 +133,19 @@ define(
             },
 
             deleteField: function (field) {
-                if ((typeof field === "string") || (typeof field === "number")) {
-                    var _field = this.getField(field);
-                    if (_field)
-                        this._fieldsCol._del(_field);
-                } else
-                    if (field instanceof MetaModelField) {
-                        this._fieldsCol._del(field);
-                    } else
+                var _field = null;
+                if ((typeof field === "string") || (typeof field === "number"))
+                    _field = this.getField(field);
+                else
+                    if (field instanceof MetaModelField)
+                        _field = field
+                    else
                         throw new Error("MetaModel::deleteField: Invalid argument type.");
+                if (_field) {
+                    if ((_field.flags() & (Meta.Field.Internal | Meta.Field.System)) !== 0)
+                        throw new Error("Can't delete \"Internal\" or \"System\" field.");
+                    this._fieldsCol._del(_field);
+                };
             },
 
             getField: function (field) {
@@ -400,32 +404,39 @@ define(
                 var field = args.obj;
                 var name = field.get("Name");
                 var idx = this._fieldsByName[name];
+                var is_duplicate_name = false;
                 if (typeof idx === "number") {
-                    if ((idx >= 0) && (idx < this._fields.length))
-                        this._fields.splice(idx, 1);
-                    delete this._fieldsByName[name];
-                    this._reindexFields();
+                    if ((idx >= 0) && (idx < this._fields.length)) {
+                        is_duplicate_name = !(this._fields[idx] === field);
+                        if (!is_duplicate_name) {
+                            this._fields.splice(idx, 1);
+                            delete this._fieldsByName[name];
+                            this._reindexFields();
+                        };
+                    };
                 };
 
-                if (this._primaryKey === field)
-                    this._primaryKey = null;
+                if (!is_duplicate_name) {
+                    if (this._primaryKey === field)
+                        this._primaryKey = null;
 
-                var fieldType = field.fieldType();
-                if (fieldType instanceof MemMetaType.DataRefType) {
+                    var fieldType = field.fieldType();
+                    if (fieldType instanceof MemMetaType.DataRefType) {
+                        this.fire({
+                            type: "removeLink",
+                            target: this,
+                            fieldName: name
+                        });
+                    };
+
+                    for (var i = 0; i < field.handlers.length; i++)
+                        field.event.off(field.handlers[i]);
+
                     this.fire({
-                        type: "removeLink",
-                        target: this,
-                        fieldName: name
+                        type: "modelModified",
+                        target: this
                     });
                 };
-
-                for (var i = 0; i < field.handlers.length; i++)
-                    field.event.off(field.handlers[i]);
-
-                this.fire({
-                    type: "modelModified",
-                    target: this
-                });
             },
 
             _addRef: function (src_field, model_name, dst_model) {

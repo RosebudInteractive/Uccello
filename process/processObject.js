@@ -14,7 +14,7 @@ define(
             classGuid: UCCELLO_CONFIG.classGuids.ProcessObject,
             metaCols: [],
             metaFields: [
-                { fname: "CurrentProcess", ftype: { type: "string", length: 36 } }
+                { fname: "CurrentProcess", ftype: "guid" }
             ],
 
             init: function(cm,params){

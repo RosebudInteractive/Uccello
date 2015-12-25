@@ -295,6 +295,72 @@ define(
             }
         });
 
+        var GuidType = StringType.extend({
+
+            key: "guid",
+
+            /**
+             * The Guid Type.
+             *
+             * @param {String|Object} typeObj Serialized data type representation
+             * @param {Object}        refResolver An Object which implements link resolver interface
+             * @extends StringType
+             * @constructor
+             */
+            init: function (typeObj, refResolver) {
+                UccelloClass.super.apply(this, [typeObj, refResolver]);
+            },
+
+            /**
+             * Data Type hash code.
+             * Uniquely represents data type instance.
+             * 
+             * @return {Strng} The hash code
+             */
+            hash: function () {
+                var result = UccelloClass.super.apply(this, []);
+                return result;
+            },
+
+            /**
+             * Returns a serialized representation of the data type
+             * 
+             * @return {Object} Serialized representation
+             */
+            serialize: function () {
+                var result = UccelloClass.super.apply(this, []);
+                delete result.length;
+                return result;
+            },
+
+            /**
+             * Checks if value is correct.
+             * 
+             * @param {Any}       val A value to be checked
+             * @param {Object}    errObj An Object which contains error info (checkVal fills it if value is incorrect)
+             * @param {String}    errObj.errMsg Error message
+             * @param {String}    fldName A field name of the value
+             * @param {Object}    obj A MemProtoObject which [val] belongs to 
+             * @return {Boolean} True if value is corect
+             */
+            checkVal: function (val, errObj, fldName, obj) {
+                // TO DO: Check for valif GUID value !
+                return true;
+            },
+
+            /**
+             * Converts this data type from the serialized representation 
+             * to the internal one (only constructor can invoke it)
+             * 
+             * @param {Object} val Serialized representation of this data type
+             * @private
+             */
+            _deserialize: function (val) {
+                var result = UccelloClass.super.apply(this, [val]);
+                this._length = 36;
+            }
+        });
+
         var EnumType = StringType.extend({
 
             key: "enum",
@@ -1176,7 +1242,8 @@ define(
             "date": { code: 9, constructor: DateTimeType },
             "time": { code: 10, constructor: DateTimeType },
             "timestamp": { code: 11, constructor: DateTimeType },
-            "enum": { code: 16, constructor: EnumType }
+            "enum": { code: 16, constructor: EnumType },
+            "guid": { code: 17, constructor: GuidType }
         };
 
         var TypedValueVal = UccelloClass.extend({
@@ -1367,7 +1434,8 @@ define(
             "time": { code: 10, constructor: DateTimeType },
             "timestamp": { code: 11, constructor: DateTimeType },
             "dataRef": { code: 14, constructor: DataRefType },
-            "enum": { code: 16, constructor: EnumType }
+            "enum": { code: 16, constructor: EnumType },
+            "guid": { code: 17, constructor: GuidType }
         };
 
         var DataFieldType = BaseType.extend({
@@ -1614,7 +1682,8 @@ define(
             "money": { code: 13, constructor: FloatType },
             "dataRef": { code: 14, constructor: DataRefType },
             "typedvalue": { code: 15, constructor: TypedValueType },
-            "enum": { code: 16, constructor: EnumType }
+            "enum": { code: 16, constructor: EnumType },
+            "guid": { code: 17, constructor: GuidType }
         };
 
         function addDataType(typeTable, type) {
@@ -1643,6 +1712,7 @@ define(
         addDataType(typeTable, DataFieldType);
         addDataType(typeTable, DataRefType);
         addDataType(typeTable, EnumType);
+        addDataType(typeTable, GuidType);
 
         var MetaTypes = {
             createTypeObject: GetFldTypeUniq,

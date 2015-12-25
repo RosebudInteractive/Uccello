@@ -21,6 +21,7 @@ define(
             }
         };
         MetaTypes.makeDescendant("string", types, string_type);
+        MetaTypes.makeDescendant("guid", types, string_type);
         MetaTypes.makeDescendant("enum", types, string_type);
         MetaTypes.makeDescendant("float", types, { prefix: "SQL", toSql: function (provider, field) { return "FLOAT"; } });
         MetaTypes.makeDescendant("datetime", types, { prefix: "SQL", toSql: function (provider, field) { return "DATETIME"; } });

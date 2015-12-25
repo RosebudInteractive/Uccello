@@ -16,7 +16,8 @@ define(
                 AutoIncrement: 2,
                 Hidden: 4,
                 Internal: 8,
-                System: 16
+                System: 16,
+                Guid: 32
             },
             State: {
                 Browse: 0,

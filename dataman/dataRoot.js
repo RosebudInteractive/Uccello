@@ -292,6 +292,11 @@ define(
 
                 var db = this.getDB();
                 var objType = this.getCol("DataElements").getColType();
+
+                var _flds = flds || {};
+                _flds.$sys = _flds.$sys || {};
+                _flds.fields = _flds.fields || {};
+
                 var self = this;
 
                 function afterObjCreate(result) {
@@ -302,11 +307,9 @@ define(
                         var constr = cm.getContext().getConstructorHolder().getComponent(objGuid).constr;
                         if (self._keyField && result.detail && (result.detail.length === 1)
                             && (result.detail[0].insertId !== undefined))
-                            flds.fields[self._keyField] = result.detail[0].insertId;
-                        var params = { parent: self, colName: "DataElements", ini: flds };
+                            _flds.fields[self._keyField] = result.detail[0].insertId;
+                        var params = { parent: self, colName: "DataElements", ini: _flds };
                         var obj = new constr(cm, params);
-                        //obj._currState(Meta.State.Insert);
-                        //obj._editSet("current");
                         localResult.newObject = obj.getGuid();
                     };
                     if (cb)
@@ -316,10 +319,15 @@ define(
                 };
 
                 if ($data) {
+                    // Присваивание GUID (не очень красиво)
+                    if (!_flds.$sys.guid)
+                        _flds.$sys.guid = this.getDB().getController().guid();
+                    _flds.fields.Guid = _flds.$sys.guid;
+
                     var dataObj = {
                         op: "insert",
                         model: objType.get("typeName"),
-                        data: { fields: flds.fields ? flds.fields : {} }
+                        data: { fields: _flds.fields }
                     };
                     var batch = [];
                     batch.push(dataObj);

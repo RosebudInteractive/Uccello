@@ -1801,10 +1801,10 @@ define(
              * Инсталляция типов данных СУБД (вызывается провайдером)
              * 
              * @param {Object} sqlTypes Таблица типов
-             * @param {Object} provider Провайдер
+             * @param {Object} engine dataObjectEngine
              */
-		    installSqlTypes: function (sqlTypes, provider) {
-		        this.pvt.sqlTypes = { types: sqlTypes, provider: provider };
+		    installSqlTypes: function (sqlTypes, engine) {
+		        this.pvt.sqlTypes = { types: sqlTypes, engine: engine };
 		    },
 
 		    /**
@@ -1828,7 +1828,8 @@ define(
 		        if (this.pvt.sqlTypes) {
 		            result = this.pvt.sqlTypes.types[dataType.prototype.key];
 		            if (!result)
-		                throw new Error("Provider: \"" + this.pvt.sqlTypes.provider.providerId +
+		                throw new Error("Provider: \"" +
+                            (this.pvt.sqlTypes.engine.getProvider() ? this.pvt.sqlTypes.engine.getProvider().providerId : "UNKNOWN") +
                             "\" doesn't support type \"" + dataType.prototype.key + "\".");
 		        }
 		        return result;

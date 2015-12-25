@@ -167,7 +167,9 @@ define(
                         }
                     };
                     var model = new MetaModel(this.getDB(), params);
-                    return model;
+                    return model
+                        .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey | Meta.Field.AutoIncrement)
+                        .addField("Guid", { type: "guid", allowNull: true }, Meta.Field.System | Meta.Field.Guid | Meta.Field.Hidden);
 
                 } else
                     throw new Error("Model name is undefined.");
@@ -297,9 +299,12 @@ define(
                     "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n";
 
                 for (var i = 0; i < fields.length; i++) {
-                    footer += "\t\t\tthis._persFields[\"" + fields[i].get("Name") + "\"] = true;\n";
-                    if (fields[i].get("Flags") & Meta.Field.PrimaryKey)
-                        footer += "\t\t\tthis._keyField = \"" + fields[i].get("Name") + "\";\n";
+                    var flags = fields[i].get("Flags");
+                    if (!(flags & Meta.Field.Hidden)) {
+                        footer += "\t\t\tthis._persFields[\"" + fields[i].get("Name") + "\"] = true;\n";
+                        if (flags & Meta.Field.PrimaryKey)
+                            footer += "\t\t\tthis._keyField = \"" + fields[i].get("Name") + "\";\n";
+                    };
                 };
 
                 footer += "\t\t}\n" + "\t});";
@@ -311,7 +316,7 @@ define(
 
                 var is_first = true;
                 for (i = 0; i < fields.length; i++) {
-                    if ((fields[i].flags() & Meta.Field.Internal) === 0) {
+                    if ((fields[i].flags() & (Meta.Field.Internal | Meta.Field.Hidden)) === 0) {
                         if (!is_first)
                             constr += ",\n";
                         is_first = false;
@@ -323,7 +328,7 @@ define(
 
                 is_first = true;
                 for (var i = 0; i < fields.length; i++) {
-                    if ((fields[i].flags() & Meta.Field.Internal) === 0) {
+                    if ((fields[i].flags() & (Meta.Field.Internal | Meta.Field.Hidden)) === 0) {
                         if (!is_first)
                             constr += ",\n";
                         is_first = false;

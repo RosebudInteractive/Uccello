@@ -59,7 +59,10 @@ define(
                             request.on("row", function (columns) {
                                 var row = {};
                                 columns.forEach(function (column) {
-                                    row[column.metadata.colName] = column.value;
+                                    var val = column.value;
+                                    if (val && (column.metadata.type.type === "GUIDN"))
+                                        val = val.toLowerCase();
+                                    row[column.metadata.colName] = val;
                                 });
 
                                 results.push(row);

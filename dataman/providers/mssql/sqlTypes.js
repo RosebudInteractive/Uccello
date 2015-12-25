@@ -62,6 +62,15 @@ define(
                 return result;
             }
         });
+        MetaTypes.makeDescendant("guid", mssqlTypes, {
+            prefix: "MSSQL",
+            addParameter: function (TYPES, request, name, val) {
+                request.addParameter(name, TYPES.UniqueIdentifier, val);
+            },
+            toSql: function (provider, field) {
+                return "UNIQUEIDENTIFIER";
+            }
+        });
         MetaTypes.makeDescendant("enum", mssqlTypes, {
             prefix: "MSSQL",
             addParameter: function (TYPES, request, name, val) {
