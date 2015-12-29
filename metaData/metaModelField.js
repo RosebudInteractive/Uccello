@@ -69,6 +69,7 @@ define(
                     msg = "\"Internal\" or \"System\" flags of field \"" + field_name + "\" can't be changed.";
                     result = false;
                 };
+
                 if (result && ((flags & Meta.Field.AutoIncrement) !== 0) && (!type.canAutoIncrement)) {
                     var table_name = this.getParent().name();
                     var field_name = this.name();
@@ -80,6 +81,13 @@ define(
                     var table_name = this.getParent().name();
                     var field_name = this.name();
                     msg = "Field \"" + field_name + "\" (\"" + type.serialize().type + "\") can't be PRIMARY KEY.";
+                    result = false;
+                };
+
+                if (result && ((flags & Meta.Field.RowVersion) !== 0) && (!type.isRowVersionType)) {
+                    var table_name = this.getParent().name();
+                    var field_name = this.name();
+                    msg = "Field \"" + field_name + "\" (\"" + type.serialize().type + "\") can't be row version field.";
                     result = false;
                 };
 

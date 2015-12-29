@@ -14,7 +14,9 @@ define(
                 START_TRAN: 1,
                 COMMIT_TRAN: 2,
                 ROLLBACK_TRAN: 3,
-                INSERT: 4
+                INSERT: 4,
+                SELECT: 5,
+                UPDATE: 6
             },
 
             init: function (engine, options) {
@@ -110,11 +112,11 @@ define(
                     if (cond_sql.length > 0)
                         result += " WHERE " + cond_sql;
                 };
-                return { sqlCmd: result + ";", params: params };
+                return { sqlCmd: result + ";", params: params, type: this.queryTypes.SELECT, meta: model };
             },
 
-            updateQuery: function (model, vals, predicate) {
-                var query = "UPDATE <%= table %> SET <%= fields%>";
+            updateQuery: function (model, vals, predicate, options) {
+                var query = "UPDATE <%= table %> SET <%= fields%><%= output %>";
                 var attrs = [];
                 var self = this;
                 var params = [];
@@ -122,14 +124,18 @@ define(
                 _.forEach(escVals, function (value, key) {
                     attrs.push(value.id + " = " + value.val);
                 });
-                var values = { table: this.escapeId(model.name()), fields: attrs.join(", ") };
+                var values = {
+                    table: this.escapeId(model.name()),
+                    output: options && options.output ? options.output : "",
+                    fields: attrs.join(", ")
+                };
                 var result = _.template(query)(values).trim();
                 if (predicate) {
                     var cond_sql = this._predicateToSql(model, predicate, params);
                     if (cond_sql.length > 0)
                         result += " WHERE " + cond_sql;
                 };
-                return { sqlCmd: result + ";", params: params };
+                return { sqlCmd: result + ";", params: params, type: this.queryTypes.UPDATE, meta: model };
             },
 
             insertQuery: function (model, vals, options) {
@@ -154,7 +160,7 @@ define(
                     fields: attrs.join(", "),
                     values: values.join(", ")
                 };
-                return { sqlCmd: _.template(query)(data).trim() + ";", params: params, type: this.queryTypes.INSERT };
+                return { sqlCmd: _.template(query)(data).trim() + ";", params: params, type: this.queryTypes.INSERT, meta: model };
             },
 
             commitTransactionQuery: function () {

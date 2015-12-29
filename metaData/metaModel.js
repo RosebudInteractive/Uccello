@@ -43,6 +43,7 @@ define(
                 this._fieldsByName = {};
                 this._fields = [];
                 this._primaryKey = null;
+                this._rowVersion = null;
                 this._orderChangCounter = 0;
                 this._refs = {};
 
@@ -83,6 +84,10 @@ define(
 
             getPrimaryKey: function () {
                 return this._primaryKey;
+            },
+
+            getRowVersionField: function () {
+                return this._rowVersion;
             },
 
             addInternalField: function (name, flags, order) {
@@ -192,6 +197,22 @@ define(
                         };
                     };
 
+                    if ((flags & Meta.Field.RowVersion) !== 0) {
+
+                        if (self._rowVersion && (self._rowVersion !== fieldObj)) {
+
+                            fieldObj.set("Flags", oldFlags);
+                            throw new Error("Row version field \"" + fieldName + "\" is already defined as \"" + self._rowVersion.name() + "\".");
+                        };
+                        self._rowVersion = fieldObj;
+                        var fieldType = fieldObj.fieldType();
+                        if (fieldType.allowNull()) {
+                            var newType = fieldType.serialize();
+                            newType.allowNull = false;
+                            fieldObj.fieldType(newType);
+                        };
+                    };
+
                     oldFlags = flags;
 
                     self.fire({
@@ -251,6 +272,11 @@ define(
                     if (((flags & Meta.Field.PrimaryKey) !== 0) && fieldType.allowNull()) {
                         fieldObj.set("FieldType", oldFieldType);
                         throw new Error("Primary key \"" + fieldName + "\" doesn't allow NULLs.");
+                    };
+
+                    if (((flags & Meta.Field.RowVersion) !== 0) && fieldType.allowNull()) {
+                        fieldObj.set("FieldType", oldFieldType);
+                        throw new Error("Row version field \"" + fieldName + "\" doesn't allow NULLs.");
                     };
 
                     if (oldFieldType instanceof MemMetaType.DataRefType) {
@@ -356,6 +382,13 @@ define(
                     };
                     this._primaryKey = field;
                 };
+                if ((flags & Meta.Field.RowVersion) !== 0) {
+                    if (this._rowVersion && (this._rowVersion !== field)) {
+                        this._fieldsCol._del(field);
+                        throw new Error("Row version field \"" + name + "\" is already defined as \"" + this._rowVersion.name() + "\".");
+                    };
+                    this._rowVersion = field;
+                };
 
                 this._fields.splice(order, 0, field);
                 this._reindexFields();
@@ -419,6 +452,9 @@ define(
                 if (!is_duplicate_name) {
                     if (this._primaryKey === field)
                         this._primaryKey = null;
+
+                    if (this._rowVersion === field)
+                        this._rowVersion = null;
 
                     var fieldType = field.fieldType();
                     if (fieldType instanceof MemMetaType.DataRefType) {

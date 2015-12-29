@@ -169,7 +169,8 @@ define(
                     var model = new MetaModel(this.getDB(), params);
                     return model
                         .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey | Meta.Field.AutoIncrement)
-                        .addField("Guid", { type: "guid", allowNull: true }, Meta.Field.System | Meta.Field.Guid | Meta.Field.Hidden);
+                        .addField("Guid", { type: "guid", allowNull: true }, Meta.Field.System | Meta.Field.Hidden)
+                        .addField(Meta.ROW_VERSION_FNAME, { type: "rowversion", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion);
 
                 } else
                     throw new Error("Model name is undefined.");
@@ -326,6 +327,9 @@ define(
                 };
                 constr += "\n\t\t],\n";
 
+                if (model.getRowVersionField())
+                    constr += "\t\trowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
+
                 is_first = true;
                 for (var i = 0; i < fields.length; i++) {
                     if ((fields[i].flags() & (Meta.Field.Internal | Meta.Field.Hidden)) === 0) {
@@ -346,8 +350,12 @@ define(
                     "\t\tclassName: \"" + model.get("DataRootName") + "\",\n" +
                     "\t\tclassGuid: \"" + model.get("DataRootGuid") + "\",\n" +
                     "\t\tmetaCols: [{ \"cname\": \"DataElements\", \"ctype\": \"" + model.get("Name") + "\" }],\n" +
-                    "\t\tmetaFields: [],\n" +
-                    "\n" +
+                    "\t\tmetaFields: [],\n";
+
+                if (model.getRowVersionField())
+                    constr += "\t\trowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
+
+                constr += "\n" +
                     "\t\tinit: function(cm,params){\n" +
                     "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n";
 

@@ -237,6 +237,14 @@ define(
                                     if (!key)
                                         throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
                                     self._tmpPredicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
+
+                                    if (val.data.rowVersion) {
+                                        var rwField = model.getRowVersionField();
+                                        if (!rwField)
+                                            throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
+                                        self._tmpPredicate.addCondition({ field: rwField.name(), op: "=", value: val.data.rowVersion });
+                                    };
+
                                     promise = self._query.update(model, val.data.fields, self._tmpPredicate, { transaction: transaction });
                                     break;
                             };

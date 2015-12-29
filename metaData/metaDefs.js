@@ -7,6 +7,7 @@ define(
     function () {
         var Meta = {
             DATA_LOG_NAME: "data_log",
+            ROW_VERSION_FNAME: "__version",
             Db: {
                 Name: "DataEngineDB",
                 Guid: "66d43749-223a-48cb-9143-122381b9ed3c"
@@ -17,7 +18,7 @@ define(
                 Hidden: 4,
                 Internal: 8,
                 System: 16,
-                Guid: 32
+                RowVersion: 32
             },
             State: {
                 Browse: 0,

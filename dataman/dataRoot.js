@@ -18,6 +18,8 @@ define(
                 { fname: "_PrevState", ftype: "int" }
             ],
 
+            rowVersionFname: null,
+
             init: function (cm, params) {
                 this._keyField = null;
                 UccelloClass.super.apply(this, [cm, params]);
@@ -133,26 +135,47 @@ define(
 
                         var ignore_child_save = self._editSet().length === 0;
                         var is_done = false;
+                        var obj_updated = [];
 
                         function local_cb(result) {
-                            if (!ignore_child_save)
+                            if (!ignore_child_save) {
+                                var isSuccess = false;
                                 if (result.result === "OK") {
-                                    self._editSet("");
-                                    self._setNewState(Meta.State.Browse);
-                                    // 2 раза, потому что был вызов _setPendingState
-                                    self._childLeaveEdit(2);
-                                    for (var i = 0; i < pending_childs.length; i++) {
-                                        pending_childs[i].obj._currState(Meta.State.Browse);
-                                        pending_childs[i].obj.resetModifFldLog(Meta.DATA_LOG_NAME);
-                                        //pending_childs[i].obj.removeModifFldLog(Meta.DATA_LOG_NAME);
+                                    if (result.detail && (result.detail.length === obj_updated.length)) {
+                                        var nobj = 0;
+                                        var cur_obj;
+                                        for (var i = 0; i < obj_updated.length; i++) {
+                                            if (result.detail[i].affectedRows === 1) {
+                                                nobj++;
+                                                cur_obj = obj_updated[i];
+                                                // Запоминаем новое значение версии записи.
+                                                if (cur_obj.rowVersionFname && result.detail[i].rowVersion)
+                                                    cur_obj.set(cur_obj.rowVersionFname, result.detail[i].rowVersion, false, true);
+                                            };
+                                        };
+                                        isSuccess = nobj === obj_updated.length;
                                     };
-                                }
-                                else {
+                                    if (isSuccess) {
+                                        self._editSet("");
+                                        self._setNewState(Meta.State.Browse);
+                                        // 2 раза, потому что был вызов _setPendingState
+                                        self._childLeaveEdit(2);
+                                        for (var i = 0; i < pending_childs.length; i++) {
+                                            pending_childs[i].obj._currState(Meta.State.Browse);
+                                            pending_childs[i].obj.resetModifFldLog(Meta.DATA_LOG_NAME);
+                                            //pending_childs[i].obj.removeModifFldLog(Meta.DATA_LOG_NAME);
+                                        };
+                                    }
+                                    else
+                                        result = { result: "ERROR", message: "Data object has been modified by another user." };
+                                };
+                                if (! isSuccess) {
                                     self._rollbackState();
                                     for (var i = 0; i < pending_childs.length; i++)
                                         pending_childs[i].obj._currState(pending_childs[i].state);
 
-                                }
+                                };
+                            };
 
                             if (cb)
                                 cb(result);
@@ -162,8 +185,10 @@ define(
                             var batch = [];
                             for (var i = 0; i < pending_childs.length; i++) {
                                 var dataObj = pending_childs[i].obj.getModifications();
-                                if (dataObj)
+                                if (dataObj) {
                                     batch.push(dataObj);
+                                    obj_updated.push(pending_childs[i].obj);
+                                }
                             }
                             if (batch.length > 0) {
                                 is_done = true;
@@ -305,9 +330,13 @@ define(
                         var objGuid = objType.getGuid();
                         var cm = self.getControlMgr();
                         var constr = cm.getContext().getConstructorHolder().getComponent(objGuid).constr;
-                        if (self._keyField && result.detail && (result.detail.length === 1)
-                            && (result.detail[0].insertId !== undefined))
-                            _flds.fields[self._keyField] = result.detail[0].insertId;
+                        if (result.detail && (result.detail.length === 1)
+                            && (result.detail[0].insertId !== undefined)) {
+                            if (self._keyField)
+                                _flds.fields[self._keyField] = result.detail[0].insertId;
+                            if (self.rowVersionFname)
+                                _flds.fields[self.rowVersionFname] = result.detail[0].rowVersion;
+                        };
                         var params = { parent: self, colName: "DataElements", ini: _flds };
                         var obj = new constr(cm, params);
                         localResult.newObject = obj.getGuid();

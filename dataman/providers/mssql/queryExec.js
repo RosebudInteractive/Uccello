@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../base/queryExec', 'lodash'],
-    function (Base, _) {
+    ['../base/queryExec', 'lodash', 'buffer'],
+    function (Base, _, Buffer) {
 
         var MSSQLQueryExec = Base.extend({
 
@@ -22,7 +22,7 @@ define(
                         if (!!err) {
                             reject(self._formatError(err));
                         } else {
-                            resolve(self._formatResults(null, sql.type, 0));
+                            resolve(self._formatResults(null, sql.type, 0, null));
                         }
                     };
 
@@ -52,7 +52,7 @@ define(
 
                                     reject(self._formatError(err));
                                 } else {
-                                    resolve(self._formatResults(results, sql.type, rowCount));
+                                    resolve(self._formatResults(results, sql.type, rowCount, sql.meta));
                                 }
                             });
 
@@ -60,8 +60,13 @@ define(
                                 var row = {};
                                 columns.forEach(function (column) {
                                     var val = column.value;
+
                                     if (val && (column.metadata.type.type === "GUIDN"))
                                         val = val.toLowerCase();
+
+                                    if (val instanceof Buffer.Buffer)
+                                        val = JSON.stringify(val);
+
                                     row[column.metadata.colName] = val;
                                 });
 
@@ -89,17 +94,29 @@ define(
                 return err;
             },
 
-            _formatResults: function (results, query_type, affectedRows) {
+            _formatResults: function (results, query_type, affectedRows, meta) {
                 var res;
+                var row_version_fname = meta && meta.getRowVersionField() ? meta.getRowVersionField().name() : "";
+
                 if (_.isArray(results)) // Результат SELECT ?
                     if ((query_type === this._queryTypes.INSERT) && (results.length === 1)) {
                         res = {
                             affectedRows: affectedRows,
                             changedRows: 0,
-                            insertId: results[0].insertId
+                            insertId: results[0].insertId,
+                            rowVersion: results[0].rowVersion
                         };
                     } else
-                        res = results;
+                        if (query_type === this._queryTypes.UPDATE) {
+                            res = {
+                                affectedRows: affectedRows,
+                                changedRows: 0,
+                                insertId: results.length === 1 ? results[0].insertId : null,
+                                rowVersion: results.length === 1 ? results[0].rowVersion : null
+                            };
+                        }
+                        else
+                            res = results;
                 else {
                     res = {
                         affectedRows: affectedRows,

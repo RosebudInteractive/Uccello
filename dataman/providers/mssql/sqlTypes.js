@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['lodash', UCCELLO_CONFIG.uccelloPath + '/memDB/memMetaType', '../base/sqlTypes'],
-    function (_, MetaTypes, Base) {
+    ['lodash', 'buffer', UCCELLO_CONFIG.uccelloPath + '/memDB/memMetaType', '../base/sqlTypes'],
+    function (_, Buffer, MetaTypes, Base) {
 
         // Базовые типы не используем !
         //
@@ -60,6 +60,22 @@ define(
                 else
                     result = "NVARCHAR(" + this._length + ")";
                 return result;
+            }
+        });
+        MetaTypes.makeDescendant("rowversion", mssqlTypes, {
+            prefix: "MSSQL",
+            addParameter: function (TYPES, request, name, val) {
+
+                var buf = JSON.parse(val, function (key, value) {
+                    return value && value.type === 'Buffer'
+                      ? new Buffer.Buffer(value.data)
+                      : value;
+                });
+
+                request.addParameter(name, TYPES.Binary, buf);
+            },
+            toSql: function (provider, field) {
+                return "ROWVERSION";
             }
         });
         MetaTypes.makeDescendant("guid", mssqlTypes, {

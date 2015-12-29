@@ -18,6 +18,8 @@ define(
                 { fname: "_PrevState", ftype: "int" }
             ],
 
+            rowVersionFname: null,
+
             init: function (cm, params) {
                 this._persFields = {};
                 this._keyField = null;
@@ -38,7 +40,10 @@ define(
                     var state = this._currState();
                     if ((state !== Meta.State.Edit) && (state !== Meta.State.Insert)) {
                         throw new Error("DataObject::set: Can't modify data-object in state \"" + Meta.stateToString(state) + "\".");
-                    };
+                    }
+                    else
+                        if (this.rowVersionFname && (field === this.rowVersionFname))
+                            throw new Error("DataObject::set: Field \"" + Meta.ROW_VERSION_FNAME + "\" is READ ONLY.");
                 };
                 UccelloClass.super.apply(this, [field, value, withCheckVal]);
             },
@@ -138,7 +143,10 @@ define(
             getModifications: function () {
                 var result = null;
                 if (this.countModifiedFields(Meta.DATA_LOG_NAME) > 0) {
-                    var data = { key: this._keyField ? this.getOldValue(this._keyField, true) : null };
+                    var data = {
+                        key: this._keyField ? this.getOldValue(this._keyField, true) : null,
+                        rowVersion: this.rowVersionFname ? this.getOldValue(this.rowVersionFname, true) : null
+                    };
                     var dataObj = { op: "update", model: this.className, data: data };
                     for (var fldName in this._persFields) {
                         if (this.isFldModified(fldName, Meta.DATA_LOG_NAME)) {
@@ -283,13 +291,26 @@ define(
                         function local_cb(result) {
                             if (!ignore_child_save)
                                 if (result.result === "OK") {
-                                    self._editSet("");
-                                    self._setNewState(Meta.State.Browse);
-                                    // 2 раза, потому что был вызов _setPendingState
-                                    self._childLeaveEdit(2);
+                                    // ѕровер€ем, что запись действительно была изменена.
+                                    if (result.detail && (result.detail.length === 1)
+                                        && (result.detail[0].affectedRows === 1)) {
 
-                                    self.resetModifFldLog(Meta.DATA_LOG_NAME);
-                                    //this.removeModifFldLog(Meta.DATA_LOG_NAME);
+                                        // «апоминаем новое значение версии записи.
+                                        if (self.rowVersionFname && result.detail[0].rowVersion)
+                                            self.set(self.rowVersionFname, result.detail[0].rowVersion, false, true);
+
+                                        self._editSet("");
+                                        self._setNewState(Meta.State.Browse);
+                                        // 2 раза, потому что был вызов _setPendingState
+                                        self._childLeaveEdit(2);
+
+                                        self.resetModifFldLog(Meta.DATA_LOG_NAME);
+                                        //this.removeModifFldLog(Meta.DATA_LOG_NAME);
+                                    }
+                                    else {
+                                        result = { result: "ERROR", message: "Data object has been modified by another user." };
+                                        self._rollbackState();
+                                    };
                                 }
                                 else
                                     self._rollbackState();
