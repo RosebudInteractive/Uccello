@@ -37,6 +37,10 @@ define(
                 return this._genericSetter("CursorSyncMode", value);
             },
 
+            size: function(value) {
+                return this._genericSetter("Size", value);
+            },
+
             /**
              * Рендер контрола
              * @param viewset
