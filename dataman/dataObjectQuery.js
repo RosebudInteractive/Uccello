@@ -73,7 +73,8 @@ define(
             update: function (model, values, predicate, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
-                    var sql = self._query_gen.updateQuery(model, values, predicate);
+                    var updOptions = _.cloneDeep(options && options.updOptions ? options.updOptions : {});
+                    var sql = self._query_gen.updateQuery(model, values, predicate, updOptions);
                     resolve(self._runQuery(sql, options).then(function (result) {
                             //console.log(JSON.stringify(result));
                             return result;

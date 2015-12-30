@@ -8,6 +8,8 @@ define(
 
         var MySqlQueryGen = Base.extend({
 
+            ROW_VERSION_INIT_VAL: 1,
+
             init: function (engine, options) {
                 UccelloClass.super.apply(this, [engine, options]);
             },
@@ -63,7 +65,9 @@ define(
                     var flags = field.flags() | 0;
                     attrs.push(self.escapeId(field.name()) + " " + field.fieldType().toSql(provider, field) +
                         ((((flags & self.Meta.Field.PrimaryKey) !== 0) || (!field.fieldType().allowNull())) ? " NOT NULL" : "") +
-                        (((flags & self.Meta.Field.AutoIncrement) !== 0) ? " auto_increment" : ""));
+                        (((flags & self.Meta.Field.AutoIncrement) !== 0) ? " auto_increment" : "")+
+                        (((flags & self.Meta.Field.RowVersion) !== 0) ? " DEFAULT " + self.ROW_VERSION_INIT_VAL : "")
+                        );
                 });
                 if (model.getPrimaryKey()) {
                     attrs.push("PRIMARY KEY (" + this.escapeId(model.getPrimaryKey().name()) + ")");
@@ -76,8 +80,37 @@ define(
                 return { sqlCmd: _.template(query)(values).trim() + ";", params: [] };
             },
 
+            updateQuery: function (model, vals, predicate, options) {
+                var opts = _.cloneDeep(options || {});
+                var mysql_vals = _.cloneDeep(vals || {});
+                var rw = model.getRowVersionField();
+                var row_version;
+                if (rw && opts.rowVersion) {
+                    row_version = ((opts.rowVersion | 0) + 1) & 0x7FFFFFFF;
+                    if (!row_version)
+                        row_version = this.ROW_VERSION_INIT_VAL;
+                    mysql_vals[rw.name()] = row_version;
+                };
+                var updateCmd = UccelloClass.super.apply(this, [model, mysql_vals, predicate, opts]);
+                updateCmd.rowVersion = row_version.toString();
+                return updateCmd;
+            },
+
+            insertQuery: function (model, vals) {
+                var mysql_vals = _.cloneDeep(vals || {});
+                var rw = model.getRowVersionField();
+                if (rw)
+                    mysql_vals[rw.name()] = this.ROW_VERSION_INIT_VAL;
+                var insertCmd = UccelloClass.super.apply(this, [model, mysql_vals]);
+                insertCmd.rowVersion = this.ROW_VERSION_INIT_VAL.toString();
+                return insertCmd;
+            },
+
             escapeValue: function (s, type, params) {
-                return this.getNativeLib().escape(s);
+                var val = s;
+                if (type.isRowVersionType && (typeof (s) === "string"))
+                    val = s | 0;
+                return this.getNativeLib().escape(val);
             },
 
             escapeId: function (s) {

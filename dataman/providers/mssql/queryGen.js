@@ -135,12 +135,12 @@ define(
                 };
             },
 
-            updateQuery: function (model, vals, predicate) {
-                var options = {};
+            updateQuery: function (model, vals, predicate, options) {
+                var opts = _.cloneDeep(options || {});
                 var rw = model.getRowVersionField();
                 if (rw)
-                    options.output = " OUTPUT INSERTED." + this.escapeId(rw.name()) + " AS rowVersion";
-                var updateCmd = UccelloClass.super.apply(this, [model, vals, predicate, options]);
+                    opts.output = " OUTPUT INSERTED." + this.escapeId(rw.name()) + " AS rowVersion";
+                var updateCmd = UccelloClass.super.apply(this, [model, vals, predicate, opts]);
                 return updateCmd;
             },
 

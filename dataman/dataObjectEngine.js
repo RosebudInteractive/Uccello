@@ -245,7 +245,13 @@ define(
                                         self._tmpPredicate.addCondition({ field: rwField.name(), op: "=", value: val.data.rowVersion });
                                     };
 
-                                    promise = self._query.update(model, val.data.fields, self._tmpPredicate, { transaction: transaction });
+                                    promise = self._query.update(model, val.data.fields, self._tmpPredicate,
+                                        {
+                                            transaction: transaction,
+                                            updOptions: {
+                                                rowVersion: val.data.rowVersion
+                                            }
+                                        });
                                     break;
                             };
                             return promise;
