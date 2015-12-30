@@ -38,7 +38,9 @@ Manager.prototype = {
 
     loadConfig: function () {
         this.config = new Config(this.configFileName);
-        this.applyConfig();
+        if (this.config.isLoaded) {
+            this.applyConfig();
+        }
     },
 
     addFileWatcher: function () {

@@ -5,9 +5,10 @@ if (typeof define !== 'function') {
 
 define(
     ['./connection/socket', './system/logger', './dataman/dataman', 'ws', './connection/router', './connection/userSessionMgr',
-	'./system/rpc', './controls/controlMgr', './resman/resman', './system/constructHolder', './process/processDispatcher'],
+	'./system/rpc', './controls/controlMgr', './resman/resman', './system/constructHolder', './process/processDispatcher',
+    './system/tracer/manager'],
     function (Socket, Logger, Dataman, WebSocketServer, Router, UserSessionMgr,
-        Rpc, ControlMgr, Resman, ConstructHolder, ProcessDispatcher) {
+        Rpc, ControlMgr, Resman, ConstructHolder, ProcessDispatcher, TraceManager) {
 	
 		var guidServer = UCCELLO_CONFIG.guids.guidServer;
 	
@@ -25,7 +26,11 @@ define(
                 var that = this;
                 this._connectId = 0;
 				this.pvt = {};
-                //this.pvt.logger = new Logger();
+
+                if (options.traceConfigFile) {
+                    TraceManager.getInstance().loadFromFile(options.traceConfigFile);
+                    this.pvt.tracer = TraceManager.getInstance();
+                }
                 this.pvt.router = new Router();
 
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
@@ -58,7 +63,7 @@ define(
 				new ProcessDispatcher({ proxyWfe: this.pvt.proxyWfe });
 
 				this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder, rpc);
-                this.pvt.resman = new Resman(that.getUserMgr().getController());
+                this.pvt.resman = new Resman(that.getUserMgr().getController(), that.pvt.constructHolder, that.pvt.proxyServer);
                 this.pvt.commServer = options.commServer;
 
                 this.getRouter().add('getGuids', function(data, done) {

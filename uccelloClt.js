@@ -7,11 +7,11 @@ define(
     ['./connection/clientConnection' ,
         './memDB/memDBController','./memDB/memDataBase','./controls/controlMgr', './system/uobject', './system/umodule', './controls/aComponent',
         './connection/userinfo', './connection/user', './connection/sessioninfo', './connection/session', './connection/connectinfo', './connection/connect', './connection/vc', './connection/vcresource',
-        './system/rpc', './system/constructHolder'
+        './system/rpc', './system/constructHolder', './system/tracer/managerMock'
     ],
     function(ClientConnection, MemDBController, MemDataBase, ControlMgr, UObject, UModule, AComponent,
         UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContext, Vcresource,
-        Rpc, ConstructHolder
+        Rpc, ConstructHolder, TraceManager
         ) {
         var UccelloClt = UccelloClass.extend({
 
@@ -21,6 +21,7 @@ define(
 
                 this.pvt.user = null;
                 this.pvt.sessionGuid = null;
+                this.pvt.tracer = TraceManager.getInstance();
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
 
                 var clt = this.pvt.clientConnection = new ClientConnection(null, {newTabCallback:options.newTabCallback});

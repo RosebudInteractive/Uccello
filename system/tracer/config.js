@@ -19,11 +19,15 @@ function Config(configFileName) {
         if (fs.existsSync(configFileName)) {
             var _text = fs.readFileSync(configFileName);
         } else {
-            throw new Error('Can not find file [%s]', configFileName);
+            console.error('Can not find file [' + configFileName + ']')
+            //throw new Error('Can not find file [' + configFileName + ']');
+            this.isLoaded = false;
+            return
         }
 
         var _prototype = JSON.parse(_text);
         Object.setPrototypeOf(this, _prototype);
+        this.isLoaded = true;
     }
 
     if (!this.listeners) {this.listeners = []}
