@@ -299,15 +299,6 @@ define(
                     "\t\tinit: function(cm,params){\n" +
                     "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n";
 
-                for (var i = 0; i < fields.length; i++) {
-                    var flags = fields[i].get("Flags");
-                    if (!(flags & Meta.Field.Hidden)) {
-                        footer += "\t\t\tthis._persFields[\"" + fields[i].get("Name") + "\"] = true;\n";
-                        if (flags & Meta.Field.PrimaryKey)
-                            footer += "\t\t\tthis._keyField = \"" + fields[i].get("Name") + "\";\n";
-                    };
-                };
-
                 footer += "\t\t}\n" + "\t});";
 
                 var constr = header +
@@ -329,6 +320,22 @@ define(
 
                 if (model.getRowVersionField())
                     constr += "\t\trowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
+
+                is_first = true;
+                constr += "\t\t_persFields: {";
+                for (i = 0; i < fields.length; i++) {
+                    var flags = fields[i].get("Flags");
+                    if (!(flags & Meta.Field.Hidden)) {
+                        if (!is_first)
+                            constr += ",";
+                        is_first = false;
+                        constr += "\n\t\t\t\"" + fields[i].get("Name") + "\": true";
+                    };
+                };
+                constr += "\n\t\t},\n";
+
+                if (model.getPrimaryKey())
+                    constr += "\t\t_keyField: \"" + model.getPrimaryKey().name() + "\",\n";
 
                 is_first = true;
                 for (var i = 0; i < fields.length; i++) {
@@ -355,12 +362,12 @@ define(
                 if (model.getRowVersionField())
                     constr += "\t\trowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
 
+                if (model.getPrimaryKey())
+                    constr += "\t\t_keyField: \"" + model.getPrimaryKey().name() + "\",\n";
+
                 constr += "\n" +
                     "\t\tinit: function(cm,params){\n" +
                     "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n";
-
-                if (model.getPrimaryKey())
-                    constr += "\t\t\tthis._keyField = \"" + model.getPrimaryKey().name() + "\";\n";
 
                 constr +=
                     "\t\t\tif(params)\n" +

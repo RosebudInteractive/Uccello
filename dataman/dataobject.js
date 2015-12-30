@@ -19,10 +19,10 @@ define(
             ],
 
             rowVersionFname: null,
+            _persFields: {},
+            _keyField: null,
 
             init: function (cm, params) {
-                this._persFields = {};
-                this._keyField = null;
                 UccelloClass.super.apply(this, [cm, params]);
                 if (params) {
                     this.resetModifFldLog(Meta.DATA_LOG_NAME);
@@ -203,7 +203,7 @@ define(
                 if ((!ignore_op) && (this._childEdCnt() > 0)) {
                     throw new Error("DataObject: Can't edit data-object when some CHILD objects in edit state.");
                 };
-                
+
                 return ignore_op;
             },
 

@@ -19,9 +19,9 @@ define(
             ],
 
             rowVersionFname: null,
+            _keyField: null,
 
             init: function (cm, params) {
-                this._keyField = null;
                 UccelloClass.super.apply(this, [cm, params]);
                 if (params) {
                     this._editSet("");
