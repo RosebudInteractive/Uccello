@@ -135,6 +135,15 @@ define(
                 };
             },
 
+            updateQuery: function (model, vals, predicate, options) {
+                var opts = _.cloneDeep(options || {});
+                var rw = model.getRowVersionField();
+                if (rw)
+                    opts.output = " OUTPUT INSERTED." + this.escapeId(rw.name()) + " AS rowVersion";
+                var updateCmd = UccelloClass.super.apply(this, [model, vals, predicate, opts]);
+                return updateCmd;
+            },
+
             insertQuery: function (model, vals) {
                 var options = {};
                 var fnames = Object.keys(vals);
@@ -147,8 +156,12 @@ define(
                     };
                 };
                 var pk = model.getPrimaryKey();
-                if (pk && (vals[pk.name()] === undefined))
+                if (pk && (vals[pk.name()] === undefined)) {
                     options.output = " OUTPUT INSERTED." + this.escapeId(pk.name()) + " AS insertId";
+                    var rw = model.getRowVersionField();
+                    if (rw)
+                        options.output += ", INSERTED." + this.escapeId(rw.name()) + " AS rowVersion";
+                }
                 var insertCmd = UccelloClass.super.apply(this, [model, vals, options]);
                 return insertCmd;
             },

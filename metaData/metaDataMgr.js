@@ -167,7 +167,10 @@ define(
                         }
                     };
                     var model = new MetaModel(this.getDB(), params);
-                    return model;
+                    return model
+                        .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey | Meta.Field.AutoIncrement)
+                        .addField("Guid", { type: "guid", allowNull: true }, Meta.Field.System | Meta.Field.Hidden)
+                        .addField(Meta.ROW_VERSION_FNAME, { type: "rowversion", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion);
 
                 } else
                     throw new Error("Model name is undefined.");
@@ -296,12 +299,6 @@ define(
                     "\t\tinit: function(cm,params){\n" +
                     "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n";
 
-                for (var i = 0; i < fields.length; i++) {
-                    footer += "\t\t\tthis._persFields[\"" + fields[i].get("Name") + "\"] = true;\n";
-                    if (fields[i].get("Flags") & Meta.Field.PrimaryKey)
-                        footer += "\t\t\tthis._keyField = \"" + fields[i].get("Name") + "\";\n";
-                };
-
                 footer += "\t\t}\n" + "\t});";
 
                 var constr = header +
@@ -311,7 +308,7 @@ define(
 
                 var is_first = true;
                 for (i = 0; i < fields.length; i++) {
-                    if ((fields[i].flags() & Meta.Field.Internal) === 0) {
+                    if ((fields[i].flags() & (Meta.Field.Internal | Meta.Field.Hidden)) === 0) {
                         if (!is_first)
                             constr += ",\n";
                         is_first = false;
@@ -321,9 +318,28 @@ define(
                 };
                 constr += "\n\t\t],\n";
 
+                if (model.getRowVersionField())
+                    constr += "\t\trowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
+
+                is_first = true;
+                constr += "\t\t_persFields: {";
+                for (i = 0; i < fields.length; i++) {
+                    var flags = fields[i].get("Flags");
+                    if (!(flags & Meta.Field.Hidden)) {
+                        if (!is_first)
+                            constr += ",";
+                        is_first = false;
+                        constr += "\n\t\t\t\"" + fields[i].get("Name") + "\": true";
+                    };
+                };
+                constr += "\n\t\t},\n";
+
+                if (model.getPrimaryKey())
+                    constr += "\t\t_keyField: \"" + model.getPrimaryKey().name() + "\",\n";
+
                 is_first = true;
                 for (var i = 0; i < fields.length; i++) {
-                    if ((fields[i].flags() & Meta.Field.Internal) === 0) {
+                    if ((fields[i].flags() & (Meta.Field.Internal | Meta.Field.Hidden)) === 0) {
                         if (!is_first)
                             constr += ",\n";
                         is_first = false;
@@ -341,13 +357,17 @@ define(
                     "\t\tclassName: \"" + model.get("DataRootName") + "\",\n" +
                     "\t\tclassGuid: \"" + model.get("DataRootGuid") + "\",\n" +
                     "\t\tmetaCols: [{ \"cname\": \"DataElements\", \"ctype\": \"" + model.get("Name") + "\" }],\n" +
-                    "\t\tmetaFields: [],\n" +
-                    "\n" +
-                    "\t\tinit: function(cm,params){\n" +
-                    "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n";
+                    "\t\tmetaFields: [],\n";
+
+                if (model.getRowVersionField())
+                    constr += "\t\trowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
 
                 if (model.getPrimaryKey())
-                    constr += "\t\t\tthis._keyField = \"" + model.getPrimaryKey().name() + "\";\n";
+                    constr += "\t\t_keyField: \"" + model.getPrimaryKey().name() + "\",\n";
+
+                constr += "\n" +
+                    "\t\tinit: function(cm,params){\n" +
+                    "\t\t\tUccelloClass.super.apply(this, [cm, params]);\n";
 
                 constr +=
                     "\t\t\tif(params)\n" +

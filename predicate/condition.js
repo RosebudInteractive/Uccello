@@ -60,7 +60,7 @@ define(
             value: function (value) {
                 var val_col = this.getCol("Values");
                 var i;
-                if (value) {
+                if (value || (typeof (value) === "number")) {
                     for (i = 0; i < val_col.count() ; i++)
                         val_col._del(val_col.get(0));
 

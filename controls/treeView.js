@@ -14,7 +14,11 @@ define(
                 {fname:"Cursor", ftype:{
                     type: "ref",
                     res_elem_type: UCCELLO_CONFIG.classGuids.TreeViewItem
-                }}
+                }},
+                {fname:"Size", ftype:"string"},
+                {fname:"VerticalLines", ftype:"boolean"},
+                {fname:"HorizontalLines", ftype:"boolean"},
+                {fname:"AlternateLines", ftype:"boolean"}
             ],
             metaCols: [
                 {"cname": "Items", "ctype": "TreeViewItem"}
@@ -47,6 +51,18 @@ define(
 
             cursor: function(value) {
                 return this._genericSetter("Cursor", value);
+            },
+
+            verticalLines: function(value) {
+                return this._genericSetter("VerticalLines", value);
+            },
+
+            horizontalLines: function(value) {
+                return this._genericSetter("HorizontalLines", value);
+            },
+
+            alternateLines: function(value) {
+                return this._genericSetter("AlternateLines", value);
             }
         });
         return TreeView;

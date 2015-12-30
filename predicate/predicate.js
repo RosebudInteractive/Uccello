@@ -94,7 +94,7 @@ define(
                 if (!condition.op)
                     throw new Error("Operation is undefined.");
 
-                if (!condition.value)
+                if ((!condition.value) && (typeof (condition.value) !== "number"))
                     throw new Error("Value is undefined.");
 
                 var ini_params = {

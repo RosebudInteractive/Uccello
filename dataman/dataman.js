@@ -5,8 +5,8 @@
 
 define(
     ['../controls/controlMgr', '../metaData/metaDataMgr',
-        '../metaData/metaModel', '../metaData/metaModelField', './dataObjectEngine'],
-    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, DataObjectEngine) {
+        '../metaData/metaModel', '../metaData/metaModelField', './dataObjectEngine', '../metaData/metaDefs'],
+    function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, DataObjectEngine, Meta) {
 
         var DATAMAN_DB_NAME = "DatamanDB";
         var DATAMAN_DB_GUID = "66d43749-223a-48cb-9143-122381b9ed3c";

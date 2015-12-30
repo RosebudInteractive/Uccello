@@ -152,10 +152,10 @@ define(
                 // DataLead
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead] = {};
                 // DataLead.edit
-                this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["edit"] = {
-                    requestName: "ObjModifRequest",
-                    timeout: 10000
-                };
+                //this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["edit"] = { // Метод "edit" (также как и "save", "cancel") перегружать через процесс нельзя !!!
+                //    requestName: "ObjModifRequest",
+                //    timeout: 10000
+                //};
                 // DataLead.convert
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["convert"] = {
                     requestName: "ObjModifRequest",

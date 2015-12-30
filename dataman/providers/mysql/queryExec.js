@@ -21,7 +21,7 @@ define(
 
                             reject(self._formatError(err));
                         } else {
-                            resolve(self._formatResults(results));
+                            resolve(self._formatResults(results, sql));
                         }
                     });
                 });
@@ -32,15 +32,25 @@ define(
                 return err;
             },
 
-            _formatResults: function (results) {
+            _formatResults: function (results, sql) {
                 var res;
-                if (_.isArray(results)) // Результат SELECT ?
-                    res = results
+                var row_version_fname = sql.meta && sql.meta.getRowVersionField() ? sql.meta.getRowVersionField().name() : null;
+
+                if (_.isArray(results)) { // Результат SELECT ?
+                    res = results;
+                    if (row_version_fname)
+                        res = _.cloneDeep(results);
+                    _.forEach(res, function (rec) {
+                        if (typeof (rec[row_version_fname]) === "number")
+                            rec[row_version_fname] = rec[row_version_fname].toString();
+                        });
+                }
                 else {
                     res = {
                         affectedRows: results.affectedRows,
                         changedRows: results.changedRows,
                         insertId: results.insertId,
+                        rowVersion: sql.rowVersion,
                         message: results.message,
                         warningCount: results.warningCount
                     };
