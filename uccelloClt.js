@@ -21,7 +21,7 @@ define(
 
                 this.pvt.user = null;
                 this.pvt.sessionGuid = null;
-                this.pvt.tracer = TraceManager.getInstance();
+                window.tracer = TraceManager.getInstance();
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
 
                 var clt = this.pvt.clientConnection = new ClientConnection(null, {newTabCallback:options.newTabCallback});
