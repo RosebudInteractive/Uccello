@@ -15,43 +15,47 @@ define(
             //
             //},
 
-            init: function(controller, constructHolder, proxy, options){
-                if ((options) && (options.hasOwnProperty('currProd'))) {
-                    this.currentProductCode = options.currProd
-                }
+            init: function (controller, constructHolder, proxy, options) {
+                // Закомментировал все изменения конструктора, потому что это не работает.
+                //   Нельзя выкладывать код, который ни разу не тестировался и в принципе работать не может !!!
+                //   Sokolov 07/01/16.
+                ///////////////////////////////////////////////////////////////////////////////////////////////
+                //if ((options) && (options.hasOwnProperty('currProd'))) {
+                //    this.currentProductCode = options.currProd
+                //}
 
-                var _dbParams = {
-                    name: "ResourceManager",
-                    kind: "master",
-                    guid: "c76362cf-5f15-4aa4-8ee2-4a6e242dca51",
-                    constructHolder: constructHolder
-                };
+                //var _dbParams = {
+                //    name: "ResourceManager",
+                //    kind: "master",
+                //    guid: "c76362cf-5f15-4aa4-8ee2-4a6e242dca51",
+                //    constructHolder: constructHolder
+                //};
 
-                var dbtest = new ControlMgr({ controller: controller, dbparams: _dbParams },
-                    null, null, null, proxy);
-
-                //this.db = new ControlMgr({ controller: controller, dbparams: _dbParams },
+                //var dbtest = new ControlMgr({ controller: controller, dbparams: _dbParams },
                 //    null, null, null, proxy);
 
-                //loadProducts();
+                ////this.db = new ControlMgr({ controller: controller, dbparams: _dbParams },
+                ////    null, null, null, proxy);
 
-                var _expression = {
-                    model: { name: "SysProduct" }
-                };
+                ////loadProducts();
+
+                //var _expression = {
+                //    model: { name: "SysProduct" }
+                //};
 
 
-                var that = this;
-                dbtest.getRoots([UCCELLO_CONFIG.guids.rootLead], { rtype: "data", expr: _expression }, function (guids) {
+                //var that = this;
+                //dbtest.getRoots([UCCELLO_CONFIG.guids.rootLead], { rtype: "data", expr: _expression }, function (guids) {
 
-                    console.log("1-st request done: " + that.db.getName());
-                    dbtest.getRoots([guids.guids[0]], { rtype: "data", refresh: true, expr: _expression }, function (guids) {
+                //    console.log("1-st request done: " + that.db.getName());
+                //    dbtest.getRoots([guids.guids[0]], { rtype: "data", refresh: true, expr: _expression }, function (guids) {
 
-                        console.log("2-nd request done: " + that.db.getName());
-                    });
-                });
+                //        console.log("2-nd request done: " + that.db.getName());
+                //    });
+                //});
 
-                var _predicate = new Predicate(this.db, {});
-                //_predicate.addCondition()
+                //var _predicate = new Predicate(this.db, {});
+                ////_predicate.addCondition()
 
                 this.pvt = {};
                 this.pvt.controller = controller;
