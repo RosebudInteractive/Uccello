@@ -326,8 +326,9 @@ define(
 
 			onNewRoot: function(result){
 
-				if (result.target.getObjType().getGuid() == UCCELLO_CONFIG.classGuids.Form) {
-					// ищем по Title и добавляем id если найден для уникальности
+				//if (result.target.getObjType().getGuid() == UCCELLO_CONFIG.classGuids.Form) {
+			    if (result.target.isInstanceOf(UCCELLO_CONFIG.classGuids.Form)) {
+			        // ищем по Title и добавляем id если найден для уникальности
 					var found = false, title = result.target.title();
 					var col = this.getCol('Resources');
 					for(var i= 0, len=col.count(); i<len; i++) {
