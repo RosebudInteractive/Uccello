@@ -51,7 +51,7 @@ define(
                 var local_name = "_$local_edit";
                 if (!this.isMaster()) {
                     for (var i = 0; i < (arguments.length - 1) ; i++)
-                        args[i - 1] = arguments[i];
+                        args[i] = arguments[i];
                     this.remoteCall(local_name, args, callback);
                 }
                 else
@@ -67,7 +67,7 @@ define(
                 var local_name = "_$local_save";
                 if (!this.isMaster()) {
                     for (var i = 0; i < (arguments.length - 1) ; i++)
-                        args[i - 1] = arguments[i];
+                        args[i] = arguments[i];
                     this.remoteCall(local_name, args, callback);
                 }
                 else
@@ -83,7 +83,7 @@ define(
                 var local_name = "_$local_cancel";
                 if (!this.isMaster()) {
                     for (var i = 0; i < (arguments.length - 1) ; i++)
-                        args[i - 1] = arguments[i];
+                        args[i] = arguments[i];
                     this.remoteCall(local_name, args, callback);
                 }
                 else
