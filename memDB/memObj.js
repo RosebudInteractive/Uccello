@@ -280,7 +280,7 @@ define(
 			
 			countFields: function() {
 				return this.pvt.objType.pvt.fieldsArr.length;
-			}
+			},
 
 			
 			// добавить объект obj в коллекцию colName
@@ -300,7 +300,32 @@ define(
 					return false;
 			}*/
 			
-			
+		    /**
+		     * Вызывает метод коллекции объекта.
+             *
+             * @param {String}  col_name Имя коллекции
+             * @param {String}  method_name Имя метода
+             * @@throws Если коллекция или ее метод не найдены, то генерирует прерывание
+             * @return {Object} Значение, возвращаемое методом коллекции
+             */
+			_collectionMethodCall: function (col_name, method_name) {
+			    if (arguments.length < 2)
+			        throw new Error("memObj::_collectionMethodCall: Invalid argument list.");
+
+			    var memCol = this.getCol(col_name);
+			    if (!memCol)
+			        throw new Error("memObj::_collectionMethodCall: Collection \"" + col_name + "\" doesn't exist.");
+
+			    if (typeof (memCol[method_name]) != "function")
+			        throw new Error("memObj::_collectionMethodCall: Collection \"" + col_name + "\" doesn't have method \"" +
+                        method_name + "\".");
+
+			    var args = [];
+			    for (var i = 2; i < (arguments.length - 1) ; i++)
+			        args[i - 2] = arguments[i];
+
+			    return memCol[method_name].apply(memCol, args);
+			}
 
 		});
 		return MemObj;
