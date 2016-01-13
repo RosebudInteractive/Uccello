@@ -153,6 +153,7 @@ define([], function () {
             'GCell': "69087f9c-99ed-14f1-0fe7-05058a862af5",
             'FContainer': "902822d8-3079-f394-2eed-3ad9ac27b2f2",
             'DataObject': "edb1b63c-f72c-6f0a-b64c-3b34da7facdb",
+            'DataObjectBase': "321ea6f6-30e0-4545-884e-12c33f620834",
             'MetaDataMgr': "ec139e1e-39d7-4ddd-8e31-c5d644403f41",
             'MetaModelRef': "35c82420-67e7-45cc-ae4b-ed35d3bcfda9",
             'MetaLinkRef': "0e7a1bf8-d94e-4447-ad75-c2a2c068c3dd",
