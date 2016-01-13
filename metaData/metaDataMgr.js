@@ -340,11 +340,14 @@ define(
                 is_first = true;
                 for (var i = 0; i < fields.length; i++) {
                     if ((fields[i].flags() & (Meta.Field.Internal | Meta.Field.Hidden)) === 0) {
-                        if (!is_first)
-                            constr += ",\n";
-                        is_first = false;
-                        constr += "\n\t\t" + this._genGetterName(fields[i].get("Name")) + ": function (value) {\n" +
-                            "\t\t\treturn this._genericSetter(\"" + fields[i].get("Name") + "\", value);\n\t\t}";
+                        var method_name = this._genGetterName(fields[i].get("Name"));
+                        if (DataObject.prototype[method_name] === undefined) {
+                            if (!is_first)
+                                constr += ",\n";
+                            is_first = false;
+                            constr += "\n\t\t" + method_name + ": function (value) {\n" +
+                                "\t\t\treturn this._genericSetter(\"" + fields[i].get("Name") + "\", value);\n\t\t}";
+                        };
                     };
                 };
 
