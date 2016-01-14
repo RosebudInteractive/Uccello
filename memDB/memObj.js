@@ -57,7 +57,7 @@ define(
 				
 				var colList = objType.getColList();
 				for (var i = 0; i < colList.length ; i++)
-				    (new MemCol(colList[i].name, this)).on({
+				    this.createCollection(colList[i].name).on({
 				        type: 'add',
 				        subscriber: this,
 				        callback: this.getCheckColElemType(i)
@@ -280,6 +280,17 @@ define(
 			
 			countFields: function() {
 				return this.pvt.objType.pvt.fieldsArr.length;
+			},
+
+		    /**
+		     * Создает коллекцию объекта.
+             *  Может быть переопределен в наследниках.
+             *
+             * @param {String}  col_name Имя коллекции
+             * @return {Object} Коллекция
+             */
+			createCollection: function (col_name) {
+			    return new MemCol(col_name, this);
 			},
 
 			
