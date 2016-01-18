@@ -96,7 +96,7 @@ define(
 
             _formatResults: function (results, query_type, affectedRows, meta) {
                 var res;
-                var row_version_fname = meta && meta.getRowVersionField() ? meta.getRowVersionField().name() : "";
+                var row_version_fname = meta && meta.model && meta.model.getRowVersionField() ? meta.model.getRowVersionField().name() : null;
 
                 if (_.isArray(results)) // Результат SELECT ?
                     if ((query_type === this._queryTypes.INSERT) && (results.length === 1)) {

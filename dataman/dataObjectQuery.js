@@ -58,10 +58,10 @@ define(
                 });
             },
 
-            select: function (model, predicate, options) {
+            select: function (request, predicate, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
-                    var sql = self._query_gen.selectQuery(model, predicate);
+                    var sql = self._query_gen.selectQuery(request, predicate);
                     resolve(self._runQuery(sql, options).then(function (result) {
                             //console.log(JSON.stringify(result));
                             return result;

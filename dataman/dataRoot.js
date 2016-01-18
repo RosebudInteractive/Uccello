@@ -11,7 +11,8 @@ define(
             classGuid: UCCELLO_CONFIG.classGuids.DataRoot,
             metaCols: [{ "cname": "DataElements", "ctype": "DataObject" }],
             metaFields: [
-                { fname: "dbgName", ftype: "string" }
+                { fname: "dbgName", ftype: "string" },
+                { fname: "Alias", ftype: "string" }
             ],
 
             init: function (cm, params) {
