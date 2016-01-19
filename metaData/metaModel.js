@@ -108,35 +108,6 @@ define(
                 return this._addField(name, field_type, flags, order, false);
             },
 
-            _addField: function (name, field_type, flags, order, is_internal) {
-                if (name && field_type) {
-                    var params = {
-                        ini: {
-                            fields: {
-                                Name: name,
-                                FieldType: field_type,
-                                Order: (typeof order === "number") ? order : this._fields.length,
-                                Flags: (is_internal ? Meta.Field.Internal : 0) | ((flags | 0) & Meta.Field.System),
-                            }
-                        },
-                        parent: this,
-                        colName: "Fields"
-                    };
-                    var field = new MetaModelField(this.getDB(), params);
-
-                    try {
-                        field.flags(flags ? (flags | 0) : 0);
-                    } catch (e) {
-                        this.deleteField(field);
-                        throw e;
-                    };
-
-                    return this;
-
-                } else
-                    throw new Error("Field name (or type) is undefined.");
-            },
-
             deleteField: function (field) {
                 var _field = null;
                 if ((typeof field === "string") || (typeof field === "number"))
@@ -171,6 +142,39 @@ define(
 
             fieldsCount: function () {
                 return this._fields.length;
+            },
+
+            outgoingLinks: function () {
+                return this.getDB()._metaDataMgr.outgoingLinks(this);
+            },
+
+            _addField: function (name, field_type, flags, order, is_internal) {
+                if (name && field_type) {
+                    var params = {
+                        ini: {
+                            fields: {
+                                Name: name,
+                                FieldType: field_type,
+                                Order: (typeof order === "number") ? order : this._fields.length,
+                                Flags: (is_internal ? Meta.Field.Internal : 0) | ((flags | 0) & Meta.Field.System),
+                            }
+                        },
+                        parent: this,
+                        colName: "Fields"
+                    };
+                    var field = new MetaModelField(this.getDB(), params);
+
+                    try {
+                        field.flags(flags ? (flags | 0) : 0);
+                    } catch (e) {
+                        this.deleteField(field);
+                        throw e;
+                    };
+
+                    return this;
+
+                } else
+                    throw new Error("Field name (or type) is undefined.");
             },
 
             _getOnFieldFlagsChangeProc: function (fieldObj) {

@@ -34,16 +34,32 @@ define(
 
             _formatResults: function (results, sql) {
                 var res;
-                var row_version_fname = sql.meta && sql.meta.getRowVersionField() ? sql.meta.getRowVersionField().name() : null;
+                var row_version_fnames = [];
+
+                function collectRowVersions(request) {
+                    var row_version_fname = request && request.model && request.model.getRowVersionField() ? request.model.getRowVersionField().name() : null;
+                    if (row_version_fname)
+                        row_version_fnames.push(request.sqlAlias ? request.sqlAlias + "_" + row_version_fname : row_version_fname);
+                    if (request && _.isArray(request.childs) && (request.childs.length > 0)) {
+                        _.forEach(request.childs, function (ch_query) {
+                            cnt = collectRowVersions(ch_query);
+                        });
+                    };
+                };
+
+                collectRowVersions(sql.meta);
 
                 if (_.isArray(results)) { // Результат SELECT ?
                     res = results;
-                    if (row_version_fname)
+                    if (row_version_fnames.length > 0) {
                         res = _.cloneDeep(results);
-                    _.forEach(res, function (rec) {
-                        if (typeof (rec[row_version_fname]) === "number")
-                            rec[row_version_fname] = rec[row_version_fname].toString();
+                        _.forEach(res, function (rec) {
+                            _.forEach(row_version_fnames, function (verfn) {
+                                if (typeof (rec[verfn]) === "number")
+                                    rec[verfn] = rec[verfn].toString();
+                            });
                         });
+                    };
                 }
                 else {
                     res = {
