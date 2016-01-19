@@ -10,7 +10,7 @@ define(
 
             className: "DataObject",
             classGuid: UCCELLO_CONFIG.classGuids.DataObject,
-            metaCols: [],
+            metaCols: [{ "cname": "Childs", "ctype": "DataRoot" }],
             metaFields: [],
 
             init: function (cm, params) {

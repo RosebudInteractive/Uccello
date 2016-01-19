@@ -318,39 +318,62 @@ define(
                     return Promise.reject(new Error("DB connection wasn't defined."));
             },
 
+            _makeRequest: function (query) {
+
+                var request = { model: null, childs: [] };
+                if (!query.dataObject)
+                    throw new Error("\"dataObject\" isn't defined in query.");
+
+                if ((!request.model) && query.dataObject.name) {
+                    request.model = this._metaDataMgr.getModel(query.dataObject.name);
+                    if (!request.model)
+                        throw new Error("Can't find model (name = \"" + query.dataObject.name + "\".");
+                };
+
+                if ((!request.model) && query.dataObject.guid) {
+                    request.model = this._metaDataMgr.getModelByGuid(query.dataObject.guid);
+                    if (!request.model)
+                        throw new Error("Can't find model (guid = \"" + query.dataObject.guid + "\".");
+                };
+
+                if ((!request.model) && query.dataObject.rootName) {
+                    request.model = this._metaDataMgr.getModelByRootName(query.dataObject.rootName);
+                    if (!request.model)
+                        throw new Error("Can't find model (rootName = \"" + query.dataObject.rootName + "\".");
+                };
+
+                if ((!request.model) && query.dataObject.rootGuid) {
+                    request.model = this._metaDataMgr.getModelByRootGuid(query.dataObject.rootGuid);
+                    if (!request.model)
+                        throw new Error("Can't find model (rootGuid = \"" + query.dataObject.rootGuid + "\".");
+                };
+
+                if (!request.model)
+                    throw new Error("Can't find model " + JSON.stringify(query.dataObject) + ".");
+
+                request.alias = query.dataObject.alias ? query.dataObject.alias : request.model.name();
+
+                if (_.isArray(query.dataObject.childs) && (query.dataObject.childs.length > 0))
+                    _.forEach(query.dataObject.childs, function (ch_query) {
+                        request.childs.push(this._makeRequest(ch_query));
+                    }, this);
+
+                return request;
+            },
+
             loadQuery: function (query, options) {
                 if (this.hasConnection()) {
-                    if (!query.dataObject)
-                        return Promise.reject(new Error("\"dataObject\" isn't defined in query."));
-                    var model = null;
-                    if (query.dataObject.name) {
-                        model = this._metaDataMgr.getModel(query.dataObject.name);
-                        if (!model)
-                            return Promise.reject(new Error("Can't find model (name = \"" + query.dataObject.name + "\"."));
-                    };
-                    if (query.dataObject.guid) {
-                        model = this._metaDataMgr.getModelByGuid(query.dataObject.guid);
-                        if (!model)
-                            return Promise.reject(new Error("Can't find model (guid = \"" + query.dataObject.guid + "\"."));
-                    };
-                    if (query.dataObject.rootName) {
-                        model = this._metaDataMgr.getModelByRootName(query.dataObject.rootName);
-                        if (!model)
-                            return Promise.reject(new Error("Can't find model (rootName = \"" + query.dataObject.rootName + "\"."));
-                    };
-                    if (query.dataObject.rootGuid) {
-                        model = this._metaDataMgr.getModelByRootGuid(query.dataObject.rootGuid);
-                        if (!model)
-                            return Promise.reject(new Error("Can't find model (rootGuid = \"" + query.dataObject.rootGuid + "\"."));
-                    };
-                    if (!model)
-                        return Promise.reject(new Error("Can't find model " + JSON.stringify(query.dataObject) + "."));
 
-                    var self = this;
-                    return this._query.select(model, query.predicate)
-                        .then(function (result) {
-                            return self._formatLoadResult(query.dataGuid, model, result);
-                        });
+                    try {
+                        var request = this._makeRequest(query);
+                        var self = this;
+                        return this._query.select(request, query.predicate)
+                            .then(function (result) {
+                                return self._formatLoadResult(query.dataGuid, request, result);
+                            });
+                    } catch (err) {
+                        return Promise.reject(err);
+                    };
                 }
                 else
                     return Promise.reject(new Error("DB connection wasn't defined."));
@@ -523,19 +546,20 @@ define(
                 });
             },
 
-            _formatLoadResult: function (dataGuid, model, rawData) {
-                var objTypeGuid = model.dataObjectGuid();
+            _formatLoadResult: function (dataGuid, request, rawData) {
+
+                var objTypeGuid = request.model.dataObjectGuid();
                 var controller = this._controller;
                 var data_guid = dataGuid ? dataGuid : controller.guid();
 
                 var result = {
                     "$sys": {
                         "guid": data_guid,
-                        "typeGuid": model.dataRootGuid()
+                        "typeGuid": request.model.dataRootGuid()
                     },
                     "fields": {
                         "Id": 1000,
-                        "Name": model.dataRootName()
+                        "Name": request.model.dataRootName()
                     },
                     "collections": {
                         "DataElements": [
@@ -543,24 +567,78 @@ define(
                     }
                 };
 
+                var objects = {};
+
+                function data_walk(data, request) {
+
+                    function _data_walk(data, request, parent, parent_obj, curr_path) {
+                        var guid_fname = request.sqlAlias ? request.sqlAlias + "_Guid" : "Guid";
+                        var guid = data[guid_fname];
+                        if (guid) {
+                            var curr_obj = objects[guid];
+                            if (!curr_obj) {
+                                objects[guid] = curr_obj = { collections: {}, currPath: curr_path };
+                                data_obj = {
+                                    "$sys": {
+                                        "guid": guid,
+                                        "typeGuid": request.model.dataObjectGuid()
+                                    },
+                                    "fields": {},
+                                    "collections": {}
+                                };
+
+                                _.forEach(request.model.fields(), function (field) {
+                                    var fld_name = field.name();
+                                    if (fld_name !== "Guid") {
+                                        var data_fld_name = request.sqlAlias ? request.sqlAlias + "_" + fld_name : fld_name;
+                                        if (data[data_fld_name] !== undefined)
+                                            data_obj.fields[fld_name] = data[data_fld_name];
+                                    };
+                                });
+
+                                parent_obj.collections.DataElements.push(data_obj);
+
+                                if (_.isArray(request.childs) && (request.childs.length > 0)) {
+                                    data_obj.collections.Childs = [];
+                                    _.forEach(request.childs, function (ch_query) {
+                                        var root = {
+                                            "$sys": {
+                                                "guid": controller.guid(),
+                                                "typeGuid": ch_query.model.dataRootGuid()
+                                            },
+                                            "fields": {
+                                                "Id": 1000,
+                                                "Name": ch_query.model.dataRootName(),
+                                                "Alias": ch_query.alias
+                                            },
+                                            "collections": {
+                                                "DataElements": [
+                                                ]
+                                            }
+                                        };
+                                        data_obj.collections.Childs.push(root);
+                                        curr_obj.collections[ch_query.alias] = root;
+                                    });
+                                };
+                            }
+                            else
+                                if (curr_obj.currPath !== curr_path)
+                                    throw new Error("Duplicated object: \"" + guid + "\" in the result set!");
+
+                            if (_.isArray(request.childs) && (request.childs.length > 0)) {
+                                _.forEach(request.childs, function (ch_query) {
+                                    _data_walk(data, ch_query, request,
+                                        curr_obj.collections[ch_query.alias], curr_path + "/" + curr_obj.collections[ch_query.alias]["$sys"].guid);
+                                });
+                            };
+                        };
+                    };
+                    _data_walk(data, request, null, result, "");
+                };
+
+
                 _.forEach(rawData, function (data) {
-                    var guid;
-
-                    if (data.Guid) {
-                        guid = data.Guid;
-                        delete data.Guid;
-                    }
-                    else
-                        guid = controller.guid();
-
-                    result.collections.DataElements.push({
-                        "$sys": {
-                            "guid": guid,
-                            "typeGuid": objTypeGuid
-                        },
-                        "fields": data,
-                        "collections": {}
-                    });
+                    data_walk(data, request);
                 });
 
                 return result;

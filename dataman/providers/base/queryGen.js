@@ -7,6 +7,7 @@ define(
     function (_, Predicate) {
 
         var TICK_CHAR = '`';
+        var ALIAS_PREFIX = "t";
 
         var QueryGen = UccelloClass.extend({
 
@@ -97,22 +98,97 @@ define(
                 };
             },
 
-            selectQuery: function (model, predicate) {
-                var query = "SELECT <%= fields%> FROM <%= table %>";
+            _setSqlAliases: function (request) {
+                function set_sql_aliases(request, cnt) {
+                    if (!((cnt === 0) && _.isArray(request.childs) && (request.childs.length === 0))) {
+                        request.sqlAlias = ALIAS_PREFIX + (++cnt);
+                        _.forEach(request.childs, function (ch_query) {
+                            cnt = set_sql_aliases(ch_query, cnt);
+                        });
+                    };
+                };
+                return set_sql_aliases(request, 0);
+            },
+
+            _escapeField: function (field_name, table_alias, is_fld_only) {
+                var field = this.escapeId(field_name);
+                if (table_alias)
+                    field = this.escapeId(table_alias) + "." + field +
+                        (is_fld_only ? "" : " AS " + this.escapeId(table_alias + "_" + field_name));
+                return field;
+            },
+
+            _escapeTable: function (table_name, table_alias) {
+                var table = this.escapeId(table_name);
+                if (table_alias)
+                    table += " AS " + this.escapeId(table_alias);
+                return table;
+            },
+
+            selectQuery: function (request, predicate) {
+
+                var query = "SELECT <%= fields%>\nFROM <%= tables%>";
                 var attrs = [];
+                var tables = [];
                 var params = [];
                 var self = this;
-                _.forEach(model.fields(), function (field) {
-                    attrs.push(self.escapeId(field.name()));
+
+                function req_walk(request, proc) {
+                    if (typeof (proc) !== "function")
+                        throw new Error("req_walk:\"proc\" argument is not a function.");
+
+                    function _req_walk(request, parent) {
+                        proc(request, parent);
+                        if (_.isArray(request.childs) && (request.childs.length > 0)) {
+                            _.forEach(request.childs, function (ch_query) {
+                                _req_walk(ch_query, request);
+                            });
+                        };
+                    };
+                    _req_walk(request, null);
+                };
+
+                this._setSqlAliases(request);
+                request.reqWalk = req_walk;
+
+                req_walk(request, function (req, parent) {
+                    _.forEach(req.model.fields(), function (field) {
+                        attrs.push(self._escapeField(field.name(), req.sqlAlias));
+                    });
+                    var tbl = null;
+                    if (parent) {
+                        var parent_name = parent.model.name()
+                        var tbl_name = req.model.name()
+                        var refs = req.model.outgoingLinks();
+                        refs = refs && refs[tbl_name] ? refs[tbl_name] : null;
+                        if (refs) {
+                            var keys = Object.keys(refs);
+                            for (var i = 0; i < keys.length; i++) {
+                                if (refs[keys[i]].dst && (refs[keys[i]].dstName === parent_name)) {
+
+                                    tbl = "LEFT JOIN " + self._escapeTable(req.model.name(), req.sqlAlias) +
+                                        " ON " + self._escapeField(keys[i], req.sqlAlias, true) + " = " +
+                                        self._escapeField(parent.model.getPrimaryKey().name(), parent.sqlAlias, true);
+                                    break;
+                                }
+                            };
+                        };
+                        if (!tbl)
+                            throw new Error("\"" + tbl_name + "\" has no parent \"" + parent_name + "\".");
+                    }
+                    else
+                        tbl = self._escapeTable(req.model.name(), req.sqlAlias);
+                    tables.push(tbl);
                 });
-                var values = { table: this.escapeId(model.name()), fields: attrs.join(", ") };
+
+                var values = { tables: tables.join("\n  "), fields: attrs.join(", ") };
                 var result = _.template(query)(values).trim();
                 if (predicate) {
-                    var cond_sql = this._predicateToSql(model, predicate, params);
+                    var cond_sql = this._predicateToSql(request.model, predicate, params, request.sqlAlias);
                     if (cond_sql.length > 0)
-                        result += " WHERE " + cond_sql;
+                        result += "\nWHERE " + cond_sql;
                 };
-                return { sqlCmd: result + ";", params: params, type: this.queryTypes.SELECT, meta: model };
+                return { sqlCmd: result + ";", params: params, type: this.queryTypes.SELECT, meta: request };
             },
 
             updateQuery: function (model, vals, predicate, options) {
@@ -191,7 +267,7 @@ define(
                 throw new Error("\"escapeValue\" wasn't implemented in descendant.");
             },
 
-            _predicateToSql: function predicateToString(model, predicate, params) {
+            _predicateToSql: function predicateToString(model, predicate, params, table_alias) {
                 var result = "";
                 var cond_arr = [];
 
@@ -201,7 +277,7 @@ define(
                     var cond = conds.get(i);
                     var res = "";
                     if (cond instanceof Predicate)
-                        res = this._predicateToSql(model, cond, params);
+                        res = this._predicateToSql(model, cond, params, table_alias);
                     else {
 
                         var field = model.getField(cond.fieldName());
@@ -224,7 +300,7 @@ define(
                             if (cond.isNegative())
                                 res += "(NOT ";
                             res += "(";
-                            res += this.escapeId(cond.fieldName()) + " " + cond.op() + " ";
+                            res += this._escapeField(cond.fieldName(), table_alias, true) + " " + cond.op() + " ";
                             var num = arg_num.max === 0 ? val_arr.length : (arg_num.max > val_arr.length ? val_arr.length : arg_num.max);
                             if (arg_num.min > num)
                                 throw new Error("Invalid number of arguments: " + num + " for operation \"" + cond.op() + "\".");

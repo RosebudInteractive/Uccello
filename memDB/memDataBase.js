@@ -112,6 +112,10 @@ define(
 		        }
 		    },
 
+		    getConstructHolder: function () {
+		        return this.pvt.constructHolder;
+		    },
+
 		    /**
              * Добавить корневой объект в БД
              * @param obj
