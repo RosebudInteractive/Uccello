@@ -8,7 +8,7 @@ define(
         UCCELLO_CONFIG.uccelloPath + 'controls/controlMgr',
         UCCELLO_CONFIG.uccelloPath + '/predicate/predicate'
     ],
-    function(ControlMgr ,Predicate) {
+    function(ControlMgr,Predicate) {
 
         function Product(productObj) {
             this.id = productObj.id();
@@ -51,7 +51,7 @@ define(
             this.id = resTypeObj.id();
             this.code = resTypeObj.code();
             this.name = resTypeObj.name();
-            this.className = resTypeObj.className();
+            //this.className = resTypeObj.className();
             this.resTypeGuid = resTypeObj.resTypeGuid();
 
         }
@@ -60,7 +60,6 @@ define(
             products : [],
             versions : [],
 
-
             resources : new Map(),
             buildResVersions : new Map(),
 
@@ -68,8 +67,14 @@ define(
             resTypes : new Map(),
 
             init: function(controller, constructHolder, proxy, options){
-                if ((options) && (options.hasOwnProperty('currProd'))) {
-                    this.currentProductCode = options.currProd
+                if ((options) && (options.hasOwnProperty('currProd')))  {
+                    this.currentProductCode = options.currProd;
+                    this.currentProduct = null;
+                } else {
+                    if (UCCELLO_CONFIG.resman.defaultProduct) {
+                        this.currentProductCode = UCCELLO_CONFIG.resman.defaultProduct;
+                        this.currentProduct = null;
+                    }
                 }
 
                 var _dbParams = {
@@ -81,23 +86,36 @@ define(
 
                 this.db = new ControlMgr({ controller: controller, dbparams: _dbParams },
                     null, null, null, proxy);
-
-                this.loadProducts();
+                // todo : убрать!!!
+                this.dbLoaded = false;
+                //this.loadProducts();
 
                 this.pvt = {};
                 this.pvt.controller = controller;
             },
 
-            loadProducts: function () {
+            loadProducts: function (callback) {
+                var _loaded = false;
+
                 var that = this;
 
                 this.db.getRoots(["846ff96f-c85e-4ae3-afad-7d4fd7e78144"], { rtype: "data", expr: {model : { name: "SysProduct" }} }, function (guids) {
                     guids.guids.forEach(function(guid) {
                         var _elements = that.db.getObj(guid).getCol('DataElements');
                         for (var i = 0; i < _elements.count(); i++) {
-                            that.products.push(new Product(_elements.get(i)))
+                            var _product = new Product(_elements.get(i));
+                            that.products.push(_product);
+                            if ((that.currentProductCode) && (_product.code == that.currentProductCode)) {
+                                that.currentProduct = _product
+                            }
                         }
-                    })
+                    });
+
+                    if (!_loaded) {
+                        _loaded = true
+                    } else {
+                        callback();
+                    }
                 });
 
                 this.db.getRoots(["81e37311-6be7-4fc2-a84a-77a28ee342d4"], { rtype: "data", expr: {model : { name: "SysVersion" }} }, function (guids) {
@@ -106,7 +124,13 @@ define(
                         for (var i = 0; i < _elements.count(); i++) {
                             that.versions.push(new Version(_elements.get(i)))
                         }
-                    })
+                    });
+
+                    if (!_loaded) {
+                        _loaded = true
+                    } else {
+                        callback();
+                    }
                 });
             },
 
@@ -132,20 +156,20 @@ define(
 
                 var that = this;
 
+                // todo: использовать guid с ухом!
                 this.db.getRoots(["15e20587-8a45-4e01-a135-b85544d32749"], { rtype: "data", expr: _expression }, function (guids) {
                     var _elements = that.db.getObj(guids.guids[0]).getCol('DataElements');
 
                     if (_elements.count() == 0) {
                         callback(null)
+                    } else {
+
+                        if (_elements.count() > 1) {
+                            throw new Error('duplicate resource')
+                        }
+
+                        that.loadResourceBody(_elements.get(0), callback);
                     }
-
-                    if (_elements.count() > 1) {
-                        throw new Error('duplicate resource')
-                    }
-
-                    that.loadResourceBody(_elements.get(0), callback);
-
-
                 });
             },
 
@@ -164,27 +188,29 @@ define(
                     var _count = 0;
 
                     if (_elements.count() > 0) {
-                        _elements.forEach(function (element) {
-                            if (that.resources.has(element.resGuid())) {
-                                _count++;
-                                _resources.push(that.resources.get(element.resGuid()));
+                        for (var i = 0; i < _elements.count(); i++) {
+                            var _elem = _elements.get(i);
 
-                                if (_elements.length == _count) {
+                            if (that.resources.has(_elem.resGuid())) {
+                                _count++;
+                                _resources.push(that.resources.get(_elem.resGuid()));
+
+                                if (_elements.count() == _count) {
                                     callback(_resources)
                                 }
                             } else {
-                                that.loadResourceBody(element, function (resource) {
+                                that.loadResourceBody(_elem, function (resource) {
                                     _count++;
                                     if (resource) {
                                         _resources.push(resource);
                                     }
 
-                                    if (_elements.length == _count) {
+                                    if (_elements.count() == _count) {
                                         callback(_resources)
                                     }
                                 })
                             }
-                        });
+                        }
                     } else {
                         callback(_resources);
                     }
@@ -289,57 +315,97 @@ define(
              * Загрузить ресурс
              * @returns {obj}
              */
-            loadRes: function (guidRoot) {
-                var gr = guidRoot.slice(0,36);
-                var json = require(UCCELLO_CONFIG.dataPath + 'forms/'+gr+'.json');
-                return json;
+            // todo : совместить с Proto1
+            loadRes: function (guids, done) {
+                if (UCCELLO_CONFIG.resman.useDb) {
+                    var _promise = this.getResources(guids);
+                    _promise.then(function(bodies){
+                        var _array = [];
+                        for (var body in bodies) {
+                            if (bodies.hasOwnProperty(body) && (body != 'count')) {
+                                _array.push(JSON.parse(bodies[body]))
+                            }
+                        }
+                        done({ datas: _array })
+                    })
+                } else {
+                    var _result = [];
+                    guids.forEach(function(guid) {
+                        var gr = guid.slice(0,36);
+                        var json = require(UCCELLO_CONFIG.dataPath + 'forms/' + gr + '.json');
+                        _result.push(json)
+                    })
+                    done({ datas: _result })
+                }
+            },
+
+            getResourceObj : function(guid, callback) {
+                if (this.resources.has(guid)) {
+                    callback(this.resources.get(guid))
+                } else {
+                    this.queryResourceObj(guid, function (obj) {
+                        callback(obj)
+                    })
+                }
             },
 
             getResource : function(guid) {
                 var that = this;
                 return new Promise(function (resolve, reject) {
-                    if (that.resources.has(guid)) {
-                        resolve(that.resources.get(guid).resBody)
+                    if (!that.dbLoaded) {
+                        that.loadProducts(promiseBody)
                     } else {
-                        that.queryResourceObj(guid, function (obj) {
-                            if (!obj) {
+                        promiseBody()
+                    }
+
+                    function promiseBody(){
+                        that.getResourceObj(guid, function (obj) {
+                            if ((!obj) || (!obj.resBody)) {
                                 reject(new Error('Resource not found'))
                             } else {
                                 resolve(obj.resBody)
                             }
                         })
                     }
-                });
+                })
             },
 
             getResources : function(guids) {
                 var that = this;
                 return new Promise(function(resolve) {
-                    var _resultArray = {};
-                    _resultArray.count = 0;
-                    guids.forEach(function(guid){
-                        if (that.resources.has(guid)) {
-                            var _resource = that.resources.get(guid);
+                    if (!that.dbLoaded) {
+                        that.loadProducts(promiseBody)
+                    } else {
+                        promiseBody()
+                    };
 
-                            _resultArray[_resource.resGuid] = _resource.resBody;
-                            _resultArray.count++;
-                            if (_resultArray.count == guids.length) {
-                                resolve(_resultArray)
+                    function promiseBody() {
+                        var _resultObj = {};
+                        _resultObj.count = 0;
+                        guids.forEach(function (guid) {
+                            if (that.resources.has(guid)) {
+                                var _resource = that.resources.get(guid);
+
+                                _resultObj[_resource.resGuid] = _resource.resBody;
+                                _resultObj.count++;
+                                if (_resultObj.count == guids.length) {
+                                    resolve(_resultObj)
+                                }
+                            } else {
+                                that.queryResourceObj(guid, function (obj) {
+                                    if (!obj) {
+                                        _resultObj[guid] = null;
+                                    } else {
+                                        _resultObj[guid] = obj.resBody;
+                                    }
+                                    _resultObj.count++;
+                                    if (_resultObj.count == guids.length) {
+                                        resolve(_resultObj)
+                                    }
+                                })
                             }
-                        } else {
-                            that.queryResourceObj(guid, function (obj) {
-                                if (!obj) {
-                                    _resultArray[guid] = null;
-                                } else {
-                                    _resultArray[guid] = obj.resBody;
-                                }
-                                _resultArray.count++;
-                                if (_resultArray.count == guids.length) {
-                                    resolve(_resultArray)
-                                }
-                            })
-                        }
-                    })
+                        })
+                    }
                 })
             },
 
@@ -366,8 +432,6 @@ define(
                         callback(null)
                     }
 
-                    that.resTypes.push(_elements.get(0));
-
                     var _resType = new ResType(_elements.get(0));
                     that.resTypes.set(typeGuid, _resType);
 
@@ -393,14 +457,72 @@ define(
                     })
 
                 });
-                //if (this.resTypes.has(typeGuid))
             },
 
             getResListByType : function(typeGuid) {
+                var that = this;
+                return new Promise(function(resolve, reject) {
+                    var _result = [];
+                    that.getResType(typeGuid, function(resType) {
+                        if (!resType) {
+                            reject(new Error('Type not found'));
+                        } else {
+                            that.loadResourcesByType(resType.id, function(resources) {
+                                resources.forEach(function(resource){
+                                    _result.push(resource.resGuid);
+                                });
+                                resolve(_result)
+                            })
+                        }
+                    })
 
+                });
             },
 
             createNewBuild : function () {
+
+            },
+
+            createNewResource : function(resource) {
+                var that = this;
+
+                function createResource() {
+                    var _predicate = new Predicate(that.db, {});
+                    _predicate.addCondition({field: "Id", op: "=", value: 0});
+                    var _expression = {
+                        model: {name: "SysResource"},
+                        predicate: that.db.serialize(_predicate)
+                    };
+
+                    that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], { rtype: "data", expr: _expression }, function(guids) {
+                        that.db.getObj(guids.guids[0]).newObject({
+                            fields : {
+                                Name: resource.name,
+                                Code: resource.code,
+                                Description: resource.description,
+                                ResGuid: resource.resGuid,
+                                ProdId: that.currentProduct.id,
+                                ResTypId: resource.resTypeId
+                            }
+                        }, function(obj) {
+                            obj.save()
+                        });
+
+                        //callback(_resource);
+                    })
+                }
+
+                if (!resource.resGuid) {
+                    createResource()
+                } else {
+                    this.getResourceObj(resource.resGuid, function(obj) {
+                        if (!obj) {
+                            createResource()
+                        } else {
+                            new Error('Resource exists');
+                        }
+                    })
+                }
 
             },
 
@@ -408,8 +530,11 @@ define(
 
             },
 
-            commitBuild : function() {}
+            commitBuild : function() {
+
+            }
         });
+
         return Resman;
     }
 );
