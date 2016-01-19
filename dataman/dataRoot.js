@@ -46,7 +46,13 @@ define(
                     if (localResult.result === "OK") {
                         var objGuid = objType.getGuid();
                         var cm = self.getControlMgr();
-                        var constr = cm.getContext().getConstructorHolder().getComponent(objGuid).constr;
+                        var constrHolder = cm.getConstructHolder() ? cm.getConstructHolder() :
+                            (cm.getContext() ? cm.getContext().getConstructorHolder() : null);
+                        if (!constrHolder)
+                            throw new Error("DataRoot::_$local_newObject: Undefined ConstructHolder !");
+                        var constr = constrHolder.getComponent(objGuid).constr;
+                        if (typeof (constr) !== "function")
+                            throw new Error("DataRoot::_$local_newObject: Undefined object constructor: \"" + objGuid + "\" !");
                         if (result.detail && (result.detail.length === 1)
                             && (result.detail[0].insertId !== undefined)) {
                             if (self._keyField)
