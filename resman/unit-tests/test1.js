@@ -120,7 +120,10 @@ describe('#createNewResource', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
 
-        _resManger.createNewResource({name : 'Test', code : 'TEST', description : 'Descr', resGuid : 'e8f21877-f3ba-4508-89bf-270a35f0361c', resTypeId : 1})
+        _resManger.createNewResource({name : 'Test', code : 'TEST', description : 'Descr', resGuid : 'e8f21877-f3ba-4508-89bf-270a35f0361c', resTypeId : 1}, function(result) {
+            console.log(result.result);
+            done();
+        })
     });
 });
 
@@ -148,27 +151,14 @@ xdescribe('#createNewBuild', function() {
 });
 
 
-xdescribe('#newResourceVersion', function() {
+describe('#newResourceVersion', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
-        done();
 
-        //var _interval =  setInterval(function() {
-        //    clearInterval(_interval);
-        //
-        //    var _promise = _resManger.getResListByType('7f93991a-4da9-4892-79c2-35fe44e69083');
-        //
-        //    _promise.then(function(resources) {
-        //        console.log('guid : [%s]', resources[0]);
-        //        console.log('guid : [%s]', resources[1]);
-        //        done();
-        //    }, function(reason){
-        //        console.log(reason);
-        //        done();
-        //    });
-        //
-        //    //done()
-        //}, 1000);
+        _resManger.newResourceVersion('e8f21877-f3ba-4508-89bf-270a35f0361c', 'TEST', function(result) {
+            console.log(result.result);
+            done();
+        });
     });
 });
 

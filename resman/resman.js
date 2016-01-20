@@ -6,9 +6,10 @@ if (typeof define !== 'function') {
 define(
     [
         UCCELLO_CONFIG.uccelloPath + 'controls/controlMgr',
-        UCCELLO_CONFIG.uccelloPath + '/predicate/predicate'
+        UCCELLO_CONFIG.uccelloPath + '/predicate/predicate',
+        'crypto'
     ],
-    function(ControlMgr,Predicate) {
+    function(ControlMgr, Predicate, Crypto) {
 
         function Product(productObj) {
             this.id = productObj.id();
@@ -27,6 +28,15 @@ define(
             this.currBuildId = versionObj.currBuildId();
         }
 
+        function Build(buildObj) {
+            this.id = buildObj.id();
+            this.buildNum = buildObj.buildNum();
+            this.isConfirmed = buildObj.isConfirmed();
+            this.description = buildObj.description();
+            this.versionId = buildObj.versionId();
+            this.resVersions = [];
+        }
+
         function Resource(resourceHeaderObj) {
             this.id = resourceHeaderObj.id();
             this.resGuid = resourceHeaderObj.resGuid();
@@ -34,7 +44,7 @@ define(
             this.name = resourceHeaderObj.name();
             this.description = resourceHeaderObj.description();
             this.prodId = resourceHeaderObj.prodId();
-            this.resTypeId = resourceHeaderObj.resTypId();
+            this.resTypeId = resourceHeaderObj.resTypeId();
             this.resBody = null;
         }
 
@@ -59,6 +69,7 @@ define(
         var Resman = UccelloClass.extend({
             products : [],
             versions : [],
+            builds : [],
 
             resources : new Map(),
             buildResVersions : new Map(),
@@ -146,6 +157,12 @@ define(
                 })
             },
 
+            getBuildById : function(id) {
+                return this.builds.find(function(build) {
+                    return build.id == id
+                })
+            },
+
             queryResourceObj : function(resourceGuid, callback) {
                 var _predicate = new Predicate(this.db, {});
                 _predicate.addCondition({field: "ResGuid", op: "=", value: resourceGuid});
@@ -175,7 +192,7 @@ define(
 
             loadResourcesByType : function(resTypeId, callback) {
                 var _predicate = new Predicate(this.db, {});
-                _predicate.addCondition({field: "ResTypId", op: "=", value: resTypeId});
+                _predicate.addCondition({field: "ResTypeId", op: "=", value: resTypeId});
                 var _expression = {
                     model: {name: "SysResource"},
                     predicate: this.db.serialize(_predicate)
@@ -243,6 +260,9 @@ define(
 
                         if (_resVer) {
                             _resource.resBody = _resVer.resBody;
+                            _resource.hash = _resVer.hash;
+                            _resource.resVerNum = _resVer.resVer;
+                            _resource.verDescription = _resVer.description;
                         }
 
                         that.resources.set(_resource.resGuid, _resource);
@@ -291,7 +311,7 @@ define(
 
             queryResVersionsOfBuild : function(buildId, callback) {
                 var _predicate = new Predicate(this.db, {});
-                _predicate.addCondition({field: "BuidId", op: "=", value: buildId});
+                _predicate.addCondition({field: "BuildId", op: "=", value: buildId});
                 var _expression = {
                     model: {name: "SysBuildRes"},
                     predicate: this.db.serialize(_predicate)
@@ -479,11 +499,9 @@ define(
                 });
             },
 
-            createNewBuild : function () {
 
-            },
 
-            createNewResource : function(resource) {
+            createNewResource : function(resource, callback) {
                 var that = this;
 
                 function createResource() {
@@ -502,13 +520,11 @@ define(
                                 Description: resource.description,
                                 ResGuid: resource.resGuid,
                                 ProdId: that.currentProduct.id,
-                                ResTypId: resource.resTypeId
+                                ResTypeId: resource.resTypeId
                             }
-                        }, function(obj) {
-                            obj.save()
+                        }, function(result) {
+                            callback(result)
                         });
-
-                        //callback(_resource);
                     })
                 }
 
@@ -519,15 +535,191 @@ define(
                         if (!obj) {
                             createResource()
                         } else {
-                            new Error('Resource exists');
+                            throw  new Error('Resource exists')
                         }
                     })
                 }
 
             },
 
-            newResourceVersion : function(res) {
+            newResourceVersion : function(resGuid, body, callback) {
+                if (!this.currentBuild) {
+                    var that = this;
+                    this.loadCurrentBuild(function(build){
+                        if (!build.isConfirmed) {
+                            createResVer(function (resVersion) {
+                                if (!resVersion) {
+                                    callback(null);
+                                } else {
+                                    createBuildRes(build.id, resVersion, callback)
+                                }
+                            })
+                        } else {
+                            throw  new Error('Current build is confirmed')
+                        }
+                    });
+                }
 
+                function createResVer(callback) {
+                    that.getResourceObj(resGuid, function (obj) {
+                        if (!obj) {
+                            new Error('No such resource')
+                        } else {
+                            obj.resVerNum = (obj.resVerNum || 0);
+
+                            var md5sum = Crypto.createHash('md5');
+                            md5sum.update(body);
+                            var _md5 = md5sum.digest('hex');
+
+                            if (_md5 != obj.hash) {
+                                var _predicate = new Predicate(that.db, {});
+                                _predicate.addCondition({field: "Id", op: "=", value: 0});
+                                var _expression = {
+                                    model: {name: "SysResVer"},
+                                    predicate: that.db.serialize(_predicate)
+                                };
+
+                                that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {rtype: "data", expr: _expression}, function (guids) {
+                                    that.db.getObj(guids.guids[0]).newObject({
+                                        fields: {
+                                            ResVer: obj.resVerNum + 1,
+                                            Hash: _md5,
+                                            ResBody: body,
+                                            Description: obj.verDescription,
+                                            ResId: obj.id
+                                        }
+                                    }, function (result) {
+                                        if (result.result == 'OK') {
+                                            var _resVersion = new ResVersion(that.db.getObj(result.newObject));
+                                            if (that.resVersions.has(_resVersion.resId)) {
+                                                that.resVersions.get(_resVersion.resId).push(_resVersion)
+                                            }
+                                            callback(_resVersion);
+                                        } else {
+                                            callback(null)
+                                        }
+                                    });
+                                })
+                            } else {
+                                callback(null)
+                            }
+                        }
+                    })
+                }
+
+                function createBuildRes(buildId, resVersion, callback) {
+                    var _predicate = new Predicate(that.db, {});
+                    _predicate.addCondition({field: "Id", op: "=", value: 0});
+                    var _expression = {
+                        model: {name: "SysBuildRes"},
+                        predicate: that.db.serialize(_predicate)
+                    };
+
+                    that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {rtype: "data", expr: _expression}, function (guids) {
+                        that.db.getObj(guids.guids[0]).newObject({
+                            fields: {
+                                BuildId: buildId,
+                                ResVerId: resVersion.id
+                            }
+                        }, function (result) {
+                            // Todo : надо удалять ресурс из закэшированных, т.к. тело изменено
+                            callback(result)
+                        });
+                    })
+                }
+            },
+
+            createNewBuild : function (description, callback) {
+                if (!this.currentBuild) {
+                    this.loadCurrentBuild(function(build){
+                        if (!build.isConfirmed) {
+                            throw new Error('Current build is unconfirmed')
+                        } else {
+                            var _newDescr = (description || build.description);
+                            var _newBuildNum = (build.buildNum || 0) + 1;
+
+                            var _predicate = new Predicate(that.db, {});
+                            _predicate.addCondition({field: "Id", op: "=", value: 0});
+                            var _expression = {
+                                model: {name: "SysBuild"},
+                                predicate: that.db.serialize(_predicate)
+                            };
+
+                            that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {rtype: "data", expr: _expression}, function (guids) {
+                                that.db.getObj(guids.guids[0]).newObject({
+                                    fields: {
+                                        BuildNum : _newBuildNum,
+                                        IsConfirmed : false,
+                                        Description : _newDescr,
+                                        VersionId : build.versionId
+                                    }
+                                }, function (result) {
+                                    if (result.result == 'OK') {
+                                        var _predicate = new Predicate(that.db, {});
+                                        _predicate.addCondition({field: "Id", op: "=", value: build.versionId});
+                                        var _expression = {
+                                            model: {name: "SysVersion"},
+                                            predicate: that.db.serialize(_predicate)
+                                        };
+
+
+                                        that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {rtype: "data", expr: _expression}, function (guids) {
+                                                var _version = that.db.getObj(guids.guids[0]);
+                                                _version.currBuildId()
+                                            },
+                                            function(){
+
+                                            })
+                                    } else {
+                                        // Todo : надо удалять ресурс из закэшированных, т.к. тело изменено
+                                        callback(null)
+                                    }
+                                });
+                            })
+                        }
+                    });
+                }
+            },
+
+            loadCurrentBuild : function(callback) {
+                var _currentVersion = this.getVersionById(this.currentProduct.currVerId);
+                var that = this;
+                this.loadBuild(_currentVersion.currBuildId, function(build){
+                    that.currentBuild = build;
+                    callback(build);
+                })
+            },
+
+            loadBuild : function(buildId, callback) {
+                var _build = this.getBuildById(buildId);
+                if (_build) {
+                    callback(_build)
+                } else {
+                    var _predicate = new Predicate(this.db, {});
+                    _predicate.addCondition({field: "Id", op: "=", value: buildId});
+                    var _expression = {
+                        model: {name: "SysBuild"},
+                        predicate: this.db.serialize(_predicate)
+                    };
+
+                    var that = this;
+                    this.db.getRoots(["eaec63f9-d15f-4e9d-8469-72ddca96cc16"], { rtype: "data", expr: _expression }, function(guids) {
+                        var _elements = that.db.getObj(guids.guids[0]).getCol('DataElements');
+                        if (_elements.count == 0) {
+                            callback(null)
+                        } else
+                        {
+                            _build = new Build(_elements.get(0));
+                            that.builds.push(_build);
+                            //that.getResVersionsOfBuild(buildId, function(resVersions) {
+                            //    resVersions.forEach(function(resVer) {
+                            //        _build.
+                            //    })
+                            //})
+                            callback(_build);
+                        }
+                    })
+                }
             },
 
             commitBuild : function() {
