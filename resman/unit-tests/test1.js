@@ -116,7 +116,7 @@ xdescribe('#getResListByType', function() {
     });
 });
 
-describe('#createNewResource', function() {
+xdescribe('#createNewResource', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
 
@@ -127,31 +127,7 @@ describe('#createNewResource', function() {
     });
 });
 
-xdescribe('#createNewBuild', function() {
-    it('создание Build-а', function(done) {
-        var _resManger = Main.Config.ResManager;
-
-        //var _interval =  setInterval(function() {
-        //    clearInterval(_interval);
-        //
-        //    var _promise = _resManger.getResListByType('7f93991a-4da9-4892-79c2-35fe44e69083');
-        //
-        //    _promise.then(function(resources) {
-        //        console.log('guid : [%s]', resources[0]);
-        //        console.log('guid : [%s]', resources[1]);
-        //        done();
-        //    }, function(reason){
-        //        console.log(reason);
-        //        done();
-        //    });
-        //
-        //    //done()
-        //}, 1000);
-    });
-});
-
-
-describe('#newResourceVersion', function() {
+xdescribe('#newResourceVersion', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
 
@@ -162,50 +138,24 @@ describe('#newResourceVersion', function() {
     });
 });
 
-xdescribe('#newResourceVersion', function() {
+xdescribe('#createNewBuild', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
-        done();
 
-        //var _interval =  setInterval(function() {
-        //    clearInterval(_interval);
-        //
-        //    var _promise = _resManger.getResListByType('7f93991a-4da9-4892-79c2-35fe44e69083');
-        //
-        //    _promise.then(function(resources) {
-        //        console.log('guid : [%s]', resources[0]);
-        //        console.log('guid : [%s]', resources[1]);
-        //        done();
-        //    }, function(reason){
-        //        console.log(reason);
-        //        done();
-        //    });
-        //
-        //    //done()
-        //}, 1000);
+        _resManger.createNewBuild('Новый тестовый build', function(result) {
+            console.log(result.result);
+            done();
+        })
     });
 });
 
-xdescribe('#commitBuild', function() {
+describe('#commitBuild', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
-        done();
 
-        //var _interval =  setInterval(function() {
-        //    clearInterval(_interval);
-        //
-        //    var _promise = _resManger.getResListByType('7f93991a-4da9-4892-79c2-35fe44e69083');
-        //
-        //    _promise.then(function(resources) {
-        //        console.log('guid : [%s]', resources[0]);
-        //        console.log('guid : [%s]', resources[1]);
-        //        done();
-        //    }, function(reason){
-        //        console.log(reason);
-        //        done();
-        //    });
-        //
-        //    //done()
-        //}, 1000);
+        _resManger.commitBuild(function(result) {
+            console.log(result.result);
+            done();
+        })
     });
 });

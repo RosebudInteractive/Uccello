@@ -499,8 +499,6 @@ define(
                 });
             },
 
-
-
             createNewResource : function(resource, callback) {
                 var that = this;
 
@@ -543,22 +541,20 @@ define(
             },
 
             newResourceVersion : function(resGuid, body, callback) {
-                if (!this.currentBuild) {
-                    var that = this;
-                    this.loadCurrentBuild(function(build){
-                        if (!build.isConfirmed) {
-                            createResVer(function (resVersion) {
-                                if (!resVersion) {
-                                    callback(null);
-                                } else {
-                                    createBuildRes(build.id, resVersion, callback)
-                                }
-                            })
-                        } else {
-                            throw  new Error('Current build is confirmed')
-                        }
-                    });
-                }
+                var that = this;
+                this.loadCurrentBuild(function(build){
+                    if (!build.isConfirmed) {
+                        createResVer(function (resVersion) {
+                            if (!resVersion) {
+                                callback(null);
+                            } else {
+                                createBuildRes(build.id, resVersion, callback)
+                            }
+                        })
+                    } else {
+                        throw  new Error('Current build is confirmed')
+                    }
+                });
 
                 function createResVer(callback) {
                     that.getResourceObj(resGuid, function (obj) {
@@ -630,64 +626,77 @@ define(
             },
 
             createNewBuild : function (description, callback) {
-                if (!this.currentBuild) {
-                    this.loadCurrentBuild(function(build){
-                        if (!build.isConfirmed) {
-                            throw new Error('Current build is unconfirmed')
-                        } else {
-                            var _newDescr = (description || build.description);
-                            var _newBuildNum = (build.buildNum || 0) + 1;
+                var that = this;
 
-                            var _predicate = new Predicate(that.db, {});
-                            _predicate.addCondition({field: "Id", op: "=", value: 0});
-                            var _expression = {
-                                model: {name: "SysBuild"},
-                                predicate: that.db.serialize(_predicate)
-                            };
+                this.loadCurrentBuild(function(build){
+                    if (!build.isConfirmed) {
+                        throw new Error('Current build is unconfirmed')
+                    } else {
+                        var _newDescr = (description || build.description);
+                        var _newBuildNum = (build.buildNum || 0) + 1;
 
-                            that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {rtype: "data", expr: _expression}, function (guids) {
-                                that.db.getObj(guids.guids[0]).newObject({
-                                    fields: {
-                                        BuildNum : _newBuildNum,
-                                        IsConfirmed : false,
-                                        Description : _newDescr,
-                                        VersionId : build.versionId
-                                    }
-                                }, function (result) {
-                                    if (result.result == 'OK') {
-                                        var _predicate = new Predicate(that.db, {});
-                                        _predicate.addCondition({field: "Id", op: "=", value: build.versionId});
-                                        var _expression = {
-                                            model: {name: "SysVersion"},
-                                            predicate: that.db.serialize(_predicate)
-                                        };
+                        var _predicate = new Predicate(that.db, {});
+                        _predicate.addCondition({field: "Id", op: "=", value: 0});
+                        var _expression = {
+                            model: {name: "SysBuild"},
+                            predicate: that.db.serialize(_predicate)
+                        };
+
+                        that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {rtype: "data", expr: _expression}, function (guids) {
+                            that.db.getObj(guids.guids[0]).newObject({
+                                fields: {
+                                    BuildNum : _newBuildNum,
+                                    IsConfirmed : false,
+                                    Description : _newDescr,
+                                    VersionId : build.versionId
+                                }
+                            }, function (result) {
+                                if (result.result == 'OK') {
+                                    var _newBuild = new Build(that.db.getObj(result.newObject));
+
+                                    var _predicate = new Predicate(that.db, {});
+                                    _predicate.addCondition({field: "Id", op: "=", value: build.versionId});
+                                    var _expression = {
+                                        model: {name: "SysVersion"},
+                                        predicate: that.db.serialize(_predicate)
+                                    };
 
 
-                                        that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {rtype: "data", expr: _expression}, function (guids) {
-                                                var _version = that.db.getObj(guids.guids[0]);
-                                                _version.currBuildId()
-                                            },
-                                            function(){
-
-                                            })
-                                    } else {
-                                        // Todo : надо удалять ресурс из закэшированных, т.к. тело изменено
-                                        callback(null)
-                                    }
-                                });
-                            })
-                        }
-                    });
-                }
+                                    that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {rtype: "data", expr: _expression}, function (guids) {
+                                        var _obj = that.db.getObj(guids.guids[0]);
+                                        _obj.edit(function() {
+                                            var _version = _obj.getCol('DataElements').get(0);
+                                            _version.currBuildId(_newBuild.id);
+                                            _obj.save(function(result) {
+                                                if (result.result == 'OK') {
+                                                    that.getVersionById(_newBuild.versionId).currBuildId = _newBuild.id
+                                                }
+                                                callback(result)
+                                            });
+                                        });
+                                    })
+                                } else {
+                                    // Todo : надо удалять ресурс из закэшированных, т.к. тело изменено
+                                    callback(null)
+                                }
+                            });
+                        })
+                    }
+                });
             },
 
             loadCurrentBuild : function(callback) {
-                var _currentVersion = this.getVersionById(this.currentProduct.currVerId);
-                var that = this;
-                this.loadBuild(_currentVersion.currBuildId, function(build){
-                    that.currentBuild = build;
-                    callback(build);
-                })
+                if (!this.currentBuild) {
+                    var _currentVersion = this.getVersionById(this.currentProduct.currVerId);
+                    var that = this;
+
+                    this.loadBuild(_currentVersion.currBuildId, function (build) {
+                        that.currentBuild = build;
+                        callback(build);
+                    })
+                } else {
+                    callback(this.currentBuild)
+                }
             },
 
             loadBuild : function(buildId, callback) {
@@ -711,19 +720,52 @@ define(
                         {
                             _build = new Build(_elements.get(0));
                             that.builds.push(_build);
-                            //that.getResVersionsOfBuild(buildId, function(resVersions) {
-                            //    resVersions.forEach(function(resVer) {
-                            //        _build.
-                            //    })
-                            //})
                             callback(_build);
                         }
                     })
                 }
             },
 
-            commitBuild : function() {
+            commitBuild : function(callback) {
+                var that = this;
+                 this.loadCurrentBuild(function(build) {
+                     if (!build.isConfirmed) {
+                         commit(build)
+                     }
+                 });
 
+                function commit(build) {
+                    that.getResVersionsOfBuild(build.id, function(buildResources) {
+                        if (buildResources.length != 0) {
+
+                            var _predicate = new Predicate(that.db, {});
+                            _predicate.addCondition({field: "Id", op: "=", value: build.id});
+                            var _expression = {
+                                model: {name: "SysBuild"},
+                                predicate: that.db.serialize(_predicate)
+                            };
+
+                            that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {rtype: "data", expr: _expression}, function (guids) {
+                                var _obj = that.db.getObj(guids.guids[0]);
+                                _obj.edit(function() {
+                                    var _version = _obj.getCol('DataElements').get(0);
+                                    _version.isConfirmed(true);
+                                    _obj.save(function(result) {
+                                        callback(result)
+                                    });
+                                });
+                            })
+                        } else {
+                            rollback(build)
+                        }
+                    })
+                }
+
+                function rollback(build) {
+                    if (build.buildNum > 1) {
+                        callback(null)
+                    }
+                }
             }
         });
 
