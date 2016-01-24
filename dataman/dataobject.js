@@ -15,9 +15,70 @@ define(
 
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
+                this._childsCol = null;
+                this._childs = {};
                 if (params) {
                     this.resetModifFldLog(Meta.DATA_LOG_NAME);
+                    this._childsCol = this.getCol("Childs");
+                    if (this._childsCol)
+                        this._childsCol.on({
+                            type: 'beforeAdd',
+                            subscriber: this,
+                            callback: this._beforeAddChilds
+                        }).on({
+                            type: 'add',
+                            subscriber: this,
+                            callback: this._onAddChilds
+                        }).on({
+                            type: 'del',
+                            subscriber: this,
+                            callback: this._onDeleteChilds
+                        });
+
                 };
+            },
+
+            _beforeAddChilds: function (args) {
+                var data_root = args.obj;
+                var alias = data_root.get("Alias");
+                if (this._childs[alias] !== undefined)
+                    throw new Error("Duplicate child DataRoot: \"" + alias + "\".");
+            },
+
+            _onAddChilds: function (args) {
+                var data_root = args.obj;
+                var alias = data_root.get("Alias");
+                this._childs[alias] = { dataRoot: data_root, dataObjects: data_root.getCol("DataElements") };
+            },
+
+            _onDeleteChilds: function (args) {
+                delete this._childs[args.obj.get("Alias")];
+            },
+
+            getChilds: function () {
+                var result = {};
+                var names = Object.keys(this._childs);
+                for (var i = 0; i < names.length; i++) {
+                    result[names[i]] = {
+                        dataRoot: this._childs[names[i]].dataRoot,
+                        dataObjects: this._childs[names[i]].dataObjects
+                    };
+                };
+                return result;
+            },
+
+            getDataRoot: function (name) {
+                var result = null;
+                if (this._childs[name])
+                    result = this._childs[name].dataRoot;
+                return result;
+            },
+
+            getCollection: function (name) {
+                var result = null;
+                if (this._childs[name])
+                    result = this._childs[name].dataObjects;
+                return result;
             },
 
             convert: function (cb) {
