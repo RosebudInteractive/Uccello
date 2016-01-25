@@ -159,3 +159,17 @@ describe('#commitBuild', function() {
         })
     });
 });
+
+$data.execSql({
+    cmd : "select * from sysproduct",
+    //dialect: {
+    //    mysql: "update sysproduct set description=concat('xxx ',description) where id=1",
+    //    mssql: "update sysproduct set description='xxx '+description where id=1"
+    //}
+}, {}, function (result) {
+    if (result.result === "OK") {
+        console.log(JSON.stringify(result));
+    }
+    else
+        throw new Error(result.message);
+});

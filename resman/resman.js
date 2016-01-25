@@ -7,9 +7,11 @@ define(
     [
         UCCELLO_CONFIG.uccelloPath + 'controls/controlMgr',
         UCCELLO_CONFIG.uccelloPath + '/predicate/predicate',
-        'crypto'
+        'crypto',
+        './products',
+        './versions'
     ],
-    function(ControlMgr, Predicate, Crypto) {
+    function(ControlMgr, Predicate, Crypto, Products, Versions) {
 
         function Product(productObj) {
             this.id = productObj.id();
@@ -67,8 +69,8 @@ define(
         }
 
         var Resman = UccelloClass.extend({
-            products : [],
-            versions : [],
+            //products : [],
+            //versions : [],
             builds : [],
 
             resources : new Map(),
@@ -97,6 +99,10 @@ define(
 
                 this.db = new ControlMgr({ controller: controller, dbparams: _dbParams },
                     null, null, null, proxy);
+
+                this.products = new Products(this.db);
+                this.versions = new Versions(this.db);
+
                 // todo : убрать!!!
                 this.dbLoaded = false;
                 //this.loadProducts();
@@ -105,44 +111,69 @@ define(
                 this.pvt.controller = controller;
             },
 
-            loadProducts: function (callback) {
-                var _loaded = false;
+            dictionaryIsLoaded : function() {
+                return this.products.isLoaded() && this.versions.isLoaded()
+            },
 
+            loadProducts: function (done) {
                 var that = this;
 
-                this.db.getRoots(["846ff96f-c85e-4ae3-afad-7d4fd7e78144"], { rtype: "data", expr: {model : { name: "SysProduct" }} }, function (guids) {
-                    guids.guids.forEach(function(guid) {
-                        var _elements = that.db.getObj(guid).getCol('DataElements');
-                        for (var i = 0; i < _elements.count(); i++) {
-                            var _product = new Product(_elements.get(i));
-                            that.products.push(_product);
-                            if ((that.currentProductCode) && (_product.code == that.currentProductCode)) {
-                                that.currentProduct = _product
-                            }
-                        }
-                    });
-
-                    if (!_loaded) {
-                        _loaded = true
-                    } else {
-                        callback();
+                if (this.dictionaryIsLoaded()) {
+                    done()
+                } else {
+                    if (!this.products.isLoaded()) {
+                        this.products.load(checkLoading)
                     }
-                });
 
-                this.db.getRoots(["81e37311-6be7-4fc2-a84a-77a28ee342d4"], { rtype: "data", expr: {model : { name: "SysVersion" }} }, function (guids) {
-                    guids.guids.forEach(function(guid) {
-                        var _elements = that.db.getObj(guid).getCol('DataElements');
-                        for (var i = 0; i < _elements.count(); i++) {
-                            that.versions.push(new Version(_elements.get(i)))
-                        }
-                    });
-
-                    if (!_loaded) {
-                        _loaded = true
-                    } else {
-                        callback();
+                    if (!this.versions.isLoaded()) {
+                        this.versions.load(checkLoading)
                     }
-                });
+                }
+
+                function checkLoading() {
+                    if (that.dictionaryIsLoaded()) {
+                        that.products.setCurrent(that.currentProductCode);
+                        done()
+                    }
+                }
+
+                //var _loaded = false;
+                //
+                //var that = this;
+                //
+                //this.db.getRoots(["846ff96f-c85e-4ae3-afad-7d4fd7e78144"], { rtype: "data", expr: {model : { name: "SysProduct" }} }, function (guids) {
+                //    guids.guids.forEach(function(guid) {
+                //        var _elements = that.db.getObj(guid).getCol('DataElements');
+                //        for (var i = 0; i < _elements.count(); i++) {
+                //            var _product = new Product(_elements.get(i));
+                //            that.products.push(_product);
+                //            if ((that.currentProductCode) && (_product.code == that.currentProductCode)) {
+                //                that.currentProduct = _product
+                //            }
+                //        }
+                //    });
+                //
+                //    if (!_loaded) {
+                //        _loaded = true
+                //    } else {
+                //        callback();
+                //    }
+                //});
+                //
+                //this.db.getRoots(["81e37311-6be7-4fc2-a84a-77a28ee342d4"], { rtype: "data", expr: {model : { name: "SysVersion" }} }, function (guids) {
+                //    guids.guids.forEach(function(guid) {
+                //        var _elements = that.db.getObj(guid).getCol('DataElements');
+                //        for (var i = 0; i < _elements.count(); i++) {
+                //            that.versions.push(new Version(_elements.get(i)))
+                //        }
+                //    });
+                //
+                //    if (!_loaded) {
+                //        _loaded = true
+                //    } else {
+                //        callback();
+                //    }
+                //});
             },
 
             getProductById : function(id) {
@@ -237,12 +268,12 @@ define(
             loadResourceBody : function(resourceObj, callback){
                 var _resource = new Resource(resourceObj);
 
-                var _product = this.getProductById(_resource.prodId);
+                var _product = this.products.getById(_resource.prodId);
                 if (!_product) {
                     throw Error('Undefined product')
                 }
 
-                var _version = this.getVersionById(_product.currVerId);
+                var _version = this.versions.getById(_product.currVerId);
                 if (!_version) {
                     throw Error('Undefined version')
                 }
@@ -372,11 +403,13 @@ define(
             getResource : function(guid) {
                 var that = this;
                 return new Promise(function (resolve, reject) {
-                    if (!that.dbLoaded) {
-                        that.loadProducts(promiseBody)
-                    } else {
-                        promiseBody()
-                    }
+                    that.loadProducts(promiseBody)
+
+                    //if (!that.dbLoaded) {
+                    //
+                    //} else {
+                    //    promiseBody()
+                    //}
 
                     function promiseBody(){
                         that.getResourceObj(guid, function (obj) {
@@ -393,11 +426,12 @@ define(
             getResources : function(guids) {
                 var that = this;
                 return new Promise(function(resolve) {
-                    if (!that.dbLoaded) {
-                        that.loadProducts(promiseBody)
-                    } else {
-                        promiseBody()
-                    };
+                    that.loadProducts(promiseBody)
+                    //if (!that.dbLoaded) {
+                    //    that.loadProducts(promiseBody)
+                    //} else {
+                    //    promiseBody()
+                    //};
 
                     function promiseBody() {
                         var _resultObj = {};
@@ -556,7 +590,7 @@ define(
                     }
                 });
 
-                function createResVer(callback) {
+                function createResVer(transaction) {
                     that.getResourceObj(resGuid, function (obj) {
                         if (!obj) {
                             new Error('No such resource')
@@ -669,7 +703,7 @@ define(
                                             _version.currBuildId(_newBuild.id);
                                             _obj.save(function(result) {
                                                 if (result.result == 'OK') {
-                                                    that.getVersionById(_newBuild.versionId).currBuildId = _newBuild.id
+                                                    that.versions.getById(_newBuild.versionId).currBuildId = _newBuild.id
                                                 }
                                                 callback(result)
                                             });
@@ -687,7 +721,7 @@ define(
 
             loadCurrentBuild : function(callback) {
                 if (!this.currentBuild) {
-                    var _currentVersion = this.getVersionById(this.currentProduct.currVerId);
+                    var _currentVersion = this.versions.getById(this.products.current.currVerId);
                     var that = this;
 
                     this.loadBuild(_currentVersion.currBuildId, function (build) {
@@ -714,7 +748,7 @@ define(
                     var that = this;
                     this.db.getRoots(["eaec63f9-d15f-4e9d-8469-72ddca96cc16"], { rtype: "data", expr: _expression }, function(guids) {
                         var _elements = that.db.getObj(guids.guids[0]).getCol('DataElements');
-                        if (_elements.count == 0) {
+                        if (_elements.count() == 0) {
                             callback(null)
                         } else
                         {
@@ -731,6 +765,8 @@ define(
                  this.loadCurrentBuild(function(build) {
                      if (!build.isConfirmed) {
                          commit(build)
+                     } else {
+                         callback( {result : 'OK'} )
                      }
                  });
 
