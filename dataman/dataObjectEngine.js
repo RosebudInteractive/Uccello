@@ -204,6 +204,38 @@ define(
                 return result;
             },
 
+            execSql: function (sql, options, callback) {
+                var res_promise;
+                if (this.hasConnection()) {
+                    res_promise = this._query.execSql(sql, options);
+                }
+                else
+                    res_promise = Promise.reject(new Error("DB connection wasn't defined."));
+
+                var result = {};
+                res_promise
+                    .then(function (opResult) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "OK";
+                                result.detail = opResult;
+                                callback(result);
+                            }, 0);
+                    })
+                    .catch(function (err) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "ERROR";
+                                result.message = "Unknown error in \"execSql\".";
+                                if (err.message)
+                                    result.message = err.message;
+                                callback(result);
+                            }, 0);
+                    });
+
+                return UCCELLO_CONFIG.REMOTE_RESULT;
+            },
+
             execBatch: function (batch, callback) {
                 console.log("execBatch: " + JSON.stringify(batch));
 
@@ -259,7 +291,9 @@ define(
                     };
 
                     res_promise = this.transaction(batchFunc);
-                };
+                }
+                else
+                    res_promise = Promise.reject(new Error("DB connection wasn't defined."));
 
                 res_promise
                     .then(function (opResult) {
@@ -558,8 +592,7 @@ define(
                         "typeGuid": request.model.dataRootGuid()
                     },
                     "fields": {
-                        "Id": 1000,
-                        "Name": request.model.dataRootName()
+                        "dbgName": request.model.dataRootName()
                     },
                     "collections": {
                         "DataElements": [
@@ -607,8 +640,7 @@ define(
                                                 "typeGuid": ch_query.model.dataRootGuid()
                                             },
                                             "fields": {
-                                                "Id": 1000,
-                                                "Name": ch_query.model.dataRootName(),
+                                                "dbgName": ch_query.model.dataRootName(),
                                                 "Alias": ch_query.alias
                                             },
                                             "collections": {

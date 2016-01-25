@@ -17,7 +17,9 @@ define(
                 ROLLBACK_TRAN: 3,
                 INSERT: 4,
                 SELECT: 5,
-                UPDATE: 6
+                UPDATE: 6,
+                DELETE: 7,
+                RAW: 8
             },
 
             init: function (engine, options) {
@@ -237,6 +239,14 @@ define(
                     values: values.join(", ")
                 };
                 return { sqlCmd: _.template(query)(data).trim() + ";", params: params, type: this.queryTypes.INSERT, meta: model };
+            },
+
+            execSql: function (sql) {
+                var curr_dialect = this.getProvider().providerId;
+                var cmd = (sql && sql.dialect && sql.dialect[curr_dialect]) ? sql.dialect[curr_dialect] : (sql.cmd ? sql.cmd : null);
+                if (!cmd)
+                    throw new Error("Empty SQL command !");
+                return { sqlCmd: cmd + ";", params: [], type: this.queryTypes.RAW };
             },
 
             commitTransactionQuery: function () {

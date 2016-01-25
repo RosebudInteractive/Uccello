@@ -320,8 +320,11 @@ define(
                 if (typeof (proc) === "function") {
                     for (var i = 0; i < this.countCol() ; i++) {
                         var childCol = this.getCol(i);
-                        for (var j = 0; j < childCol.count() ; j++)
-                            proc(childCol.get(j));
+                        for (var j = 0; j < childCol.count(); j++) {
+                            var child = childCol.get(j);
+                            proc(child);
+                            child._iterateChilds(proc);
+                        };
                     };
                 };
             },
