@@ -91,6 +91,14 @@ define(
                 });
             },
 
+            execSql: function (sql, options) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    var sqlCmd = self._query_gen.execSql(sql);
+                    resolve(self._runQuery(sqlCmd, options));
+                });
+            },
+
             commitTransaction: function (transaction) {
                 var self = this;
                 return new Promise(function (resolve, reject) {

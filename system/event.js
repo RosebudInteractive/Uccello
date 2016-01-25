@@ -37,7 +37,7 @@ define (
                         this._eventHandlers[eventName] = [];
 
                     if (!handler.subscriber || !handler.callback) {
-                        return;
+                        return this;
                     }
                     if (!this._eventHandlerExists(handler)) {
                         //handler.id = calypso1.database.getNewLid();
