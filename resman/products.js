@@ -7,12 +7,10 @@ if (typeof define !== 'function') {
 }
 
 define([
-        //UCCELLO_CONFIG.uccelloPath + 'controls/controlMgr',
-        //UCCELLO_CONFIG.uccelloPath + '/predicate/predicate',
-        './resUtils'
+        './resUtils', 'events'
     ],
 
-    function(ResUtils) {
+    function(ResUtils, EventEmitter) {
         function Product(productObj) {
             this.id = productObj.id();
             this.code = productObj.code();
@@ -21,13 +19,15 @@ define([
             this.currVerId = productObj.currVerId();
         }
 
-        var Products = UccelloClass.extend({
+        return UccelloClass.extend({
 
             init : function(db) {
+                //UccelloClass.super.apply(this);
                 this.db = db;
                 this.products = [];
                 this.current = null;
                 this.state = ResUtils.state.new;
+                this.events = new EventEmitter();
 
                 this.queryGuid = '846ff96f-c85e-4ae3-afad-7d4fd7e78144';
             },
@@ -74,13 +74,12 @@ define([
             },
 
             setCurrent : function(productCode) {
-                this.current = this.getByCode(productCode);
+                if ((!this.current) || (this.current.code != productCode)) {
+                    this.current = this.getByCode(productCode);
+                    this.events.emit('changeCurrent');
+                }
             }
-
-
         });
-
-        return Products;
     }
 
 );

@@ -52,9 +52,6 @@ describe('#getResources', function() {
     it('Загрузка 2 ресурсов', function(done) {
         var _resManger = Main.Config.ResManager;
 
-        //var _interval =  setInterval(function() {
-        //    clearInterval(_interval);
-
         var _promise = _resManger.getResources(['0c5e3ff0-1c87-3d99-5597-21d498a477c6', '0d6f3891-f800-9f8f-edac-53cd51792f0c']);
 
         _promise.then(function (bodys) {
@@ -65,54 +62,41 @@ describe('#getResources', function() {
             console.log(reason);
             done();
         });
-
-        //done()
-        //}, 1000);
     });
 });
 
-xdescribe('#getResByType', function() {
+describe('#getResByType', function() {
     it('Загрузка ресурсов по типу', function(done) {
         var _resManger = Main.Config.ResManager;
 
-        var _interval =  setInterval(function() {
-            clearInterval(_interval);
+        var _promise = _resManger.getResByType('7f93991a-4da9-4892-79c2-35fe44e69083');
 
-            var _promise = _resManger.getResByType('7f93991a-4da9-4892-79c2-35fe44e69083');
-
-            _promise.then(function(resources) {
-                console.log('body0 : [%s]', resources['0c5e3ff0-1c87-3d99-5597-21d498a477c6']);
-                console.log('body1 : [%s]', resources['0d6f3891-f800-9f8f-edac-53cd51792f0c']);
-                done();
-            }, function(reason){
-                console.log(reason);
-                done();
-            });
-
-        }, 1000);
+        _promise.then(function (resources) {
+            console.log('body0 : [%s]', resources['0c5e3ff0-1c87-3d99-5597-21d498a477c6']);
+            console.log('body1 : [%s]', resources['0d6f3891-f800-9f8f-edac-53cd51792f0c']);
+            done();
+        }, function (reason) {
+            console.log(reason);
+            done();
+        });
     });
 });
 
-xdescribe('#getResListByType', function() {
+describe('#getResListByType', function() {
     it('Загрузка ресурсов по типу', function(done) {
         var _resManger = Main.Config.ResManager;
 
-        var _interval =  setInterval(function() {
-            clearInterval(_interval);
+        var _promise = _resManger.getResListByType('7f93991a-4da9-4892-79c2-35fe44e69083');
 
-            var _promise = _resManger.getResListByType('7f93991a-4da9-4892-79c2-35fe44e69083');
+        _promise.then(function (resources) {
+            console.log('guid : [%s]', resources[0]);
+            console.log('guid : [%s]', resources[1]);
+            done();
+        }, function (reason) {
+            console.log(reason);
+            done();
+        });
 
-            _promise.then(function(resources) {
-                console.log('guid : [%s]', resources[0]);
-                console.log('guid : [%s]', resources[1]);
-                done();
-            }, function(reason){
-                console.log(reason);
-                done();
-            });
-
-            //done()
-        }, 1000);
     });
 });
 
@@ -160,7 +144,7 @@ describe('#commitBuild', function() {
     });
 });
 
-$data.execSql({
+/*$data.execSql({
     cmd : "select * from sysproduct",
     //dialect: {
     //    mysql: "update sysproduct set description=concat('xxx ',description) where id=1",
@@ -172,4 +156,4 @@ $data.execSql({
     }
     else
         throw new Error(result.message);
-});
+});*/

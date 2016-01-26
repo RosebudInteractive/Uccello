@@ -21,12 +21,13 @@ define([
         }
 
 
-        var Versions = UccelloClass.extend({
+        return UccelloClass.extend({
 
             init : function(db) {
                 this.db = db;
                 this.state = ResUtils.state.new;
                 this.versions = [];
+                this.current = null;
                 this.queryGuid = '81e37311-6be7-4fc2-a84a-77a28ee342d4';
             },
 
@@ -59,10 +60,12 @@ define([
                 return this.versions.find(function(version) {
                     return version.id == id
                 })
+            },
+
+            setCurrent : function(versionId) {
+                this.current = this.getById(versionId);
             }
         });
-
-        return Versions;
     }
 
 );
