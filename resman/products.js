@@ -22,14 +22,13 @@ define([
         return UccelloClass.extend({
 
             init : function(db) {
-                //UccelloClass.super.apply(this);
                 this.db = db;
                 this.products = [];
                 this.current = null;
                 this.state = ResUtils.state.new;
                 this.events = new EventEmitter();
 
-                this.queryGuid = '846ff96f-c85e-4ae3-afad-7d4fd7e78144';
+                this.queryResVersionsGuid = '846ff96f-c85e-4ae3-afad-7d4fd7e78144';
             },
 
             load : function(done) {
@@ -38,9 +37,9 @@ define([
                 } else {
                     var that = this;
 
-                    this.db.getRoots([this.queryGuid], {rtype: "data", expr: {model: {name: "SysProduct"}}}, function (guids) {
+                    this.db.getRoots([this.queryResVersionsGuid], {rtype: "data", expr: {model: {name: "SysProduct"}}}, function (guids) {
                         var _objectGuid = guids.guids[0];
-                        that.queryGuid = _objectGuid;
+                        that.queryResVersionsGuid = _objectGuid;
 
                         var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
                         for (var i = 0; i < _elements.count(); i++) {

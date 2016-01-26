@@ -10,20 +10,27 @@ if (typeof define !== 'function') {
 define([
         './products',
         './versions',
-        './resTypes'
+        './resTypes',
+        'events'
     ],
 
-    function(Products, Versions, ResTypes) {
+    function(Products, Versions, ResTypes, EventEmitter) {
 
         return UccelloClass.extend({
+
             init : function(db) {
                 this.products = new Products(db);
                 this.versions = new Versions(db);
                 this.resTypes = new ResTypes(db);
+                this.events = new EventEmitter;
 
                 var that = this;
                 this.products.events.on('changeCurrent', function() {
                     that.onChangeCurrentProduct()
+                });
+
+                this.versions.events.on('changeCurrent', function() {
+                    that.onChangeCurrentVersion()
                 });
             },
 
@@ -67,6 +74,10 @@ define([
 
             onChangeCurrentProduct: function () {
                 this.versions.setCurrent(this.products.current.currVerId);
+            },
+
+            onChangeCurrentVersion: function () {
+                this.events.emit('changeCurrentVersion')
             },
 
             isLoaded : function() {

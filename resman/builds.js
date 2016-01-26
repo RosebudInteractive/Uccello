@@ -32,7 +32,7 @@ define([
                 this.state = ResUtils.state.new;
                 this.current = null;
 
-                this.queryGuid = 'eaec63f9-d15f-4e9d-8469-72ddca96cc16';
+                this.queryResVersionsGuid = 'eaec63f9-d15f-4e9d-8469-72ddca96cc16';
             },
 
             loadBuild : function(buildId, callback) {
@@ -48,9 +48,9 @@ define([
                     };
 
                     var that = this;
-                    this.db.getRoots([this.queryGuid], { rtype: "data", expr: _expression }, function(guids) {
+                    this.db.getRoots([this.queryResVersionsGuid], { rtype: "data", expr: _expression }, function(guids) {
                         var _objectGuid = guids.guids[0];
-                        that.queryGuid = _objectGuid;
+                        that.queryResVersionsGuid = _objectGuid;
 
                         var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
                         if (_elements.count() == 0) {
@@ -59,7 +59,7 @@ define([
                         {
                             _build = new Build(that.db, _elements.get(0));
                             that.builds.push(_build);
-                            _build.loadResources(function() {
+                            _build.loadResVersions(function() {
                                 callback(_build);
                             });
                         }
@@ -87,8 +87,13 @@ define([
                 })
             },
 
-            commitCurrentBuild : function(callback) {
+            createBuild : function() {
+                var that = this;
+                return new Promise(promiseBody);
 
+                function promiseBody(resolve, reject) {
+
+                }
             }
 
         });

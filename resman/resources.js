@@ -29,7 +29,7 @@ define([
                 this.resources = new Map();
                 this.state = ResUtils.state.new;
 
-                this.queryGuid = '15e20587-8a45-4e01-a135-b85544d32749';
+                this.queryResVersionsGuid = '15e20587-8a45-4e01-a135-b85544d32749';
             },
 
             getObject : function(guid, callback) {
@@ -55,9 +55,9 @@ define([
                 };
 
                 var that = this;
-                this.db.getRoots([this.queryGuid], { rtype: "data", expr: _expression }, function (guids) {
+                this.db.getRoots([this.queryResVersionsGuid], { rtype: "data", expr: _expression }, function (guids) {
                     var _objectGuid = guids.guids[0];
-                    that.queryGuid = _objectGuid;
+                    that.queryResVersionsGuid = _objectGuid;
 
                     var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
 

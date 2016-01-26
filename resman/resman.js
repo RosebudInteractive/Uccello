@@ -13,9 +13,10 @@ define(
         //'./resTypes',
 
         './directories',
-        './builds'
+        './builds',
+        './resUtils'
     ],
-    function(ControlMgr, Predicate, Crypto, Directories, Builds) {
+    function(ControlMgr, Predicate, Crypto, Directories, Builds, ResUtils) {
 
         function Resource(resourceHeaderObj) {
             this.id = resourceHeaderObj.id();
@@ -45,6 +46,9 @@ define(
             resVersions: new Map(),
 
             init: function (controller, constructHolder, proxy, options) {
+                this.pvt = {};
+                this.pvt.controller = controller;
+
                 if ((options) && (options.hasOwnProperty('currProd'))) {
                     this.currentProductCode = options.currProd;
                     this.currentProduct = null;
@@ -68,11 +72,17 @@ define(
                 this.directories = new Directories(this.db);
                 this.builds = new Builds(this.db, this.directories);
 
-                this.pvt = {};
-                this.pvt.controller = controller;
+                var that = this;
+                this.directories.events.on('changeCurrentVersion', function() {
+                    that.onChangeCurrentVersion()
+                });
             },
 
-            loadProducts: function (done) {
+            onChangeCurrentVersion : function() {
+                this.builds.loadCurrentBuild(function() {})
+            },
+
+            loadDirectories: function (done) {
                 var that = this;
 
                 this.directories.load(function () {
@@ -81,6 +91,8 @@ define(
                 });
             },
 
+
+            // ------------------------------------------------
             queryResourceObj: function (resourceGuid, callback) {
                 var _predicate = new Predicate(this.db, {});
                 _predicate.addCondition({field: "ResGuid", op: "=", value: resourceGuid});
@@ -260,7 +272,7 @@ define(
                     callback(_resVersions);
                 })
             },
-
+            // -------------------------------------------------
             /**
              * Загрузить ресурс
              * @returns {obj}
@@ -302,7 +314,7 @@ define(
             getResource: function (guid) {
                 var that = this;
                 return new Promise(function (resolve, reject) {
-                    that.loadProducts(promiseBody);
+                    that.loadDirectories(promiseBody);
 
                     function promiseBody() {
                         that.getResourceObj(guid, function (obj) {
@@ -319,7 +331,7 @@ define(
             getResources: function (guids) {
                 var that = this;
                 return new Promise(function (resolve) {
-                    that.loadProducts(promiseBody);
+                    that.loadDirectories(promiseBody);
 
                     function promiseBody() {
                         var _resultObj = {};
@@ -354,7 +366,7 @@ define(
             getResByType: function (typeGuid) {
                 var that = this;
                 return new Promise(function (resolve, reject) {
-                    that.loadProducts(promiseBody);
+                    that.loadDirectories(promiseBody);
 
                     function promiseBody() {
                         var _result = {};
@@ -377,7 +389,7 @@ define(
             getResListByType: function (typeGuid) {
                 var that = this;
                 return new Promise(function (resolve, reject) {
-                    that.loadProducts(promiseBody);
+                    that.loadDirectories(promiseBody);
 
                     function promiseBody() {
                         var _result = [];
@@ -448,7 +460,10 @@ define(
                             if (!resVersion) {
                                 callback(null);
                             } else {
-                                createBuildRes(build.id, resVersion, callback)
+                                build.addResVersion(resVersion.id).then(
+                                    function() {/*transaction commit*/},
+                                    function() {/*transaction rollback + reload resource*/}
+                                )
                             }
                         })
                     } else {
@@ -506,33 +521,42 @@ define(
                     })
                 }
 
-                function createBuildRes(buildId, resVersion, callback) {
-                    var _predicate = new Predicate(that.db, {});
-                    _predicate.addCondition({field: "Id", op: "=", value: 0});
-                    var _expression = {
-                        model: {name: "SysBuildRes"},
-                        predicate: that.db.serialize(_predicate)
-                    };
-
-                    that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {
-                        rtype: "data",
-                        expr: _expression
-                    }, function (guids) {
-                        that.db.getObj(guids.guids[0]).newObject({
-                            fields: {
-                                BuildId: buildId,
-                                ResVerId: resVersion.id
-                            }
-                        }, function (result) {
-                            // Todo : надо удалять ресурс из закэшированных, т.к. тело изменено
-                            callback(result)
-                        });
-                    })
-                }
+                //function createBuildRes(buildId, resVersion, callback) {
+                //    var _predicate = new Predicate(that.db, {});
+                //    _predicate.addCondition({field: "Id", op: "=", value: 0});
+                //    var _expression = {
+                //        model: {name: "SysBuildRes"},
+                //        predicate: that.db.serialize(_predicate)
+                //    };
+                //
+                //    that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {
+                //        rtype: "data",
+                //        expr: _expression
+                //    }, function (guids) {
+                //        that.db.getObj(guids.guids[0]).newObject({
+                //            fields: {
+                //                BuildId: buildId,
+                //                ResVerId: resVersion.id
+                //            }
+                //        }, function (result) {
+                //            // Todo : надо удалять ресурс из закэшированных, т.к. тело изменено
+                //            callback(result)
+                //        });
+                //    })
+                //}
             },
 
             createNewBuild: function (description, callback) {
                 var that = this;
+                this.builds.createBuild().then(
+                    function(buildId){
+                        that.directories.getCurrentVersion().setCurrentBuild(buildId).then(
+                            function() {/*transaction commit*/},
+                            function() {/*transaction rollback*/}
+                        )
+                    },
+                    function(){/*transaction rollback*/}
+                )
 
                 this.builds.loadCurrentBuild(function (build) {
                     if (!build.isConfirmed) {
@@ -597,18 +621,30 @@ define(
                 });
             },
 
-
             commitBuild: function (callback) {
                 var that = this;
 
                 var _promise = this.builds.current.commit();
-                _promise.then(function(){
-                    that.directories.getCurrentVersion().updateLast})
-
-
-
-
-
+                _promise.then(
+                    function(){
+                        that.directories.getCurrentVersion().setLastConfirmedBuild().
+                        then(
+                            function() {/*transaction commit*/},
+                            function() {/*transaction rollback*/}
+                        )
+                    },
+                    function(error) {
+                        switch (error.reason) {
+                            case ResUtils.errorReasons.dbError : {/*transaction rollback*/ break;}
+                            case ResUtils.errorReasons.objectError : {
+                                that.directories.getCurrentVersion().revertToLastConfirmedBuild();
+                                break;
+                            }
+                            default :  {/*transaction rollback*/ break;}
+                        }
+                    }
+                );
+/*
                 this.builds.loadCurrentBuild(function (build) {
                     if (!build.isConfirmed) {
                         commit(build)
@@ -651,7 +687,7 @@ define(
                     if (build.buildNum > 1) {
                         callback(null)
                     }
-                }
+                }*/
             }
         });
 

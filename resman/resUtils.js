@@ -11,6 +11,7 @@ define([],
         var ResUtils = UccelloClass.extend({});
 
         ResUtils.state = {new : 0, loaded : 1, changed : 2};
+        ResUtils.errorReasons = {dbError : 0, objectError : 1};
 
         return ResUtils;
     }

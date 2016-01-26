@@ -7,19 +7,12 @@ if (typeof define !== 'function') {
 }
 
 define([
-        './resUtils'
+        './resUtils',
+        'events',
+        './version'
     ],
 
-    function(ResUtils) {
-        function Version(versionObj) {
-            this.id = versionObj.id();
-            this.code = versionObj.code();
-            this.name = versionObj.name();
-            this.description = versionObj.description();
-            this.prodId = versionObj.prodId();
-            this.currBuildId = versionObj.currBuildId();
-        }
-
+    function(ResUtils, EventEmitter, Version) {
 
         return UccelloClass.extend({
 
@@ -28,7 +21,9 @@ define([
                 this.state = ResUtils.state.new;
                 this.versions = [];
                 this.current = null;
-                this.queryGuid = '81e37311-6be7-4fc2-a84a-77a28ee342d4';
+                this.events = new EventEmitter();
+
+                this.queryResVersionsGuid = '81e37311-6be7-4fc2-a84a-77a28ee342d4';
             },
 
             load : function(done) {
@@ -37,9 +32,9 @@ define([
                 } else {
                     var that = this;
 
-                    this.db.getRoots([this.queryGuid], { rtype: "data", expr: {model : { name: "SysVersion" }} }, function (guids) {
+                    this.db.getRoots([this.queryResVersionsGuid], { rtype: "data", expr: {model : { name: "SysVersion" }} }, function (guids) {
                         var _objectGuid = guids.guids[0];
-                        that.queryGuid = _objectGuid;
+                        that.queryResVersionsGuid = _objectGuid;
 
                         var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
                         for (var i = 0; i < _elements.count(); i++) {
@@ -63,7 +58,10 @@ define([
             },
 
             setCurrent : function(versionId) {
-                this.current = this.getById(versionId);
+                if ((!this.current) || (this.current.id != versionId)) {
+                    this.current = this.getById(versionId);
+                    this.events.emit('changeCurrent')
+                }
             }
         });
     }

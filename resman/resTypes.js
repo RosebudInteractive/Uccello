@@ -24,7 +24,7 @@ define(['./resUtils'],
                 this.db = db;
                 this.state = ResUtils.state.new;
                 this.types = [];
-                this.queryGuid = 'd53fa310-a5ce-4054-97e0-c894a03d3719';
+                this.queryResVersionsGuid = 'd53fa310-a5ce-4054-97e0-c894a03d3719';
             },
 
             getByGuid : function(typeGuid) {
@@ -35,9 +35,9 @@ define(['./resUtils'],
 
             load : function(done) {
                 var that = this;
-                this.db.getRoots([this.queryGuid], {rtype: "data", expr: {model: {name: "SysResType"}}}, function(guids) {
+                this.db.getRoots([this.queryResVersionsGuid], {rtype: "data", expr: {model: {name: "SysResType"}}}, function(guids) {
                     var _objectGuid = guids.guids[0];
-                    that.queryGuid = _objectGuid;
+                    that.queryResVersionsGuid = _objectGuid;
 
                     var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
 
