@@ -19,7 +19,7 @@ define(
                 UccelloClass.super.apply(this, [cm, params]);
             },
 
-            newObject: function (flds, cb) {
+            newObject: function (flds, options, cb) {
                 var result = null;
 
                 var args = [];
@@ -30,7 +30,7 @@ define(
                 return result;
             },
 
-            _$local_newObject: function (flds, cb) {
+            _$local_newObject: function (flds, options, cb) {
 
                 var db = this.getDB();
                 var objType = this.getCol("DataElements").getColType();
@@ -83,7 +83,7 @@ define(
                     };
                     var batch = [];
                     batch.push(dataObj);
-                    $data.execBatch(batch, afterObjCreate);
+                    $data.execBatch(batch, options, afterObjCreate);
                 }
                 else {
                     setTimeout(function () {

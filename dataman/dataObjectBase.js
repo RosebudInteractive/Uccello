@@ -97,7 +97,7 @@ define(
                     this[local_name].apply(this, arguments);
             },
 
-            save: function (cb) {
+            save: function (options, cb) {
                 var callback = arguments.length > 0 ? arguments[arguments.length - 1] : null;
                 if (typeof (callback) !== "function")
                     throw new Error("DataObjectBase::save Invalid callback type \"" + typeof (callback) + "\".");
@@ -129,7 +129,7 @@ define(
                     this[local_name].apply(this, arguments);
             },
 
-            modify: function (modif_func, callback) {
+            modify: function (modif_func, options, callback) {
 
                 var self = this;
 
@@ -145,7 +145,7 @@ define(
                         if (result && (result.result === "OK")) {
                             try {
                                 modif_func();
-                                self.save(finalize);
+                                self.save(options, finalize);
                             } catch (err) {
                                 finalize({ result: "ERROR", message: err.message });
                             };
@@ -185,7 +185,7 @@ define(
                     }, 0);
             },
 
-            _$local_save: function (cb) {
+            _$local_save: function (options, cb) {
                 var result = { result: "OK" };
 
                 var self = this;
@@ -271,7 +271,7 @@ define(
                             }
                             if (batch.length > 0) {
                                 is_done = true;
-                                $data.execBatch(batch, local_cb);
+                                $data.execBatch(batch, options, local_cb);
                             };
                         };
 
