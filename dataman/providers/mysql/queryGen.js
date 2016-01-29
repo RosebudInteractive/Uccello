@@ -2,9 +2,15 @@ if (typeof define !== 'function') {
     var define = require('amdefine')(module);
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
+
+var currPath = __dirname;
+
 define(
-    ['../base/queryGen', 'lodash', UCCELLO_CONFIG.uccelloPath + '/memDB/memMetaType'],
-    function (Base, _, MemMetaType) {
+    ['path', '../base/queryGen', 'lodash', UCCELLO_CONFIG.uccelloPath + '/memDB/memMetaType'],
+    function (Path, Base, _, MemMetaType) {
+
+        var iniScriptPath = Path.resolve(currPath, "./scripts/dbInit.sql");
+        var ROWID_TABLE_PREFIX = "__GEN_ROWID_";
 
         var MySqlQueryGen = Base.extend({
 
@@ -12,6 +18,7 @@ define(
 
             init: function (engine, options) {
                 UccelloClass.super.apply(this, [engine, options]);
+                this._iniScriptPath = iniScriptPath;
             },
 
             showForeignKeysQuery: function (src_name, dst_name) {
@@ -50,15 +57,24 @@ define(
 
             dropTableQuery: function (model) {
                 var query = "DROP TABLE IF EXISTS <%= table %>";
-                return {
+                var batch = [];
+                batch.push({
                     sqlCmd: _.template(query)({ table: this.escapeId(model.name()) }).trim() + ";",
                     params: []
-                };
+                });
+                batch.push({
+                    sqlCmd: _.template(query)({ table: this.escapeId(ROWID_TABLE_PREFIX + model.name()) }).trim() + ";",
+                    params: []
+                });
+                return batch;
             },
 
             createTableQuery: function (model) {
                 var query = "CREATE TABLE IF NOT EXISTS <%= table %> (<%= fields%>) ENGINE=<%= engine%>";
+                var query_gen = "CREATE TABLE IF NOT EXISTS <%= table %> (`Id` int NOT NULL auto_increment, `fake` int, PRIMARY KEY (`Id`)) ENGINE=<%= engine%>";
+
                 var self = this;
+                var batch = [];
                 var attrs = [];
                 var provider = this.getProvider();
                 _.forEach(model.fields(), function (field) {
@@ -77,7 +93,16 @@ define(
                     fields: attrs.join(", "),
                     engine: this._options.provider_options.engine
                 };
-                return { sqlCmd: _.template(query)(values).trim() + ";", params: [] };
+                batch.push({ sqlCmd: _.template(query)(values).trim() + ";", params: [] });
+                batch.push({
+                    sqlCmd: _.template(query_gen)(
+                        {
+                            table: this.escapeId(ROWID_TABLE_PREFIX + model.name()),
+                            engine: this._options.provider_options.engine
+                        }).trim() + ";", params: []
+                });
+
+                return batch;
             },
 
             updateQuery: function (model, vals, predicate, options) {
@@ -96,6 +121,37 @@ define(
                 return updateCmd;
             },
 
+            setTableRowIdQuery: function (model) {
+                var vals = {};
+                var sql_params = [];
+                var stringType = (MemMetaType.createTypeObject("datatype", this.getEngine().getDB()))
+                    .setValue({ type: "string", length: 255 });
+                vals.table = this.escapeValue(model.name(), stringType, sql_params);
+                vals.rid_table = this.escapeValue(ROWID_TABLE_PREFIX + model.name(), stringType, sql_params);
+                vals.pk = this.escapeValue(model.getPrimaryKey().name(), stringType, sql_params);
+
+                var query = "CALL _sys_sp_set_row_id(<%= table %>, <%= rid_table %>, <%= pk %>, NULL)";
+                return {
+                    sqlCmd: _.template(query)(vals).trim() + ";",
+                    params: sql_params,
+                };
+            },
+
+            getNextRowIdQuery: function (model) {
+                var vals = {};
+                var sql_params = [];
+                var stringType = (MemMetaType.createTypeObject("datatype", this.getEngine().getDB()))
+                    .setValue({ type: "string", length: 255 });
+                vals.table = this.escapeValue(ROWID_TABLE_PREFIX + model.name(), stringType, sql_params);
+
+                var query = "CALL _sys_sp_get_row_id(<%= table %>)";
+                return {
+                    sqlCmd: _.template(query)(vals).trim() + ";",
+                    params: sql_params,
+                    type: this.queryTypes.ROWID
+                };
+            },
+
             insertQuery: function (model, vals) {
                 var mysql_vals = _.cloneDeep(vals || {});
                 var rw = model.getRowVersionField();
@@ -103,6 +159,10 @@ define(
                     mysql_vals[rw.name()] = this.ROW_VERSION_INIT_VAL;
                 var insertCmd = UccelloClass.super.apply(this, [model, mysql_vals]);
                 insertCmd.rowVersion = this.ROW_VERSION_INIT_VAL.toString();
+                var pk = model.getPrimaryKey();
+                if (pk && vals[pk.name()]) {
+                    insertCmd.insertId = vals[pk.name()];
+                }
                 return insertCmd;
             },
 

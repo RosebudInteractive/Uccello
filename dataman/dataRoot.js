@@ -11,9 +11,22 @@ define(
             classGuid: UCCELLO_CONFIG.classGuids.DataRoot,
             metaCols: [{ "cname": "DataElements", "ctype": "DataObject" }],
             metaFields: [
-                { fname: "dbgName", ftype: "string" },
-                { fname: "Alias", ftype: "string" }
+                { fname: "Name", ftype: "string" },
+                { fname: "Alias", ftype: "string" },
+                { fname: "ParentField", ftype: "string" }
             ],
+
+            name: function (value) {
+                return this._genericSetter("Name", value);
+            },
+
+            alias: function (value) {
+                return this._genericSetter("Alias", value);
+            },
+
+            parentField: function (value) {
+                return this._genericSetter("ParentField", value);
+            },
 
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
@@ -57,11 +70,14 @@ define(
                             && (result.detail[0].insertId !== undefined)) {
                             if (self._keyField)
                                 _flds.fields[self._keyField] = result.detail[0].insertId;
-                            if (self.rowVersionFname)
+                            if (self.rowVersionFname && (result.detail[0].rowVersion !== undefined))
                                 _flds.fields[self.rowVersionFname] = result.detail[0].rowVersion;
                         };
                         var params = { parent: self, colName: "DataElements", ini: _flds };
+
                         var obj = new constr(cm, params);
+                        if (self._currState() === Meta.State.Edit)
+                            obj._currState(Meta.State.Insert);
                         localResult.newObject = obj.getGuid();
                     };
                     if (cb)
@@ -70,20 +86,35 @@ define(
                         }, 0);
                 };
 
-                if ($data) {
+                if ((typeof ($data) !== "undefined") && $data) {
                     // Присваивание GUID (не очень красиво)
                     if (!_flds.$sys.guid)
                         _flds.$sys.guid = this.getDB().getController().guid();
                     _flds.fields.Guid = _flds.$sys.guid;
 
-                    var dataObj = {
-                        op: "insert",
-                        model: objType.get("typeName"),
-                        data: { fields: _flds.fields }
+                    var pfname = this.parentField();
+                    if (pfname) {
+                        var parentDataObj = this.getParent();
+                        if (parentDataObj && parentDataObj.isInstanceOf(UCCELLO_CONFIG.classGuids.DataObject)) {
+                            var val = parentDataObj.getSerialized(parentDataObj._keyField);
+                            if (val)
+                                _flds.fields[pfname] = val;
+                        }
                     };
-                    var batch = [];
-                    batch.push(dataObj);
-                    $data.execBatch(batch, options, afterObjCreate);
+
+                    if (this._currState() === Meta.State.Edit) {
+                        $data.getNextRowId(objType.get("typeName"), options, afterObjCreate);
+                    }
+                    else {
+                        var dataObj = {
+                            op: "insert",
+                            model: objType.get("typeName"),
+                            data: { fields: _flds.fields }
+                        };
+                        var batch = [];
+                        batch.push(dataObj);
+                        $data.execBatch(batch, options, afterObjCreate);
+                    };
                 }
                 else {
                     setTimeout(function () {

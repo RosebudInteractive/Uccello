@@ -22,6 +22,7 @@ define(
             tranStart: "function",
             tranCommit: "function",
             tranRollback: "function",
+            getNextRowId: "function",
             execBatch: "function"
         };
 
@@ -337,6 +338,51 @@ define(
                 return UCCELLO_CONFIG.REMOTE_RESULT;
             },
 
+            getNextRowId: function (model_name, options, callback) {
+
+                var result = {};
+                var res_promise;
+
+                try {
+                    var tran;
+                    if (this.hasConnection()) {
+                        
+                        var model = this._metaDataMgr.getModel(model_name);
+                        if (model)
+                            res_promise = this._query.getNextRowId(model, options)
+                        else
+                            throw new Error("Model \"" + model_name + "\" doesn't exist.");
+                    }
+                    else
+                        res_promise = Promise.reject(new Error("DB connection wasn't defined."));
+                } catch (err) {
+                    res_promise = Promise.reject(err);
+                };
+
+                res_promise
+                    .then(function (opResult) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "OK";
+                                result.detail = [];
+                                result.detail.push({ insertId: opResult.insertId });
+                                callback(result);
+                            }, 0);
+                    })
+                    .catch(function (err) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "ERROR";
+                                result.message = "Unknown error in \"DataObjectEngine::getNextRowId\".";
+                                if (err.message)
+                                    result.message = err.message;
+                                callback(result);
+                            }, 0);
+                    });
+
+                return UCCELLO_CONFIG.REMOTE_RESULT;
+            },
+
             execSql: function (sql, options, callback) {
                 var res_promise;
 
@@ -565,27 +611,30 @@ define(
                     var promise = Promise.resolve([]);
                     if (opts.force === true) {
                         promise = new Promise(function (resolve, reject) {
-                            resolve(self._query.showForeignKeys().then(function (result) {
-                                var curr_promise = Promise.resolve();
-                                if (result.length > 0) {
-                                    var models = self._metaDataMgr.models();
-                                    var fk_list = _.filter(result, function (fk) {
-                                        var tbl_name = fk.dst_table.toLowerCase();
-                                        var tbls = _.filter(models, function (model) {
-                                            return model.name().toLowerCase() === tbl_name;
+                            resolve(self._query.execDbInitialScript({}).then(function () {
+                                return self._query.showForeignKeys().then(function (result) {
+                                        var curr_promise = Promise.resolve();
+                                        if (result.length > 0) {
+                                            var models = self._metaDataMgr.models();
+                                            var fk_list = _.filter(result, function (fk) {
+                                                var tbl_name = fk.dst_table.toLowerCase();
+                                                var tbls = _.filter(models, function (model) {
+                                                    return model.name().toLowerCase() === tbl_name;
+                                                });
+                                                return tbls.length > 0;
+                                            });
+                                            if (fk_list.length > 0) {
+                                                curr_promise = self._seqExec(fk_list, function (fk) {
+                                                    return self._query.dropForeignKey(fk.src_table, fk.fk_name);
+                                                });
+                                            };
+                                        };
+                                        return curr_promise.then(function (result) {
+                                            return self.syncSchema({ force: true });
                                         });
-                                        return tbls.length > 0;
                                     });
-                                    if (fk_list.length > 0) {
-                                        curr_promise = self._seqExec(fk_list, function (fk) {
-                                            return self._query.dropForeignKey(fk.src_table, fk.fk_name);
-                                        });
-                                    };
-                                };
-                                return curr_promise.then(function (result) {
-                                    return self.syncSchema({ force: true });
-                                });
-                            }));
+                                })
+                            );
                         });
                     }
 
@@ -660,6 +709,13 @@ define(
                             }
                             else
                                 return resolve(createRefs([]));
+                        }).then(function (result) {
+                            var fin_result = result;
+                            return self._seqExec(self._metaDataMgr.models(), function (model) {
+                                return self._query.setTableRowId(model);
+                            }).then(function (result_rowid) {
+                                return fin_result.concat(result_rowid);
+                            });;
                         });
                     });
                 }
@@ -734,7 +790,7 @@ define(
                         "typeGuid": request.model.dataRootGuid()
                     },
                     "fields": {
-                        "dbgName": request.model.dataRootName()
+                        "Name": request.model.dataRootName()
                     },
                     "collections": {
                         "DataElements": [
@@ -782,7 +838,7 @@ define(
                                                 "typeGuid": ch_query.model.dataRootGuid()
                                             },
                                             "fields": {
-                                                "dbgName": ch_query.model.dataRootName(),
+                                                "Name": ch_query.model.dataRootName(),
                                                 "Alias": ch_query.alias
                                             },
                                             "collections": {
@@ -790,6 +846,8 @@ define(
                                                 ]
                                             }
                                         };
+                                        if (ch_query.parentField)
+                                            root.fields.ParentField = ch_query.parentField;
                                         data_obj.collections.Childs.push(root);
                                         curr_obj.collections[ch_query.alias] = root;
                                     });

@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['lodash', '../../../predicate/predicate'],
-    function (_, Predicate) {
+    ['fs', 'lodash', '../../../predicate/predicate'],
+    function (Fs, _, Predicate) {
 
         var TICK_CHAR = '`';
         var ALIAS_PREFIX = "t";
@@ -19,7 +19,8 @@ define(
                 SELECT: 5,
                 UPDATE: 6,
                 DELETE: 7,
-                RAW: 8
+                RAW: 8,
+                ROWID: 9
             },
 
             init: function (engine, options) {
@@ -27,12 +28,35 @@ define(
                 this._provider = engine.getProvider();
                 this._options = options || {};
                 this.Meta = engine.Meta;
+                this._iniScriptPath = "";
             },
 
             getNativeLib: function () {
                 if (!this._nativeLib)
                     this._nativeLib = this.getProvider().connectionMgr().getNativeLib();
                 return this._nativeLib;
+            },
+
+            getDbInitialScript: function () {
+                var result = null;
+                var stat = Fs.statSync(this._iniScriptPath);
+                if (stat.isFile()) {
+                    var script = Fs.readFileSync(this._iniScriptPath, { encoding: "utf8" });
+                    var cmds = script.split("\nGO");
+                    result = [];
+                    _.forEach(cmds, function (cmd) {
+                        if (cmd.trim().length > 0) {
+                            result.push({
+                                sqlCmd: cmd,
+                                params: [],
+                                type: this.queryTypes.RAW
+                            });
+                        };
+                    }, this);
+                    if (result.length === 0)
+                        result = null;
+                };
+                return result;
             },
 
             showForeignKeysQuery: function (src_name, dst_name) {
@@ -49,6 +73,14 @@ define(
 
             createTableQuery: function (model) {
                 throw new Error("\"createTableQuery\" wasn't implemented in descendant.");
+            },
+
+            getNextRowIdQuery: function (model) {
+                throw new Error("\"getNextRowIdQuery\" wasn't implemented in descendant.");
+            },
+
+            setTableRowIdQuery: function (model) {
+                throw new Error("\"setTableRowIdQuery\" wasn't implemented in descendant.");
             },
 
             getProvider: function () {
@@ -151,7 +183,6 @@ define(
                 };
 
                 this._setSqlAliases(request);
-                request.reqWalk = req_walk;
 
                 req_walk(request, function (req, parent) {
                     _.forEach(req.model.fields(), function (field) {
@@ -166,8 +197,10 @@ define(
                         if (refs) {
                             var keys = Object.keys(refs);
                             for (var i = 0; i < keys.length; i++) {
-                                if (refs[keys[i]].dst && (refs[keys[i]].dstName === parent_name)) {
-
+                                if (refs[keys[i]].dst && (refs[keys[i]].dstName === parent_name) &&
+                                    ((!req.parentField)||(req.parentField === keys[i]))) {
+                                    if (!req.parentField)
+                                        req.parentField = keys[i];
                                     tbl = "LEFT JOIN " + self._escapeTable(req.model.name(), req.sqlAlias) +
                                         " ON " + self._escapeField(keys[i], req.sqlAlias, true) + " = " +
                                         self._escapeField(parent.model.getPrimaryKey().name(), parent.sqlAlias, true);
