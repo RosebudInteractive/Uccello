@@ -9,10 +9,11 @@ if (typeof define !== 'function') {
 
 define([
         UCCELLO_CONFIG.uccelloPath + '/predicate/predicate',
-        './resUtils'
+        './resUtils',
+        './resVersions'
     ],
 
-    function(Predicate, ResUtils) {
+    function(Predicate, ResUtils, ResVersions) {
 
         function ResVersion(resVersionObj) {
             this.id = resVersionObj.id();
@@ -36,7 +37,8 @@ define([
                 this.resVersions = [];
                 this.state = ResUtils.state.new;
 
-                this.queryResVersionsGuid = 'f447d844-9ad4-4a89-ad41-347427c17e3b';
+                this.queryBuildResGuid = 'f447d844-9ad4-4a89-ad41-347427c17e3b';
+                this.queryResVerGuid = '99abb520-3c5b-4c2c-a2fe-5aab01da7aa6';
                 this.commitGuid = 'd53fa310-a5ce-4054-97e0-c894a03d3719';
             },
 
@@ -49,21 +51,21 @@ define([
                     _predicate.addCondition({field: "Id", op: "=", value: 0});
                     var _expression = { model: {name: "SysBuildRes"}, predicate: that.db.serialize(_predicate) };
 
-                    that.db.getRoots([this.queryResVersionsGuid], {rtype: "data", expr: _expression}, function (guids) {
+                    that.db.getRoots([this.queryBuildResGuid], {rtype: "data", expr: _expression}, function (guids) {
                         var _objectGuid = guids.guids[0];
-                        that.queryResVersionsGuid = _objectGuid;
+                        that.queryBuildResGuid = _objectGuid;
 
                         that.db.getObj(_objectGuid).newObject({
                             fields: {
                                 BuildId: that.Id,
-                                ResVerId: resVersionid
+                                ResVerId: resVersionId
                             }
                         }, function (result) {
                             if (result.result == 'OK') {
                                 that.resVersions.push(new ResVersion(that.db.getObj(result.newObject)));
                                 resolve()
                             } else {
-                                reject(new Error({reason : ResUtils.errorReasons.dbError, message : result.message}));
+                                reject(ResUtils.newDbError(result.message));
                             }
                         });
                     })
@@ -78,19 +80,48 @@ define([
                 var _expression = { model: {name: "SysBuildRes"}, predicate: this.db.serialize(_predicate) };
 
                 var that = this;
-                this.db.getRoots([this.queryResVersionsGuid], { rtype: "data", expr: _expression }, function(guids) {
+                this.db.getRoots([this.queryBuildResGuid], { rtype: "data", expr: _expression }, function(guids) {
                     var _objectGuid = guids.guids[0];
-                    that.queryResVersionsGuid = _objectGuid;
+                    that.queryBuildResGuid = _objectGuid;
 
+                    var _resVersionsId = [];
                     var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
                     for (var i = 0; i < _elements.count(); i++) {
-                        that.resVersions.push(new ResVersion(_elements.get(i)))
+                        _resVersionsId.push(_elements.get(i).resVerId())
                     }
 
-                    that.state = ResUtils.state.loaded;
-                    done();
+                    //that.loadResVersions2(_resVersionsId, that.resVersions, function(resultArray){
+                    ResVersions.load(_resVersionsId, that.resVersions, function(){
+                        that.state = ResUtils.state.loaded;
+                        done();
+                    });
                 })
             },
+
+            //loadResVersions2 : function(resVersionsId, done) {
+            //    this.resVersions = [];
+            //
+            //    if (resVersionsId.length == 0) {
+            //        done()
+            //    } else {
+            //        var _predicate = new Predicate(this.db, {});
+            //        _predicate.addCondition({field: "Id", op: "in", value: resVersionsId});
+            //        var _expression = { model: {name: "SysResVer"}, predicate: this.db.serialize(_predicate) };
+            //
+            //        var that = this;
+            //        this.db.getRoots([this.queryResVerGuid], { rtype: "data", expr: _expression }, function(guids) {
+            //            var _objectGuid = guids.guids[0];
+            //            that.queryResVerGuid = _objectGuid;
+            //
+            //            var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
+            //            for (var i = 0; i < _elements.count(); i++) {
+            //                that.resVersions.push(new ResVersion(_elements.get(i)));
+            //            }
+            //
+            //            done();
+            //        })
+            //    }
+            //},
 
             commit : function() {
                 var that = this;

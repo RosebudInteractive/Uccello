@@ -39,7 +39,7 @@ var _initializer = {
                 connection: { //MySql
                     host: "localhost",
                     username: "sa",
-                    password: "1q2w3e",
+                    password: "system",
                     database: "resmanager_test",
                     provider: "mysql",
                     connection_options: {},

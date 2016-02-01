@@ -9,19 +9,11 @@ if (typeof define !== 'function') {
 
 define([
         UCCELLO_CONFIG.uccelloPath + '/predicate/predicate',
-        './resUtils'
+        './resUtils',
+        './build'
     ],
 
-    function(Predicate, ResUtils) {
-
-        function Build(buildObj) {
-            this.id = buildObj.id();
-            this.buildNum = buildObj.buildNum();
-            this.isConfirmed = buildObj.isConfirmed();
-            this.description = buildObj.description();
-            this.versionId = buildObj.versionId();
-            this.resVersions = [];
-        }
+    function(Predicate, ResUtils, Build) {
 
         return UccelloClass.extend({
 
@@ -32,7 +24,7 @@ define([
                 this.state = ResUtils.state.new;
                 this.current = null;
 
-                this.queryResVersionsGuid = 'eaec63f9-d15f-4e9d-8469-72ddca96cc16';
+                this.queryBuildResGuid = 'eaec63f9-d15f-4e9d-8469-72ddca96cc16';
             },
 
             loadBuild : function(buildId, callback) {
@@ -48,18 +40,17 @@ define([
                     };
 
                     var that = this;
-                    this.db.getRoots([this.queryResVersionsGuid], { rtype: "data", expr: _expression }, function(guids) {
+                    this.db.getRoots([this.queryBuildResGuid], { rtype: "data", expr: _expression }, function(guids) {
                         var _objectGuid = guids.guids[0];
-                        that.queryResVersionsGuid = _objectGuid;
+                        that.queryBuildResGuid = _objectGuid;
 
                         var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
                         if (_elements.count() == 0) {
                             callback(null)
-                        } else
-                        {
+                        } else {
                             _build = new Build(that.db, _elements.get(0));
-                            that.builds.push(_build);
                             _build.loadResVersions(function() {
+                                that.builds.push(_build);
                                 callback(_build);
                             });
                         }
@@ -68,7 +59,9 @@ define([
             },
 
             loadCurrentBuild : function(callback) {
-                if (!this.current) {
+                if ((this.current) && (this.current.id == this.directories.getCurrentVersion().currBuildId)) {
+                    callback(this.current)
+                } else {
                     var _currentVersion = this.directories.getCurrentVersion();
                     var that = this;
 
@@ -76,8 +69,6 @@ define([
                         that.current = build;
                         callback(build);
                     })
-                } else {
-                    callback(this.current)
                 }
             },
 
@@ -87,11 +78,48 @@ define([
                 })
             },
 
-            createBuild : function() {
+            createNew : function(description, transactionId) {
                 var that = this;
                 return new Promise(promiseBody);
 
                 function promiseBody(resolve, reject) {
+
+                    that.loadCurrentBuild(function (build) {
+                        if (!build.isConfirmed) {
+                            reject(ResUtils.newObjectError('Current build is unconfirmed'))
+                        } else {
+                            var _newDescr = (description || build.description);
+                            var _newBuildNum = (build.buildNum || 0) + 1;
+
+                            var _predicate = new Predicate(that.db, {});
+                            _predicate.addCondition({field: "Id", op: "=", value: 0});
+                            var _expression = {
+                                model: {name: "SysBuild"},
+                                predicate: that.db.serialize(_predicate)
+                            };
+
+                            that.db.getRoots([that.queryBuildResGuid], {rtype: "data", expr: _expression}, function (guids) {
+                                var _objectGuid = guids.guids[0];
+                                that.queryBuildResGuid = _objectGuid;
+
+                                that.db.getObj(_objectGuid).newObject({
+                                    fields: {
+                                        BuildNum: _newBuildNum,
+                                        IsConfirmed: false,
+                                        Description: _newDescr,
+                                        VersionId: build.versionId
+                                    }
+                                }, function (result) {
+                                    if (result.result == 'OK') {
+                                        var _newBuild = new Build(that.db.getObj(result.newObject));
+                                        resolve(_newBuild.id);
+                                    } else {
+                                        reject(ResUtils.newDbError(result.message));
+                                    }
+                                });
+                            })
+                        }
+                    });
 
                 }
             }

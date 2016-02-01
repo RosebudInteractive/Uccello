@@ -7,43 +7,16 @@ define(
     [
         UCCELLO_CONFIG.uccelloPath + 'controls/controlMgr',
         UCCELLO_CONFIG.uccelloPath + '/predicate/predicate',
-        'crypto',
-        //'./products',
-        //'./versions',
-        //'./resTypes',
 
         './directories',
         './builds',
-        './resUtils'
+        './resources',
+        './resUtils',
+        './resVersions'
     ],
-    function(ControlMgr, Predicate, Crypto, Directories, Builds, ResUtils) {
-
-        function Resource(resourceHeaderObj) {
-            this.id = resourceHeaderObj.id();
-            this.resGuid = resourceHeaderObj.resGuid();
-            this.code = resourceHeaderObj.code();
-            this.name = resourceHeaderObj.name();
-            this.description = resourceHeaderObj.description();
-            this.prodId = resourceHeaderObj.prodId();
-            this.resTypeId = resourceHeaderObj.resTypeId();
-            this.resBody = null;
-        }
-
-        function ResVersion(resVersionObj) {
-            this.id = resVersionObj.id();
-            this.resVer = resVersionObj.resVer();
-            this.hash = resVersionObj.hash();
-            this.resBody = resVersionObj.resBody();
-            this.description = resVersionObj.description();
-            this.resId = resVersionObj.resId();
-        }
+    function(ControlMgr, Predicate, Directories, Builds, Resources, ResUtils, ResVersions) {
 
         var Resman = UccelloClass.extend({
-
-            resources: new Map(),
-            buildResVersions: new Map(),
-
-            resVersions: new Map(),
 
             init: function (controller, constructHolder, proxy, options) {
                 this.pvt = {};
@@ -51,11 +24,9 @@ define(
 
                 if ((options) && (options.hasOwnProperty('currProd'))) {
                     this.currentProductCode = options.currProd;
-                    this.currentProduct = null;
                 } else {
                     if (UCCELLO_CONFIG.resman.defaultProduct) {
                         this.currentProductCode = UCCELLO_CONFIG.resman.defaultProduct;
-                        this.currentProduct = null;
                     }
                 }
 
@@ -71,15 +42,8 @@ define(
 
                 this.directories = new Directories(this.db);
                 this.builds = new Builds(this.db, this.directories);
-
-                var that = this;
-                this.directories.events.on('changeCurrentVersion', function() {
-                    that.onChangeCurrentVersion()
-                });
-            },
-
-            onChangeCurrentVersion : function() {
-                this.builds.loadCurrentBuild(function() {})
+                this.resources = new Resources(this.db, this.directories, this.builds);
+                this.resVersions = ResVersions.init(this.db);
             },
 
             loadDirectories: function (done) {
@@ -91,188 +55,6 @@ define(
                 });
             },
 
-
-            // ------------------------------------------------
-            queryResourceObj: function (resourceGuid, callback) {
-                var _predicate = new Predicate(this.db, {});
-                _predicate.addCondition({field: "ResGuid", op: "=", value: resourceGuid});
-                var _expression = {
-                    model: {name: "SysResource"},
-                    predicate: this.db.serialize(_predicate)
-                };
-
-                var that = this;
-
-                // todo: использовать guid с ухом!
-                this.db.getRoots(["15e20587-8a45-4e01-a135-b85544d32749"], {
-                    rtype: "data",
-                    expr: _expression
-                }, function (guids) {
-                    var _elements = that.db.getObj(guids.guids[0]).getCol('DataElements');
-
-                    if (_elements.count() == 0) {
-                        callback(null)
-                    } else {
-
-                        if (_elements.count() > 1) {
-                            throw new Error('duplicate resource')
-                        }
-
-                        that.loadResourceBody(_elements.get(0), callback);
-                    }
-                });
-            },
-
-            loadResourcesByType: function (resTypeId, callback) {
-                var _predicate = new Predicate(this.db, {});
-                _predicate.addCondition({field: "ResTypeId", op: "=", value: resTypeId});
-                var _expression = {
-                    model: {name: "SysResource"},
-                    predicate: this.db.serialize(_predicate)
-                };
-
-                var that = this;
-                this.db.getRoots(["30893c22-e103-4771-b4c2-37d3c6593cae"], {
-                    rtype: "data",
-                    expr: _expression
-                }, function (guids) {
-                    var _elements = that.db.getObj(guids.guids[0]).getCol('DataElements');
-                    var _resources = [];
-                    var _count = 0;
-
-                    if (_elements.count() > 0) {
-                        for (var i = 0; i < _elements.count(); i++) {
-                            var _elem = _elements.get(i);
-
-                            if (that.resources.has(_elem.resGuid())) {
-                                _count++;
-                                _resources.push(that.resources.get(_elem.resGuid()));
-
-                                if (_elements.count() == _count) {
-                                    callback(_resources)
-                                }
-                            } else {
-                                that.loadResourceBody(_elem, function (resource) {
-                                    _count++;
-                                    if (resource) {
-                                        _resources.push(resource);
-                                    }
-
-                                    if (_elements.count() == _count) {
-                                        callback(_resources)
-                                    }
-                                })
-                            }
-                        }
-                    } else {
-                        callback(_resources);
-                    }
-                })
-            },
-
-            loadResourceBody: function (resourceObj, callback) {
-                var _resource = new Resource(resourceObj);
-
-                var _product = this.directories.products.getById(_resource.prodId);
-                if (!_product) {
-                    throw Error('Undefined product')
-                }
-
-                var _version = this.directories.versions.getById(_product.currVerId);
-                if (!_version) {
-                    throw Error('Undefined version')
-                }
-
-                var that = this;
-
-                this.getResVersionsOfBuild(_version.currBuildId, function (buildResVersions) {
-                    that.getResVersions(_resource.id, function (resVersions) {
-                        var _resVer = resVersions.find(function (resVer) {
-                            var _id = buildResVersions.find(function (buildResVerId) {
-                                return buildResVerId == resVer.id
-                            });
-                            return !_id ? false : _id != 0;
-                        });
-
-                        if (_resVer) {
-                            _resource.resBody = _resVer.resBody;
-                            _resource.hash = _resVer.hash;
-                            _resource.resVerNum = _resVer.resVer;
-                            _resource.verDescription = _resVer.description;
-                        }
-
-                        that.resources.set(_resource.resGuid, _resource);
-                        callback(_resource);
-                    })
-                });
-            },
-
-            getResVersions: function (resourceId, callback) {
-                if (this.resVersions.has(resourceId)) {
-                    callback(this.resVersions.get(resourceId))
-                } else {
-                    this.queryResVersions(resourceId, callback)
-                }
-            },
-
-            queryResVersions: function (resourceId, callback) {
-                var _predicate = new Predicate(this.db, {});
-                _predicate.addCondition({field: "ResId", op: "=", value: resourceId});
-                var _expression = {
-                    model: {name: "SysResVer"},
-                    predicate: this.db.serialize(_predicate)
-                };
-
-                var that = this;
-                this.db.getRoots(["f447d844-9ad4-4a89-ad41-347427c17e3b"], {
-                    rtype: "data",
-                    expr: _expression
-                }, function (guids) {
-                    var _elements = that.db.getObj(guids.guids[0]).getCol('DataElements');
-                    var _resVersions = [];
-                    for (var i = 0; i < _elements.count(); i++) {
-                        _resVersions.push(new ResVersion(_elements.get(i)))
-                    }
-
-                    that.buildResVersions.set(resourceId, _resVersions);
-
-                    callback(_resVersions);
-                })
-            },
-
-            getResVersionsOfBuild: function (buildId, callback) {
-                if (this.buildResVersions.has(buildId)) {
-                    callback(this.buildResVersions.get(buildId))
-                } else {
-                    this.queryResVersionsOfBuild(buildId, callback)
-                }
-            },
-
-            queryResVersionsOfBuild: function (buildId, callback) {
-                var _predicate = new Predicate(this.db, {});
-                _predicate.addCondition({field: "BuildId", op: "=", value: buildId});
-                var _expression = {
-                    model: {name: "SysBuildRes"},
-                    predicate: this.db.serialize(_predicate)
-                };
-
-                var that = this;
-                this.db.getRoots(["eaec63f9-d15f-4e9d-8469-72ddca96cc16"], {
-                    rtype: "data",
-                    expr: _expression
-                }, function (guids) {
-                    var _elements = that.db.getObj(guids.guids[0]).getCol('DataElements');
-                    var _resVersions = [];
-                    for (var i = 0; i < _elements.count(); i++) {
-                        _resVersions.push(_elements.get(i).resVerId())
-                    }
-
-                    that.buildResVersions.set(buildId, _resVersions);
-
-                    callback(_resVersions);
-                })
-            },
-            // -------------------------------------------------
             /**
              * Загрузить ресурс
              * @returns {obj}
@@ -296,18 +78,8 @@ define(
                         var gr = guid.slice(0, 36);
                         var json = require(UCCELLO_CONFIG.dataPath + 'forms/' + gr + '.json');
                         _result.push(json)
-                    })
+                    });
                     done({datas: _result})
-                }
-            },
-
-            getResourceObj: function (guid, callback) {
-                if (this.resources.has(guid)) {
-                    callback(this.resources.get(guid))
-                } else {
-                    this.queryResourceObj(guid, function (obj) {
-                        callback(obj)
-                    })
                 }
             },
 
@@ -317,13 +89,14 @@ define(
                     that.loadDirectories(promiseBody);
 
                     function promiseBody() {
-                        that.getResourceObj(guid, function (obj) {
-                            if ((!obj) || (!obj.resBody)) {
-                                reject(new Error('Resource not found'))
+                        that.resources.getBody(guid, function(body) {
+                            if (!body) {
+                                reject(new Error({reason : ResUtils.errorReasons.dbError, message : 'Resource Not Found'}))
                             } else {
-                                resolve(obj.resBody)
+                                resolve(body)
                             }
-                        })
+                        });
+
                     }
                 })
             },
@@ -335,29 +108,16 @@ define(
 
                     function promiseBody() {
                         var _resultObj = {};
-                        _resultObj.count = 0;
+                        var _count = 0;
                         guids.forEach(function (guid) {
-                            if (that.resources.has(guid)) {
-                                var _resource = that.resources.get(guid);
+                            that.resources.getBody(guid, function(body) {
+                                _resultObj[guid] = body;
+                                _count++;
 
-                                _resultObj[_resource.resGuid] = _resource.resBody;
-                                _resultObj.count++;
-                                if (_resultObj.count == guids.length) {
+                                if (_count == guids.length) {
                                     resolve(_resultObj)
                                 }
-                            } else {
-                                that.queryResourceObj(guid, function (obj) {
-                                    if (!obj) {
-                                        _resultObj[guid] = null;
-                                    } else {
-                                        _resultObj[guid] = obj.resBody;
-                                    }
-                                    _resultObj.count++;
-                                    if (_resultObj.count == guids.length) {
-                                        resolve(_resultObj)
-                                    }
-                                })
-                            }
+                            });
                         })
                     }
                 })
@@ -370,19 +130,18 @@ define(
 
                     function promiseBody() {
                         var _result = {};
-                        var _resType = that.directories.getResType(typeGuid);
-                        if (!_resType) {
-                            reject(new Error('Type not found'));
-                        } else {
-                            that.loadResourcesByType(_resType.id, function (resources) {
+                        that.resources.getListByType(typeGuid).then(
+                            function(resources){
                                 resources.forEach(function (resource) {
                                     _result[resource.resGuid] = resource.resBody
                                 });
                                 resolve(_result)
-                            })
-                        }
+                            },
+                            function(reason){
+                                reject(reason)
+                            }
+                        );
                     }
-
                 });
             },
 
@@ -393,230 +152,121 @@ define(
 
                     function promiseBody() {
                         var _result = [];
-                        var _resType = that.directories.getResType(typeGuid);
-                        if (!_resType) {
-                            reject(new Error('Type not found'));
-                        } else {
-                            that.loadResourcesByType(_resType.id, function (resources) {
+                        that.resources.getListByType(typeGuid).then(
+                            function(resources){
                                 resources.forEach(function (resource) {
-                                    _result.push(resource.resGuid);
+                                    _result.push(resource.resGuid)
                                 });
                                 resolve(_result)
-                            })
-                        }
+                            },
+                            function(reason){
+                                reject(reason)
+                            }
+                        );
+
+
                     }
                 });
             },
 
             createNewResource: function (resource, callback) {
                 var that = this;
-
-                function createResource() {
-                    var _predicate = new Predicate(that.db, {});
-                    _predicate.addCondition({field: "Id", op: "=", value: 0});
-                    var _expression = {
-                        model: {name: "SysResource"},
-                        predicate: that.db.serialize(_predicate)
-                    };
-
-                    that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {
-                        rtype: "data",
-                        expr: _expression
-                    }, function (guids) {
-                        that.db.getObj(guids.guids[0]).newObject({
-                            fields: {
-                                Name: resource.name,
-                                Code: resource.code,
-                                Description: resource.description,
-                                ResGuid: resource.resGuid,
-                                ProdId: that.currentProduct.id,
-                                ResTypeId: resource.resTypeId
-                            }
-                        }, function (result) {
-                            callback(result)
-                        });
-                    })
-                }
-
-                if (!resource.resGuid) {
-                    createResource()
-                } else {
-                    this.getResourceObj(resource.resGuid, function (obj) {
-                        if (!obj) {
-                            createResource()
-                        } else {
-                            throw  new Error('Resource exists')
+                this.loadDirectories(function() {
+                    that.resources.createNew(resource).then(
+                        function (resourcesGuid) {
+                            callback({result : 'OK', resourcesGuid : resourcesGuid})
+                        },
+                        function (reason) {
+                            callback({result : 'ERROR', message : reason.message})
                         }
-                    })
-                }
+                    );
+                });
+            },
 
+            commit : function(transactionId){
+                $data.tranCommit(transactionId, function (result) {
+                    if (result.result !== "OK") {
+                        throw new Error(result.message);
+                    } else {
+                        //console.log("Transaction finished!");
+                    }
+                });
+            },
+
+            rollback : function(transactionId){
+                $data.tranRollback(transactionId, function (result) {
+                    if (result.result !== "OK") {
+                        throw new Error(result.message);
+                    } else {
+                        //console.log("Transaction finished!");
+                    }
+                });
             },
 
             newResourceVersion: function (resGuid, body, callback) {
                 var that = this;
-                this.builds.loadCurrentBuild(function (build) {
-                    if (!build.isConfirmed) {
-                        createResVer(function (resVersion) {
-                            if (!resVersion) {
-                                callback(null);
-                            } else {
-                                build.addResVersion(resVersion.id).then(
-                                    function() {/*transaction commit*/},
-                                    function() {/*transaction rollback + reload resource*/}
-                                )
-                            }
-                        })
-                    } else {
-                        throw  new Error('Current build is confirmed')
-                    }
-                });
-
-                function createResVer(transaction) {
-                    that.getResourceObj(resGuid, function (obj) {
-                        if (!obj) {
-                            new Error('No such resource')
+                this.loadDirectories(function() {
+                    this.builds.loadCurrentBuild(function (build) {
+                        if (!build.isConfirmed) {
+                            $data.tranStart({}, function (result) {
+                                if (result.result === "OK") {
+                                    var _transactionId = result.transactionId;
+                                    that.resources.createNewVersion(resGuid, body, _transactionId).then(
+                                        function (resVersion) {
+                                            build.addResVersion(resVersion.id, _transactionId).then(
+                                                function () {
+                                                    that.commit(_transactionId);
+                                                    callback({result : 'OK', resVersionId : resVersion.id})
+                                                },
+                                                function (reason) {
+                                                    that.rollback(_transactionId);
+                                                    callback({result : 'ERROR', message : reason.message})
+                                                }
+                                            )
+                                        },
+                                        function (reason) {
+                                            that.rollback(_transactionId);
+                                            callback({result : 'ERROR', message : reason.message})
+                                        }
+                                    );
+                                } else {
+                                    callback({result : 'ERROR', message : result.message})
+                                }
+                            })
                         } else {
-                            obj.resVerNum = (obj.resVerNum || 0);
-
-                            var md5sum = Crypto.createHash('md5');
-                            md5sum.update(body);
-                            var _md5 = md5sum.digest('hex');
-
-                            if (_md5 != obj.hash) {
-                                var _predicate = new Predicate(that.db, {});
-                                _predicate.addCondition({field: "Id", op: "=", value: 0});
-                                var _expression = {
-                                    model: {name: "SysResVer"},
-                                    predicate: that.db.serialize(_predicate)
-                                };
-
-                                that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {
-                                    rtype: "data",
-                                    expr: _expression
-                                }, function (guids) {
-                                    that.db.getObj(guids.guids[0]).newObject({
-                                        fields: {
-                                            ResVer: obj.resVerNum + 1,
-                                            Hash: _md5,
-                                            ResBody: body,
-                                            Description: obj.verDescription,
-                                            ResId: obj.id
-                                        }
-                                    }, function (result) {
-                                        if (result.result == 'OK') {
-                                            var _resVersion = new ResVersion(that.db.getObj(result.newObject));
-                                            if (that.resVersions.has(_resVersion.resId)) {
-                                                that.resVersions.get(_resVersion.resId).push(_resVersion)
-                                            }
-                                            callback(_resVersion);
-                                        } else {
-                                            callback(null)
-                                        }
-                                    });
-                                })
-                            } else {
-                                callback(null)
-                            }
+                            throw new Error('Current build is confirmed')
                         }
-                    })
-                }
-
-                //function createBuildRes(buildId, resVersion, callback) {
-                //    var _predicate = new Predicate(that.db, {});
-                //    _predicate.addCondition({field: "Id", op: "=", value: 0});
-                //    var _expression = {
-                //        model: {name: "SysBuildRes"},
-                //        predicate: that.db.serialize(_predicate)
-                //    };
-                //
-                //    that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {
-                //        rtype: "data",
-                //        expr: _expression
-                //    }, function (guids) {
-                //        that.db.getObj(guids.guids[0]).newObject({
-                //            fields: {
-                //                BuildId: buildId,
-                //                ResVerId: resVersion.id
-                //            }
-                //        }, function (result) {
-                //            // Todo : надо удалять ресурс из закэшированных, т.к. тело изменено
-                //            callback(result)
-                //        });
-                //    })
-                //}
+                    });
+                });
             },
 
             createNewBuild: function (description, callback) {
                 var that = this;
-                this.builds.createBuild().then(
-                    function(buildId){
-                        that.directories.getCurrentVersion().setCurrentBuild(buildId).then(
-                            function() {/*transaction commit*/},
-                            function() {/*transaction rollback*/}
-                        )
-                    },
-                    function(){/*transaction rollback*/}
-                )
+                $data.tranStart({}, function(result){
+                    if (result.result === "OK") {
+                        var _transactionId = result.transactionId;
 
-                this.builds.loadCurrentBuild(function (build) {
-                    if (!build.isConfirmed) {
-                        throw new Error('Current build is unconfirmed')
+                        that.builds.createNew(description, _transactionId).then(
+                            function(buildId){
+                                that.directories.getCurrentVersion().setCurrentBuild(buildId, _transactionId).then(
+                                    function () {
+                                        that.commit(_transactionId);
+                                        callback({result : 'OK', resVersionId : resVersion.id})
+                                    },
+                                    function (reason) {
+                                        that.rollback(_transactionId);
+                                        callback({result : 'ERROR', message : reason.message})
+                                    }
+                                )
+                            },
+                            function (reason) {
+                                that.rollback(_transactionId);
+                                callback({result : 'ERROR', message : reason.message})
+                            }
+                        );
+
                     } else {
-                        var _newDescr = (description || build.description);
-                        var _newBuildNum = (build.buildNum || 0) + 1;
-
-                        var _predicate = new Predicate(that.db, {});
-                        _predicate.addCondition({field: "Id", op: "=", value: 0});
-                        var _expression = {
-                            model: {name: "SysBuild"},
-                            predicate: that.db.serialize(_predicate)
-                        };
-
-                        that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {
-                            rtype: "data",
-                            expr: _expression
-                        }, function (guids) {
-                            that.db.getObj(guids.guids[0]).newObject({
-                                fields: {
-                                    BuildNum: _newBuildNum,
-                                    IsConfirmed: false,
-                                    Description: _newDescr,
-                                    VersionId: build.versionId
-                                }
-                            }, function (result) {
-                                if (result.result == 'OK') {
-                                    var _newBuild = new Build(that.db.getObj(result.newObject));
-
-                                    var _predicate = new Predicate(that.db, {});
-                                    _predicate.addCondition({field: "Id", op: "=", value: build.versionId});
-                                    var _expression = {
-                                        model: {name: "SysVersion"},
-                                        predicate: that.db.serialize(_predicate)
-                                    };
-
-
-                                    that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {
-                                        rtype: "data",
-                                        expr: _expression
-                                    }, function (guids) {
-                                        var _obj = that.db.getObj(guids.guids[0]);
-                                        _obj.edit(function () {
-                                            var _version = _obj.getCol('DataElements').get(0);
-                                            _version.currBuildId(_newBuild.id);
-                                            _obj.save(function (result) {
-                                                if (result.result == 'OK') {
-                                                    that.versions.getById(_newBuild.versionId).currBuildId = _newBuild.id
-                                                }
-                                                callback(result)
-                                            });
-                                        });
-                                    })
-                                } else {
-                                    // Todo : надо удалять ресурс из закэшированных, т.к. тело изменено
-                                    callback(null)
-                                }
-                            });
-                        })
+                        callback({result : 'ERROR', message : result.message})
                     }
                 });
             },
@@ -624,70 +274,56 @@ define(
             commitBuild: function (callback) {
                 var that = this;
 
-                var _promise = this.builds.current.commit();
-                _promise.then(
-                    function(){
-                        that.directories.getCurrentVersion().setLastConfirmedBuild().
-                        then(
-                            function() {/*transaction commit*/},
-                            function() {/*transaction rollback*/}
-                        )
-                    },
-                    function(error) {
-                        switch (error.reason) {
-                            case ResUtils.errorReasons.dbError : {/*transaction rollback*/ break;}
-                            case ResUtils.errorReasons.objectError : {
-                                that.directories.getCurrentVersion().revertToLastConfirmedBuild();
-                                break;
+                $data.tranStart({}, function(result){
+                    if (result.result === "OK") {
+                        var _transactionId = result.transactionId;
+
+                        var _promise = that.builds.current.commit();
+                        _promise.then(
+                            function(){
+                                that.directories.getCurrentVersion().setLastConfirmedBuild().then(
+                                    function () {
+                                        that.commit(_transactionId);
+                                        callback({result : 'OK'})
+                                    },
+                                    function (reason) {
+                                        that.rollback(_transactionId);
+                                        callback({result : 'ERROR', message : reason.message})
+                                    }
+                                )
+                            },
+                            function(error) {
+                                switch (error.reason) {
+                                    case ResUtils.errorReasons.dbError : {
+                                        that.rollback(_transactionId);
+                                        callback({result : 'ERROR', message : error.message});
+                                        break;
+                                    }
+                                    case ResUtils.errorReasons.objectError : {
+                                        that.directories.getCurrentVersion().revertToLastConfirmedBuild().then(
+                                            function () {
+                                                that.commit(_transactionId);
+                                                callback({result : 'OK'})
+                                            },
+                                            function (reason) {
+                                                that.rollback(_transactionId);
+                                                callback({result : 'ERROR', message : reason.message})
+                                            }
+                                        );
+                                        break;
+                                    }
+                                    default :  {
+                                        that.rollback(_transactionId);
+                                        callback({result : 'ERROR', message : error.message});
+                                        break;
+                                    }
+                                }
                             }
-                            default :  {/*transaction rollback*/ break;}
-                        }
-                    }
-                );
-/*
-                this.builds.loadCurrentBuild(function (build) {
-                    if (!build.isConfirmed) {
-                        commit(build)
+                        );
                     } else {
-                        callback({result: 'OK'})
+                        callback({result : 'ERROR', message : result.message})
                     }
-                });
-
-                function commit(build) {
-                    that.getResVersionsOfBuild(build.id, function (buildResources) {
-                        if (buildResources.length != 0) {
-
-                            var _predicate = new Predicate(that.db, {});
-                            _predicate.addCondition({field: "Id", op: "=", value: build.id});
-                            var _expression = {
-                                model: {name: "SysBuild"},
-                                predicate: that.db.serialize(_predicate)
-                            };
-
-                            that.db.getRoots(["d53fa310-a5ce-4054-97e0-c894a03d3719"], {
-                                rtype: "data",
-                                expr: _expression
-                            }, function (guids) {
-                                var _obj = that.db.getObj(guids.guids[0]);
-                                _obj.edit(function () {
-                                    var _version = _obj.getCol('DataElements').get(0);
-                                    _version.isConfirmed(true);
-                                    _obj.save(function (result) {
-                                        callback(result)
-                                    });
-                                });
-                            })
-                        } else {
-                            rollback(build)
-                        }
-                    })
-                }
-
-                function rollback(build) {
-                    if (build.buildNum > 1) {
-                        callback(null)
-                    }
-                }*/
+                })
             }
         });
 

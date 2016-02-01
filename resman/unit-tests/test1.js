@@ -100,7 +100,7 @@ describe('#getResListByType', function() {
     });
 });
 
-xdescribe('#createNewResource', function() {
+describe('#createNewResource', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
 
@@ -133,7 +133,7 @@ xdescribe('#createNewBuild', function() {
     });
 });
 
-describe('#commitBuild', function() {
+xdescribe('#commitBuild', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
 

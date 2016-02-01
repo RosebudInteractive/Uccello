@@ -23,7 +23,7 @@ define([
                 this.current = null;
                 this.events = new EventEmitter();
 
-                this.queryResVersionsGuid = '81e37311-6be7-4fc2-a84a-77a28ee342d4';
+                this.queryBuildResGuid = '81e37311-6be7-4fc2-a84a-77a28ee342d4';
             },
 
             load : function(done) {
@@ -32,13 +32,13 @@ define([
                 } else {
                     var that = this;
 
-                    this.db.getRoots([this.queryResVersionsGuid], { rtype: "data", expr: {model : { name: "SysVersion" }} }, function (guids) {
+                    this.db.getRoots([this.queryBuildResGuid], { rtype: "data", expr: {model : { name: "SysVersion" }} }, function (guids) {
                         var _objectGuid = guids.guids[0];
-                        that.queryResVersionsGuid = _objectGuid;
+                        that.queryBuildResGuid = _objectGuid;
 
                         var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
                         for (var i = 0; i < _elements.count(); i++) {
-                            that.versions.push(new Version(_elements.get(i)))
+                            that.versions.push(new Version(that.db, _elements.get(i)))
                         }
 
                         that.state = ResUtils.state.loaded;
