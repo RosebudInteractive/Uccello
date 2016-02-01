@@ -221,7 +221,7 @@ define([
                                     ProdId: that.directories.getCurrentProduct().id,
                                     ResTypeId: resource.resTypeId
                                 }
-                            }, function (result) {
+                            }, {}, function (result) {
                                 if (result.result == 'OK') {
                                     resolve(result.newObject)
                                 } else {

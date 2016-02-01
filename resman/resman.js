@@ -206,7 +206,7 @@ define(
             newResourceVersion: function (resGuid, body, callback) {
                 var that = this;
                 this.loadDirectories(function() {
-                    this.builds.loadCurrentBuild(function (build) {
+                    that.builds.loadCurrentBuild(function (build) {
                         if (!build.isConfirmed) {
                             $data.tranStart({}, function (result) {
                                 if (result.result === "OK") {
