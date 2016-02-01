@@ -52,7 +52,7 @@ define(
 
                                     reject(self._formatError(err));
                                 } else {
-                                    resolve(self._formatResults(results, sql.type, rowCount, sql.meta));
+                                    resolve(self._formatResults(results, sql, rowCount));
                                 }
                             });
 
@@ -94,17 +94,20 @@ define(
                 return err;
             },
 
-            _formatResults: function (results, query_type, affectedRows, meta) {
+            _formatResults: function (results, sql, affectedRows) {
                 var res;
+                var query_type = sql.type;
+                var meta = sql.meta;
                 var row_version_fname = meta && meta.model && meta.model.getRowVersionField() ? meta.model.getRowVersionField().name() : null;
 
                 if (_.isArray(results)) // Результат SELECT ?
-                    if ((query_type === this._queryTypes.INSERT) && (results.length === 1)) {
+                    if (((query_type === this._queryTypes.INSERT) ||
+                        (query_type === this._queryTypes.ROWID)) && (results.length === 1)) {
                         res = {
                             affectedRows: affectedRows,
                             changedRows: 0,
-                            insertId: results[0].insertId,
-                            rowVersion: results[0].rowVersion
+                            insertId: results[0].insertId ? results[0].insertId : (sql.insertId ? sql.insertId : null),
+                            rowVersion: results[0].rowVersion ? results[0].rowVersion : null
                         };
                     } else
                         if (query_type === this._queryTypes.UPDATE) {

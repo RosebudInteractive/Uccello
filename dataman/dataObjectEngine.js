@@ -19,6 +19,10 @@ define(
             className: "IDataObjectEngine",
             classGuid: UCCELLO_CONFIG.guids.iDataObjectEngine,
 
+            tranStart: "function",
+            tranCommit: "function",
+            tranRollback: "function",
+            getNextRowId: "function",
             execBatch: "function"
         };
 
@@ -180,45 +184,57 @@ define(
             },
 
             transaction: function (batch, options) {
-                var tran = new Transaction(this, options);
                 var result;
-                if (batch) {
-                    result = tran.start()
-                        .then(function () {
-                            return batch(tran);
-                        })
-                        .then(function (res) {
-                            return tran.commit()
-                                .then(function () {
-                                    return res;
-                                });
-                        }, function (err) {
-                            return tran.rollback()
-                                .then(function () {
-                                    return Promise.reject(err);
-                                });
-                        });
-                }
-                else
-                    result = tran.start().then(function () { return tran; });
+                try {
+                    var tran = new Transaction(this, options);
+                    if (batch) {
+                        result = tran.start()
+                            .then(function () {
+                                return batch(tran);
+                            })
+                            .then(function (res) {
+                                return tran.commit()
+                                    .then(function () {
+                                        return res;
+                                    });
+                            }, function (err) {
+                                return tran.rollback()
+                                    .then(function () {
+                                        return Promise.reject(err);
+                                    });
+                            });
+                    }
+                    else
+                        result = tran.start().then(function () { return tran; });
+                } catch (err) {
+                    result = Promise.reject(err);
+                };
                 return result;
             },
 
-            execSql: function (sql, options, callback) {
-                var res_promise;
-                if (this.hasConnection()) {
-                    res_promise = this._query.execSql(sql, options);
-                }
-                else
-                    res_promise = Promise.reject(new Error("DB connection wasn't defined."));
+            tranStart: function (options, callback) {
 
                 var result = {};
+                var res_promise;
+
+                try {
+                    var tran;
+                    if (this.hasConnection()) {
+                        tran = new Transaction(this, options);
+                        res_promise = tran.start();
+                    }
+                    else
+                        res_promise = Promise.reject(new Error("DB connection wasn't defined."));
+                } catch (err) {
+                    res_promise = Promise.reject(err);
+                };
+
                 res_promise
                     .then(function (opResult) {
                         if (callback)
                             setTimeout(function () {
                                 result.result = "OK";
-                                result.detail = opResult;
+                                result.transactionId = tran.getTranId();
                                 callback(result);
                             }, 0);
                     })
@@ -226,7 +242,7 @@ define(
                         if (callback)
                             setTimeout(function () {
                                 result.result = "ERROR";
-                                result.message = "Unknown error in \"execSql\".";
+                                result.message = "Unknown error in \"DataObjectEngine::tranStrart\".";
                                 if (err.message)
                                     result.message = err.message;
                                 callback(result);
@@ -236,64 +252,236 @@ define(
                 return UCCELLO_CONFIG.REMOTE_RESULT;
             },
 
-            execBatch: function (batch, callback) {
+            tranCommit: function (transactionId, callback) {
+
+                var result = {};
+                var res_promise;
+
+                try {
+                    var tran;
+                    if (this.hasConnection()) {
+                        tran = Transaction.getTranById(transactionId);
+                        if (tran)
+                            res_promise = tran.commit()
+                        else
+                            throw new Error("Transaction \"" + transactionId + "\" doesn't exist.");
+                    }
+                    else
+                        res_promise = Promise.reject(new Error("DB connection wasn't defined."));
+                } catch (err) {
+                    res_promise = Promise.reject(err);
+                };
+
+                res_promise
+                    .then(function (opResult) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "OK";
+                                result.transactionId = tran.getTranId();
+                                callback(result);
+                            }, 0);
+                    })
+                    .catch(function (err) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "ERROR";
+                                result.message = "Unknown error in \"DataObjectEngine::tranCommit\".";
+                                if (err.message)
+                                    result.message = err.message;
+                                callback(result);
+                            }, 0);
+                    });
+
+                return UCCELLO_CONFIG.REMOTE_RESULT;
+            },
+
+            tranRollback: function (transactionId, callback) {
+
+                var result = {};
+                var res_promise;
+
+                try {
+                    var tran;
+                    if (this.hasConnection()) {
+                        tran = Transaction.getTranById(transactionId);
+                        if (tran)
+                            res_promise = tran.rollback()
+                        else
+                            throw new Error("Transaction \"" + transactionId + "\" doesn't exist.");
+                    }
+                    else
+                        res_promise = Promise.reject(new Error("DB connection wasn't defined."));
+                } catch (err) {
+                    res_promise = Promise.reject(err);
+                };
+
+                res_promise
+                    .then(function (opResult) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "OK";
+                                result.transactionId = tran.getTranId();
+                                callback(result);
+                            }, 0);
+                    })
+                    .catch(function (err) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "ERROR";
+                                result.message = "Unknown error in \"DataObjectEngine::tranRollback\".";
+                                if (err.message)
+                                    result.message = err.message;
+                                callback(result);
+                            }, 0);
+                    });
+
+                return UCCELLO_CONFIG.REMOTE_RESULT;
+            },
+
+            getNextRowId: function (model_name, options, callback) {
+
+                var result = {};
+                var res_promise;
+
+                try {
+                    var tran;
+                    if (this.hasConnection()) {
+                        
+                        var model = this._metaDataMgr.getModel(model_name);
+                        if (model)
+                            res_promise = this._query.getNextRowId(model, options)
+                        else
+                            throw new Error("Model \"" + model_name + "\" doesn't exist.");
+                    }
+                    else
+                        res_promise = Promise.reject(new Error("DB connection wasn't defined."));
+                } catch (err) {
+                    res_promise = Promise.reject(err);
+                };
+
+                res_promise
+                    .then(function (opResult) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "OK";
+                                result.detail = [];
+                                result.detail.push({ insertId: opResult.insertId });
+                                callback(result);
+                            }, 0);
+                    })
+                    .catch(function (err) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "ERROR";
+                                result.message = "Unknown error in \"DataObjectEngine::getNextRowId\".";
+                                if (err.message)
+                                    result.message = err.message;
+                                callback(result);
+                            }, 0);
+                    });
+
+                return UCCELLO_CONFIG.REMOTE_RESULT;
+            },
+
+            execSql: function (sql, options, callback) {
+                var res_promise;
+
+                try {
+                    if (this.hasConnection()) {
+                        res_promise = this._query.execSql(sql, options);
+                    }
+                    else
+                        res_promise = Promise.reject(new Error("DB connection wasn't defined."));
+                } catch (err) {
+                    res_promise = Promise.reject(err);
+                };
+
+                var result = {};
+                res_promise
+                    .then(function (opResult) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "OK";
+                                result.detail = opResult;
+                                callback(result);
+                            }, 0);
+                    })
+                    .catch(function (err) {
+                        if (callback)
+                            setTimeout(function () {
+                                result.result = "ERROR";
+                                result.message = "Unknown error in \"DataObjectEngine::execSql\".";
+                                if (err.message)
+                                    result.message = err.message;
+                                callback(result);
+                            }, 0);
+                    });
+
+                return UCCELLO_CONFIG.REMOTE_RESULT;
+            },
+
+            execBatch: function (batch, options, callback) {
                 console.log("execBatch: " + JSON.stringify(batch));
 
                 var result = {};
-                var res_promise = Promise.resolve({});
+                var res_promise;
                 var self = this;
 
-                if (this.hasConnection() && (batch.length > 0)) {
+                try {
+                    if (this.hasConnection() && (batch.length > 0)) {
 
-                    function batchFunc(transaction) {
-                        return self._seqExec(batch, function (val) {
+                        function batchFunc(transaction) {
+                            return self._seqExec(batch, function (val) {
 
-                            var promise = Promise.resolve();
-                            var model = self._metaDataMgr.getModel(val.model);
-                            if (!model)
-                                throw new Error("execBatch::Model \"" + val.model + "\" doesn't exist.");
+                                var promise = Promise.resolve();
+                                var model = self._metaDataMgr.getModel(val.model);
+                                if (!model)
+                                    throw new Error("execBatch::Model \"" + val.model + "\" doesn't exist.");
 
-                            switch (val.op) {
+                                switch (val.op) {
 
-                                case "insert":
+                                    case "insert":
 
-                                    promise = self._query.insert(model, val.data.fields, { transaction: transaction });
-                                    break;
+                                        promise = self._query.insert(model, val.data.fields, { transaction: transaction });
+                                        break;
 
-                                case "update":
+                                    case "update":
 
-                                    if ((!val.data) || (!val.data.key))
-                                        throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
+                                        if ((!val.data) || (!val.data.key))
+                                            throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
 
-                                    var key = model.getPrimaryKey();
-                                    if (!key)
-                                        throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
-                                    self._tmpPredicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
+                                        var key = model.getPrimaryKey();
+                                        if (!key)
+                                            throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
+                                        self._tmpPredicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
 
-                                    if (val.data.rowVersion) {
-                                        var rwField = model.getRowVersionField();
-                                        if (!rwField)
-                                            throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
-                                        self._tmpPredicate.addCondition({ field: rwField.name(), op: "=", value: val.data.rowVersion });
-                                    };
+                                        if (val.data.rowVersion) {
+                                            var rwField = model.getRowVersionField();
+                                            if (!rwField)
+                                                throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
+                                            self._tmpPredicate.addCondition({ field: rwField.name(), op: "=", value: val.data.rowVersion });
+                                        };
 
-                                    promise = self._query.update(model, val.data.fields, self._tmpPredicate,
-                                        {
-                                            transaction: transaction,
-                                            updOptions: {
-                                                rowVersion: val.data.rowVersion
-                                            }
-                                        });
-                                    break;
-                            };
-                            return promise;
-                        });
-                    };
+                                        promise = self._query.update(model, val.data.fields, self._tmpPredicate,
+                                            {
+                                                transaction: transaction,
+                                                updOptions: {
+                                                    rowVersion: val.data.rowVersion
+                                                }
+                                            });
+                                        break;
+                                };
+                                return promise;
+                            });
+                        };
 
-                    res_promise = this.transaction(batchFunc);
-                }
-                else
-                    res_promise = Promise.reject(new Error("DB connection wasn't defined."));
+                        res_promise = this.transaction(batchFunc, options);
+                    }
+                    else
+                        res_promise = Promise.reject(new Error("DB connection wasn't defined."));
+                } catch (err) {
+                    res_promise = Promise.reject(err);
+                };
 
                 res_promise
                     .then(function (opResult) {
@@ -308,7 +496,7 @@ define(
                         if (callback)
                             setTimeout(function () {
                                 result.result = "ERROR";
-                                result.message = "Unknown error in \"execBatch\".";
+                                result.message = "Unknown error in \"DataObjectEngine::execBatch\".";
                                 if (err.message)
                                     result.message = err.message;
                                 callback(result);
@@ -423,27 +611,30 @@ define(
                     var promise = Promise.resolve([]);
                     if (opts.force === true) {
                         promise = new Promise(function (resolve, reject) {
-                            resolve(self._query.showForeignKeys().then(function (result) {
-                                var curr_promise = Promise.resolve();
-                                if (result.length > 0) {
-                                    var models = self._metaDataMgr.models();
-                                    var fk_list = _.filter(result, function (fk) {
-                                        var tbl_name = fk.dst_table.toLowerCase();
-                                        var tbls = _.filter(models, function (model) {
-                                            return model.name().toLowerCase() === tbl_name;
+                            resolve(self._query.execDbInitialScript({}).then(function () {
+                                return self._query.showForeignKeys().then(function (result) {
+                                        var curr_promise = Promise.resolve();
+                                        if (result.length > 0) {
+                                            var models = self._metaDataMgr.models();
+                                            var fk_list = _.filter(result, function (fk) {
+                                                var tbl_name = fk.dst_table.toLowerCase();
+                                                var tbls = _.filter(models, function (model) {
+                                                    return model.name().toLowerCase() === tbl_name;
+                                                });
+                                                return tbls.length > 0;
+                                            });
+                                            if (fk_list.length > 0) {
+                                                curr_promise = self._seqExec(fk_list, function (fk) {
+                                                    return self._query.dropForeignKey(fk.src_table, fk.fk_name);
+                                                });
+                                            };
+                                        };
+                                        return curr_promise.then(function (result) {
+                                            return self.syncSchema({ force: true });
                                         });
-                                        return tbls.length > 0;
                                     });
-                                    if (fk_list.length > 0) {
-                                        curr_promise = self._seqExec(fk_list, function (fk) {
-                                            return self._query.dropForeignKey(fk.src_table, fk.fk_name);
-                                        });
-                                    };
-                                };
-                                return curr_promise.then(function (result) {
-                                    return self.syncSchema({ force: true });
-                                });
-                            }));
+                                })
+                            );
                         });
                     }
 
@@ -518,6 +709,13 @@ define(
                             }
                             else
                                 return resolve(createRefs([]));
+                        }).then(function (result) {
+                            var fin_result = result;
+                            return self._seqExec(self._metaDataMgr.models(), function (model) {
+                                return self._query.setTableRowId(model);
+                            }).then(function (result_rowid) {
+                                return fin_result.concat(result_rowid);
+                            });;
                         });
                     });
                 }
@@ -592,7 +790,7 @@ define(
                         "typeGuid": request.model.dataRootGuid()
                     },
                     "fields": {
-                        "dbgName": request.model.dataRootName()
+                        "Name": request.model.dataRootName()
                     },
                     "collections": {
                         "DataElements": [
@@ -640,7 +838,7 @@ define(
                                                 "typeGuid": ch_query.model.dataRootGuid()
                                             },
                                             "fields": {
-                                                "dbgName": ch_query.model.dataRootName(),
+                                                "Name": ch_query.model.dataRootName(),
                                                 "Alias": ch_query.alias
                                             },
                                             "collections": {
@@ -648,6 +846,8 @@ define(
                                                 ]
                                             }
                                         };
+                                        if (ch_query.parentField)
+                                            root.fields.ParentField = ch_query.parentField;
                                         data_obj.collections.Childs.push(root);
                                         curr_obj.collections[ch_query.alias] = root;
                                     });
