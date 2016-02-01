@@ -19,6 +19,7 @@ define(
 
             rowVersionFname: null,
             _keyField: null,
+            _parentField: null,
             _persFields: {},
 
             init: function (cm, params) {
@@ -41,7 +42,10 @@ define(
                     }
                     else
                         if (this.rowVersionFname && (field === this.rowVersionFname))
-                            throw new Error("DataObject::set: Field \"" + Meta.ROW_VERSION_FNAME + "\" is READ ONLY.");
+                            throw new Error("DataObject::set: Field \"" + field + "\" is READ ONLY.")
+                        else
+                            if (this._parentField && (field === this._parentField))
+                                throw new Error("DataObject::set: Field \"" + field + "\" is READ ONLY.");
                 };
                 UccelloClass.super.apply(this, [field, value, withCheckVal]);
             },
@@ -60,24 +64,42 @@ define(
                 return result;
             },
 
-            getModifications: function () {
+            getModifications: function (state) {
                 var result = null;
-                if (this.countModifiedFields(Meta.DATA_LOG_NAME) > 0) {
-                    var data = {
-                        key: this._keyField ? this.getOldValue(this._keyField, true) : null,
-                        rowVersion: this.rowVersionFname ? this.getOldValue(this.rowVersionFname, true) : null
-                    };
-                    var dataObj = { op: "update", model: this.className, data: data };
+                if (state === Meta.State.Insert) {
+                    var fields = {};
+                    fields.Guid = this.getGuidRes();
+                    var ver_fld_name = this.rowVersionFname;
                     for (var fldName in this._persFields) {
-                        if (this.isFldModified(fldName, Meta.DATA_LOG_NAME)) {
-                            if (!data.fields)
-                                data.fields = {};
-                            data.fields[fldName] = this.getSerialized(fldName);
+                        if (ver_fld_name !== fldName) {
+                            var val = this.getSerialized(fldName);
+                            if (val !== undefined)
+                                fields[fldName] = val;
                         };
                     };
-                    if (data.fields)
-                        result = dataObj;
-                };
+                    result = {
+                        op: "insert",
+                        model: this.className,
+                        data: { fields: fields }
+                    };
+                }
+                else
+                    if (this.countModifiedFields(Meta.DATA_LOG_NAME) > 0) {
+                        var data = {
+                            key: this._keyField ? this.getOldValue(this._keyField, true) : null,
+                            rowVersion: this.rowVersionFname ? this.getOldValue(this.rowVersionFname, true) : null
+                        };
+                        var dataObj = { op: "update", model: this.className, data: data };
+                        for (var fldName in this._persFields) {
+                            if (this.isFldModified(fldName, Meta.DATA_LOG_NAME)) {
+                                if (!data.fields)
+                                    data.fields = {};
+                                data.fields[fldName] = this.getSerialized(fldName);
+                            };
+                        };
+                        if (data.fields)
+                            result = dataObj;
+                    };
                 return result;
             },
 
@@ -97,7 +119,7 @@ define(
                     this[local_name].apply(this, arguments);
             },
 
-            save: function (cb) {
+            save: function (options, cb) {
                 var callback = arguments.length > 0 ? arguments[arguments.length - 1] : null;
                 if (typeof (callback) !== "function")
                     throw new Error("DataObjectBase::save Invalid callback type \"" + typeof (callback) + "\".");
@@ -129,7 +151,7 @@ define(
                     this[local_name].apply(this, arguments);
             },
 
-            modify: function (modif_func, callback) {
+            modify: function (modif_func, options, callback) {
 
                 var self = this;
 
@@ -145,7 +167,7 @@ define(
                         if (result && (result.result === "OK")) {
                             try {
                                 modif_func();
-                                self.save(finalize);
+                                self.save(options, finalize);
                             } catch (err) {
                                 finalize({ result: "ERROR", message: err.message });
                             };
@@ -185,7 +207,7 @@ define(
                     }, 0);
             },
 
-            _$local_save: function (cb) {
+            _$local_save: function (options, cb) {
                 var result = { result: "OK" };
 
                 var self = this;
@@ -254,16 +276,16 @@ define(
                                 cb(result);
                         };
 
-                        if ((!ignore_child_save) && $data) {
+                        if ((!ignore_child_save) && (typeof ($data) !== "undefined") && $data) {
                             var batch = [];
-                            var dataObj = this.getModifications();
+                            var dataObj = this.getModifications(Meta.State.Edit);
                             if (dataObj) {
                                 batch.push(dataObj);
                                 obj_updated.push(this);
                                 is_self_changed = true;
                             }
                             for (var i = 0; i < pending_childs.length; i++) {
-                                var dataObj = pending_childs[i].obj.getModifications();
+                                var dataObj = pending_childs[i].obj.getModifications(pending_childs[i].state);
                                 if (dataObj) {
                                     batch.push(dataObj);
                                     obj_updated.push(pending_childs[i].obj);
@@ -271,7 +293,7 @@ define(
                             }
                             if (batch.length > 0) {
                                 is_done = true;
-                                $data.execBatch(batch, local_cb);
+                                $data.execBatch(batch, options, local_cb);
                             };
                         };
 

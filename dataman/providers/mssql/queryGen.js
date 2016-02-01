@@ -1,15 +1,22 @@
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
-}
+};
+
+var currPath = __dirname;
+
 define(
-    ['../base/queryGen', 'lodash', UCCELLO_CONFIG.uccelloPath + '/memDB/memMetaType'],
-    function (Base, _, MemMetaType) {
+    ['fs', 'path', '../base/queryGen', 'lodash', UCCELLO_CONFIG.uccelloPath + '/memDB/memMetaType'],
+    function (Fs, Path, Base, _, MemMetaType) {
+
+        var iniScriptPath = Path.resolve(currPath, "./scripts/dbInit.sql");
+        var ROWID_TABLE_PREFIX = "__GEN_ROWID_";
 
         var MSSQLQueryGen = Base.extend({
 
             init: function (engine, options) {
                 UccelloClass.super.apply(this, [engine, options]);
+                this._iniScriptPath = iniScriptPath;
             },
 
             showForeignKeysQuery: function (src_name, dst_name) {
@@ -48,17 +55,21 @@ define(
 
             dropTableQuery: function (model) {
                 var query = "IF OBJECT_ID('<%= table %>', 'U') IS NOT NULL DROP TABLE <%= table %>";
-                return {
-                    sqlCmd: _.template(query)({ table: this.escapeId(model.name()) }).trim() + ";",
-                    params: []
-                };
+                var batch = [];
+                batch.push({ sqlCmd: _.template(query)({ table: this.escapeId(ROWID_TABLE_PREFIX + model.name()) }).trim() + ";", params: [] });
+                batch.push({ sqlCmd: _.template(query)({ table: this.escapeId(model.name()) }).trim() + ";", params: [] });
+                return batch;
             },
 
             createTableQuery: function (model) {
                 var query = "IF OBJECT_ID('<%= table %>', 'U') IS NULL CREATE TABLE <%= table %> (<%= fields%>)";
+                var query_gen = "IF OBJECT_ID('<%= table %>', 'U') IS NULL CREATE TABLE <%= table %> ([Id] int IDENTITY(1,1) NOT NULL, [fake] tinyint NULL)";
+
                 var self = this;
+                var batch = [];
                 var attrs = [];
                 var provider = this.getProvider();
+
                 _.forEach(model.fields(), function (field) {
                     var flags = field.flags() | 0;
                     attrs.push(self.escapeId(field.name()) + " " + field.fieldType().toSql(provider, field) +
@@ -73,9 +84,11 @@ define(
                     fields: attrs.join(", "),
                     engine: this._options.provider_options.engine
                 };
-                return { sqlCmd: _.template(query)(values).trim() + ";", params: [] };
-            },
+                batch.push({ sqlCmd: _.template(query)(values).trim() + ";", params: [] });
+                batch.push({ sqlCmd: _.template(query_gen)({ table: this.escapeId(ROWID_TABLE_PREFIX + model.name()) }).trim() + ";", params: [] });
 
+                return batch;
+            },
 
             commitTransactionQuery: function () {
                 return { sqlCmd: "COMMIT TRANSACTION;", params: [], type: this.queryTypes.COMMIT_TRAN };
@@ -144,25 +157,51 @@ define(
                 return updateCmd;
             },
 
+            setTableRowIdQuery: function (model) {
+                var vals = {};
+                var sql_params = [];
+                var stringType = (MemMetaType.createTypeObject("datatype", this.getEngine().getDB()))
+                    .setValue({ type: "string", length: 255 });
+                vals.table = this.escapeValue(model.name(), stringType, sql_params);
+                vals.rid_table = this.escapeValue(ROWID_TABLE_PREFIX + model.name(), stringType, sql_params);
+                vals.pk = this.escapeValue(model.getPrimaryKey().name(), stringType, sql_params);
+
+                var query = "EXEC _sys_sp_set_row_id @TableName = <%= table %>, @RowIdTableName = <%= rid_table %>, @RowIdFieldName = <%= pk %>";
+                return {
+                    sqlCmd: _.template(query)(vals).trim() + ";",
+                    params: sql_params,
+                };
+            },
+
+            getNextRowIdQuery: function (model) {
+                var vals = {};
+                var sql_params = [];
+                var stringType = (MemMetaType.createTypeObject("datatype", this.getEngine().getDB()))
+                    .setValue({ type: "string", length: 255 });
+                vals.table = this.escapeValue(ROWID_TABLE_PREFIX + model.name(), stringType, sql_params);
+
+                var query = "EXEC _sys_sp_get_row_id @TableName = <%= table %>";
+                return {
+                    sqlCmd: _.template(query)(vals).trim() + ";",
+                    params: sql_params,
+                    type: this.queryTypes.ROWID
+                };
+            },
+
             insertQuery: function (model, vals) {
                 var options = {};
-                var fnames = Object.keys(vals);
-                for (var i = 0; i < fnames.length; i++) {
-                    var fld = model.getField(fnames[i]);
-                    if (fld && ((fld.flags() & this.Meta.Field.AutoIncrement) !== 0)) {
-                        options.before = "SET IDENTITY_INSERT " + this.escapeId(model.name()) + " ON;";
-                        options.after = ";SET IDENTITY_INSERT " + this.escapeId(model.name()) + " OFF";
-                        break;
-                    };
-                };
-                var pk = model.getPrimaryKey();
-                if (pk && (vals[pk.name()] === undefined)) {
-                    options.output = " OUTPUT INSERTED." + this.escapeId(pk.name()) + " AS insertId";
-                    var rw = model.getRowVersionField();
-                    if (rw)
-                        options.output += ", INSERTED." + this.escapeId(rw.name()) + " AS rowVersion";
-                }
+
+                var rw = model.getRowVersionField();
+                if (rw)
+                    options.output = " OUTPUT INSERTED." + this.escapeId(rw.name()) + " AS rowVersion";
+
                 var insertCmd = UccelloClass.super.apply(this, [model, vals, options]);
+
+                var pk = model.getPrimaryKey();
+                if (pk && vals[pk.name()]) {
+                    insertCmd.insertId = vals[pk.name()];
+                }
+
                 return insertCmd;
             },
 

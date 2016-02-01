@@ -83,11 +83,57 @@ define(
                 });
             },
 
+            setTableRowId: function (model, options) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    var sql = self._query_gen.setTableRowIdQuery(model);
+                    resolve(self._runQuery(sql, options));
+                });
+            },
+
+            getNextRowId: function (model, options) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    var sql = self._query_gen.getNextRowIdQuery(model);
+                    resolve(self._runQuery(sql, options));
+                });
+            },
+
             insert: function (model, values, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
-                    var sql = self._query_gen.insertQuery(model, values);
-                    resolve(self._runQuery(sql, options));
+                    vals = _.cloneDeep(values);
+                    var pk = model.getPrimaryKey();
+                    if (!pk) {
+                        reject(new Error("Missing PK: \"" + model.name() + "\"."));
+                    }
+                    else {
+                        var res_id = { insertId: -1 };
+                        var promise = Promise.resolve(res_id);
+                        if (!vals[pk.name()]) {
+                            promise = self.getNextRowId(model, options);
+                        }
+                        else
+                            res_id.insertId = values[pk.name()];
+                        resolve(promise.then(function (res) {
+                            if (!res.insertId)
+                                return Promise.reject(new Error("Missing PK value: \"" + model.name() + "\"."));
+                            else {
+                                if (!vals[pk.name()])
+                                    vals[pk.name()] = res.insertId;
+                                var sql = self._query_gen.insertQuery(model, vals);
+                                return self._runQuery(sql, options);
+                            };
+                        }));
+                    };
+                });
+            },
+
+            execDbInitialScript: function (options) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    var sqlArr = self._query_gen.getDbInitialScript();
+                    resolve(self._runQuery(sqlArr, options));
                 });
             },
 
@@ -158,20 +204,43 @@ define(
                 });
             },
 
-            _runQuery: function (sql, options) {
+            _runQueryBatch: function (sqlBatch, connection) {
+                var self = this;
+
+                function exec_query(cmd, connection) {
+                    var query = new self._query(self._engine, connection, self._query_options);
+                    if (self._trace.sqlCommands)
+                        console.log("Started: " + cmd.sqlCmd);
+                    return query.run(cmd).then(function (result) {
+                        if (self._trace.sqlCommands)
+                            console.log("Finished: " + cmd.sqlCmd);
+                        return result;
+                    });
+                };
+
+                return new Promise(function (resolve, reject) {
+                    if (sqlBatch) {
+                        if (_.isArray(sqlBatch))
+                            resolve(self._engine._seqExec(sqlBatch, function (sqlCmd) {
+                                return exec_query(sqlCmd, connection);
+                            }))
+                        else
+                            resolve(exec_query(sqlBatch, connection));
+                    }
+                    else
+                        resolve({});
+                });
+            },
+
+            _runQuery: function (sqlBatch, options) {
                 var self = this;
                 var transaction = options && options.transaction ? options.transaction : null;
                 return Promise.resolve(transaction ? transaction.getConnection() : this._connection_mgr.getConnection())
                 .then(function (connection) {
-                    var query = new self._query(self._engine, connection, self._query_options);
-                    if (self._trace.sqlCommands)
-                        console.log("Started: " + sql.sqlCmd);
-                    return query.run(sql).then(function (result) {
+                    return self._runQueryBatch(sqlBatch, connection).then(function (result) {
                         return (transaction ? Promise.resolve() : self._connection_mgr.releaseConnection(connection))
                             .then(function () {
-                                if (self._trace.sqlCommands)
-                                    console.log("Finished: " + sql.sqlCmd);
-                                return Promise.resolve(result);
+                                return result;
                             });
                     }, function (err) {
                         return (transaction ? Promise.resolve() : self._connection_mgr.releaseConnection(connection))

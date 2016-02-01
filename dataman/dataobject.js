@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['./dataObjectBase', '../metaData/metaDefs'],
-    function (DataObjectBase, Meta) {
+    ['./dataRoot', './dataObjectBase', '../metaData/metaDefs'],
+    function (DataRoot, DataObjectBase, Meta) {
 
         var DataObject = DataObjectBase.extend({
 
@@ -34,6 +34,8 @@ define(
                             subscriber: this,
                             callback: this._onDeleteChilds
                         });
+                    if ((this.getParent() instanceof DataRoot) && this.getParent().parentField())
+                        this._parentField = this.getParent().parentField();
 
                 };
             },

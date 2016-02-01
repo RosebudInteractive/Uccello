@@ -291,7 +291,7 @@ define(
 			            }, 0);
                 };
 
-			    this.root().newObject(flds, addObjectCallback);
+			    this.root().newObject(flds, {}, addObjectCallback);
 
 			}
         });

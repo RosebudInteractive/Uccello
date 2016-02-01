@@ -43,7 +43,7 @@ define(
                     else {
                         for (var i = 1; i < arguments.length; i++)
                             args[i - 1] = arguments[i];
-                        if ($process && $process.processDispatcher) {
+                        if ((typeof ($process) !== "undefined") && $process && $process.processDispatcher) {
                             result = $process.processDispatcher.methodCallResolver(this, fname, args);
                         }
                         else

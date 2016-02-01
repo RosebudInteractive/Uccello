@@ -168,7 +168,7 @@ define(
                     };
                     var model = new MetaModel(this.getDB(), params);
                     return model
-                        .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey | Meta.Field.AutoIncrement)
+                        .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey)
                         .addField("Guid", { type: "guid", allowNull: true }, Meta.Field.System | Meta.Field.Hidden)
                         .addField(Meta.ROW_VERSION_FNAME, { type: "rowversion", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion);
 
