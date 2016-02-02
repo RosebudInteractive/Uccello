@@ -15,14 +15,14 @@ define([
 
     function(Predicate, ResUtils, ResVersions) {
 
-        function ResVersion(resVersionObj) {
-            this.id = resVersionObj.id();
-            this.resVer = resVersionObj.resVer();
-            this.hash = resVersionObj.hash();
-            this.resBody = resVersionObj.resBody();
-            this.description = resVersionObj.description();
-            this.resId = resVersionObj.resId();
-        }
+        //function ResVersion(resVersionObj) {
+        //    this.id = resVersionObj.id();
+        //    this.resVerId = resVersionObj.resVerId();
+        //    this.hash = resVersionObj.hash();
+        //    this.resBody = resVersionObj.resBody();
+        //    this.description = resVersionObj.description();
+        //    this.resId = resVersionObj.resId();
+        //}
 
 
         return UccelloClass.extend({
@@ -38,11 +38,10 @@ define([
                 this.state = ResUtils.state.new;
 
                 this.queryBuildResGuid = 'f447d844-9ad4-4a89-ad41-347427c17e3b';
-                this.queryResVerGuid = '99abb520-3c5b-4c2c-a2fe-5aab01da7aa6';
                 this.commitGuid = 'd53fa310-a5ce-4054-97e0-c894a03d3719';
             },
 
-            addResVersion : function(resVersionId) {
+            addResVersion : function(resVersionId, transactionId) {
                 var that = this;
                 return new Promise(promiseBody);
 
@@ -51,18 +50,26 @@ define([
                     _predicate.addCondition({field: "Id", op: "=", value: 0});
                     var _expression = { model: {name: "SysBuildRes"}, predicate: that.db.serialize(_predicate) };
 
-                    that.db.getRoots([this.queryBuildResGuid], {rtype: "data", expr: _expression}, function (guids) {
+                    that.db.getRoots([that.queryBuildResGuid], {rtype: "data", expr: _expression}, function (guids) {
                         var _objectGuid = guids.guids[0];
                         that.queryBuildResGuid = _objectGuid;
 
+                        var _options = {};
+                        if (transactionId) {
+                            _options.transactionId = transactionId;
+                        }
+
                         that.db.getObj(_objectGuid).newObject({
                             fields: {
-                                BuildId: that.Id,
+                                BuildId: that.id,
                                 ResVerId: resVersionId
                             }
-                        }, function (result) {
+                        }, _options, function (result) {
                             if (result.result == 'OK') {
-                                that.resVersions.push(new ResVersion(that.db.getObj(result.newObject)));
+                                //that.loadResVersions(function() {
+                                //    resolve()
+                                //});
+                                ////that.resVersions.push(that.db.getObj(result.newObject).resVerId());
                                 resolve()
                             } else {
                                 reject(ResUtils.newDbError(result.message));
@@ -90,7 +97,6 @@ define([
                         _resVersionsId.push(_elements.get(i).resVerId())
                     }
 
-                    //that.loadResVersions2(_resVersionsId, that.resVersions, function(resultArray){
                     ResVersions.load(_resVersionsId, that.resVersions, function(){
                         that.state = ResUtils.state.loaded;
                         done();
@@ -98,39 +104,14 @@ define([
                 })
             },
 
-            //loadResVersions2 : function(resVersionsId, done) {
-            //    this.resVersions = [];
-            //
-            //    if (resVersionsId.length == 0) {
-            //        done()
-            //    } else {
-            //        var _predicate = new Predicate(this.db, {});
-            //        _predicate.addCondition({field: "Id", op: "in", value: resVersionsId});
-            //        var _expression = { model: {name: "SysResVer"}, predicate: this.db.serialize(_predicate) };
-            //
-            //        var that = this;
-            //        this.db.getRoots([this.queryResVerGuid], { rtype: "data", expr: _expression }, function(guids) {
-            //            var _objectGuid = guids.guids[0];
-            //            that.queryResVerGuid = _objectGuid;
-            //
-            //            var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
-            //            for (var i = 0; i < _elements.count(); i++) {
-            //                that.resVersions.push(new ResVersion(_elements.get(i)));
-            //            }
-            //
-            //            done();
-            //        })
-            //    }
-            //},
-
-            commit : function() {
+            commit : function(transactionId) {
                 var that = this;
                 return new Promise(promiseBody);
 
                 function promiseBody(resolve, reject) {
                     if (that.resVersions.length != 0) {
-                        var _predicate = new Predicate(this.db, {});
-                        _predicate.addCondition({field: "Id", op: "=", value: this.id});
+                        var _predicate = new Predicate(that.db, {});
+                        _predicate.addCondition({field: "Id", op: "=", value: that.id});
                         var _expression = {
                             model: {name: "SysBuild"},
                             predicate: that.db.serialize(_predicate)
@@ -140,21 +121,26 @@ define([
                             var _objectGuid = guids.guids[0];
                             that.commitGuid = _objectGuid;
 
+                            var _options = {};
+                            if (transactionId) {
+                                _options.transactionId = transactionId;
+                            }
+
                             var _obj = that.db.getObj(_objectGuid);
                             _obj.edit(function() {
                                 var _build = _obj.getCol('DataElements').get(0);
                                 _build.isConfirmed(true);
-                                _obj.save(function(result) {
+                                _obj.save(_options, function(result) {
                                     if (result.result == "OK") {
                                         resolve(that.id)
                                     } else {
-                                        reject(new Error({reason : ResUtils.errorReasons.dbError, message : result.message}))
+                                        reject(ResUtils.newDbError(result.message))
                                     }
                                 });
                             });
                         })
                     } else {
-                        reject(new Error({reason : ResUtils.errorReasons.objectError, message : 'No resources'}))
+                        reject(ResUtils.newObjectError('No resources'))
                     }
                 }
             }

@@ -39,7 +39,7 @@ define([
                 return new Promise(promiseBody);
 
                 function promiseBody(resolve, reject) {
-                    var _predicate = new Predicate(this.db, {});
+                    var _predicate = new Predicate(that.db, {});
                     _predicate.addCondition({field: "Id", op: "=", value: that.id});
                     var _expression = { model: {name: "SysVersion"}, predicate: that.db.serialize(_predicate) };
 
@@ -47,14 +47,19 @@ define([
                         var _objectGuid = guids.guids[0];
                         that.editQueryGuid = _objectGuid;
 
+                        var _options = {};
+                        if (transactionId) {
+                            _options.transactionId = transactionId;
+                        }
+
                         var _obj = that.db.getObj(_objectGuid);
                         _obj.edit(function() {
                             var _version = _obj.getCol('DataElements').get(0);
                             _version.lastConfirmedBuildId(that.currBuildId);
                             that.state = ResUtils.state.changed;
-                            _obj.save(function(result) {
+                            _obj.save(_options, function(result) {
                                 if (result.result == "OK") {
-                                    that.parseDbObject(that.db.getObj(result.newObject));
+                                    that.parseDbObject(_version);
                                     resolve()
                                 } else {
                                     reject(ResUtils.newDbError(result.message))
@@ -70,7 +75,7 @@ define([
                 return new Promise(promiseBody);
 
                 function promiseBody(resolve, reject) {
-                    var _predicate = new Predicate(this.db, {});
+                    var _predicate = new Predicate(that.db, {});
                     _predicate.addCondition({field: "Id", op: "=", value: that.id});
                     var _expression = {model: {name: "SysVersion"}, predicate: that.db.serialize(_predicate)};
 
@@ -78,14 +83,19 @@ define([
                         var _objectGuid = guids.guids[0];
                         that.editQueryGuid = _objectGuid;
 
+                        var _options = {};
+                        if (transactionId) {
+                            _options.transactionId = transactionId;
+                        }
+
                         var _obj = that.db.getObj(_objectGuid);
                         _obj.edit(function () {
                             var _version = _obj.getCol('DataElements').get(0);
                             _version.currBuildId(buildId);
                             that.state = ResUtils.state.changed;
-                            _obj.save(function (result) {
+                            _obj.save(_options, function (result) {
                                 if (result.result == "OK") {
-                                    that.parseDbObject(that.db.getObj(result.newObject));
+                                    that.parseDbObject(_version);
                                     resolve()
                                 } else {
                                     reject(ResUtils.newDbError(result.message));

@@ -100,7 +100,7 @@ describe('#getResListByType', function() {
     });
 });
 
-describe('#createNewResource', function() {
+xdescribe('#createNewResource', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
 
@@ -122,27 +122,31 @@ xdescribe('#newResourceVersion', function() {
     });
 });
 
+describe('#commitBuild', function() {
+    it('создание Build-а', function(done) {
+        var _resManger = Main.Config.ResManager;
+
+        _resManger.commitBuild(function(result) {
+            console.log(result.result);
+            console.log(result.message);
+            done();
+        })
+    });
+});
+
 xdescribe('#createNewBuild', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
 
         _resManger.createNewBuild('Новый тестовый build', function(result) {
             console.log(result.result);
+            console.log(result.message);
             done();
         })
     });
 });
 
-xdescribe('#commitBuild', function() {
-    it('создание Build-а', function(done) {
-        var _resManger = Main.Config.ResManager;
 
-        _resManger.commitBuild(function(result) {
-            console.log(result.result);
-            done();
-        })
-    });
-});
 
 /*$data.execSql({
     cmd : "select * from sysproduct",

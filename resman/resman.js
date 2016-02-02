@@ -216,7 +216,9 @@ define(
                                             build.addResVersion(resVersion.id, _transactionId).then(
                                                 function () {
                                                     that.commit(_transactionId);
-                                                    callback({result : 'OK', resVersionId : resVersion.id})
+                                                    build.loadResVersions(function(){
+                                                        callback({result : 'OK', resVersionId : resVersion.id})
+                                                    });
                                                 },
                                                 function (reason) {
                                                     that.rollback(_transactionId);
@@ -242,33 +244,35 @@ define(
 
             createNewBuild: function (description, callback) {
                 var that = this;
-                $data.tranStart({}, function(result){
-                    if (result.result === "OK") {
-                        var _transactionId = result.transactionId;
+                this.loadDirectories(function() {
+                    $data.tranStart({}, function (result) {
+                        if (result.result === "OK") {
+                            var _transactionId = result.transactionId;
 
-                        that.builds.createNew(description, _transactionId).then(
-                            function(buildId){
-                                that.directories.getCurrentVersion().setCurrentBuild(buildId, _transactionId).then(
-                                    function () {
-                                        that.commit(_transactionId);
-                                        callback({result : 'OK', resVersionId : resVersion.id})
-                                    },
-                                    function (reason) {
-                                        that.rollback(_transactionId);
-                                        callback({result : 'ERROR', message : reason.message})
-                                    }
-                                )
-                            },
-                            function (reason) {
-                                that.rollback(_transactionId);
-                                callback({result : 'ERROR', message : reason.message})
-                            }
-                        );
+                            that.builds.createNew(description, _transactionId).then(
+                                function (buildId) {
+                                    that.directories.getCurrentVersion().setCurrentBuild(buildId, _transactionId).then(
+                                        function () {
+                                            that.commit(_transactionId);
+                                            callback({result: 'OK', currentBuildId: buildId})
+                                        },
+                                        function (reason) {
+                                            that.rollback(_transactionId);
+                                            callback({result: 'ERROR', message: reason.message})
+                                        }
+                                    )
+                                },
+                                function (reason) {
+                                    that.rollback(_transactionId);
+                                    callback({result: 'ERROR', message: reason.message})
+                                }
+                            );
 
-                    } else {
-                        callback({result : 'ERROR', message : result.message})
-                    }
-                });
+                        } else {
+                            callback({result: 'ERROR', message: result.message})
+                        }
+                    });
+                })
             },
 
             commitBuild: function (callback) {
@@ -278,10 +282,10 @@ define(
                     if (result.result === "OK") {
                         var _transactionId = result.transactionId;
 
-                        var _promise = that.builds.current.commit();
+                        var _promise = that.builds.current.commit(_transactionId);
                         _promise.then(
                             function(){
-                                that.directories.getCurrentVersion().setLastConfirmedBuild().then(
+                                that.directories.getCurrentVersion().setLastConfirmedBuild(_transactionId).then(
                                     function () {
                                         that.commit(_transactionId);
                                         callback({result : 'OK'})

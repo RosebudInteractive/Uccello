@@ -14,11 +14,11 @@ define([],
         ResUtils.errorReasons = {dbError : 0, objectError : 1};
 
         ResUtils.newObjectError = function(message) {
-            return new Error({reason : ResUtils.errorReasons.objectError, message : message})
+            return {reason : ResUtils.errorReasons.objectError, message : message}
         };
 
         ResUtils.newDbError = function(message) {
-            return new Error({reason : ResUtils.errorReasons.dbError, message : message})
+            return {reason : ResUtils.errorReasons.dbError, message : message}
         };
 
         return ResUtils;

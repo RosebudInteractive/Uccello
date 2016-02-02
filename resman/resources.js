@@ -200,7 +200,7 @@ define([
                         })
                     }
 
-                    function createResource() {
+                    function createResource(transactionId) {
                         var _predicate = new Predicate(that.db, {});
                         _predicate.addCondition({field: "Id", op: "=", value: 0});
                         var _expression = {
@@ -212,6 +212,11 @@ define([
                             var _objectGuid = guids.guids[0];
                             that.queryResGuid = _objectGuid;
 
+                            var _options = {};
+                            if (transactionId) {
+                                _options.transactionId = transactionId;
+                            }
+
                             that.db.getObj(_objectGuid).newObject({
                                 fields: {
                                     Name: resource.name,
@@ -221,7 +226,7 @@ define([
                                     ProdId: that.directories.getCurrentProduct().id,
                                     ResTypeId: resource.resTypeId
                                 }
-                            }, {}, function (result) {
+                            }, _options, function (result) {
                                 if (result.result == 'OK') {
                                     resolve(result.newObject)
                                 } else {
@@ -234,12 +239,12 @@ define([
                 }
             },
 
-            createNewVersion: function (resGuid, body) {
+            createNewVersion: function (resGuid, body, transactionId) {
                 var that = this;
                 return new Promise(promiseBody);
 
                 function promiseBody(resolve, reject) {
-                    that.getObj(resGuid, function (obj) {
+                    that.getObject(resGuid, function (obj) {
                         if (!obj) {
                             reject(ResUtils.newObjectError('No such resource'))
                         } else {
@@ -257,7 +262,7 @@ define([
                                     Description: obj.verDescription,
                                     ResId: obj.id
                                 };
-                                ResVersions.createNew(_fields).then(
+                                ResVersions.createNew(_fields, transactionId).then(
                                     function (resVersion) {
                                         that.state = ResUtils.state.changed;
                                         resolve(resVersion)

@@ -60,7 +60,7 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils'],
                 }
             };
 
-        ResVersions.createNew = function(fields) {
+        ResVersions.createNew = function(fields, transactionId) {
             var that = _instance;
             return new Promise(promiseBody);
 
@@ -74,11 +74,15 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils'],
                 };
 
                 that.db.getRoots([that.queryGuid], { rtype: "data", expr: _expression }, function (guids) {
-
                     var _objectGuid = guids.guids[0];
                     that.queryGuid = _objectGuid;
 
-                    that.db.getObj(_objectGuid).newObject(fields, function (result) {
+                    var _options = {};
+                    if (transactionId) {
+                        _options.transactionId = transactionId;
+                    }
+
+                    that.db.getObj(_objectGuid).newObject({fields : fields}, _options, function (result) {
                         if (result.result == 'OK') {
                             var _resVersion = new ResVersion(that.db.getObj(result.newObject));
                             resolve(_resVersion);

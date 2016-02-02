@@ -102,6 +102,11 @@ define([
                                 var _objectGuid = guids.guids[0];
                                 that.queryBuildResGuid = _objectGuid;
 
+                                var _options = {};
+                                if (transactionId) {
+                                    _options.transactionId = transactionId;
+                                }
+
                                 that.db.getObj(_objectGuid).newObject({
                                     fields: {
                                         BuildNum: _newBuildNum,
@@ -109,9 +114,9 @@ define([
                                         Description: _newDescr,
                                         VersionId: build.versionId
                                     }
-                                }, function (result) {
+                                }, _options, function (result) {
                                     if (result.result == 'OK') {
-                                        var _newBuild = new Build(that.db.getObj(result.newObject));
+                                        var _newBuild = new Build(that.db, that.db.getObj(result.newObject));
                                         resolve(_newBuild.id);
                                     } else {
                                         reject(ResUtils.newDbError(result.message));
