@@ -2,8 +2,8 @@
  * Created by staloverov on 28.05.2015.
  */
 var _parentDir = __dirname;
-var _uccelloDir = _parentDir + '/../../';
-var _dbPath = _parentDir + '/../../../ProtoOne/data/';
+var _uccelloDir = _parentDir + '/../../../';
+var _dbPath = _parentDir + '/../../../../ProtoOne/data/';
 var _definitionsPath = _parentDir + '/definitions/';
 
 var _path = {
@@ -20,48 +20,12 @@ var _initializer = {
             uccelloPath     : _path.Uccello,
             webSocketServer : {port: 8082},
 
-            dataman: {
-                connection: { //MSSQL
-                    host: "GALLO", // "SQL-SERVER"
-                    //port: 1435, //instanceName: "SQL2008R2"
-                    username: "sa",
-                    password: "",
-                    database: "resmanger_test",
-                    provider: "mssql",
-                    connection_options: { instanceName: "SQLEXPRESS" },
-                    provider_options: {},
-                    pool: {
-                        max: 5,
-                        min: 0,
-                        idle: 10000
-                    }
-                },
-                //connection: { //MySql
-                //    host: "localhost",
-                //    username: "sa",
-                //    password: "system",
-                //    database: "resmanager_test",
-                //    provider: "mysql",
-                //    connection_options: {},
-                //    provider_options: {},
-                //    pool: {
-                //        max: 5,
-                //        min: 0,
-                //        idle: 10000
-                //    },
-                //},
-                importData: {
-                    autoimport: false,
-                    dir: "../../ProtoOne/data/tables"
-                },
-                trace: {
-                    sqlCommands: true,
-                    importDir: true
-                }
-            },
-            resman : {
-                useDb : true,
-                defaultProduct : 'ProtoOne'
+            resourceBuilder : {
+                sourceDir : './../../../ProtoOne/data/forms/',
+                destDir : './testFiles/',
+                formResTypeId : 1,
+                productId : 2,
+                currBuildId : 2
             }
         };
     },
@@ -92,7 +56,7 @@ var _initializer = {
             done(err, row);
         }
         this.uccelloServ = new UccelloServ({authenticate: fakeAuthenticate});
-        this.ResManager = this.uccelloServ.pvt.resman;
+        //this.resourceBuilder = this.uccelloServ.pvt.resman;
     }
 };
 

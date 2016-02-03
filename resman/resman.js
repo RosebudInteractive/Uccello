@@ -25,7 +25,8 @@ define(
                 if ((options) && (options.hasOwnProperty('currProd'))) {
                     this.currentProductCode = options.currProd;
                 } else {
-                    if (UCCELLO_CONFIG.resman.defaultProduct) {
+                    // Todo : продумать защиту когда секции resman нет!!
+                    if ((UCCELLO_CONFIG.resman) && (UCCELLO_CONFIG.resman.defaultProduct)) {
                         this.currentProductCode = UCCELLO_CONFIG.resman.defaultProduct;
                     }
                 }
