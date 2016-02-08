@@ -279,22 +279,31 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
             return _instance;
         }
 
-        Builder.prepareFiles = function(callback){
-            var that = getInstance();
+        Builder.prepareFiles = function(){
+            return new Promise(promiseBody);
 
-            if (that.canBuildData) {
-                var _list = fs.readdirSync(that.formDir);
-                if (_list.length != 0) {
-                    that.createResources(_list, function(){
-                        that.saveFiles(function(){
-                            callback('done')
-                        })
-                    });
-                } else {
-                    callback('No files to build into resource')
+            function promiseBody(resolve, reject){
+                var that = getInstance();
+
+                if (that.canBuildData) {
+                    var _list = fs.readdirSync(that.formDir);
+                    if (_list.length != 0) {
+                        that.createResources(_list, function(){
+                            that.saveFiles(function(){
+                                resolve()
+                            })
+                        });
+                    } else {
+                        reject(new Error('No files to build into resource'))
+                    }
                 }
             }
 
+
+        };
+
+        Builder.kill = function(){
+            _instance = null;
         };
 
         return Builder;

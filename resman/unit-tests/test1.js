@@ -1,6 +1,11 @@
 /**
  * Created by staloverov on 23.12.2015.
  */
+var chai = require("chai");
+var chaiAsPromised = require("chai-as-promised");
+
+chai.use(chaiAsPromised);
+
 var should  = require('chai').should();
 var expect = require('chai').expect;
 
@@ -11,40 +16,34 @@ before(function() {
     Main.Config.init();
 });
 
-xdescribe('#init', function() {
-    it('Прогрузить первоначальные данные', function(done) {
-        var _resManger = Main.Config.ResManager;
-        _resManger.should.be.exist;
-
-        var _interval =  setInterval(function() {
-            clearInterval(_interval);
-
-            var _promise = _resManger.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6');
-
-            _promise.then(function(body) {
-                console.log('body : [%s]', body);
-                done();
-            }, function(reason){
-                console.log(reason);
-                done();
-            });
-
-        }, 1000);
-    });
-});
-
 describe('#getResource', function() {
-    it('Прогрузить первоначальные данные', function(done) {
+    it('Загрузить существующий ресурс', function(done) {
+        $data.execSql({
+            cmd : "update SysVersion set CurrBuildId = 2 where Id = 2;" +
+            "delete from SysBuild where Id > 2"
+            //dialect: {
+            //    mysql: "update sysproduct set description=concat('xxx ',description) where id=1",
+            //    mssql: "update sysproduct set description='xxx '+description where id=1"
+            //}
+        }, {}, function (result) {
+            if (result.result !== "OK") {
+                done(new Error(result.message));
+            }
+        });
+
         var _resManger = Main.Config.ResManager;
 
-        var _promise = _resManger.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6');
-        _promise.then(function (body) {
-            console.log('body : [%s]', body);
-            done();
-        }, function (reason) {
-            console.log(reason);
-            done();
-        });
+        _resManger.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6').then(
+            function (body) {
+                body.should.be.exist;
+                var _resource = JSON.parse(body);
+                _resource.fields.should.be.exists;
+                _resource.fields.Name.should.be.equal('MainForm');
+                done();
+            }, function (reason) {
+                done(reason);
+            });
+        //_resManger.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6').should.be.fulfilled.notify(done);
     });
 });
 
@@ -96,27 +95,28 @@ describe('#getResListByType', function() {
             console.log(reason);
             done();
         });
-
     });
 });
 
-xdescribe('#createNewResource', function() {
+describe('#createNewResource', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
 
         _resManger.createNewResource({name : 'Test', code : 'TEST', description : 'Descr', resGuid : 'e8f21877-f3ba-4508-89bf-270a35f0361c', resTypeId : 1}, function(result) {
             console.log(result.result);
+            console.log(result.message);
             done();
         })
     });
 });
 
-xdescribe('#newResourceVersion', function() {
+describe('#newResourceVersion', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
 
         _resManger.newResourceVersion('e8f21877-f3ba-4508-89bf-270a35f0361c', 'TEST', function(result) {
             console.log(result.result);
+            console.log(result.message);
             done();
         });
     });
@@ -134,7 +134,7 @@ describe('#commitBuild', function() {
     });
 });
 
-xdescribe('#createNewBuild', function() {
+describe('#createNewBuild', function() {
     it('создание Build-а', function(done) {
         var _resManger = Main.Config.ResManager;
 

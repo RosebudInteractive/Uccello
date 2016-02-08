@@ -7,6 +7,8 @@ if (typeof define !== 'function') {
 }
 
 
+var _instance = null;
+
 define([
         UCCELLO_CONFIG.uccelloPath + '/predicate/predicate',
         './resUtils',
@@ -14,8 +16,7 @@ define([
     ],
 
     function(Predicate, ResUtils, Build) {
-
-        return UccelloClass.extend({
+        var Builds = UccelloClass.extend({
 
             init: function (db, directories) {
                 this.db = db;
@@ -30,7 +31,14 @@ define([
             loadBuild : function(buildId, callback) {
                 var _build = this.getById(buildId);
                 if (_build) {
-                    callback(_build)
+                    if (_build.isLoaded()) {
+                        callback(_build)
+                    } else {
+                        _build.loadResVersions(function() {
+                            callback(_build);
+                        });
+                    }
+
                 } else {
                     var _predicate = new Predicate(this.db, {});
                     _predicate.addCondition({field: "Id", op: "=", value: buildId});
@@ -117,6 +125,7 @@ define([
                                 }, _options, function (result) {
                                     if (result.result == 'OK') {
                                         var _newBuild = new Build(that.db, that.db.getObj(result.newObject));
+                                        that.builds.push(_newBuild);
                                         resolve(_newBuild.id);
                                     } else {
                                         reject(ResUtils.newDbError(result.message));
@@ -130,5 +139,23 @@ define([
             }
 
         });
+
+        Builds.init = function(db, directories){
+            _instance = new Builds(db, directories)
+            return _instance;
+        };
+
+        function getInstance() {
+            if (!_instance) {
+                throw new Error('Build not initialized');
+            }
+            return _instance;
+        }
+
+        Builds.loadBuild = function(buildId, callback) {
+            getInstance().loadBuild(buildId, callback);
+        };
+
+        return Builds;
     }
 )

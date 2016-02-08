@@ -26,7 +26,7 @@ var _initializer = {
                     //port: 1435, //instanceName: "SQL2008R2"
                     username: "sa",
                     password: "",
-                    database: "resmanger_test",
+                    database: "resmanager_test",
                     provider: "mssql",
                     connection_options: { instanceName: "SQLEXPRESS" },
                     provider_options: {},

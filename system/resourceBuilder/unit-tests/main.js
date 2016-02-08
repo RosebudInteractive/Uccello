@@ -56,7 +56,6 @@ var _initializer = {
             done(err, row);
         }
         this.uccelloServ = new UccelloServ({authenticate: fakeAuthenticate});
-        //this.resourceBuilder = this.uccelloServ.pvt.resman;
     }
 };
 

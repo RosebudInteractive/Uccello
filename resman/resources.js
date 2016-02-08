@@ -85,7 +85,7 @@ define([
                         var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
 
                         if (_elements.count() == 0) {
-                            callback(null)
+                            callback([])
                         } else {
                             var _count = 0;
                             var _resultArray = [];

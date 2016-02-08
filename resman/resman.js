@@ -31,20 +31,41 @@ define(
                     }
                 }
 
-                var _dbParams = {
-                    name: "ResourceManager",
-                    kind: "master",
-                    guid: "c76362cf-5f15-4aa4-8ee2-4a6e242dca51",
-                    constructHolder: constructHolder
-                };
+                this.checkOptions();
 
-                this.db = new ControlMgr({controller: controller, dbparams: _dbParams},
-                    null, null, null, proxy);
+                if (this.dbMode.canUse) {
+                    var _dbParams = {
+                        name: "ResourceManager",
+                        kind: "master",
+                        guid: "c76362cf-5f15-4aa4-8ee2-4a6e242dca51",
+                        constructHolder: constructHolder
+                    };
 
-                this.directories = new Directories(this.db);
-                this.builds = new Builds(this.db, this.directories);
-                this.resources = new Resources(this.db, this.directories, this.builds);
-                this.resVersions = ResVersions.init(this.db);
+                    this.db = new ControlMgr({controller: controller, dbparams: _dbParams},
+                        null, null, null, proxy);
+
+                    this.directories = new Directories(this.db);
+                    this.builds = Builds.init(this.db, this.directories);
+                    this.resources = new Resources(this.db, this.directories, this.builds);
+                    this.resVersions = ResVersions.init(this.db);
+                } else {
+                    if (this.dbMode.init) {
+                        console.log(this.dbMode.error);
+                    }
+                }
+            },
+
+            checkOptions: function () {
+                this.dbMode = {canUse : false, error : ''};
+                this.dbMode.canUse = ((UCCELLO_CONFIG.resman) && (UCCELLO_CONFIG.resman.useDb) || false);
+                if (!this.dbMode.canUse) {
+                    this.dbMode.error = 'ResManager not in db mode';
+                    return;
+                }
+
+                if (!this.currentProductCode) {
+                    this.dbMode.error += 'Current product not defined/n'
+                }
             },
 
             loadDirectories: function (done) {
@@ -62,7 +83,7 @@ define(
              */
             // todo : совместить с Proto1
             loadRes: function (guids, done) {
-                if (UCCELLO_CONFIG.resman.useDb) {
+                if (this.dbMode.canUse) {
                     var _promise = this.getResources(guids);
                     _promise.then(function (bodies) {
                         var _array = [];
@@ -87,24 +108,33 @@ define(
             getResource: function (guid) {
                 var that = this;
                 return new Promise(function (resolve, reject) {
+                    if (!that.dbMode.canUse) {
+                        reject(ResUtils.newSystemError(that.dbMode.error));
+                        return;
+                    }
+
                     that.loadDirectories(promiseBody);
 
                     function promiseBody() {
                         that.resources.getBody(guid, function(body) {
                             if (!body) {
-                                reject(new Error({reason : ResUtils.errorReasons.dbError, message : 'Resource Not Found'}))
+                                reject(ResUtils.newObjectError('Resource Not Found'))
                             } else {
                                 resolve(body)
                             }
                         });
-
                     }
                 })
             },
 
             getResources: function (guids) {
                 var that = this;
-                return new Promise(function (resolve) {
+                return new Promise(function (resolve, reject) {
+                    if (!that.dbMode.canUse) {
+                        reject(ResUtils.newSystemError(that.dbMode.error));
+                        return;
+                    }
+
                     that.loadDirectories(promiseBody);
 
                     function promiseBody() {
@@ -127,6 +157,11 @@ define(
             getResByType: function (typeGuid) {
                 var that = this;
                 return new Promise(function (resolve, reject) {
+                    if (!that.dbMode.canUse) {
+                        reject(ResUtils.newSystemError(that.dbMode.error));
+                        return;
+                    }
+
                     that.loadDirectories(promiseBody);
 
                     function promiseBody() {
@@ -149,6 +184,11 @@ define(
             getResListByType: function (typeGuid) {
                 var that = this;
                 return new Promise(function (resolve, reject) {
+                    if (!that.dbMode.canUse) {
+                        reject(ResUtils.newSystemError(that.dbMode.error));
+                        return;
+                    }
+
                     that.loadDirectories(promiseBody);
 
                     function promiseBody() {
@@ -171,14 +211,19 @@ define(
             },
 
             createNewResource: function (resource, callback) {
+                if (!this.dbMode.canUse) {
+                    callback(ResUtils.newSystemError(this.dbMode.error))
+                    return
+                }
+
                 var that = this;
-                this.loadDirectories(function() {
+                this.loadDirectories(function () {
                     that.resources.createNew(resource).then(
                         function (resourcesGuid) {
-                            callback({result : 'OK', resourcesGuid : resourcesGuid})
+                            callback({result: 'OK', resourcesGuid: resourcesGuid})
                         },
                         function (reason) {
-                            callback({result : 'ERROR', message : reason.message})
+                            callback({result: 'ERROR', message: reason.message})
                         }
                     );
                 });
@@ -205,8 +250,13 @@ define(
             },
 
             newResourceVersion: function (resGuid, body, callback) {
+                if (!this.dbMode.canUse) {
+                    callback(ResUtils.newSystemError(this.dbMode.error));
+                    return;
+                }
+
                 var that = this;
-                this.loadDirectories(function() {
+                this.loadDirectories(function () {
                     that.builds.loadCurrentBuild(function (build) {
                         if (!build.isConfirmed) {
                             $data.tranStart({}, function (result) {
@@ -217,23 +267,23 @@ define(
                                             build.addResVersion(resVersion.id, _transactionId).then(
                                                 function () {
                                                     that.commit(_transactionId);
-                                                    build.loadResVersions(function(){
-                                                        callback({result : 'OK', resVersionId : resVersion.id})
+                                                    build.loadResVersions(function () {
+                                                        callback({result: 'OK', resVersionId: resVersion.id})
                                                     });
                                                 },
                                                 function (reason) {
                                                     that.rollback(_transactionId);
-                                                    callback({result : 'ERROR', message : reason.message})
+                                                    callback({result: 'ERROR', message: reason.message})
                                                 }
                                             )
                                         },
                                         function (reason) {
                                             that.rollback(_transactionId);
-                                            callback({result : 'ERROR', message : reason.message})
+                                            callback({result: 'ERROR', message: reason.message})
                                         }
                                     );
                                 } else {
-                                    callback({result : 'ERROR', message : result.message})
+                                    callback({result: 'ERROR', message: result.message})
                                 }
                             })
                         } else {
@@ -244,6 +294,11 @@ define(
             },
 
             createNewBuild: function (description, callback) {
+                if (!this.dbMode.canUse) {
+                    callback(ResUtils.newSystemError(this.dbMode.error))
+                    return
+                }
+
                 var that = this;
                 this.loadDirectories(function() {
                     $data.tranStart({}, function (result) {
@@ -277,6 +332,11 @@ define(
             },
 
             commitBuild: function (callback) {
+                if (!this.dbMode.canUse) {
+                    callback(ResUtils.newSystemError(this.dbMode.error))
+                    return
+                }
+
                 var that = this;
 
                 $data.tranStart({}, function(result){

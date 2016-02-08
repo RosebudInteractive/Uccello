@@ -9,10 +9,11 @@ if (typeof define !== 'function') {
 
 define([
         UCCELLO_CONFIG.uccelloPath + '/predicate/predicate',
-        './resUtils'
+        './resUtils',
+        './builds'
     ],
 
-    function(Predicate, ResUtils) {
+    function(Predicate, ResUtils, Builds) {
         return UccelloClass.extend({
 
             init : function(db, versionObj) {
@@ -72,7 +73,16 @@ define([
 
             setCurrentBuild : function(buildId, transactionId) {
                 var that = this;
-                return new Promise(promiseBody);
+                return new Promise(function(resolve, reject) {
+                    Builds.loadBuild(buildId, function(build) {
+                            if (!build) {
+                                reject(ResUtils.newObjectError('Can not load build with id ' + buildId))
+                            } else {
+                                promiseBody(resolve, reject);
+                            }
+                        }
+                    )
+                });
 
                 function promiseBody(resolve, reject) {
                     var _predicate = new Predicate(that.db, {});

@@ -15,16 +15,6 @@ define([
 
     function(Predicate, ResUtils, ResVersions) {
 
-        //function ResVersion(resVersionObj) {
-        //    this.id = resVersionObj.id();
-        //    this.resVerId = resVersionObj.resVerId();
-        //    this.hash = resVersionObj.hash();
-        //    this.resBody = resVersionObj.resBody();
-        //    this.description = resVersionObj.description();
-        //    this.resId = resVersionObj.resId();
-        //}
-
-
         return UccelloClass.extend({
 
             init: function (db, buildObj) {
@@ -39,6 +29,10 @@ define([
 
                 this.queryBuildResGuid = 'f447d844-9ad4-4a89-ad41-347427c17e3b';
                 this.commitGuid = 'd53fa310-a5ce-4054-97e0-c894a03d3719';
+            },
+
+            isLoaded : function() {
+                return this.state == ResUtils.state.loaded
             },
 
             addResVersion : function(resVersionId, transactionId) {
@@ -66,10 +60,6 @@ define([
                             }
                         }, _options, function (result) {
                             if (result.result == 'OK') {
-                                //that.loadResVersions(function() {
-                                //    resolve()
-                                //});
-                                ////that.resVersions.push(that.db.getObj(result.newObject).resVerId());
                                 resolve()
                             } else {
                                 reject(ResUtils.newDbError(result.message));
@@ -109,6 +99,10 @@ define([
                 return new Promise(promiseBody);
 
                 function promiseBody(resolve, reject) {
+                    if (that.isConfirmed) {
+                        resolve()
+                    }
+
                     if (that.resVersions.length != 0) {
                         var _predicate = new Predicate(that.db, {});
                         _predicate.addCondition({field: "Id", op: "=", value: that.id});
@@ -132,7 +126,9 @@ define([
                                 _build.isConfirmed(true);
                                 _obj.save(_options, function(result) {
                                     if (result.result == "OK") {
-                                        resolve(that.id)
+                                        resolve();
+                                        that.isConfirmed = true;
+                                        that.state = ResUtils.state.changed;
                                     } else {
                                         reject(ResUtils.newDbError(result.message))
                                     }
