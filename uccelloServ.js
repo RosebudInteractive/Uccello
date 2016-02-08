@@ -235,13 +235,15 @@ define(
              * @returns {obj} - массив ресурсов в result.datas
              */
 			loadResources: function(rootGuids, done) {
-				var result = [];
-				for (var i=0; i<rootGuids.length; i++) 
-					result.push(this.pvt.resman.loadRes(rootGuids[i]));
+                this.pvt.resman.loadRes(rootGuids, done)
+
+                //var result = [];
+                //for (var i=0; i<rootGuids.length; i++)
+					//result.push();
                 if (DEBUG)
 				    console.log("load resources");
-				if (done !== undefined && (typeof done == "function")) done({ datas: result });
-				return { datas: result };// временная заглушка
+				//if (done !== undefined && (typeof done == "function")) done({ datas: result });
+				//return { datas: result };// временная заглушка
 			},
 
             /**

@@ -1,0 +1,234 @@
+/**
+ * Created by staloverov on 23.12.2015.
+ */
+var should  = require('chai').should();
+var Main = require("./main");
+var Builder = require('./../resourceBuilder');
+var fs = require('fs');
+
+deleteFolderRecursive = function(path) {
+    var files = [];
+    if( fs.existsSync(path) ) {
+        files = fs.readdirSync(path);
+        files.forEach(function(file,index){
+            var curPath = path + "/" + file;
+            if(fs.lstatSync(curPath).isDirectory()) { // recurse
+                deleteFolderRecursive(curPath);
+            } else { // delete file
+                fs.unlinkSync(curPath);
+            }
+        });
+        fs.rmdirSync(path);
+    }
+};
+
+var rmdirAsync = function(path, callback) {
+    fs.readdir(path, function(err, files) {
+        if(err) {
+            // Pass the error on to callback
+            callback(err, []);
+            return;
+        }
+        var wait = files.length,
+            count = 0,
+            folderDone = function(err) {
+                count++;
+                // If we cleaned out all the files, continue
+                if( count >= wait || err) {
+                    fs.rmdir(path,callback);
+                }
+            };
+        // Empty directory to bail early
+        if(!wait) {
+            folderDone();
+            return;
+        }
+
+        // Remove one or more trailing slash to keep from doubling up
+        path = path.replace(/\/+$/,"");
+        files.forEach(function(file) {
+            var curPath = path + "/" + file;
+            fs.lstat(curPath, function(err, stats) {
+                if( err ) {
+                    callback(err, []);
+                    return;
+                }
+                if( stats.isDirectory() ) {
+                    rmdirAsync(curPath, folderDone);
+                } else {
+                    fs.unlink(curPath, folderDone);
+                }
+            });
+        });
+    });
+};
+
+before(function() {
+    Main.Config.init();
+});
+
+describe('#init', function(){
+
+    beforeEach(function(){
+        UCCELLO_CONFIG = {}
+    });
+
+    afterEach(function() {
+        Builder.kill();
+        UCCELLO_CONFIG = Main.Config.getConfig();
+    });
+
+    it('Не найдена секция ResourceBuilder', function(done){
+        Builder.prepareFiles().then(
+            function(){done(new Error('must be rejected'))},
+            function(err){
+                if (!err) {
+                    done('No defined error')
+                }
+                err.message.should.be.equal('ResourceBuilder options not found');
+                done();
+            }
+        );
+    });
+
+    it('Не найдена настройка Source directory', function(done){
+        UCCELLO_CONFIG.resourceBuilder = {};
+
+        Builder.prepareFiles().then(
+            function(){done(new Error('must be rejected'))},
+            function(err){
+                if (!err) {
+                    done('No defined error')
+                }
+                err.message.should.be.equal('ResourceBuilder : Source directory not found');
+                done();
+            }
+        );
+    });
+
+    it('Не найдена настройка Destination directory', function(done){
+        UCCELLO_CONFIG.resourceBuilder = {};
+        UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
+
+        Builder.prepareFiles().then(
+            function(){done(new Error('must be rejected'))},
+            function(err){
+                if (!err) {
+                    done('No defined error')
+                }
+                err.message.should.be.equal('ResourceBuilder : Destination directory not found');
+                done();
+            }
+        );
+    });
+
+    it('Не найдена настройка FormResTypeId', function(done){
+        UCCELLO_CONFIG.resourceBuilder = {};
+        UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
+        UCCELLO_CONFIG.resourceBuilder.destDir = './testFolder';
+
+        Builder.prepareFiles().then(
+            function(){done(new Error('must be rejected'))},
+            function(err){
+                if (!err) {
+                    done('No defined error')
+                }
+                err.message.should.be.equal('ResourceBuilder : FormResTypeId not found');
+                done();
+            }
+        );
+    });
+
+    it('Не найдена настройка ProductId', function(done){
+        UCCELLO_CONFIG.resourceBuilder = {};
+        UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
+        UCCELLO_CONFIG.resourceBuilder.destDir = './testFolder';
+        UCCELLO_CONFIG.resourceBuilder.formResTypeId = 1;
+
+        Builder.prepareFiles().then(
+            function(){done(new Error('must be rejected'))},
+            function(err){
+                if (!err) {
+                    done('No defined error')
+                }
+                err.message.should.be.equal('ResourceBuilder : ProductId not found');
+                done();
+            }
+        );
+    });
+
+    it('Не найдена настройка CurrentBuildId', function(done){
+        UCCELLO_CONFIG.resourceBuilder = {};
+        UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
+        UCCELLO_CONFIG.resourceBuilder.destDir = './testFolder';
+        UCCELLO_CONFIG.resourceBuilder.formResTypeId = 1;
+        UCCELLO_CONFIG.resourceBuilder.productId = 2;
+
+        Builder.prepareFiles().then(
+            function(){done(new Error('must be rejected'))},
+            function(err){
+                if (!err) {
+                    done('No defined error')
+                }
+                err.message.should.be.equal('ResourceBuilder : CurrentBuildId not found');
+                done();
+            }
+        );
+    });
+});
+
+describe('#Static method prepareFiles', function() {
+    beforeEach(function(done){
+        if (fs.existsSync(UCCELLO_CONFIG.resourceBuilder.destDir)) {
+            rmdirAsync(UCCELLO_CONFIG.resourceBuilder.destDir, done);
+        } else {
+            done()
+        }
+    });
+
+    afterEach(function() {
+        Builder.kill()
+    });
+
+    after(function(){
+        deleteFolderRecursive('./emptyFolder');
+    });
+
+    it('Создать файлы', function (done) {
+        Builder.prepareFiles().then(
+            function(){
+                fs.readdir(UCCELLO_CONFIG.resourceBuilder.destDir, function(err, files)
+                {
+                    if (err) {
+                        done(err)
+                    } else {
+                        files.length.should.be.equal(3);
+                        files.forEach(function(fileName){
+                            fs.statSync(UCCELLO_CONFIG.resourceBuilder.destDir + '/' + fileName).
+                                size.should.be.greaterThan(0)
+                        });
+
+                        done();
+                    }
+                });
+            },
+            function(errMessage){done(new Error(errMessage))}
+        );
+    });
+
+    it('Вернуть ошибку "Нет файлов"', function (done) {
+        deleteFolderRecursive('./emptyFolder');
+        fs.mkdirSync('./emptyFolder');
+        UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
+
+        Builder.prepareFiles().then(
+            function(){
+                done(new Error('Must be rejected'))
+            },
+            function(err){
+                err.message.should.be.equal('No files to build into resource');
+                done()
+            }
+        );
+    });
+});
