@@ -23,7 +23,8 @@ define(
             tranCommit: "function",
             tranRollback: "function",
             getNextRowId: "function",
-            execBatch: "function"
+            execBatch: "function",
+            execSql: "function"
         };
 
         var DataObjectEngine = UccelloClass.extend({
@@ -787,7 +788,8 @@ define(
                 var result = {
                     "$sys": {
                         "guid": data_guid,
-                        "typeGuid": request.model.dataRootGuid()
+                        "typeGuid": request.model.dataRootGuid(),
+                        "requiredTypes": []
                     },
                     "fields": {
                         "Name": request.model.dataRootName()
@@ -797,6 +799,49 @@ define(
                         ]
                     }
                 };
+
+                function make_types_arr() {
+                    var types = {};
+
+                    function _make_types_arr(arr, request, level, request_tree) {
+
+                        var root_type_guid = request.model.dataRootGuid();
+                        var obj_type_guid = request.model.dataObjectGuid();
+                        if (level > 0) {
+                            request_tree = request_tree[request.alias] = {};
+                            request_tree.t = root_type_guid;
+                            request_tree.f = request.parentField;
+                        };
+
+                        if (_.isArray(request.childs) && (request.childs.length > 0)) {
+                            var rt;
+
+                            if (!request_tree)
+                                rt = request_tree = {}
+                            else
+                                rt = request_tree.c = {};
+
+                            _.forEach(request.childs, function (ch_query) {
+                                _make_types_arr(arr, ch_query, level + 1, rt);
+                            });
+                        };
+
+                        if ((!types[root_type_guid]) && (level > 0)) {
+                            arr.push(root_type_guid);
+                            types[root_type_guid] = true;
+                        };
+                        if (!types[obj_type_guid]) {
+                            arr.push(obj_type_guid);
+                            types[obj_type_guid] = true;
+                        };
+                        return request_tree;
+                    };
+                    return _make_types_arr(result.$sys.requiredTypes, request, 0, null);
+                };
+
+                var request_tree = make_types_arr();
+                if (request_tree)
+                    result.fields.RequestTree = JSON.stringify(request_tree);
 
                 var objects = {};
 

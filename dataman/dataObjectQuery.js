@@ -235,6 +235,11 @@ define(
             _runQuery: function (sqlBatch, options) {
                 var self = this;
                 var transaction = options && options.transaction ? options.transaction : null;
+                if ((!transaction) && options && options.transactionId) {
+                    transaction = Transaction.getTranById(options.transactionId);
+                    if (!transaction)
+                        throw new Error("Unknown transaction (transactionId = \"" + options.transactionId + "\").");
+                };
                 return Promise.resolve(transaction ? transaction.getConnection() : this._connection_mgr.getConnection())
                 .then(function (connection) {
                     return self._runQueryBatch(sqlBatch, connection).then(function (result) {

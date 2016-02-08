@@ -13,7 +13,8 @@ define(
             metaFields: [
                 { fname: "Name", ftype: "string" },
                 { fname: "Alias", ftype: "string" },
-                { fname: "ParentField", ftype: "string" }
+                { fname: "ParentField", ftype: "string" },
+                { fname: "RequestTree", ftype: "string" }
             ],
 
             name: function (value) {
@@ -28,8 +29,40 @@ define(
                 return this._genericSetter("ParentField", value);
             },
 
+            requestTree: function (value) {
+                return this._genericSetter("RequestTree", value);
+            },
+
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
+                this._requestTreeObj = null;
+            },
+
+            getRequestTree: function (alias) {
+                var result = {};
+                if (!this._requestTreeObj) {
+                    var parent = this.getParent();
+                    if (!parent) {
+                        try{
+                            this._requestTreeObj = JSON.parse(this.requestTree());
+                        }
+                        catch (err) {
+                            this._requestTreeObj = {};
+                        };
+                    }
+                    else
+                        if (parent.isInstanceOf(UCCELLO_CONFIG.classGuids.DataObject))
+                            this._requestTreeObj = parent.getRequestTree(this.alias());
+                };
+                if (this._requestTreeObj) {
+                    if (alias) {
+                        if (this._requestTreeObj[alias] && this._requestTreeObj[alias].c)
+                            result = this._requestTreeObj[alias].c;
+                    }
+                    else
+                        result = this._requestTreeObj;
+                }
+                return result;
             },
 
             newObject: function (flds, options, cb) {
@@ -41,6 +74,32 @@ define(
                 result = this._methodCall.apply(this, args);
 
                 return result;
+            },
+
+            _create_child_collections: function (parent_obj, constrHolder) {
+                var childs = this.getRequestTree();
+                var keys = Object.keys(childs);
+                for (var i = 0; i < keys.length; i++) {
+                    var collection = childs[keys[i]];
+
+                    var constr = constrHolder.getComponent(collection.t).constr;
+                    if (typeof (constr) !== "function")
+                        throw new Error("DataRoot::_create_child_collections: Undefined object constructor: \"" + objGuid + "\" !");
+
+                    var params = {
+                        parent: parent_obj, colName: "Childs", ini: {
+                            $sys: { guid: this.getDB().getController().guid() },
+                            fields: {
+                                Alias: keys[i],
+                                ParentField: collection.f
+                            }
+                        }
+                    };
+
+                    var new_root = new constr(this.getControlMgr(), params);
+                    new_root._currState(Meta.State.Edit);
+
+                };
             },
 
             _$local_newObject: function (flds, options, cb) {
@@ -76,6 +135,7 @@ define(
                         var params = { parent: self, colName: "DataElements", ini: _flds };
 
                         var obj = new constr(cm, params);
+                        self._create_child_collections(obj, constrHolder);
                         if (self._currState() === Meta.State.Edit)
                             obj._currState(Meta.State.Insert);
                         localResult.newObject = obj.getGuid();

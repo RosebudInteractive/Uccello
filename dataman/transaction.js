@@ -162,14 +162,14 @@ define(
                     .then(function () {
                         return self._cleanup()
                             .then(function () {
-                                self._afterClenup();
+                                self._afterCleanup();
                                 return Promise.resolve();
                             });
 
                     }, function (err) {
                         return self._cleanup(err)
                             .then(function () {
-                                self._afterClenup(err);
+                                self._afterCleanup(err);
                                 return Promise.reject(err);
                             });
                     });
@@ -179,7 +179,7 @@ define(
                 this._child = child;
             },
 
-            _afterClenup: function (err) {
+            _afterCleanup: function (err) {
 
                 var self = this;
                 delete transactions[this._id];

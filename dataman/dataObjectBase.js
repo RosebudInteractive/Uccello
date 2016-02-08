@@ -50,6 +50,10 @@ define(
                 UccelloClass.super.apply(this, [field, value, withCheckVal]);
             },
 
+            getRequestTree: function (alias) {
+                return {};
+            },
+
             getOldValue: function (fldName, is_serialized) {
                 var result = undefined;
                 if (!this.isMaster())
