@@ -279,7 +279,16 @@ define(
                 var cmd = (sql && sql.dialect && sql.dialect[curr_dialect]) ? sql.dialect[curr_dialect] : (sql.cmd ? sql.cmd : null);
                 if (!cmd)
                     throw new Error("Empty SQL command !");
-                return { sqlCmd: cmd + ";", params: [], type: this.queryTypes.RAW };
+                var result;
+                if (_.isArray(cmd)) {
+                    result = [];
+                    _.forEach(cmd, function (item) {
+                        result.push({ sqlCmd: item + ";", params: [], type: this.queryTypes.RAW });
+                    }, this);
+                }
+                else
+                    result = { sqlCmd: cmd + ";", params: [], type: this.queryTypes.RAW };
+                return result;
             },
 
             commitTransactionQuery: function () {

@@ -766,11 +766,20 @@ define(
 		        };
 		        var constructHolder = this.pvt.constructHolder ? this.pvt.constructHolder :
                     (this.getContext() ? this.getContext().getConstructorHolder() : null);
-		        if (objTypeGuid && constructHolder && (!types.list[objTypeGuid])
-                    && ((!constructHolder.getComponent(objTypeGuid)) || notCheck)) {
-		            types.list[objTypeGuid] = true;
-		            types.arrTypes.push(objTypeGuid);
+
+		        function add_to_types(type_guid) {
+		            if (type_guid && constructHolder && (!types.list[type_guid])
+                        && ((!constructHolder.getComponent(type_guid)) || notCheck)) {
+		                types.list[type_guid] = true;
+		                types.arrTypes.push(type_guid);
+		            };
 		        };
+
+		        if (obj.$sys.requiredTypes && (obj.$sys.requiredTypes.length > 0))
+		            for (var i = 0; i < obj.$sys.requiredTypes.length; i++)
+		                add_to_types(obj.$sys.requiredTypes[i]);
+
+		        add_to_types(objTypeGuid);
 		    },
 
 		    /**

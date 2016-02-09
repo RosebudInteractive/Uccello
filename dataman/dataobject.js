@@ -57,6 +57,14 @@ define(
                 delete this._childs[args.obj.get("Alias")];
             },
 
+            getRequestTree: function (alias) {
+                var result = {};
+                var parent = this.getParent();
+                if (parent instanceof DataRoot)
+                    result = parent.getRequestTree(alias);
+                return result;
+            },
+
             getChilds: function () {
                 var result = {};
                 var names = Object.keys(this._childs);
