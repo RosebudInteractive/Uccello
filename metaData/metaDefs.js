@@ -25,8 +25,9 @@ define(
                 Insert: 1,
                 Edit: 2,
                 Delete: 3,
-                Pending: 4
-            }
+                Pending: 4,
+                Unknown: 5
+            },
         };
 
         Meta.stateToString = function (state) {
@@ -46,6 +47,9 @@ define(
                     break;
                 case Meta.State.Pending:
                     state_str = "Pending";
+                    break;
+                case Meta.State.Unknown:
+                    state_str = "Unknown";
                     break;
             };
             return state_str;
