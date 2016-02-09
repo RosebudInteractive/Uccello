@@ -16,11 +16,11 @@ before(function() {
     Main.Config.init();
 });
 
-describe('#getResource', function() {
-    it('Загрузить существующий ресурс', function(done) {
+describe('#get functions', function(){
+    before(function(done) {
         $data.execSql({
-            cmd : "update SysVersion set CurrBuildId = 2 where Id = 2;" +
-            "delete from SysBuild where Id > 2"
+            cmd : "update SysVersion set CurrBuildId = 2 where Id = 2"
+            //"delete from SysBuild where Id > 2"
             //dialect: {
             //    mysql: "update sysproduct set description=concat('xxx ',description) where id=1",
             //    mssql: "update sysproduct set description='xxx '+description where id=1"
@@ -28,24 +28,30 @@ describe('#getResource', function() {
         }, {}, function (result) {
             if (result.result !== "OK") {
                 done(new Error(result.message));
+            } else {
+                done()
             }
-        });
-
-        var _resManger = Main.Config.ResManager;
-
-        _resManger.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6').then(
-            function (body) {
-                body.should.be.exist;
-                var _resource = JSON.parse(body);
-                _resource.fields.should.be.exists;
-                _resource.fields.Name.should.be.equal('MainForm');
-                done();
-            }, function (reason) {
-                done(reason);
-            });
-        //_resManger.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6').should.be.fulfilled.notify(done);
+        })
     });
-});
+
+
+    describe('#getResource', function() {
+        it('Загрузить существующий ресурс', function(done) {
+            var _resManger = Main.Config.ResManager;
+
+            _resManger.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6').then(
+                function (body) {
+                    body.should.be.exist;
+                    var _resource = JSON.parse(body);
+                    _resource.fields.should.be.exists;
+                    _resource.fields.Name.should.be.equal('MainForm');
+                    done();
+                }, function (reason) {
+                    done(reason);
+                });
+            //_resManger.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6').should.be.fulfilled.notify(done);
+        });
+    });
 
 describe('#getResources', function() {
     it('Загрузка 2 ресурсов', function(done) {
@@ -97,6 +103,9 @@ describe('#getResListByType', function() {
         });
     });
 });
+});
+
+
 
 describe('#createNewResource', function() {
     it('создание Build-а', function(done) {
