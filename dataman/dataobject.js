@@ -109,14 +109,14 @@ define(
                 var self = this;
                 this.modify(function () {
                     self._genericSetter("State", "Converted");
-                }, cb);
+                }, {}, cb);
             },
 
             _$local_archive: function (cb) {
                 var self = this;
                 this.modify(function () {
                     self._genericSetter("State", "Archieved");
-                }, cb);
+                }, {}, cb);
             }
         });
         return DataObject;
