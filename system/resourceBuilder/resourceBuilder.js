@@ -226,11 +226,16 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
 
             createResources : function(fileList, done){
                 var that = this;
-                fileList.forEach(function(fileName){
-                    var _form = require(that.formDir + fileName);
-                    var _resId = that.addResource(_form);
-                    var _resVerId = that.addResVer(_form, _resId);
-                    that.addBuildRes(_resVerId);
+                fileList.forEach(function (fileName) {
+                    try {
+                        var _form = JSON.parse(fs.readFileSync(that.formDir + fileName, { encoding: "utf8" }));
+                        var _resId = that.addResource(_form);
+                        var _resVerId = that.addResVer(_form, _resId);
+                        that.addBuildRes(_resVerId);
+                    } catch (err) {
+                        throw new Error("WARNING: Problem in file: \"" + that.formDir + fileName +
+                            "\" : " + err.message);
+                    }
                 });
 
                 done();

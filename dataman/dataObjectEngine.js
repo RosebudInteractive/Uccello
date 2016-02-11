@@ -6,9 +6,9 @@
 define(
     ['../controls/controlMgr', '../metaData/metaDataMgr', '../metaData/metaModel',
         '../metaData/metaModelField', '../metaData/metaDefs', '../metaData/metaModelRef', '../metaData/metaLinkRef',
-        'bluebird', 'lodash', './dataObjectQuery', '../predicate/predicate', './transaction'],
+        'bluebird', 'lodash', './dataObjectQuery', '../predicate/predicate', './transaction', '../system/resourceBuilder/resourceBuilder'],
     function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Meta, MetaModelRef, MetaLinkRef,
-        Promise, _, Query, Predicate, Transaction) {
+        Promise, _, Query, Predicate, Transaction, ResourceBuilder) {
 
         var METADATA_FILE_NAME = UCCELLO_CONFIG.dataPath + "meta/metaTables.json";
         var METADATA_DIR_NAME = UCCELLO_CONFIG.dataPath + "meta";
@@ -641,83 +641,90 @@ define(
 
                     return promise.then(function (result) {
 
-                        var result_import = result;
+                        return ResourceBuilder.prepareFiles()
+                            .then(function () {
+                                return (result);
+                            })
+                            .then(function (result) {
 
-                        function createRefs(result) {
-                            result_import = result_import.concat(result);
-                            if (opts.force === true)
-                                return self._createAllReferences().then(function (result_ref) {
-                                    return result_import.concat(result_ref);
-                                });
-                            else
-                                return result_import;
-                        };
+                                var result_import = result;
 
-                        return new Promise(function (resolve, reject) {
-                            var fs = require('fs');
-                            var path = require('path');
-                            var allFiles = fs.readdirSync(dir);
-                            var allData = {};
-
-                            if (allFiles.length > 0) {
-                                var files = allFiles;
-                                if (opts.ext_filter !== "*")
-                                    files = _.filter(allFiles, function (file) {
-                                        return _.endsWith(file, "." + opts.ext_filter);
-                                    });
-
-                                _.forEach(files, function (file) {
-                                    var fname = path.format({ dir: dir, base: file });
-                                    var data = JSON.parse(fs.readFileSync(fname, { encoding: "utf8" }));
-                                    if (self._options.trace.importDir)
-                                        console.log("Read file: " + file);
-
-                                    if (data && data.collections && data.collections.DataElements
-                                        && (data.collections.DataElements.length > 0)) {
-                                        if (self._options.trace.importDir)
-                                            console.log("Process file: " + file);
-                                        _.forEach(data.collections.DataElements, function (dataObj) {
-                                            if (dataObj.$sys && dataObj.fields && dataObj.fields.Id) {
-                                                var modelGuid = dataObj.$sys.typeGuid;
-                                                var model = self._metaDataMgr.getModelByGuid(modelGuid);
-                                                if (model) {
-                                                    var modelData = allData[modelGuid];
-                                                    if (!modelData) {
-                                                        modelData = { model: model, data: {} };
-                                                        allData[modelGuid] = modelData;
-                                                    };
-                                                    if (dataObj.$sys.guid)
-                                                        dataObj.fields.Guid = dataObj.$sys.guid;
-                                                    modelData.data[dataObj.fields.Id] = dataObj.fields;
-                                                };
-                                            };
+                                function createRefs(result) {
+                                    result_import = result_import.concat(result);
+                                    if (opts.force === true)
+                                        return self._createAllReferences().then(function (result_ref) {
+                                            return result_import.concat(result_ref);
                                         });
-                                    };
+                                    else
+                                        return result_import;
+                                };
 
-                                });
+                                return new Promise(function (resolve, reject) {
+                                    var fs = require('fs');
+                                    var path = require('path');
+                                    var allFiles = fs.readdirSync(dir);
+                                    var allData = {};
 
-                                resolve(self._seqExec(allData, function (val, key) {
-                                    if (self._options.trace.importDir)
-                                        console.log("Import data: \"" + val.model.name() + "\".");
-                                    var _model = val.model;
-                                    var _data = val.data;
-                                    return self._seqExec(_data, function (values, id) {
-                                        return self._query.insert(_model, values);
-                                    });
+                                    if (allFiles.length > 0) {
+                                        var files = allFiles;
+                                        if (opts.ext_filter !== "*")
+                                            files = _.filter(allFiles, function (file) {
+                                                return _.endsWith(file, "." + opts.ext_filter);
+                                            });
+
+                                        _.forEach(files, function (file) {
+                                            var fname = path.format({ dir: dir, base: file });
+                                            var data = JSON.parse(fs.readFileSync(fname, { encoding: "utf8" }));
+                                            if (self._options.trace.importDir)
+                                                console.log("Read file: " + file);
+
+                                            if (data && data.collections && data.collections.DataElements
+                                                && (data.collections.DataElements.length > 0)) {
+                                                if (self._options.trace.importDir)
+                                                    console.log("Process file: " + file);
+                                                _.forEach(data.collections.DataElements, function (dataObj) {
+                                                    if (dataObj.$sys && dataObj.fields && dataObj.fields.Id) {
+                                                        var modelGuid = dataObj.$sys.typeGuid;
+                                                        var model = self._metaDataMgr.getModelByGuid(modelGuid);
+                                                        if (model) {
+                                                            var modelData = allData[modelGuid];
+                                                            if (!modelData) {
+                                                                modelData = { model: model, data: {} };
+                                                                allData[modelGuid] = modelData;
+                                                            };
+                                                            if (dataObj.$sys.guid)
+                                                                dataObj.fields.Guid = dataObj.$sys.guid;
+                                                            modelData.data[dataObj.fields.Id] = dataObj.fields;
+                                                        };
+                                                    };
+                                                });
+                                            };
+
+                                        });
+
+                                        resolve(self._seqExec(allData, function (val, key) {
+                                            if (self._options.trace.importDir)
+                                                console.log("Import data: \"" + val.model.name() + "\".");
+                                            var _model = val.model;
+                                            var _data = val.data;
+                                            return self._seqExec(_data, function (values, id) {
+                                                return self._query.insert(_model, values);
+                                            });
+                                        }).then(function (result) {
+                                            return createRefs(result);
+                                        }));
+                                    }
+                                    else
+                                        return resolve(createRefs([]));
                                 }).then(function (result) {
-                                    return createRefs(result);
-                                }));
-                            }
-                            else
-                                return resolve(createRefs([]));
-                        }).then(function (result) {
-                            var fin_result = result;
-                            return self._seqExec(self._metaDataMgr.models(), function (model) {
-                                return self._query.setTableRowId(model);
-                            }).then(function (result_rowid) {
-                                return fin_result.concat(result_rowid);
-                            });;
-                        });
+                                    var fin_result = result;
+                                    return self._seqExec(self._metaDataMgr.models(), function (model) {
+                                        return self._query.setTableRowId(model);
+                                    }).then(function (result_rowid) {
+                                        return fin_result.concat(result_rowid);
+                                    });;
+                                });
+                            });
                     });
                 }
                 else
