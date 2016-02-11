@@ -108,7 +108,7 @@ define(
             },
 
             getGuid: function () {
-                return UCCELLO_CONFIG.guids.dataObjectEngineGuid;
+                return UCCELLO_CONFIG.guids.iDataObjectEngine;
             },
 
             hasConnection: function () {
