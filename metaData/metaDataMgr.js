@@ -115,7 +115,7 @@ define(
                 var obj = null;
                 var code = this.getObjConstrByGuid(guid);
                 if (code)
-                    obj = this._createObj(code, params, model.get("Name"));
+                    obj = this._createObj(code, params, model.get("ResName"));
                 return obj;
             },
 
@@ -159,7 +159,7 @@ define(
                     var params = {
                         ini: {
                             fields: {
-                                Name: name,
+                                ResName: name,
                                 DataObjectGuid: guid ? guid : this.getDB().getController().guid(),
                                 DataRootName: rootName ? rootName : "Root" + name,
                                 DataRootGuid: rootGuid ? rootGuid : this.getDB().getController().guid(),
@@ -302,7 +302,7 @@ define(
                 footer += "\t\t}\n" + "\t});";
 
                 var constr = header +
-                    "\t\tclassName: \"" + model.get("Name") + "\",\n" +
+                    "\t\tclassName: \"" + model.get("ResName") + "\",\n" +
                     "\t\tclassGuid: \"" + model.get("DataObjectGuid") + "\",\n" +
                     "\t\tmetaFields: [\n";
 
@@ -312,7 +312,7 @@ define(
                         if (!is_first)
                             constr += ",\n";
                         is_first = false;
-                        constr += "\t\t\t{fname: \"" + fields[i].get("Name") + "\", ftype: " +
+                        constr += "\t\t\t{fname: \"" + fields[i].get("ResElemName") + "\", ftype: " +
                             JSON.stringify(fields[i].get("FieldType").serialize()) + "}";
                     }
                 };
@@ -329,7 +329,7 @@ define(
                         if (!is_first)
                             constr += ",";
                         is_first = false;
-                        constr += "\n\t\t\t\"" + fields[i].get("Name") + "\": true";
+                        constr += "\n\t\t\t\"" + fields[i].get("ResElemName") + "\": true";
                     };
                 };
                 constr += "\n\t\t},\n";
@@ -340,13 +340,13 @@ define(
                 is_first = true;
                 for (var i = 0; i < fields.length; i++) {
                     if ((fields[i].flags() & (Meta.Field.Internal | Meta.Field.Hidden)) === 0) {
-                        var method_name = this._genGetterName(fields[i].get("Name"));
+                        var method_name = this._genGetterName(fields[i].get("ResElemName"));
                         if (DataObject.prototype[method_name] === undefined) {
                             if (!is_first)
                                 constr += ",\n";
                             is_first = false;
                             constr += "\n\t\t" + method_name + ": function (value) {\n" +
-                                "\t\t\treturn this._genericSetter(\"" + fields[i].get("Name") + "\", value);\n\t\t}";
+                                "\t\t\treturn this._genericSetter(\"" + fields[i].get("ResElemName") + "\", value);\n\t\t}";
                         };
                     };
                 };
@@ -359,7 +359,7 @@ define(
                 var constr = "return Parent.extend({\n" +
                     "\t\tclassName: \"" + model.get("DataRootName") + "\",\n" +
                     "\t\tclassGuid: \"" + model.get("DataRootGuid") + "\",\n" +
-                    "\t\tmetaCols: [{ \"cname\": \"DataElements\", \"ctype\": \"" + model.get("Name") + "\" }],\n" +
+                    "\t\tmetaCols: [{ \"cname\": \"DataElements\", \"ctype\": \"" + model.get("ResName") + "\" }],\n" +
                     "\t\tmetaFields: [],\n";
 
                 if (model.getRowVersionField())
@@ -374,7 +374,7 @@ define(
 
                 constr +=
                     "\t\t\tif(params)\n" +
-                    "\t\t\t\tcm.registerDataRoot(\"" + model.get("Name") + "\", this);\n" +
+                    "\t\t\t\tcm.registerDataRoot(\"" + model.get("ResName") + "\", this);\n" +
                     "\t\t}\n" +
                     "\t});";
 
@@ -635,9 +635,9 @@ define(
                 hdesc = {
                     obj: model.event,
                     handler: {
-                        type: 'mod%Name',
+                        type: 'mod%ResName',
                         subscriber: this,
-                        callback: this._getOnChangeModelReadOnlyProp(model, "Name")
+                        callback: this._getOnChangeModelReadOnlyProp(model, "ResName")
                     }
                 };
                 model.handlers.push(hdesc);
@@ -684,7 +684,7 @@ define(
                 if (!model)
                     throw new Error("MetaDataMgr::_onAddModelRef: Empty or unresolved table reference.");
 
-                var name = model.get("Name");
+                var name = model.get("ResName");
                 var guid = model.get("DataObjectGuid");
 
                 var root_name = model.get("DataRootName");

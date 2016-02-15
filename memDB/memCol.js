@@ -46,6 +46,11 @@ define(
 	                target: this,
 	                obj: obj
 	            });
+
+	            if (typeof (obj.onCollectionAdd) === "function") {
+                    // Информирование объекта о том, что он добавлен в коллекцию
+	                obj.onAddToCollection(this);
+	            };
 	        },
 
 	        _del: function (obj) {
