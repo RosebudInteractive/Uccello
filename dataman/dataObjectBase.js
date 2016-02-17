@@ -212,7 +212,7 @@ define(
             },
 
             _$local_save: function (options, cb) {
-                var result = { result: "OK" };
+                var result = { result: "OK", detail: [] };
 
                 var self = this;
                 var pending_childs = [];

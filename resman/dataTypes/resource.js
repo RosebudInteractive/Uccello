@@ -20,7 +20,7 @@ define(
                 return this._genericSetter("ResName", value);
             },
 
-            getNextElemName: function (value) {
+            getNextElemName: function () {
                 var cnt = this._counter();
                 cnt = cnt ? cnt : 0;
                 return this.elemNamePrefix + this._counter(++cnt);

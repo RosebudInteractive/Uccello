@@ -4,8 +4,9 @@ if (typeof define !== 'function') {
 }
 define(
     ['../system/uobject', './metaModel', '../dataman/dataobject', '../dataman/dataRoot',
-        './metaDefs', './metaModelRef', './metaLinkRef'],
-    function (UObject, MetaModel, DataObject, DataRoot, Meta, MetaModelRef, MetaLinkRef) {
+        './metaDefs', './metaModelRef', './metaLinkRef', './metaObjTree', './metaObjTreeElemRoot'],
+    function (UObject, MetaModel, DataObject, DataRoot, Meta,
+        MetaModelRef, MetaLinkRef, MetaObjTree, MetaObjTreeElemRoot) {
 
         var REMOTE_RESULT = "XXX";
 
@@ -29,6 +30,8 @@ define(
             init: function (cm, params) {
                 this._modelsByName = {};
                 this._modelsByGuid = {};
+
+                this._treesByName = {};
 
                 this._modelsByRootName = {};
                 this._modelsByRootGuid = {};
@@ -97,7 +100,6 @@ define(
                 return this._router;
             },
 
-
             getInterface: function () {
                 typeProviderInterface.classGuid = this.getGuid();
                 return typeProviderInterface;
@@ -154,6 +156,52 @@ define(
                 return callback ? REMOTE_RESULT : constrArr;
             },
 
+            addObjectTree: function (name, model) {
+                if (name) {
+
+                    var fields = {};
+                    var ResName = name;
+                    var ModelRef;
+
+                    if (model instanceof MetaModel) {
+                        ModelRef = {
+                            guidInstanceRes: model.getGuid(),
+                            guidInstanceElem: model.getGuid(),
+                        };
+                    }
+                    else
+                        if (model)
+                            ModelRef = model;
+                        else
+                            throw new Error("MetaDataMgr::addObjectTree: Model argument is empty!");
+
+                    var obj_tree = new MetaObjTree(this.getDB(), { ini: { fields: { ResName: ResName } } });
+                    obj_tree._createRootDS(ModelRef);
+                    return obj_tree;
+
+                }
+                else
+                    throw new Error("Name is undefined.");
+            },
+
+            deleteObjectTree: function (model) {
+                var _model;
+                if (typeof model === "string") {
+                    _model = this._treesByName[name];
+                } else
+                    if (model instanceof MetaObjTree) {
+                        _model = model;
+                    } else
+                        throw new Error("MetaDataMgr::deleteObjectTree: Invalid argument type.");
+                if (_model){
+                    this.getDB()._deleteRoot(_model);
+                };
+            },
+
+            getObjectTree: function (name) {
+                return this._treesByName[name];
+            },
+
             addModel: function (name, guid, rootName, rootGuid) {
                 if (name) {
                     var params = {
@@ -185,9 +233,9 @@ define(
                         _model = model;
                     } else
                         throw new Error("MetaDataMgr::deleteModel: Invalid argument type.");
-                if(_model)
-                    // TODO: вместо этого здесь д.б. удаление root-а memDB
-                    this._modelsCol._del(this._getModelRef(_model));
+                if (_model) {
+                    this.getDB()._deleteRoot(_model);
+                }
             },
 
             getModel: function (name) {
@@ -515,8 +563,9 @@ define(
 
             _onAddModel: function (args) {
                 var model = args.obj;
+                var name;
                 if (model instanceof MetaModel) {
-                    var name = model.name();
+                    name = model.name();
                     var guid = model.dataObjectGuid();
 
                     var root_name = model.dataRootName();
@@ -559,7 +608,27 @@ define(
                     var fields = model.fields();
                     for (var i = 0; i < fields.length; i++)
                         model._addLinkIfRef(fields[i]);
-                };
+                }
+                else
+                    if (model instanceof MetaObjTree) {
+                        name = model.name();
+                        if (this._treesByName[name] !== undefined) {
+                            this.getDB()._deleteRoot(model);
+                            throw new Error("Data Object Tree \"" + name + "\" is already defined.");
+                        };
+
+                        var hdesc = {
+                            type: 'mod%ResName',
+                            subscriber: this,
+                            callback: this._getOnChangeModelReadOnlyProp(model, "ResName")
+                        };
+                        model.event.on(hdesc);
+
+                        this._treesByName[name] = {
+                            objTree: model,
+                            hdesc: hdesc
+                        };
+                    };
             },
 
             _onBeforeDelModel: function (args) {
@@ -569,7 +638,16 @@ define(
                     var ref = this._modelRefs[guid];
                     if (ref)
                         this._modelsCol._del(ref);
-                };
+                }
+                else
+                    if (model instanceof MetaObjTree) {
+                        var name = model.name();
+                        var obj=this._treesByName[name];
+                        if (obj !== undefined) {
+                            obj.objTree.event.off(obj.hdesc);
+                            delete this._treesByName[name];
+                        };
+                    };
             },
 
             _onAddModelRef: function (args) {

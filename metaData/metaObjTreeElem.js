@@ -3,37 +3,36 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../system/uobject', './metaDefs'],
-    function (UObject, Meta) {
-        var MetaObjTreeElem = UObject.extend({
+    ['./metaObjTreeElemRoot', './metaDefs'],
+    function (MetaObjTreeElemRoot, Meta) {
+        var MetaObjTreeElem = MetaObjTreeElemRoot.extend({
 
             className: "MetaObjTreeElem",
             classGuid: UCCELLO_CONFIG.classGuids.MetaObjTreeElem,
             metaFields: [
                 { fname: "Alias", ftype: "string" },
-                { fname: "TableName", ftype: "string" },
-                { fname: "ParentFieldName", ftype: "string" }
-            ],
-
-            metaCols: [
-                { "cname": "Childs", "ctype": "MetaObjTreeElem" }
+                {
+                    fname: "FieldRef", ftype: {
+                        type: "ref",
+                        external: true,
+                        res_type: UCCELLO_CONFIG.classGuids.MetaModel,
+                        res_elem_type: UCCELLO_CONFIG.classGuids.MetaModelField
+                    }
+                }
             ],
 
             alias: function (value) {
                 return this._genericSetter("Alias", value);
             },
 
-            tableName: function (value) {
-                return this._genericSetter("TableName", value);
-            },
-
-            parentFieldName: function (value) {
-                return this._genericSetter("ParentFieldName", value);
+            fieldRef: function (value) {
+                return this._genericSetter("FieldRef", value);
             },
 
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
             }
+
         });
         return MetaObjTreeElem;
     }

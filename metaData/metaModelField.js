@@ -11,7 +11,6 @@ define(
             classGuid: UCCELLO_CONFIG.classGuids.MetaModelField,
             metaCols: [],
             metaFields: [
-                //{ fname: "Name", ftype: "string" },
                 { fname: "FieldType", ftype: "datatype" },
                 { fname: "Order", ftype: "int" },
                 { fname: "Flags", ftype: "int" }

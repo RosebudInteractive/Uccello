@@ -157,10 +157,10 @@ define(
                 //    timeout: 10000
                 //};
                 // DataLead.convert
-                this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["convert"] = {
-                    requestName: "ObjModifRequest",
-                    timeout: 10000
-                };
+                //this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["convert"] = {
+                //    requestName: "ObjModifRequest",
+                //    timeout: 10000
+                //};
                 // DataLead.archive
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["archive"] = {
                     requestName: "ObjModifRequest",

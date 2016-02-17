@@ -21,11 +21,12 @@ define(
 
                 this._collection = null;
                 this._collection_handler = null;
+                this._collection_p_handler = null;
                 UccelloClass.super.apply(this, [cm, params]);
 
             },
 
-            onAddToCollection: function (collection) {
+            onAddToCollection: function (collection, isParentAdded) {
                 this._collection = collection;
                 if (this._collection) {
                     var resource = this.getRoot();
@@ -36,7 +37,13 @@ define(
                             subscriber: this,
                             callback: this._onDeleteMySelf
                         };
+                        this._collection_p_handler = {
+                            type: 'delParent',
+                            subscriber: this,
+                            callback: this._onDeleteMySelf
+                        };
                         this._collection.on(this._collection_handler);
+                        this._collection.on(this._collection_p_handler);
                     }
                     else
                         throw new Error("Resource of resource element \"" + this.resElemName() + "\" is undefined or has wrong type.");
@@ -45,16 +52,18 @@ define(
             },
 
             _onDeleteMySelf: function (args) {
-                this._collection = collection;
                 var objDeleted = args.obj;
                 if (this._collection && (this === objDeleted)) {
                     var resource = this.getRoot();
                     if (resource && resource.isInstanceOf(UCCELLO_CONFIG.classGuids.Resource)) {
                         resource._delResElem(this);
-                        if(this._collection_handler)
+                        if (this._collection_handler)
                             this._collection.off(this._collection_handler);
+                        if (this._collection_p_handler)
+                            this._collection.off(this._collection_p_handler);
                         this._collection = null;
                         this._collection_handler = null;
+                        this._collection_p_handler = null;
                     }
                     else
                         throw new Error("Resource of resource element \"" + this.resElemName() + "\" is undefined or has wrong type.");

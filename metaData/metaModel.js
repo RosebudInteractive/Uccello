@@ -17,7 +17,6 @@ define(
                 { "cname": "Refs", "ctype": "MetaLinkRef" }
             ],
             metaFields: [
-                //{ fname: "Name", ftype: "string" },
                 { fname: "DataObjectGuid", ftype: "string" },
                 { fname: "DataRootName", ftype: "string" },
                 { fname: "DataRootGuid", ftype: "string" }
