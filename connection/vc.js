@@ -276,7 +276,7 @@ define(
 			allDataInit: function() {
 				var roots = this.pvt.cm.getRootGuids("res");
 				for (var i=0; i<roots.length; i++) {
-					var root = this.pvt.cm.get(roots[i]);
+					var root = this.pvt.cm.get(roots[i]).getForm();
 					this.pvt.cm.allDataInit(root);
 				}				
 			},
@@ -295,7 +295,7 @@ define(
 						var renderItem = this.pvt.renderRoot(roots[i]);
 					else renderItem = null;
 					if (root)
-						this.pvt.cm.render(root,renderItem);
+						this.pvt.cm.render(root.getForm(),renderItem);
 				}
 				this.getContextCM().resetModifLog();
 			},
@@ -327,12 +327,12 @@ define(
 			onNewRoot: function(result){
 
 				//if (result.target.getObjType().getGuid() == UCCELLO_CONFIG.classGuids.Form) {
-			    if (result.target.isInstanceOf(UCCELLO_CONFIG.classGuids.Form)) {
+			    if (result.target.isInstanceOf(UCCELLO_CONFIG.classGuids.ResForm)) {
 			        // ищем по Title и добавляем id если найден для уникальности
-					var found = false, title = result.target.title();
+					var found = false, title = result.target.resName();
 					var col = this.getCol('Resources');
 					for(var i= 0, len=col.count(); i<len; i++) {
-						if (title == col.get(i).title())
+						if (title == col.get(i).resName())
 							found = true;
 					}
 					var id = ++this.pvt.vcrCounter;
