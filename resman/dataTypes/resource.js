@@ -41,12 +41,23 @@ define(
 
             _addResElem: function (resElemObj) {
                 var ResElemName = resElemObj.resElemName();
-                if (this._elemsByName[ResElemName] !== undefined) {
+
+                function del_res_elem() {
                     var col = resElemObj.getParentCol();
                     if (col)
                         col._del(resElemObj);
-                    throw new Error("\"" + ResElemName + "\" is already defined.");
+                };
+
+                if (!ResElemName) {
+                    del_res_elem();
+                    throw new Error("Resource \"" + this.getGuid() + "\": Can't add element with empty \"ResElemName\".");
                 }
+
+                if (this._elemsByName[ResElemName] !== undefined) {
+                    del_res_elem();
+                    throw new Error("Resource \""+ this.getGuid()+"\": Element \"" + ResElemName + "\" is already defined.");
+                }
+
                 var handler = {
                     type: 'mod%ResElemName',
                     subscriber: this,
