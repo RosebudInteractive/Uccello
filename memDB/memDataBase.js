@@ -208,10 +208,12 @@ define(
              * @private
              */
 		    _deleteResFromNameMap: function (obj) {
-		        if (obj.isInstanceOf(UCCELLO_CONFIG.classGuids.Resource)) {
+		        var resClassGuid = obj.getNearestChildOf(UCCELLO_CONFIG.classGuids.Resource);
+		        if (resClassGuid)
+		            resClassGuid = resClassGuid.getGuid();
+		        if (resClassGuid) {
 		            var guid = obj.getGuid();
 		            var res_name = obj.resName();
-		            var resClassGuid = obj.getTypeGuid();
 		            var res_names = this.pvt.resNameMap[resClassGuid];
 		            if (res_names) {
 		                var res_list = res_names[res_name];
@@ -227,10 +229,12 @@ define(
              * @private
              */
 		    _addResToNameMap: function (obj) {
-		        if (obj.isInstanceOf(UCCELLO_CONFIG.classGuids.Resource)) {
+		        var resClassGuid = obj.getNearestChildOf(UCCELLO_CONFIG.classGuids.Resource);
+		        if (resClassGuid)
+		            resClassGuid = resClassGuid.getGuid();
+		        if (resClassGuid) {
 		            var guid = obj.getGuid();
 		            var res_name = obj.resName();
-		            var resClassGuid = obj.getTypeGuid();
 		            var res_names = this.pvt.resNameMap[resClassGuid] ? this.pvt.resNameMap[resClassGuid] : this.pvt.resNameMap[resClassGuid] = {};
 		            var res_list = res_names[res_name] ? res_names[res_name] : res_names[res_name] = {};
 		            res_list[guid] = obj;

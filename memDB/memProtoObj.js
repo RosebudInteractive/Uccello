@@ -200,6 +200,29 @@ define(
 			},
 
 	        /**
+             * Get nearest child class of a given type which belongs object inheritance hierarchy
+             * 
+             * @param {String} typeGuid A type GUID
+             * @return {Object} Class object
+             */
+			getNearestChildOf: function (typeGuid) {
+			    var result = null;
+			    if (this.pvt.objType) {
+			        var ancestors = this.pvt.objType.pvt.ancestors;
+			        if (ancestors) {
+			            for (var i = ancestors.length- 1 ; i >= 0; i--) {
+			                if (ancestors[i].getGuid() === typeGuid) {
+			                    if (i > 0)
+			                        result = ancestors[i- 1];
+			                    break;
+			                }
+			            };
+			        };
+			    };
+			    return result;
+			},
+
+	        /**
              * Rollbacks changes in a field.
              * 
              * @param {String}  field Field name

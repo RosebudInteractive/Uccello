@@ -59,9 +59,10 @@ define (
                     else {
                         var typeHandlers = this._eventHandlers[eventName];
                         for (var j = 0, len2 = typeHandlers.length; j < len2; j++) {
-                            if (typeHandlers[j].subscriber === handler.subscriber &&
+                            if (typeHandlers[j] && typeHandlers[j].subscriber === handler.subscriber &&
                                 typeHandlers[j].callback === handler.callback) {
-                                typeHandlers.splice(j, 1);
+                                //typeHandlers.splice(j, 1);
+                                typeHandlers[j] = null;
                                 break;
                             }
                         }
@@ -80,7 +81,7 @@ define (
                     var typeHandlers = this._eventHandlers[eventName];
                     for (var i= 0, len = typeHandlers.length; i < len; i++ ) {
                         var typeHandler = typeHandlers[i];
-                        if (typeHandler.subscriber === handler.subscriber &&
+                        if (typeHandler && typeHandler.subscriber === handler.subscriber &&
                             typeHandler.callback === handler.callback) {
                             return true;
                         }
@@ -97,20 +98,45 @@ define (
             _fire: function(eventArgs) {
                 if (eventArgs.type in this._eventHandlers) {
                     var handlers = this._eventHandlers[eventArgs.type];
-                    for (var i=0, len=handlers.length; i < len; i++){
+                    var has_deleted = false;
+                    for (var i = 0, len = handlers.length; i < len; i++) {
                         var handler = handlers[i];
-                        //try {
+                        if (handler) {
+                            //try {
                             handler.callback.call(handler.subscriber, eventArgs);
-                        /*}
-                        catch (e) {
-                            console.error(["ERROR executing fire:", handler, e]);
-                            throw e;
-                        }*/
-                    }
+                            /*}
+                            catch (e) {
+                                console.error(["ERROR executing fire:", handler, e]);
+                                throw e;
+                            }*/
+                        }
+                        else
+                            has_deleted = true;
+                    };
+                    if (has_deleted)
+                        this._clearDeleted(handlers);
                 }
             },
 
-            fire: function(eventArgs){
+            /**
+             * Приватная функция удаления пустых обработчиков, извне не вызывать
+             * @param handlers - массив обработчиков, среди которых есть пустые
+             * @private
+             */
+            _clearDeleted: function (handlers) {
+                var i = 0
+                var len = handlers.length;
+                while (i < len) {
+                    if (!handlers[i]) {
+                        handlers.splice(i, 1);
+                        len--;
+                    }
+                    else
+                        i++;
+                };
+            },
+
+            fire: function (eventArgs) {
                 if (!eventArgs.target){
                     eventArgs.target = this;
                 }
