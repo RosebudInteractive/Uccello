@@ -1,0 +1,246 @@
+{
+  "$sys": {
+    "guid": "cf07df23-abfe-9887-a353-09a00faf99d8",
+    "typeGuid": "10217b8e-b1f8-4221-a419-f20735219dd2"
+  },
+  "fields": {
+    "Id": 1,
+    "ResName": "h-containers"
+  },
+  "collections": {
+    "Form": [
+      {
+        "$sys": {
+          "guid": "7a2311da-6946-64fd-afac-9fb0edf422c6",
+          "typeGuid": "7f93991a-4da9-4892-79c2-35fe44e69083"
+        },
+        "fields": {
+          "Id": 1456,
+          "Name": "MainFormH",
+          "Title": "h-containers",
+          "dbgName": "FormHContainers",
+          "ResElemName": "1"
+        },
+        "collections": {
+          "Children": [
+            {
+              "$sys": {
+                "guid": "2f202a13-5321-c9c1-8dcc-ed2944a07dff",
+                "typeGuid": "26309035-7f47-422e-26c8-6c25a091c20e"
+              },
+              "fields": {
+                "Id": 1100,
+                "Name": "GContainer1",
+                "Width": 600,
+                "Height": 400,
+                "ResElemName": "2"
+              },
+              "collections": {
+                "Children": [
+                  {
+                    "$sys": {
+                      "guid": "e23e369a-d06a-9891-6da4-1e7118b8f770",
+                      "typeGuid": "32932036-3c90-eb8b-dd8d-4f19253fabed"
+                    },
+                    "fields": {
+                      "Id": 1108,
+                      "Name": "Label01",
+                      "Label": "Label in cell 00",
+                      "Left": 0,
+                      "Top": 0,
+                      "ResElemName": "3"
+                    }
+                  },
+                  {
+                    "$sys": {
+                      "guid": "8ecc17a-c2e7-1e7c-36e7-c9a5d2007379",
+                      "typeGuid": "32932036-3c90-eb8b-dd8d-4f19253fabed"
+                    },
+                    "fields": {
+                      "Id": 1109,
+                      "Name": "Label22",
+                      "Label": "Label in cell 01",
+                      "Left": 0,
+                      "Top": 1,
+                      "ResElemName": "4"
+                    }
+                  },
+                  {
+                    "$sys": {
+                      "guid": "6112baca-9980-2863-96c5-b1c296d684db",
+                      "typeGuid": "f79d78eb-4315-5fac-06e0-d58d07572482"
+                    },
+                    "fields": {
+                      "Id": 1108,
+                      "Name": "Edit1",
+                      "Left": 1,
+                      "Top": 0,
+                      "ResElemName": "5"
+                    }
+                  },
+                  {
+                    "$sys": {
+                      "guid": "21996a4b-3778-c2ce-17c6-90ac387294c9",
+                      "typeGuid": "f79d78eb-4315-5fac-06e0-d58d07572482"
+                    },
+                    "fields": {
+                      "Id": 1109,
+                      "Name": "Edit2",
+                      "Left": 1,
+                      "Top": 1,
+                      "ResElemName": "6"
+                    }
+                  },
+                  {
+                    "$sys": {
+                      "guid": "28503320-c2d7-9072-7296-68314a94a042",
+                      "typeGuid": "af419748-7b25-1633-b0a9-d539cada8e0d"
+                    },
+                    "fields": {
+                      "Id": 1111,
+                      "Name": "Button1",
+                      "Left": 1,
+                      "Top": 2,
+                      "Caption": "Button1",
+                      "ResElemName": "7"
+                    },
+                    "collections": {}
+                  }
+                ],
+                "Columns": [
+                  {
+                    "$sys": {
+                      "guid": "f073e613-5050-a1ac-9600-a07a79b095c6",
+                      "typeGuid": "9d00a857-4a93-6b7a-9ef0-08b14dc81e54"
+                    },
+                    "fields": {
+                      "Id": 1101,
+                      "Name": "Column1",
+                      "Width": 100,
+                      "ResElemName": "8"
+                    }
+                  },
+                  {
+                    "$sys": {
+                      "guid": "0fe432b8-1f6f-e9a6-d1f9-8f45a76a12f6",
+                      "typeGuid": "9d00a857-4a93-6b7a-9ef0-08b14dc81e54"
+                    },
+                    "fields": {
+                      "Id": 1102,
+                      "Name": "Column2",
+                      "Width": 200,
+                      "ResElemName": "9"
+                    }
+                  },
+                  {
+                    "$sys": {
+                      "guid": "97c38d01-062e-628f-7525-8f036584de10",
+                      "typeGuid": "9d00a857-4a93-6b7a-9ef0-08b14dc81e54"
+                    },
+                    "fields": {
+                      "Id": 1103,
+                      "Name": "Column3",
+                      "Width": 300,
+                      "ResElemName": "10"
+                    }
+                  }
+                ],
+                "Rows": [
+                  {
+                    "$sys": {
+                      "guid": "34fe74fb-f46e-3b72-fa3b-b7b46c2f88bc",
+                      "typeGuid": "157eb87c-3331-97cf-e307-a0c5311ba7d5"
+                    },
+                    "fields": {
+                      "Id": 1112,
+                      "Name": "Row0",
+                      "Height": 100,
+                      "ResElemName": "11"
+                    }
+                  },
+                  {
+                    "$sys": {
+                      "guid": "e41cd697-bda3-4913-cc56-650e783be727",
+                      "typeGuid": "157eb87c-3331-97cf-e307-a0c5311ba7d5"
+                    },
+                    "fields": {
+                      "Id": 1104,
+                      "Name": "Row1",
+                      "Height": 100,
+                      "ResElemName": "12"
+                    }
+                  },
+                  {
+                    "$sys": {
+                      "guid": "1dd54f1e-3b19-5082-341e-af0a00a2c1c4",
+                      "typeGuid": "157eb87c-3331-97cf-e307-a0c5311ba7d5"
+                    },
+                    "fields": {
+                      "Id": 1105,
+                      "Name": "Row2",
+                      "ResElemName": "13"
+                    }
+                  },
+                  {
+                    "$sys": {
+                      "guid": "da646446-7629-1734-50da-600e3042e2c9",
+                      "typeGuid": "157eb87c-3331-97cf-e307-a0c5311ba7d5"
+                    },
+                    "fields": {
+                      "Id": 1106,
+                      "Name": "Row3",
+                      "Height": 100,
+                      "ResElemName": "14"
+                    }
+                  },
+                  {
+                    "$sys": {
+                      "guid": "9f8cfeb6-6218-fc63-9f86-7503452d2787",
+                      "typeGuid": "157eb87c-3331-97cf-e307-a0c5311ba7d5"
+                    },
+                    "fields": {
+                      "Id": 1107,
+                      "Name": "Row4",
+                      "Height": 100,
+                      "ResElemName": "15"
+                    }
+                  }
+                ],
+                "Cells": [
+                  {
+                    "$sys": {
+                      "guid": "2e2248b0-6851-0ccd-aac9-5be3bc86bedb",
+                      "typeGuid": "69087f9c-99ed-14f1-0fe7-05058a862af5"
+                    },
+                    "fields": {
+                      "Id": 1110,
+                      "Name": "Cell01",
+                      "Left": 0,
+                      "Top": 3,
+                      "Width": 2,
+                      "ResElemName": "16"
+                    }
+                  },
+                  {
+                    "$sys": {
+                      "guid": "1bfff470-afd3-81e9-b87d-9773b82b0e24",
+                      "typeGuid": "69087f9c-99ed-14f1-0fe7-05058a862af5"
+                    },
+                    "fields": {
+                      "Id": 1110,
+                      "Name": "Cell01",
+                      "Left": 2,
+                      "Top": 3,
+                      "Height": 2,
+                      "ResElemName": "17"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

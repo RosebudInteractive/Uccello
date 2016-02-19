@@ -1,0 +1,30 @@
+{
+  "$sys": {
+    "guid": "95a99d2b-73a6-4091-841f-5115b95fb720",
+    "typeGuid": "10217b8e-b1f8-4221-a419-f20735219dd2"
+  },
+  "fields": {
+    "Id": 1,
+    "ResName": "EmptyForm"
+  },
+  "collections": {
+    "Form": [
+      {
+        "$sys": {
+          "guid": "228f26d1-dd50-030d-1a79-76d554cee535",
+          "typeGuid": "7f93991a-4da9-4892-79c2-35fe44e69083"
+        },
+        "fields": {
+          "Id": 1456,
+          "Name": "EmptyForm",
+          "Title": "EmptyForm",
+          "dbgName": "EmptyForm",
+          "ResElemName": "1"
+        },
+        "collections": {
+          "Children": []
+        }
+      }
+    ]
+  }
+}

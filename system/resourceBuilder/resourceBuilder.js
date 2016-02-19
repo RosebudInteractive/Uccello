@@ -8,51 +8,18 @@ if (typeof define !== 'function') {
 
 var _instance = null;
 
-define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
-    function(fs, Utils, Crypto) {
-
-        const metaInfo = {
-            SysResource : {
-                ClassGuid : 'dc156f00-52bd-46ca-98e8-0ac6967ffd44',
-                RootName : 'RootSysResource',
-                RootGuid : '866db0f5-d312-4c10-9313-07d1c3fd352b',
-                currentId : 0,
-                getId : function(){
-                    this.currentId++;
-                    return this.currentId;
-                }
-            },
-            SysResVer : {
-                ClassGuid : 'a44a2754-a231-45e8-b483-afd57144a629',
-                RootName : 'RootSysResVer',
-                RootGuid : 'be4cc757-4cba-4046-8206-723618242f7c',
-                currentId : 0,
-                getId : function(){
-                    this.currentId++;
-                    return this.currentId;
-                }
-            },
-            SysBuildRes : {
-                ClassGuid : '039c1cb9-0fdf-49e9-8bb9-e720aa9fe9d1',
-                RootName : 'RootSysBuildRes',
-                RootGuid : 'e610fea3-5b38-44b5-aeab-e2d5fa084759',
-                currentId : 0,
-                getId : function(){
-                    this.currentId++;
-                    return this.currentId;
-                }
-            }
-        };
+define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo', './sysResType'],
+    function(fs, Utils, Crypto, MetaInfo, SysResType) {
 
         function createSysResource() {
             return {
                 "$sys": {
-                    "guid": Utils.guid(), //"c170c217-e519-7c23-2811-ff75cd4bfe81",
-                    "typeGuid": metaInfo.SysResource.RootGuid //"866db0f5-d312-4c10-9313-07d1c3fd352b"
+                    "guid": Utils.guid(),
+                    "typeGuid": MetaInfo.SysResource.RootGuid
                 },
                 "fields": {
                     "Id": 1000,
-                    "Name":metaInfo.SysResource.RootName //"RootSysResource"
+                    "Name" : MetaInfo.SysResource.RootName
                 },
                 "collections": {
                     "DataElements": []
@@ -63,12 +30,12 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
         function createSysResVer() {
             return {
                 "$sys": {
-                    "guid": Utils.guid(), //"c170c217-e519-7c23-2811-ff75cd4bfe81",
-                    "typeGuid": metaInfo.SysResVer.RootGuid,//"be4cc757-4cba-4046-8206-723618242f7c"
+                    "guid": Utils.guid(),
+                    "typeGuid": MetaInfo.SysResVer.RootGuid
                 },
                 "fields": {
                     "Id": 1000,
-                    "Name": metaInfo.SysResVer.RootName //"RootSysResVer"
+                    "Name": MetaInfo.SysResVer.RootName
                 },
                 "collections": {
                     "DataElements": []
@@ -79,12 +46,12 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
         function createSysBuildRes() {
             return {
                 "$sys": {
-                    "guid": Utils.guid(), //"85dfcac5-e37a-4dd7-8f22-957c77251870",
-                    "typeGuid": metaInfo.SysBuildRes.RootGuid//"e610fea3-5b38-44b5-aeab-e2d5fa084759"
+                    "guid": Utils.guid(),
+                    "typeGuid": MetaInfo.SysBuildRes.RootGuid
                 },
                 "fields": {
                     "Id": 1000,
-                    "Name": metaInfo.SysBuildRes.RootName //"RootSysBuildRes"
+                    "Name": MetaInfo.SysBuildRes.RootName
                 },
                 "collections": {
                     "DataElements": []
@@ -96,15 +63,15 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
             init : function() {
                 this.checkOptions();
 
-                this.formDir = UCCELLO_CONFIG.resourceBuilder.sourceDir;
+                this.sourceDir = UCCELLO_CONFIG.resourceBuilder.sourceDir;
                 this.outputDir = UCCELLO_CONFIG.resourceBuilder.destDir;
-                this.resTypeId = UCCELLO_CONFIG.resourceBuilder.formResTypeId;
                 this.productId = UCCELLO_CONFIG.resourceBuilder.productId;
                 this.currBuildId = UCCELLO_CONFIG.resourceBuilder.currBuildId;
 
                 this.sysResource = createSysResource();
                 this.sysResVer = createSysResVer();
                 this.sysBuildRes = createSysBuildRes();
+                this.sysResType = new SysResType(UCCELLO_CONFIG.resourceBuilder.types);
 
                 this.canBuildData = true;
             },
@@ -122,10 +89,6 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
                     throw new Error('ResourceBuilder : Destination directory not found')
                 }
 
-                if (!UCCELLO_CONFIG.resourceBuilder.formResTypeId) {
-                    throw new Error('ResourceBuilder : FormResTypeId not found')
-                }
-
                 if (!UCCELLO_CONFIG.resourceBuilder.productId) {
                     throw new Error('ResourceBuilder : ProductId not found')
                 }
@@ -133,41 +96,46 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
                 if (!UCCELLO_CONFIG.resourceBuilder.currBuildId) {
                     throw new Error('ResourceBuilder : CurrentBuildId not found')
                 }
+
+                if (!UCCELLO_CONFIG.resourceBuilder.types) {
+                    throw new Error('ResourceBuilder : Resource types not found')
+                }
+
             },
 
-            addResource: function (form) {
+            addResource: function (resource, resType) {
                 var that = this;
 
                 function newResourceRecord() {
-                    var _name = (form.fields.dbgName || form.fields.Name);
-                    var _desc = (form.fields.Title || form.fields.Name);
+                    var _name = (resource.fields.ResName || 'Undefined');
+                    var _desc = (resource.fields.Title || _name);
                     return {
                         "$sys": {
                             "guid": Utils.guid(),
-                            "typeGuid": metaInfo.SysResource.ClassGuid
+                            "typeGuid": MetaInfo.SysResource.ClassGuid
                         },
                         "fields": {
-                            "Id": metaInfo.SysResource.getId(),
-                            "ResGuid": form.$sys.guid,
+                            "Id": MetaInfo.SysResource.getId(),
+                            "ResGuid": resource.$sys.guid,
                             "Code": _name.toUpperCase(),
-                            "Name": form.fields.Name,
-                            "Description": 'форма ' + _desc,
+                            "Name": _name,
+                            "Description": resType.fields.Description + ' ' + _desc,
                             "ProdId": that.productId,
-                            "ResTypeId": that.resTypeId
+                            "ResTypeId": resType.fields.Id
                         },
                         "collections": {}
                     }
                 }
 
-                var _resource = newResourceRecord()
+                var _resource = newResourceRecord();
                 this.sysResource.collections.DataElements.push(
                     _resource
                 );
                 return _resource.fields.Id
             },
 
-            addResVer: function (form, resId) {
-                var _body = JSON.stringify(form);
+            addResVer: function (resource, resId, resType) {
+                var _body = JSON.stringify(resource);
                 var md5sum = Crypto.createHash('md5');
                 md5sum.update(_body);
                 var _md5 = md5sum.digest('hex');
@@ -176,14 +144,14 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
                     return {
                         "$sys": {
                             "guid": Utils.guid(),
-                            "typeGuid": metaInfo.SysResVer.ClassGuid
+                            "typeGuid": MetaInfo.SysResVer.ClassGuid
                         },
                         "fields": {
-                            "Id": metaInfo.SysResVer.getId(),
+                            "Id": MetaInfo.SysResVer.getId(),
                             "ResVer": 1,
                             "Hash": _md5,
                             "ResBody": _body,
-                            "Description": 'форма ' + (form.fields.Title || form.fields.Name),
+                            "Description": resType.fields.Description + ' ' + (resource.fields.Title || resource.fields.Name),
                             "ResId": resId
                         },
                         "collections": {}
@@ -205,10 +173,10 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
                     return {
                         "$sys": {
                             "guid": Utils.guid(),
-                            "typeGuid": metaInfo.SysBuildRes.ClassGuid
+                            "typeGuid": MetaInfo.SysBuildRes.ClassGuid
                         },
                         "fields": {
-                            "Id": metaInfo.SysBuildRes.getId(),
+                            "Id": MetaInfo.SysBuildRes.getId(),
                             "BuildId": that.currBuildId,
                             "ResVerId": resVerId
                         },
@@ -224,30 +192,95 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
                 return _buildRes.fields.Id
             },
 
-            createResources : function(fileList, done){
+            createResources : function(fileList, resTypeCode){
                 var that = this;
-                fileList.forEach(function (fileName) {
-                    try {
-                        var _form = JSON.parse(fs.readFileSync(that.formDir + fileName, { encoding: "utf8" }));
-                        var _resId = that.addResource(_form);
-                        var _resVerId = that.addResVer(_form, _resId);
-                        that.addBuildRes(_resVerId);
-                    } catch (err) {
-                        throw new Error("WARNING: Problem in file: \"" + that.formDir + fileName +
-                            "\" : " + err.message);
-                    }
-                });
 
-                done();
+                return new Promise(function(resolve, reject){
+                    var _resType = that.sysResType.getType(resTypeCode);
+                    if (!_resType) {
+                        reject(new Error('Can not find resource ' + resTypeCode))
+                    } else {
+                        fileList.forEach(function (fileName) {
+                            try {
+                                var _resource = JSON.parse(fs.readFileSync(fileName, {encoding: "utf8"}));
+                                var _resId = that.addResource(_resource, _resType);
+                                var _resVerId = that.addResVer(_resource, _resId, _resType);
+                                that.addBuildRes(_resVerId);
+                            } catch (err) {
+                                reject(new Error("WARNING: Problem in file: \"" + fileName +
+                                    "\" : " + err.message))
+                            }
+                        });
+
+                        resolve();
+                    }
+                })
+            },
+
+            prepare : function() {
+                var that = this;
+
+                return new Promise(function (resolve, reject){
+                    if (that.canBuildData) {
+                        var _handledTypesCount = 0;
+                        var _errors = [];
+
+                        function checkDone() {
+                            if (_handledTypesCount == that.sourceDir.length) {
+                                that.saveFiles(function(){
+                                    if (_errors.length == 0) {
+                                        resolve()
+                                    } else {
+                                        var _err = new Error('Resources built with errors.');
+                                        _err.details = _errors.slice();
+
+                                        reject(_err);
+                                    }
+                                });
+                            }
+                        }
+
+                        that.sourceDir.forEach(function(element){
+
+                            var _list = fs.readdirSync(element.path);
+
+                            if (_list.length != 0) {
+                                _list.forEach(function(fileName, index, array){
+                                    array[index] = element.path + '/' + fileName;
+                                });
+
+                                that.createResources(_list, element.type).then(
+                                    function() {
+                                        _handledTypesCount++;
+                                        checkDone();
+                                    },
+                                    function(err) {
+                                        _handledTypesCount++;
+                                        _errors.push(err.message);
+                                        checkDone();
+                                    }
+                                )
+                            } else {
+                                _handledTypesCount++;
+                                _errors.push('No files to build to resource in [' + element.path + ']');
+                                checkDone();
+                            }
+                        });
+                    }
+                    else {
+                        reject(new Error('Can not build resources'))
+                    }
+                })
             },
 
             saveFiles : function(done) {
+                var _typesSaved = false;
                 var _resSaved = false;
                 var _verSaved = false;
                 var _buildSaved = false;
 
                 function checkDone() {
-                    if ((_resSaved) && (_verSaved) && (_buildSaved)) {
+                    if ((_resSaved) && (_verSaved) && (_buildSaved) && (_typesSaved)) {
                         done()
                     }
                 }
@@ -255,6 +288,12 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
                 if (!fs.existsSync(this.outputDir)) {
                     fs.mkdirSync(this.outputDir)
                 }
+
+                fs.writeFile(this.outputDir + 'SysResType.json', JSON.stringify(this.sysResType.object), function(err) {
+                    if (err) throw err;
+                    _typesSaved = true;
+                    checkDone()
+                });
 
                 fs.writeFile(this.outputDir + 'SysResource.json', JSON.stringify(this.sysResource), function(err) {
                     if (err) throw err;
@@ -285,25 +324,9 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto'],
         }
 
         Builder.prepareFiles = function(){
-            return new Promise(promiseBody);
-
-            function promiseBody(resolve, reject){
-                var that = getInstance();
-
-                if (that.canBuildData) {
-                    var _list = fs.readdirSync(that.formDir);
-                    if (_list.length != 0) {
-                        that.createResources(_list, function(){
-                            that.saveFiles(function(){
-                                resolve()
-                            })
-                        });
-                    } else {
-                        reject(new Error('No files to build into resource'))
-                    }
-                }
-            }
-
+            return new Promise(function(resolve, reject) {
+                getInstance().prepare().then(resolve, reject);
+            })
 
         };
 

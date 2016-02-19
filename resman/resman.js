@@ -210,23 +210,37 @@ define(
                 });
             },
 
-            createNewResource: function (resource, callback) {
-                if (!this.dbMode.canUse) {
-                    callback(ResUtils.newSystemError(this.dbMode.error))
-                    return
-                }
-
+            createNewResource: function (resource) {
                 var that = this;
-                this.loadDirectories(function () {
-                    that.resources.createNew(resource).then(
-                        function (resourcesGuid) {
-                            callback({result: 'OK', resourcesGuid: resourcesGuid})
-                        },
-                        function (reason) {
-                            callback({result: 'ERROR', message: reason.message})
-                        }
-                    );
+                return new Promise(function (resolve, reject) {
+                    if (!that.dbMode.canUse) {
+                        reject(ResUtils.newSystemError(that.dbMode.error));
+                        return
+                    }
+
+                    that.loadDirectories(function () {
+                        that.builds.loadCurrentBuild(function (build) {
+                            if (!build.isConfirmed) {
+                                that.resources.createNew(resource).then(
+                                    function (resourcesGuid) {
+                                        resolve({result: 'OK', resourcesGuid: resourcesGuid})
+                                    },
+                                    function (reason) {
+                                        reject(reason)
+                                    })
+                            } else {
+                                reject(ResUtils.newObjectError('Current build is confirmed'))
+                            }
+                        });
+                    });
                 });
+            },
+
+            createNewResourceCB : function(resource, callback) {
+                this.createNewResource(resource).then(
+                    function (result) {callback(result)},
+                    function (error) {callback({result : error.result, message : error.message})}
+                )
             },
 
             commit : function(transactionId){
@@ -249,48 +263,58 @@ define(
                 });
             },
 
-            newResourceVersion: function (resGuid, body, callback) {
-                if (!this.dbMode.canUse) {
-                    callback(ResUtils.newSystemError(this.dbMode.error));
-                    return;
-                }
-
+            newResourceVersion: function (resGuid, body) {
                 var that = this;
-                this.loadDirectories(function () {
-                    that.builds.loadCurrentBuild(function (build) {
-                        if (!build.isConfirmed) {
-                            $data.tranStart({}, function (result) {
-                                if (result.result === "OK") {
-                                    var _transactionId = result.transactionId;
-                                    that.resources.createNewVersion(resGuid, body, _transactionId).then(
-                                        function (resVersion) {
-                                            build.addResVersion(resVersion.id, _transactionId).then(
-                                                function () {
-                                                    that.commit(_transactionId);
-                                                    build.loadResVersions(function () {
-                                                        callback({result: 'OK', resVersionId: resVersion.id})
-                                                    });
-                                                },
-                                                function (reason) {
-                                                    that.rollback(_transactionId);
-                                                    callback({result: 'ERROR', message: reason.message})
-                                                }
-                                            )
-                                        },
-                                        function (reason) {
-                                            that.rollback(_transactionId);
-                                            callback({result: 'ERROR', message: reason.message})
-                                        }
-                                    );
-                                } else {
-                                    callback({result: 'ERROR', message: result.message})
-                                }
-                            })
-                        } else {
-                            throw new Error('Current build is confirmed')
-                        }
+
+                return new Promise(function (resolve, reject) {
+                    if (!that.dbMode.canUse) {
+                        reject(ResUtils.newSystemError(that.dbMode.error));
+                        return;
+                    }
+
+                    that.loadDirectories(function () {
+                        that.builds.loadCurrentBuild(function (build) {
+                            if (!build.isConfirmed) {
+                                $data.tranStart({}, function (result) {
+                                    if (result.result === "OK") {
+                                        var _transactionId = result.transactionId;
+                                        that.resources.createNewVersion(resGuid, body, _transactionId).then(
+                                            function (resVersion) {
+                                                build.addResVersion(resVersion.id, _transactionId).then(
+                                                    function () {
+                                                        that.commit(_transactionId);
+                                                        build.loadResVersions(function () {
+                                                            resolve({result: 'OK', resVersionId: resVersion.id})
+                                                        });
+                                                    },
+                                                    function (reason) {
+                                                        that.rollback(_transactionId);
+                                                        reject(reason)
+                                                    }
+                                                )
+                                            },
+                                            function (reason) {
+                                                that.rollback(_transactionId);
+                                                reject(reason)
+                                            }
+                                        );
+                                    } else {
+                                        reject(ResUtils.newDbError(result.message))
+                                    }
+                                })
+                            } else {
+                                reject(ResUtils.newObjectError('Current build is confirmed'))
+                            }
+                        });
                     });
                 });
+            },
+
+            newResourceVersionCB : function(resGuid, body, callback) {
+                this.newResourceVersion(resGuid, body).then(
+                    function (result) {callback(result)},
+                    function (error) {callback({result : error.result, message : error.message})}
+                )
             },
 
             createNewBuild: function (description, callback) {

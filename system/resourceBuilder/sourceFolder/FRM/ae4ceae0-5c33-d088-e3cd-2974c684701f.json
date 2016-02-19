@@ -1,0 +1,65 @@
+{
+  "$sys": {
+    "guid": "ae4ceae0-5c33-d088-e3cd-2974c684701f",
+    "typeGuid": "10217b8e-b1f8-4221-a419-f20735219dd2"
+  },
+  "fields": {
+    "Id": 1,
+    "ResName": "navigator"
+  },
+  "collections": {
+    "Form": [
+      {
+        "$sys": {
+          "guid": "2bf24707-7b19-ce48-74cd-76d6b4168625",
+          "typeGuid": "7f93991a-4da9-4892-79c2-35fe44e69083"
+        },
+        "fields": {
+          "Id": 1456,
+          "Name": "MainForm",
+          "Title": "navigator",
+          "dbgName": "FormNavigator",
+          "ResElemName": "1"
+        },
+        "collections": {
+          "Children": [
+            {
+              "$sys": {
+                "guid": "ddefd58a-ba5a-e96b-c13e-3cdb3d44fbf6",
+                "typeGuid": "1d95ab61-df00-aec8-eff5-0f90187891cf"
+              },
+              "fields": {
+                "Id": 11,
+                "Name": "MainContainer",
+                "ResElemName": "2"
+              },
+              "collections": {
+                "Children": [
+                  {
+                    "$sys": {
+                      "guid": "988ea655-e07e-17e6-6697-6575b27f887b",
+                      "typeGuid": "38aec981-30ae-ec1d-8f8f-5004958b4cfa"
+                    },
+                    "fields": {
+                      "Id": 55,
+                      "Name": "DbNavigator",
+                      "Top": "10",
+                      "Left": "10",
+                      "Nlevels": 3,
+                      "RootElem": "fc13e2b8-3600-b537-f9e5-654b7418c156",
+                      "Level": 0,
+                      "Width": 900,
+                      "Height": 500,
+                      "ResElemName": "3"
+                    },
+                    "collections": {}
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

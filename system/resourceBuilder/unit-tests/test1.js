@@ -1,6 +1,11 @@
 /**
  * Created by staloverov on 23.12.2015.
  */
+var chai = require("chai");
+var chaiAsPromised = require("chai-as-promised");
+
+chai.use(chaiAsPromised);
+
 var should  = require('chai').should();
 var Main = require("./main");
 var Builder = require('./../resourceBuilder');
@@ -122,28 +127,10 @@ describe('#init', function(){
         );
     });
 
-    it('Не найдена настройка FormResTypeId', function(done){
-        UCCELLO_CONFIG.resourceBuilder = {};
-        UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
-        UCCELLO_CONFIG.resourceBuilder.destDir = './testFolder';
-
-        Builder.prepareFiles().then(
-            function(){done(new Error('must be rejected'))},
-            function(err){
-                if (!err) {
-                    done('No defined error')
-                }
-                err.message.should.be.equal('ResourceBuilder : FormResTypeId not found');
-                done();
-            }
-        );
-    });
-
     it('Не найдена настройка ProductId', function(done){
         UCCELLO_CONFIG.resourceBuilder = {};
         UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
         UCCELLO_CONFIG.resourceBuilder.destDir = './testFolder';
-        UCCELLO_CONFIG.resourceBuilder.formResTypeId = 1;
 
         Builder.prepareFiles().then(
             function(){done(new Error('must be rejected'))},
@@ -161,7 +148,6 @@ describe('#init', function(){
         UCCELLO_CONFIG.resourceBuilder = {};
         UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
         UCCELLO_CONFIG.resourceBuilder.destDir = './testFolder';
-        UCCELLO_CONFIG.resourceBuilder.formResTypeId = 1;
         UCCELLO_CONFIG.resourceBuilder.productId = 2;
 
         Builder.prepareFiles().then(
@@ -174,6 +160,17 @@ describe('#init', function(){
                 done();
             }
         );
+    });
+
+    it('Не найдена секция Types', function(){
+        UCCELLO_CONFIG.resourceBuilder = {};
+        UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
+        UCCELLO_CONFIG.resourceBuilder.destDir = './testFolder';
+        UCCELLO_CONFIG.resourceBuilder.productId = 2;
+        UCCELLO_CONFIG.resourceBuilder.currBuildId = 2;
+
+
+        return Builder.prepareFiles().should.be.rejectedWith('ResourceBuilder : Resource types not found');
     });
 });
 
@@ -194,41 +191,28 @@ describe('#Static method prepareFiles', function() {
         deleteFolderRecursive('./emptyFolder');
     });
 
-    it('Создать файлы', function (done) {
-        Builder.prepareFiles().then(
+    it('Создать файлы', function () {
+        return Builder.prepareFiles().then(
             function(){
                 fs.readdir(UCCELLO_CONFIG.resourceBuilder.destDir, function(err, files)
                 {
-                    if (err) {
-                        done(err)
-                    } else {
-                        files.length.should.be.equal(3);
+                    if (!err) {
+                        files.length.should.be.equal(4);
                         files.forEach(function(fileName){
                             fs.statSync(UCCELLO_CONFIG.resourceBuilder.destDir + '/' + fileName).
                                 size.should.be.greaterThan(0)
                         });
-
-                        done();
                     }
                 });
-            },
-            function(errMessage){done(new Error(errMessage))}
+            }
         );
     });
 
-    it('Вернуть ошибку "Нет файлов"', function (done) {
+    it('Вернуть ошибку "Нет файлов"', function () {
         deleteFolderRecursive('./emptyFolder');
         fs.mkdirSync('./emptyFolder');
         UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
 
-        Builder.prepareFiles().then(
-            function(){
-                done(new Error('Must be rejected'))
-            },
-            function(err){
-                err.message.should.be.equal('No files to build into resource');
-                done()
-            }
-        );
+        Builder.prepareFiles().should.be.rejectedWith('Resources built with errors')
     });
 });

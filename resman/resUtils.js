@@ -8,21 +8,33 @@ if (typeof define !== 'function') {
 
 define([],
     function() {
+        function ResourceError(message, reason){
+            Error.apply(this, arguments);
+            this.message = message;
+            this.reason = reason;
+            this.result = 'ERROR'
+        }
+        //ResourceError.prototype = Error.prototype;
+
+        ResourceError.prototype = Object.create(Error.prototype);
+        ResourceError.prototype.constructor = ResourceError;
+
+
         var ResUtils = UccelloClass.extend({});
 
         ResUtils.state = {new : 0, loaded : 1, changed : 2};
         ResUtils.errorReasons = {dbError : 0, objectError : 1, systemError : 2};
 
         ResUtils.newObjectError = function(message) {
-            return {result : 'ERROR', reason : ResUtils.errorReasons.objectError, message : message}
+            return new ResourceError(message, ResUtils.errorReasons.objectError);//{result : 'ERROR', reason : ResUtils.errorReasons.objectError, message : message}
         };
 
         ResUtils.newDbError = function(message) {
-            return {result : 'ERROR', reason : ResUtils.errorReasons.dbError, message : message}
+            return new ResourceError(message, ResUtils.errorReasons.dbError);//{result : 'ERROR', reason : ResUtils.errorReasons.dbError, message : message}
         };
 
         ResUtils.newSystemError = function(message) {
-            return {result : 'ERROR', reason : ResUtils.errorReasons.systemError, message : message}
+            return new ResourceError(message, ResUtils.errorReasons.systemError);//{result : 'ERROR', reason : ResUtils.errorReasons.systemError, message : message}
         };
 
         return ResUtils;

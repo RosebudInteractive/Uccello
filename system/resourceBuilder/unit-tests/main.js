@@ -21,11 +21,17 @@ var _initializer = {
             webSocketServer : {port: 8082},
 
             resourceBuilder : {
-                sourceDir : './../../../ProtoOne/data/forms/',
-                destDir : './testFiles/',
-                formResTypeId : 1,
-                productId : 2,
-                currBuildId : 2
+                types: [
+                    {Code: "FRM", Name: "User Form", ClassName: "Form", Description: "Пользовательская форма", Guid : "7f93991a-4da9-4892-79c2-35fe44e69083"},
+                    {Code: "TEST", Name: "Test Type", ClassName: "Test", Description: "Тестовый тип", Guid : "7c516850-9c5b-4f51-9d2b-a51db4f4a554"}
+                ],
+                sourceDir: [
+                    {path: _parentDir + '/../sourceFolder/FRM', type: 'FRM'},
+                    {path: _parentDir + '/../sourceFolder/TEST', type: 'TEST'}
+                ],
+                destDir: './testFiles/',
+                productId: 2,
+                currBuildId: 2
             }
         };
     },
