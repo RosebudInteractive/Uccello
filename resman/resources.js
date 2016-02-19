@@ -39,13 +39,13 @@ define([
             },
 
             getObject: function (guid, callback) {
-                if ((this.resources.has(guid)) && (this.resources.get(guid).state == ResUtils.state.loaded)) {
-                    callback(this.resources.get(guid))
-                } else {
+                //if ((this.resources.has(guid)) && (this.resources.get(guid).state == ResUtils.state.loaded)) {
+                //    callback(this.resources.get(guid))
+                //} else {
                     this.queryResourceObj(guid, function (obj) {
                         callback(obj)
                     })
-                }
+                //}
             },
 
             getListByType: function (typeGuid) {
@@ -128,7 +128,11 @@ define([
                     callback(this.resources.get(guid).resBody)
                 } else {
                     this.queryResourceObj(guid, function (resource) {
-                        callback(resource.resBody)
+                        if (resource) {
+                            callback(resource.resBody)
+                        } else {
+                            callback(null)
+                        }
                     })
                 }
             },
@@ -272,7 +276,7 @@ define([
                                     }
                                 );
                             } else {
-                                reject(ResVersions.newObjectError('No body different'))
+                                reject(ResUtils.newObjectError('No body different'))
                             }
                         }
                     });

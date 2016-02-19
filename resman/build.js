@@ -1,9 +1,11 @@
 /**
  * Created by staloverov on 26.01.2016.
  */
+"use strict";
+
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
+    //var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 
@@ -14,28 +16,33 @@ define([
     ],
 
     function(Predicate, ResUtils, ResVersions) {
+        return class Build{
+        //return UccelloClass.extend({
 
-        return UccelloClass.extend({
-
-            init: function (db, buildObj) {
+            constructor(db, buildObj) {
                 this.db = db;
+                this.parseDbObject(buildObj);
+                this.state = ResUtils.state.new;
+
+                this.queryBuildResGuid = 'f447d844-9ad4-4a89-ad41-347427c17e3b';
+                this.commitGuid = 'd53fa310-a5ce-4054-97e0-c894a03d3719';
+            }
+
+            parseDbObject(buildObj) {
                 this.id = buildObj.id();
                 this.buildNum = buildObj.buildNum();
                 this.isConfirmed = buildObj.isConfirmed();
                 this.description = buildObj.description();
                 this.versionId = buildObj.versionId();
                 this.resVersions = [];
-                this.state = ResUtils.state.new;
+                this.state = ResUtils.state.loaded;
+            }
 
-                this.queryBuildResGuid = 'f447d844-9ad4-4a89-ad41-347427c17e3b';
-                this.commitGuid = 'd53fa310-a5ce-4054-97e0-c894a03d3719';
-            },
-
-            isLoaded : function() {
+            isLoaded() {
                 return this.state == ResUtils.state.loaded
-            },
+            }
 
-            addResVersion : function(resVersionId, transactionId) {
+            addResVersion(resVersionId, transactionId) {
                 var that = this;
                 return new Promise(promiseBody);
 
@@ -68,9 +75,9 @@ define([
                     })
                 }
 
-            },
+            }
 
-            loadResVersions : function(done) {
+            loadResVersions(done) {
                 this.resVersions.length = 0;
                 var _predicate = new Predicate(this.db, {});
                 _predicate.addCondition({field: "BuildId", op: "=", value: this.id});
@@ -92,9 +99,9 @@ define([
                         done();
                     });
                 })
-            },
+            }
 
-            commit : function(transactionId) {
+            commit (transactionId) {
                 var that = this;
                 return new Promise(promiseBody);
 
@@ -140,6 +147,6 @@ define([
                     }
                 }
             }
-        })
+        }
     }
 );
