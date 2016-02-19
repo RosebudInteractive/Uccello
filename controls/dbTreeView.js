@@ -293,7 +293,8 @@ define(
 
                 // добавляем в коллекцию
                 var cm = this.getControlMgr(), vc = cm.getContext();
-                var newItem = new (vc.getConstructorHolder().getComponent(UCCELLO_CONFIG.classGuids.TreeViewItem).constr)(cm, {parent: this, colName: "Items", ini:{fields:{Parent:parent, Kind:"item"}} });
+                var newItem = new (vc.getConstructorHolder().getComponent(UCCELLO_CONFIG.classGuids.TreeViewItem).constr)(
+                    cm, {parent: this, colName: "Items", ini:{fields:{Parent:parent, Kind:"item", ResElemName: this.getRoot().getNextElemName()}} });
 
                 return newItem;
             },

@@ -117,6 +117,7 @@ define(
 				        target: this.getDB(),
 				        obj: this
 				    });
+				this.getDB().afterObjectFinalized(this);  // уведомить свою базу данных
 			},
 			
 			// Добавляем логгер
@@ -457,6 +458,10 @@ define(
 				return this.pvt.colName;
 			},
 			
+			getParentCol: function () {
+			    return this.pvt.col;
+			},
+
 			isFldModified: function (fldName, log_name) {
 			    var logName = log_name ? log_name : this.dfltLogName;
 			    if (fldName in this.pvt.fldLog[logName])

@@ -4,9 +4,9 @@ if (typeof define !== 'function') {
 }
 
 define(
-    ['../system/uobject'],
-    function(UObject) {
-        var AComponent = UObject.extend({
+    ['../resman/dataTypes/resElem'],
+    function(ResElem) {
+        var AComponent = ResElem.extend({
 		
 			className: "AComponent",
 			classGuid: UCCELLO_CONFIG.classGuids.AComponent,
@@ -88,6 +88,16 @@ define(
 
 			name: function(value) {
 				return this._genericSetter("Name",value);
+			},
+
+			getForm: function() {
+				var res = this.getRoot();
+				return res.getForm();
+			},
+
+			getParentComp: function() {
+				var parent = this.getParent();
+				return (parent instanceof ResElem ? parent : null);
 			}
 
         });

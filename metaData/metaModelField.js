@@ -3,24 +3,27 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../system/uobject', './metaDefs'],
-    function (UObject, Meta) {
-        var MetaModelField = UObject.extend({
+    ['../resman/dataTypes/resElem', './metaDefs'],
+    function (ResElem, Meta) {
+        var MetaModelField = ResElem.extend({
 
             className: "MetaModelField",
             classGuid: UCCELLO_CONFIG.classGuids.MetaModelField,
             metaCols: [],
             metaFields: [
-                { fname: "Name", ftype: "string" },
                 { fname: "FieldType", ftype: "datatype" },
                 { fname: "Order", ftype: "int" },
                 { fname: "Flags", ftype: "int" }
             ],
 
+            resElemName: function (value) {
+                return this.name(value);
+            },
+
             name: function (value) {
                 if (value && ((this.flags() & (Meta.Field.Internal | Meta.Field.System)) !== 0))
                     throw new Error("Can't change name of \"Internal\" or \"System\" field.");
-                return this._genericSetter("Name", value);
+                return this._genericSetter("ResElemName", value);
             },
 
             fieldType: function (value) {
@@ -57,6 +60,9 @@ define(
 
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
+            },
+
+            onAddToCollection: function (collection) {
             },
 
             _checkFlags: function (flags, type, err) {

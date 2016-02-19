@@ -248,7 +248,7 @@ define(
              * Установить фокус на контрол
              */
             setFocused: function(){
-                var form = this.getRoot();
+                var form = this.getForm();
                 if (form && "currentControl" in form) {
                     form.currentControl(this);
                     return true;

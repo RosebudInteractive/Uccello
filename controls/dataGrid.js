@@ -60,14 +60,14 @@ define(
 
                 // если только фокус
                 if  (this.isOnlyFocus()) {
-                    if (this.getRoot().currentControl() == this)
+                    if (this.getForm().currentControl() == this)
                         viewset.setFocus.apply(this);
                     return;
                 }
 
                 // если передвинули курсор + фокус
                 if (this.isCursorFocus()) {
-                    if (this.getRoot().currentControl() == this)
+                    if (this.getForm().currentControl() == this)
                         viewset.setFocus.apply(this);
                     viewset.renderCursor.apply(this, [this.dataset().cursor()]);
                     return;
@@ -87,7 +87,7 @@ define(
 					if  (!ds.isDataSourceModified() &&
                          ds.isFldModified("Cursor") &&
                          !this.isDataModified() &&
-                         !this.getRoot().isFldModified("CurrentControl"))
+                         !this.getForm().isFldModified("CurrentControl"))
                         return true;
                     else
                         return false;

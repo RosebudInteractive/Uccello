@@ -800,6 +800,51 @@ define(
             },
 
             /**
+             * Returns "External" flag
+             * 
+             * @return {Boolean}
+             */
+            isExternal: function () {
+                return this._external;
+            },
+
+            /**
+             * Returns "Strict" flag
+             * 
+             * @return {Boolean}
+             */
+            isStrict: function () {
+                return this._strict;
+            },
+
+            /**
+             * Returns "Ref To Resorce" flag
+             * 
+             * @return {Boolean}
+             */
+            isRefToResource: function () {
+                return this._is_ref_to_resource;
+            },
+
+            /**
+             * Returns Resource Type Guid
+             * 
+             * @return {String}
+             */
+            resType: function () {
+                return this._external ? this._resType : null;
+            },
+
+            /**
+             * Returns Resource Element Type Guid
+             * 
+             * @return {String}
+             */
+            resElemType: function () {
+                return this._resElemType;
+            },
+
+            /**
              * Returns a serialized representation of the data type
              * 
              * @return {Object} Serialized representation
@@ -837,6 +882,7 @@ define(
                 this._resType = null;
                 this._resElemType = null;
                 this._strict = false;
+                this._is_ref_to_resource = val.res_type === val.res_elem_type;
 
                 if (val instanceof Object) {
                     if (typeof (val.external) === "boolean") {
@@ -874,7 +920,7 @@ define(
              */
             getSerializedValue: function (val, use_resource_guid) {
                 var result = val;
-                if (val)
+                if (val) {
                     if (this._external) {
                         result = { guidRes: val.guidRes, guidElem: val.guidElem };
                         if ((!use_resource_guid) && val.guidInstanceRes && val.guidInstanceElem)
@@ -882,11 +928,16 @@ define(
                                 guidInstanceRes: val.guidInstanceRes,
                                 guidInstanceElem: val.guidInstanceElem
                             };
-                    } else{
+                        if (val.resName)
+                            result.resName = val.resName;
+                    } else {
                         result = { guidElem: val.guidElem };
                         if ((!use_resource_guid) && val.guidInstanceElem)
                             result = val.guidInstanceElem;
                     };
+                    if (val.elemName)
+                        result.elemName = val.elemName;
+                };
                 return result;
             },
 
@@ -919,10 +970,13 @@ define(
                         if (this._external)
                             return (val1.guidRes === val2.guidRes)
                                 && (val1.guidElem === val2.guidElem)
+                                && (val1.resName === val2.resName)
+                                && (val1.elemName === val2.elemName)
                                 && (val1.guidInstanceRes === val2.guidInstanceRes)
                                 && (val1.guidInstanceElem === val2.guidInstanceElem);
                         else
                             return (val1.guidElem === val2.guidElem)
+                                && (val1.elemName === val2.elemName)
                                 && (val1.guidInstanceElem === val2.guidInstanceElem);
                     };
                 }
@@ -945,11 +999,15 @@ define(
                         if (val1.objRef && val2.objRef)
                             return UccelloClass.super.apply(this, [val1.objRef, val2.objRef]);
                         else {
-                            var str1 = val1.objRef ? "" : String(val1.guidElem) + "|" + String(val1.guidInstanceElem);
-                            var str2 = val2.objRef ? "" : String(val2.guidElem) + "|" + String(val2.guidInstanceElem);
+                            var str1 = val1.objRef ? "" : String(val1.guidElem) + "|" +
+                                String(val1.guidInstanceElem) + "|" + String(val1.elemName);
+                            var str2 = val2.objRef ? "" : String(val2.guidElem) + "|" +
+                                String(val2.guidInstanceElem) + "|" + String(val2.elemName);
                             if (this._external) {
-                                str1 = (val1.objRef ? "" : String(val1.guidRes) + "|" + String(val1.guidInstanceRes) + "|") + str1;
-                                str2 = (val2.objRef ? "" : String(val2.guidRes) + "|" + String(val2.guidInstanceRes) + "|") + str2;
+                                str1 = (val1.objRef ? "" : String(val1.guidRes) + "|" +
+                                    String(val1.guidInstanceRes) + "|" + String(val1.resName) + "|") + str1;
+                                str2 = (val2.objRef ? "" : String(val2.guidRes) + "|" +
+                                    String(val2.guidInstanceRes) + "|" + String(val2.resName) + "|") + str2;
                             };
                             return UccelloClass.super.apply(this, [str1, str2]);
                         };
@@ -975,13 +1033,13 @@ define(
                 var msg;
                 if (!val.objRef) {
                     // Check for the NULL reference which is valid as well
-                    result = (val.objRef === null) && (val.guidElem === null) &&
-                        ((!val.is_external) || (val.guidRes === null));
+                    result = (val.objRef === null) && (val.guidElem === null) && (val.elemName === null) &&
+                        ((!val.is_external) || ((val.guidRes === null) && (val.resName === null)));
 
                     if (!result) {
-                        result = typeof (val.guidElem) === "string";
+                        result = (typeof (val.guidElem) === "string") || (typeof (val.elemName) === "string");
                         if (val.is_external)
-                            result = result && (typeof (val.guidRes) === "string");
+                            result = result && ((typeof (val.guidRes) === "string") || (typeof (val.resName) === "string"));
                         if (!result) {
                             msg = "Invalid reference: \"" +
                                     JSON.stringify(this.getSerializedValue(val)) + "\".";
@@ -1017,9 +1075,11 @@ define(
              * Using [refResolver] interface resolves reference and adds it to the link storage
              * Internal reference representation:
              *   guidRes          - Resource GUID (for external ref)
-             *   guidInstanceRes  - GUID of the resource instanse (for external ref)
+             *   guidInstanceRes  - GUID of the resource instance (for external ref)
+             *   resName          - Name of the resource instance (for external ref)
              *   guidElem         - Resource element GUID
-             *   guidInstanceElem - GUID of the resource element instanse
+             *   guidInstanceElem - GUID of the resource element instance
+             *   elemName         - Name of the resource element instance
              *   objRef           - reference to the referenced MemProtoObject (NULL if ref is unresolved)
              *   is_external      - TRUE if ref is external
              * 
@@ -1035,8 +1095,10 @@ define(
                 var result = {
                     guidRes: null,
                     guidInstanceRes: null,
+                    resName: null,
                     guidElem: null,
                     guidInstanceElem: null,
+                    elemName: null,
                     objRef: null,
                     is_external: this._external
                 };
@@ -1051,7 +1113,13 @@ define(
                         result.guidInstanceRes = val.getRoot().getGuid();
                     } else {
                         // Val is serialized reference
+                        if (val.elemName)
+                            result.elemName = val.elemName;
+
                         if (result.is_external) {
+                            if (val.resName)
+                                result.resName = val.resName;
+
                             if (typeof (val) === "string") {
                                 result.guidInstanceElem = val;
                                 result.guidElem = obj.parseGuid(result.guidInstanceElem).guid;
@@ -1091,7 +1159,7 @@ define(
                     };
 
                 if (!result.objRef)
-                    this._refResolver.resolveRef(result, obj);
+                    this._refResolver.resolveRef(result, obj, this);
 
                 if (withCheckVal) {
                     var errObj = {};

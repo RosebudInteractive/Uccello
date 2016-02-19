@@ -46,6 +46,20 @@ define(
 	                target: this,
 	                obj: obj
 	            });
+
+	            if (typeof (obj.onAddToCollection) === "function") {
+                    // Информирование объекта о том, что он добавлен в коллекцию
+	                obj.onAddToCollection(this, false);
+	            };
+
+	            // Генерация событий "addParent" для всех дочерних элементов
+	            this._iterateChilds(obj, true, 0, function (add_obj) {
+	                if (typeof (add_obj.onAddToCollection) === "function") {
+	                    // Информирование объекта о том, что он добавлен в родительскую коллекцию
+	                    add_obj.onAddToCollection(add_obj.getParentCol(), true);
+	                };
+	            });
+
 	        },
 
 	        _del: function (obj) {
@@ -75,10 +89,37 @@ define(
 	                        target: this,
 	                        obj: obj
 	                    });
+
+	                    // Генерация событий "delParent" для всех дочерних элементов
+	                    this._iterateChilds(obj, false, 0, function (del_obj) {
+	                        var curr_col = del_obj.getParentCol();
+	                        curr_col.fire({
+	                            type: "delParent",
+	                            target: curr_col,
+	                            obj: del_obj
+	                        });
+	                    });
+
 						delete this._guidIndex[obj.getGuid()];
 	                    return;
 	                }
 	            }
+	        },
+
+	        _iterateChilds: function (obj, isRootFirst, lvl, proc) {
+	            if (typeof (proc) === "function") {
+	                for (var i = 0; i < obj.countCol() ; i++) {
+	                    var childCol = obj.getCol(i);
+	                    for (var j = 0; j < childCol.count() ; j++) {
+	                        var child = childCol.get(j);
+	                        if (isRootFirst)
+	                            proc(child);
+	                        this._iterateChilds(child, isRootFirst, lvl + 1, proc);
+	                    };
+                    };
+	                if ((!isRootFirst) && (lvl > 0))
+	                    proc(obj);
+                };
 	        },
 
 	        getName: function () {

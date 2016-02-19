@@ -55,7 +55,23 @@ define(
 						type: 'modFld',
 						subscriber: this,
 						callback: function(){ this._isRendered(false); }
-					});					
+					});
+
+					ds.event.on({
+						type: "beforeStateChange",
+						subscriber: this,
+						callback: function() { this._isRendered(false); console.log("beforeStateChange", arguments)}
+					});
+					ds.event.on({
+						type: "afterStateChange",
+						subscriber: this,
+						callback: function() { this._isRendered(false); console.log("afterStateChange", arguments)}
+					});
+					ds.event.on({
+						type: "mod%AutoEdit",
+						subscriber: this,
+						callback: function() { this._isRendered(false); }
+					});
 				}
 			},
 

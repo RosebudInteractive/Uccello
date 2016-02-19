@@ -4,11 +4,11 @@ if (typeof define !== 'function') {
 }
 
 define(
-    ['../system/uobject', './metaModelField', './metaDefs', './metaLinkRef', '../system/event',
+    ['../resman/dataTypes/resource', './metaModelField', './metaDefs', './metaLinkRef', '../system/event',
         '../memDB/memMetaType', '../dataman/dataobject'],
-    function (UObject, MetaModelField, Meta, MetaLinkRef, Event, MemMetaType, DataObject) {
+    function (Resource, MetaModelField, Meta, MetaLinkRef, Event, MemMetaType, DataObject) {
 
-        var MetaModel = UObject.extend([new Event()], {
+        var MetaModel = Resource.extend([new Event()], {
 
             className: "MetaModel",
             classGuid: UCCELLO_CONFIG.classGuids.MetaModel,
@@ -17,14 +17,15 @@ define(
                 { "cname": "Refs", "ctype": "MetaLinkRef" }
             ],
             metaFields: [
-                { fname: "Name", ftype: "string" },
                 { fname: "DataObjectGuid", ftype: "string" },
                 { fname: "DataRootName", ftype: "string" },
                 { fname: "DataRootGuid", ftype: "string" }
             ],
 
+            elemNamePrefix: "Field",
+
             name: function (value) {
-                return this._genericSetter("Name", value);
+                return this._genericSetter("ResName", value);
             },
 
             dataObjectGuid: function (value) {
@@ -136,6 +137,10 @@ define(
                 return res;
             },
 
+            getResElemByName: function (name) {
+                return this.getField(name);
+            },
+
             fields: function () {
                 return this._fields;
             },
@@ -153,7 +158,7 @@ define(
                     var params = {
                         ini: {
                             fields: {
-                                Name: name,
+                                ResElemName: name,
                                 FieldType: field_type,
                                 Order: (typeof order === "number") ? order : this._fields.length,
                                 Flags: (is_internal ? Meta.Field.Internal : 0) | ((flags | 0) & Meta.Field.System),
@@ -312,7 +317,7 @@ define(
                     if (fieldName !== oldFieldName) {
 
                         if (self._fieldsByName[fieldName] !== undefined) {
-                            fieldObj.set("Name", oldFieldName);
+                            fieldObj.set("ResElemName", oldFieldName);
                             throw new Error("Can't change field name from \"" +
                                 oldFieldName + "\" to \"" + fieldName + "\". Field \"" + fieldName + "\" is already defined.");
                         };
@@ -365,7 +370,7 @@ define(
 
             _onAddField: function (args) {
                 var field = args.obj;
-                var name = field.get("Name");
+                var name = field.get("ResElemName");
                 var order = field.get("Order");
                 var flags = field.get("Flags");
                 if (order === undefined)
@@ -401,7 +406,7 @@ define(
                 field.handlers = [];
 
                 var handler = {
-                    type: 'mod%Name',
+                    type: 'mod%ResElemName',
                     subscriber: this,
                     callback: this._getOnFieldNameChangeProc(field)
                 };
@@ -439,7 +444,7 @@ define(
 
             _onDeleteField: function (args) {
                 var field = args.obj;
-                var name = field.get("Name");
+                var name = field.get("ResElemName");
                 var idx = this._fieldsByName[name];
                 var is_duplicate_name = false;
                 if (typeof idx === "number") {
