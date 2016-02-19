@@ -90,8 +90,11 @@ define(
                     fields.Alias = ds_def.model.name();
                 }
                 else
-                    if (ds_def.model)
+                    if (ds_def.model) {
                         fields.ModelRef = ds_def.model;
+                        if(ds_def.model.resName)
+                            fields.Alias = ds_def.model.resName;
+                    }
                     else
                         throw new Error("MetaObjTree::addDataSource: Model argument is empty!");
 
@@ -105,6 +108,10 @@ define(
                     fields.FieldRef = {
                         guidInstanceRes: ds_def.field.getRoot().getGuid(),
                         guidInstanceElem: ds_def.field.getGuid(),
+                    }
+                else
+                    if (ds_def.field) {
+                        fields.FieldRef = ds_def.field;
                     };
 
                 var params = {

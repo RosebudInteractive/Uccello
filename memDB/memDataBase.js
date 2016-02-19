@@ -43,6 +43,7 @@ define(
 		        pvt.rcoll = {};
 		        pvt.objs = {};				// все объекты по гуидам
 		        pvt.resMap = {};			// связь гуида ресурса и гуида экземпляра
+		        pvt.resNameMap = {};		// связь имени ресурса и их экзепляров (имена уникальны внутри типа ресурса)
 		        pvt.refTo = {};			    // исходящие ссылки (по объектам)
 		        pvt.refFrom = {};			// входящие ссылки (по объектам)
 		        pvt.uLinks = {};			// неразрешенные ссылки
@@ -163,6 +164,7 @@ define(
 		        });
 
 		        this.clearObjRefs(obj);
+		        this._deleteResFromNameMap(obj);
 
 		        for (var i = 0; i < this.pvt.robjs.length; i++) {
 		            if (this.pvt.robjs === obj) {
@@ -180,6 +182,71 @@ define(
 		    },
 
 		    /**
+             * Поиск ресурса по имени
+             * @param {String}  res_name    имя ресурса
+             * @param {String}  class_guid  guid типа ресурса
+             * @return {Object} найденный ресурс или null
+             * @private
+             */
+		    findResByName: function (res_name, class_guid) {
+		        var result = null;
+		        var res_names = this.pvt.resNameMap[class_guid];
+		        if (res_names) {
+		            var res_list = res_names[res_name];
+		            if (res_list) {
+		                var guids = Object.keys(res_list);
+		                if (guids.length === 1)
+		                    result = res_list[guids[0]];
+		            };
+		        };
+		        return result;
+		    },
+
+		    /**
+             * Удаляет ресурс из словаря
+             * @param {Object} obj  ресурс
+             * @private
+             */
+		    _deleteResFromNameMap: function (obj) {
+		        if (obj.isInstanceOf(UCCELLO_CONFIG.classGuids.Resource)) {
+		            var guid = obj.getGuid();
+		            var res_name = obj.resName();
+		            var resClassGuid = obj.getTypeGuid();
+		            var res_names = this.pvt.resNameMap[resClassGuid];
+		            if (res_names) {
+		                var res_list = res_names[res_name];
+		                if (res_list)
+		                    delete res_list[guid];
+		            };
+		        };
+		    },
+
+		    /**
+             * Регистрирует ресурс в словаре ресурсов
+             * @param {Object} obj  ресурс
+             * @private
+             */
+		    _addResToNameMap: function (obj) {
+		        if (obj.isInstanceOf(UCCELLO_CONFIG.classGuids.Resource)) {
+		            var guid = obj.getGuid();
+		            var res_name = obj.resName();
+		            var resClassGuid = obj.getTypeGuid();
+		            var res_names = this.pvt.resNameMap[resClassGuid] ? this.pvt.resNameMap[resClassGuid] : this.pvt.resNameMap[resClassGuid] = {};
+		            var res_list = res_names[res_name] ? res_names[res_name] : res_names[res_name] = {};
+		            res_list[guid] = obj;
+		        };
+		    },
+
+		    /**
+             * Вызывается после завершения создания объекта в memDB 
+             * @param {Object} obj  объект
+             * @private
+             */
+		    afterObjectFinalized: function (obj) {
+		        this._addResToNameMap(obj);
+		    },
+
+	        /**
              * зарегистрировать объект в списке по гуидам
              * @param obj
              * @private
@@ -327,7 +394,7 @@ define(
 		        var refs = Object.keys(uLinks);
 		        for (var i = 0; i < refs.length; i++) {
 		            var link = uLinks[refs[i]];
-		            this.resolveRef(link.val, link.src);
+		            this.resolveRef(link.val, link.src, link.type);
 		            if (link.val.objRef) {
 		                // Resolved !
 		                var refGuid = link.val.objRef.getGuid();
@@ -348,12 +415,14 @@ define(
              * Fills [ref.objRef] field with MemProtoObject if reference can be resolved
              * and set it to NULL otherwise.
              * 
-             * @param {Object} ref The internal representaton of a value of the reference type
-             * @param {Object} obj A MemProtoObject which [ref] belongs to
+             * @param {Object} ref      The internal representaton of a value of the reference type
+             * @param {Object} obj      A MemProtoObject which [ref] belongs to
+             * @param {Object} ref_type A type of [ref]
              */
-		    resolveRef: function (ref, obj) {
+		    resolveRef: function (ref, obj, ref_type) {
 		        ref.objRef = null;
 		        var objRef = null;
+		        var resRef = null;
 
 		        // Backup initial state
 		        var oldGuidInstanceRes = ref.guidInstanceRes;
@@ -383,8 +452,15 @@ define(
 		                        objRef = objResBase[guids[0]];
 		                    };
 		                };
-		                if ((!ref.guidInstanceRes) && objRef) {
-		                    ref.guidInstanceRes = objRef.root.getGuid();
+		                if ((!objRef) && ref.resName) {
+		                    // Try to resolve by name
+		                    resRef = this.findResByName(ref.resName, ref_type.resType());
+		                    if (resRef) {
+		                        ref.guidRes = resRef.getGuidRes();
+		                    };
+                        }
+		                if ((!ref.guidInstanceRes) && (objRef || resRef)) {
+		                    ref.guidInstanceRes = objRef ? objRef.root.getGuid() : resRef.getGuid();
 		                    isChanged = true;
 		                };
 		            } else {
@@ -403,13 +479,30 @@ define(
 		                };
 		            };
 
-		            if (objRef)
-		                if (ref.guidElem == ref.guidRes)
+		            var is_ref_to_res = ref_type.isRefToResource();
+		            if (objRef) {
+		                resRef = objRef.root;
+		                //if (ref.guidElem == ref.guidRes)
+		                if (is_ref_to_res)
 		                    objRef = objRef.root; // Ref to the root object
 		                else
-		                    objRef = objRef.elems[ref.guidElem];
+		                    objRef = objRef.elems[ref.guidElem]
+		            };
+
+		            if (resRef && (!objRef)) {
+		                if (is_ref_to_res)
+		                    objRef = resRef;
+		                else
+		                    if (ref.elemName) {
+		                        if (resRef.isInstanceOf(UCCELLO_CONFIG.classGuids.Resource))
+		                            objRef = resRef.getResElemByName(ref.elemName);
+		                    };
+		            };
+
 		            if (objRef) {
 		                ref.guidInstanceElem = objRef.getGuid();
+		                if (!ref.guidElem)
+		                    ref.guidElem = objRef.parseGuid(ref.guidInstanceElem).guid;
 		                ref.objRef = objRef;
 		            } else
 		                // Restore initial state
@@ -520,6 +613,7 @@ define(
 		        var root = this.getRoot(obj.getRoot().getGuid());
 
 		        this._clearSingleObjRefs(obj);
+		        //this.clearObjRefs(obj);//!!! РАЗОБРАТЬСЯ: Это правильная строчка, но движок с ней падает
 
 		        // TODO проверить не корневой ли объект - и тогда тоже удалить его со всей обработкой
 		        this.event.fire({

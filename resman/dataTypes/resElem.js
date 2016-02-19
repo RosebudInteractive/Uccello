@@ -46,7 +46,8 @@ define(
                         this._collection.on(this._collection_p_handler);
                     }
                     else
-                        throw new Error("Resource of resource element \"" + this.resElemName() + "\" is undefined or has wrong type.");
+                        //throw new Error("Resource of resource element \"" + this.resElemName() + "\" is undefined or has wrong type.");
+                        console.warn("Resource of resource element \"" + this.resElemName() + "\" is undefined or has wrong type.");
 
                 };
             },

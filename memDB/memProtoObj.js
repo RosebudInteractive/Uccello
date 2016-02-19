@@ -117,6 +117,7 @@ define(
 				        target: this.getDB(),
 				        obj: this
 				    });
+				this.getDB().afterObjectFinalized(this);  // уведомить свою базу данных
 			},
 			
 			// Добавляем логгер
