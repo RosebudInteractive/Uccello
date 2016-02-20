@@ -87,7 +87,7 @@ function convertControl(control, resName) {
     if (cols) {
         for (var colName in cols) {
             var collection = cols[colName];
-            for (var i = 0; i < collection.length; i++) {
+            for (var i in collection) {
                 resName = convertControl(collection[i], resName);
             }
         }
