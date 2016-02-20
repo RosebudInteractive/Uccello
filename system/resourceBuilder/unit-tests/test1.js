@@ -68,6 +68,8 @@ var rmdirAsync = function(path, callback) {
     });
 };
 
+var correctConfig = UCCELLO_CONFIG;
+
 before(function() {
     Main.Config.init();
 });
@@ -175,6 +177,10 @@ describe('#init', function(){
 });
 
 describe('#Static method prepareFiles', function() {
+    before(function(){
+        UCCELLO_CONFIG = correctConfig;
+    });
+
     beforeEach(function(done){
         if (fs.existsSync(UCCELLO_CONFIG.resourceBuilder.destDir)) {
             rmdirAsync(UCCELLO_CONFIG.resourceBuilder.destDir, done);
