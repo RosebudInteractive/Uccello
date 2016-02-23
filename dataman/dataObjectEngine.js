@@ -170,10 +170,25 @@ define(
                 return result;
             },
 
-            saveSchemaToFile: function (dir, schema_name) {
+            saveSchemaToFile: function (dir, schema_name, entity_name) {
                 var fs = require('fs');
                 var path = require('path');
-                var models = this.getSchema(schema_name) ? this.getSchema(schema_name).models() : null;
+                var method;
+                switch (entity_name) {
+                    case "model":
+                        method = "models";
+                        break;
+                    case "objectTree":
+                        method = "objectTrees";
+                        break;
+                    default:
+                        if (!entity_name)
+                            method = "models"
+                        else
+                            throw new Error("Entity \"" + entity_name + "\" isn't supported!");
+                        break;
+                }
+                var models = this.getSchema(schema_name) ? this.getSchema(schema_name)[method].apply(this.getSchema(schema_name)) : null;
                 if (!models)
                     throw new Error("Schema \"" + schema_name + "\" doesn't exist.");
 

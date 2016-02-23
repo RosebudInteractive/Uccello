@@ -88,6 +88,14 @@ define(
                 return result;
             },
 
+            objectTrees: function () {
+                var result = [];
+                var keys = Object.keys(this._treesByName);
+                for (var i = 0; i < keys.length; i++)
+                    result.push(this._treesByName[keys[i]].objTree);
+                return result;
+            },
+
             router: function (aRouter) {
                 if (aRouter) {
                     this._router = aRouter;
