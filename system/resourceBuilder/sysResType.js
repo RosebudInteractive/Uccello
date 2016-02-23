@@ -45,7 +45,7 @@ define([UCCELLO_CONFIG.uccelloPath + 'system/utils', './metaInfo'],
                                 "Code": resType.Code,
                                 "Name" : resType.Name,
                                 "ClassName" : resType.ClassName,
-                                "ResTypeGuid": resType.Guid,
+                                "ResTypeGuid": UCCELLO_CONFIG.classGuids[resType.ClassName],
                                 "Description": resType.Description
                             },
                             "collections": {}
