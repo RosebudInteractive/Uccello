@@ -110,7 +110,7 @@ define(
 					};					
 					function gr() {
 						p.cm.tranStart();
-						p.cm.getRoots(params.formGuids, { rtype: "res"  }, cb3);
+						p.cm.getRoots(params.formGuids, { rtype: "res", depth: 1  }, cb3);
 					};
 					if (onServer) gr();
 					else p.cm.userEventHandler(p.cm,gr, []); //cm2.userEventHandler(cm2,cm2.getRoots, [params.formGuids, { rtype: "res"  },cb3]);
@@ -131,7 +131,7 @@ define(
 						if (forms == null) forms = "all";
 						else if (forms == "") forms = [];
 						//var cm2 = that.getContextCM();
-						p.cm.userEventHandler(p.cm,p.cm.getRoots, [forms, { rtype: "res"  },cb2]);
+						p.cm.userEventHandler(p.cm, p.cm.getRoots, [forms, { rtype: "res", depth: 1 }, cb2]);
 					},this.pvt.proxyServer);
 
 				}
@@ -276,8 +276,9 @@ define(
 			allDataInit: function() {
 				var roots = this.pvt.cm.getRootGuids("res");
 				for (var i=0; i<roots.length; i++) {
-					var root = this.pvt.cm.get(roots[i]).getForm();
-					this.pvt.cm.allDataInit(root);
+				    var root = this.pvt.cm.get(roots[i]);
+				    if (root.isInstanceOf(UCCELLO_CONFIG.classGuids.ResForm))
+				        this.pvt.cm.allDataInit(root.getForm());
 				}				
 			},
 
@@ -291,11 +292,12 @@ define(
 			    //if (DEBUG) console.log("%c RENDER FORMS " + pd, 'color: green');
 				for (var i=0; i<roots.length; i++) {
 					var root = this.pvt.cm.get(roots[i]);
-					if (this.pvt.renderRoot)
-						var renderItem = this.pvt.renderRoot(roots[i]);
-					else renderItem = null;
-					if (root)
-						this.pvt.cm.render(root.getForm(),renderItem);
+					if (root && root.isInstanceOf(UCCELLO_CONFIG.classGuids.ResForm)) {
+					    if (this.pvt.renderRoot)
+					        var renderItem = this.pvt.renderRoot(roots[i]);
+					    else renderItem = null;
+					    this.pvt.cm.render(root.getForm(), renderItem);
+					};
 				}
 				this.getContextCM().resetModifLog();
 			},

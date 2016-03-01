@@ -31,7 +31,24 @@ define(
 
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
-            }
+            },
+
+            _getReqElem: function () {
+                var result = UccelloClass.super.apply(this, []);
+
+                var parentField;
+                if (this.fieldRef())
+                    parentField = this.fieldRef().name();
+                else
+                    parentField = this.getSerialized("FieldRef").elemName;
+                if (parentField)
+                    result.parentField = parentField;
+
+                if (this.alias())
+                    result.alias = this.alias();
+
+                return result;
+            },
 
         });
         return MetaObjTreeElem;

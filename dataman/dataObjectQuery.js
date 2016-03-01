@@ -62,6 +62,7 @@ define(
                 var self = this;
                 return new Promise(function (resolve, reject) {
                     var sql = self._query_gen.selectQuery(request, predicate);
+                    self._engine.releasePredicate(predicate);
                     resolve(self._runQuery(sql, options).then(function (result) {
                             //console.log(JSON.stringify(result));
                             return result;
@@ -75,6 +76,7 @@ define(
                 return new Promise(function (resolve, reject) {
                     var updOptions = _.cloneDeep(options && options.updOptions ? options.updOptions : {});
                     var sql = self._query_gen.updateQuery(model, values, predicate, updOptions);
+                    self._engine.releasePredicate(predicate);
                     resolve(self._runQuery(sql, options).then(function (result) {
                             //console.log(JSON.stringify(result));
                             return result;

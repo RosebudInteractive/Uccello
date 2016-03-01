@@ -8,9 +8,9 @@
  * @module MemDataBase
  */
 define(
-	["../system/event", "../system/utils", "./memCol", "./memObj", "./memMetaRoot", "./memMetaObj",
+	["../system/event", "../system/utils", "./memProtoObj", "./memCol", "./memObj", "./memMetaRoot", "./memMetaObj",
         "./memMetaObjFields", "./memMetaObjCols", "../metaData/metaDataMgr"],
-	function (Event, Utils, MemCollection, MemObj, MemMetaRoot, MemMetaObj, MemMetaObjFields, MemMetaObjCols, MetaDataMgr) {
+	function (Event, Utils, MemProtoObj, MemCollection, MemObj, MemMetaRoot, MemMetaObj, MemMetaObjFields, MemMetaObjCols, MetaDataMgr) {
 
 
 		var metaObjFieldsGuid =  UCCELLO_CONFIG.guids.metaObjFieldsGuid;
@@ -616,8 +616,8 @@ define(
 		    onDeleteObject: function (obj) {
 		        var root = this.getRoot(obj.getRoot().getGuid());
 
-		        this._clearSingleObjRefs(obj);
-		        //this.clearObjRefs(obj);//!!! РАЗОБРАТЬСЯ: Это правильная строчка, но движок с ней падает
+		        //this._clearSingleObjRefs(obj);
+		        this.clearObjRefs(obj);//!!! РАЗОБРАТЬСЯ: Это правильная строчка, но движок с ней падает
 
 		        // TODO проверить не корневой ли объект - и тогда тоже удалить его со всей обработкой
 		        this.event.fire({
@@ -955,8 +955,13 @@ define(
 		            if ((this.parseGuid(sobj.$sys.guid).rootId != -1)
                             || keep_guid) {
 		                var currObj = this.getObj(sobj.$sys.guid);
-		                if (currObj)
+		                if (currObj) {
+                            // Удаляем "старый" объект из коллекции
+		                    var col = currObj.getParentCol();
+		                    if (col)
+		                        col._del(currObj);
 		                    this.clearObjRefs(currObj);
+		                };
 		            }
 		        };
 
@@ -972,6 +977,7 @@ define(
 
 		        this.resolveAllRefs();
 		        res.getLog().setActive(true);
+
 		        return res;
 		    },
 
@@ -1952,7 +1958,101 @@ define(
              */
 		    getMetaDataMgrConstructor: function () {
 		        return MetaDataMgr;
-		    }
+		    },
+
+		    /**
+             * Возвращает конструктор MetaDataMgr
+             * 
+             */
+		    getUnresolvedRefs: function (objects) {
+		        var uRefsByGuid = {};
+		        var uRefsByName = uRefsByGuid;
+
+		        var self = this;
+		        objects.forEach(function (root) {
+		            self._iterateChilds(root, true, function (obj, lvl) {
+		                var objRefs = self.pvt.refTo[obj.getGuid()];
+		                if (objRefs) {
+		                    var keys = Object.keys(objRefs);
+		                    keys.forEach(function (key) {
+		                        var link = objRefs[key];
+		                        if ((!link.val.objRef) && link.val.is_external) {
+		                            // Неразрешенная внешняя ссылка
+		                            var ref = {
+		                                guidRes: link.val.guidRes,
+		                                resName: link.val.resName,
+		                                resType: link.type.resType()
+		                            };
+		                            var oldRefByGuid = uRefsByGuid[ref.guidRes];
+		                            if (oldRefByGuid) {
+		                                if (oldRefByGuid.resName && ref.resName && (oldRefByGuid.resName !== ref.resName))
+		                                    throw new Error("Different names (\"" + oldRefByGuid.resName + "\" and \"" +
+                                                ref.resName + "\") of resource \"" + ref.guidRes + "\" are not allowed.");
+		                                if ((!oldRefByGuid.resName) && ref.resName) {
+		                                    oldRefByGuid.resName = ref.resName;
+		                                };
+		                            }
+		                            else {
+		                                if (ref.guidRes)
+		                                    uRefsByGuid[ref.guidRes] = ref;
+		                            };
+		                            if (ref.resName)
+		                                if (ref.guidRes)
+		                                    delete uRefsByName[ref.resName + "_" + ref.resType];
+		                                else
+		                                    uRefsByName[ref.resName + "_" + ref.resType] = ref;
+                                };
+		                    });
+		                };
+		            });
+		        });
+
+		        var result = [];
+		        Object.keys(uRefsByGuid).forEach(function (key) {
+		            result.push(uRefsByGuid[key]);
+		        });
+
+		        return result;
+		    },
+
+		    /**
+             * Совершает обход дерева объектов
+             * @param {Object | String} obj         Корневой объект (может быть задан своим GUID)
+             * @param {Boolean}         isRootFirst Если true, то сначала обходятся корневые элементы
+             * @param {Function}        proc        Процедура, вызываемая для каждого узла дерева
+             *                                        параметры: узел и текущий уровень (целое число, начальный уровень=0).
+             */
+		    _iterateChilds: function (obj, isRootFirst, proc) {
+
+		        function iterate_childs(obj, isRootFirst, lvl, proc) {
+		            if (typeof (proc) === "function") {
+		                if (isRootFirst)
+		                    proc(obj, lvl);
+		                for (var i = 0; i < obj.countCol() ; i++) {
+		                    var childCol = obj.getCol(i);
+		                    for (var j = 0; j < childCol.count() ; j++) {
+		                        var child = childCol.get(j);
+		                        iterate_childs(child, isRootFirst, lvl + 1, proc);
+		                    };
+		                };
+		                if (!isRootFirst)
+		                    proc(obj, lvl);
+		            };
+		        };
+
+		        var curr_obj = null;
+		        if (obj instanceof MemProtoObj) {
+		            curr_obj = obj;
+		        }
+		        else
+		            if (typeof (obj) === "string") {
+		                curr_obj = this.getObj(obj);
+		            };
+
+		        if (curr_obj)
+		            iterate_childs(curr_obj, isRootFirst, 0, proc);
+
+		    },
 
 		});
 		return MemDataBase;

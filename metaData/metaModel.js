@@ -79,7 +79,7 @@ define(
                     this._dataObjectType = this.getDB().getObj(DataObject.prototype.classGuid);
 
                     if (!this.getDB()._metaDataMgr)
-                        new this.getDB().getMetaDataMgrConstructor(this.getDB(), {});
+                        new (this.getDB().getMetaDataMgrConstructor())(this.getDB(), {});
                 };
             },
 

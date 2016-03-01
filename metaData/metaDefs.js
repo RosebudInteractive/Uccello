@@ -28,6 +28,12 @@ define(
                 Pending: 4,
                 Unknown: 5
             },
+            ReqLevel: {
+                All: 0,
+                CurrentOnly: 1,
+                CurrentAndChilds: 2,
+                CurrentAndEmptyChilds: 3
+            }
         };
 
         Meta.stateToString = function (state) {

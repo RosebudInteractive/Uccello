@@ -20,7 +20,7 @@ define(
 
 
 	        // добавить объект в коллекцию
-	        _add: function (obj) {
+	        _add: function (obj, index) {
 
 	            this.fire({
 	                type: "beforeAdd",
@@ -28,9 +28,24 @@ define(
 	                obj: obj
 	            });
 
-	            this._elems.push(obj);
+	            if (typeof (index) === "number") {
+	                if ((index >= 0) && (index <= this._elems.length)) {
+	                    for(var guid in this._guidIndex)
+	                        if(this._guidIndex[guid] >= index)
+	                            this._guidIndex[guid]++;
+                        
+	                    this._elems.splice(index, 0, obj);
+	                    this._guidIndex[obj.getGuid()] = index;
 
-				this._guidIndex[obj.getGuid()] = this._elems.length - 1;
+                    }
+	                else
+	                    throw new Error("MemCol::_add: Invalid \"index\" parameter: " +
+                            index + ". Allowed range: [0.." + this._elems.length + "].");
+	            }
+	            else {
+	                this._elems.push(obj);
+	                this._guidIndex[obj.getGuid()] = this._elems.length - 1;
+	            };
 
 	            if (this._obj.getLog().getActive()) {
 	                var mg = (obj.getParent() ? obj.getParent().getGuid() : "");
@@ -64,9 +79,10 @@ define(
 
 	        _del: function (obj) {
 	            // TODO временный вариант - необходимо будет сделать нормально как можно быстрее
+	            var result;
 	            for (var i = 0; i < this._elems.length; i++) {
 	                if (this._elems[i] == obj) {
-
+	                    result = i;
 	                    this.fire({
 	                        type: "beforeDel",
 	                        target: this,
@@ -101,7 +117,7 @@ define(
 	                    });
 
 						delete this._guidIndex[obj.getGuid()];
-	                    return;
+	                    return result;
 	                }
 	            }
 	        },

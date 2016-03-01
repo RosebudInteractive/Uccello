@@ -33,6 +33,9 @@ define(
 
 				pvt.$rootId = -1;
 
+				if (flds && flds.$sys && flds.$sys.$collection_index)
+				    pvt.$collection_index = flds.$sys.$collection_index;
+
 				if (!parent.obj) {	// корневой объект
 					pvt.col = null;
 					pvt.db = parent.db;
@@ -88,11 +91,15 @@ define(
 					// 20/4 - не факт, что это правильно, пока оставляем в комментах..
 					//if ((parent.mode == "RW") && (!parent.nolog) && (!pvt.db.isMaster())) // не мастер, то активируем, для мастера - на 1й подписке
 					//	pvt.log.setActive(true); // лог активен только для корневого объекта, который создан в режиме ReadWrite
-					// ## перенес на 3 строки ниже, чтобы лог уже существовал
+				    // ## перенес на 3 строки ниже, чтобы лог уже существовал
+					var root_type = "res";
 					if (!objType || this.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot))
-						pvt.db._addRoot(this,{ type: "data", mode: parent.mode});
-					else 
-						pvt.db._addRoot(this,{ type: "res", mode: parent.mode});
+					    root_type = "data";
+					else
+					    if (this.isInstanceOf(UCCELLO_CONFIG.classGuids.Resource))
+					        root_type = "res";
+
+					pvt.db._addRoot(this, { type: root_type, mode: parent.mode });
 				}
 
 				this.getDB()._addObj(this);
@@ -109,7 +116,7 @@ define(
 		    // завершение инициализации (вызывается из наследников)
 			finit: function() {
 				if (this.pvt.col)
-					this.pvt.col._add(this);
+				    this.pvt.col._add(this, this.pvt.$collection_index);
 				//this.pvt.state = 1;
 				if (!this.getParent())
 				    this.getDB().event.fire({

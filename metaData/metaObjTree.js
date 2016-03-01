@@ -37,7 +37,7 @@ define(
                     });
 
                     if (!this.getDB()._metaDataMgr)
-                        new this.getDB().getMetaDataMgrConstructor(this.getDB(), {});
+                        new (this.getDB().getMetaDataMgrConstructor())(this.getDB(), {});
                 };
             },
 

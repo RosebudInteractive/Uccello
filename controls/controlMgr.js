@@ -348,19 +348,98 @@ define(
 			// params.rtype = "res" | "data"
 			// params.compcb - только в случае ресурсов (может использоваться дефолтный)
 			// params.expr - выражение для данных
-			getRoots: function(rootGuids,params, cb) {			
+			getRoots: function(rootGuids, params, cb) {			
 				var that = this;
 				if (this.isMaster()) {
+
+				    var isDataSubTreeReload = params.path && (params.rtype == "data");
 
 					var icb = function(r) {
 
 						var objArr = r ? r.datas : null;
 
 						function localCallback() {
-							var res = that.addRoots(objArr, params, rg, rgsubs);							
-							if (cb) {
-							    cb({ guids: res });
-							}
+						    var res = [];
+						    if (isDataSubTreeReload) {
+						        // Перезагрузка поддерева данных
+                                //
+						        that.getController().genDeltas(that.getGuid());		// рассылаем дельты
+
+						        var parent = that.getObj(params.path.parent);
+						        if (!parent)
+						            throw new Error("Parent \"" + params.path.parent + "\" for data subtree load request doesn't exist.");
+
+						        curr_obj = that.getObj(params.path.dataRoot);
+						        // Удаляем поддерево
+						        var index;
+						        if (curr_obj) {
+						            var col = curr_obj.getParentCol();
+						            if (col)
+						                index = col._del(curr_obj);
+						        };
+						        // Вставляем поддерево
+						        if (typeof (index) === "number") {
+						            if (!objArr[0].$sys)
+						                objArr[0].$sys = {};
+						            objArr[0].$sys.$collection_index = index;
+						        };
+						        var resObj = that.deserialize(objArr[0],
+                                    {
+                                        obj: parent,
+                                        colName: params.path.parentColName
+                                    }, that.getDefaultCompCallback(), false, params.path.dataRoot);
+
+						        // Логгируем добавление поддерева
+						        var mg = parent.getGuid();
+						        var newObj = objArr[0];
+						        var o = { adObj: newObj, obj: resObj, colName: params.path.parentColName, guid: mg, type: "add" };
+						        parent.getLog().add(o);
+						        parent.logColModif("add", params.path.parentColName, resObj);
+
+						        res.push(resObj.getGuid());
+						    }
+						    else
+						        res = that.addRoots(objArr, params, rg, rgsubs);
+
+						    if (!params.orig)
+						        params.orig = res; // Сохраняем ответ на исходный запрос
+
+						    var needToLoad = [];
+
+						    if ((params.rtype == "res") &&
+                                (typeof (params.depth) === "number") && (params.depth > 0)) {
+
+						        // Вычисление списка загружаемых ресурсов,
+                                //   те на которые идет подписка нас не интересуют
+						        var loadedRes = [];
+						        var subsRes = {};
+						        rgsubs.forEach(function (guid) {
+						            subsRes[guid] = true;
+						        });
+						        res.forEach(function (guid) {
+						            if (!subsRes[guid])
+						                loadedRes.push(guid);
+						        });
+
+                                // Получаем список недостающих ресурсов
+						        var uRefs = [];
+						        uRefs = that.getUnresolvedRefs(loadedRes);
+                                // Пока умеем грузить ресурсы только по GUID
+						        uRefs.forEach(function (elem) {
+						            if (elem.guidRes)
+						                needToLoad.push(elem.guidRes);
+						        });
+						        params.depth--; // Уменьшаем глубину отслеживаемых связей
+						    };
+
+						    if (needToLoad.length > 0) {
+                                // Если есть зависимости - загружаем их.
+						        that.getRoots(needToLoad, params, cb);
+						    }
+						    else
+						        if (cb) {
+						            cb({ guids: params.orig }); // Отправляем ответ на исходный запрос
+						        };
 						};
 
 						if (cb) {
@@ -381,19 +460,25 @@ define(
 					// если есть - то просто возвращать его, а не загружать заново. Если нет, тогда грузить.
 					var rg = []; // эти загрузить
 					var rgsubs = []; // а на эти просто подписать
-					rootGuids = this.getRootGuids(rootGuids);
-					
-					// Всегда добавляем новые - проверка существования не имеет смысла, мы говорим о гуидах прототипов
-					for (var i=0; i<rootGuids.length; i++) {
-						if (rootGuids[i].length > 36) { // instance Guid
-							var cr = this.getRoot(rootGuids[i]); 
-							if (params.refresh || (cr && (params.expr && params.expr != cr.hash)))
-									rg.push(rootGuids[i]);
-							else rgsubs.push(rootGuids[i]);
-						}
-						else rg.push(rootGuids[i]); // если resourceGuid			
+
+					if (isDataSubTreeReload) {
+					    rg.push(rootGuids[0]);
 					}
-				
+					else {
+					    rootGuids = this.getRootGuids(rootGuids);
+
+					    // Всегда добавляем новые - проверка существования не имеет смысла, мы говорим о гуидах прототипов
+					    for (var i = 0; i < rootGuids.length; i++) {
+					        if (rootGuids[i].length > 36) { // instance Guid
+					            var cr = this.getRoot(rootGuids[i]);
+					            if (params.refresh || (cr && (params.expr && params.expr != cr.hash)))
+					                rg.push(rootGuids[i]);
+					            else rgsubs.push(rootGuids[i]);
+					        }
+					        else rg.push(rootGuids[i]); // если resourceGuid			
+					    }
+					};
+
 					if (rg.length>0) {
 						if (params.rtype == "res") {
 							// TODO 10 ИСПРАВИТЬ ДЛЯ КК

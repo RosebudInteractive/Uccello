@@ -141,6 +141,12 @@ define(
                         var cm = that.getContextCM();
 						
                         cm.userEventHandler(that, function () {  that.getContext().allDataInit(); });
+                    },
+
+                    r2: function (fun) {
+                        var cm = that.getContextCM();
+
+                        cm.userEventHandler(that, fun);
                     }
                 };
             },
