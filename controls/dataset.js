@@ -59,6 +59,7 @@ define(
                 this._predicate = null;
                 this._isWaitingForData = false;
                 this._isRootSwitched = false;
+                this._moveCursorEnabled = true;
 
                 if (this.get("OnMoveCursor"))
                     /*jshint evil: true */
@@ -107,6 +108,9 @@ define(
                     }
                     else
                         this.pvt.dataObj = null;
+
+                    if (DEBUG)
+                        console.warn("### WARNING: \"" + this.name() + "\" fires \"switchRoot\" in method \"_switchRoot\".");
                     this.event.fire({ type: 'switchRoot', target: this });
                 }
             },
@@ -141,12 +145,18 @@ define(
 
                 if (!this.active()) return;
 
-                if (this._isWaitingForData)
+                if (this._isWaitingForData) {
+                    if (DEBUG)
+                        console.warn("### WARNING: \"" + this.name() + "\" receives \"_dataInit\" request while it's waiting for data.");
                     return;
+                };
 
                 var that = this;
 
                 function icb(res) {
+                    if (DEBUG)
+                        console.warn("### WARNING: \"" + this.name() + "\" receives data.");
+
                     var dataRoot = that.getDB().getObj(res.guids[0]);
                     if (dataRoot)
                         that.root(dataRoot);
@@ -218,6 +228,8 @@ define(
                                 }
                                 else {
                                     // Родительский DataSet пустой!
+                                    this._isRootSwitched = true;
+                                    this.root(null);
                                     this._initCursor(true);
                                     needToQuery = false;
                                     //throw new Error("Dataset::_dataInit: Undefined \"CurrentDataObject\"!");
@@ -232,6 +244,8 @@ define(
 
                         if (needToQuery) {
                             this._isWaitingForData = true;
+                            if (DEBUG)
+                                console.warn("### WARNING: \"" + this.name() + "\" requests data.");
                             this.dataLoad([rgp], params, icb);
                         };
                     }
@@ -242,6 +256,9 @@ define(
             // forceRefresh - возбудить событие даже если курсор "не двигался" - это нужно для случая загрузки данных
             _initCursor: function (forceRefresh) {
                 var dataRoot = this.root();
+                if (forceRefresh)
+                    this._moveCursorEnabled = false;
+
                 if (dataRoot) {
                     var col = dataRoot.getCol("DataElements");
                     if (!dataRoot.getCol("DataElements").getObjById(this.cursor())) {
@@ -251,9 +268,15 @@ define(
                     else {
                         this._setDataObj(this.cursor());
                         //if (forceRefresh) this.event.fire({type: 'refreshData', target: this });
-                    }
-                    if (forceRefresh) this.event.fire({ type: 'refreshData', target: this });
+                    };
                 };
+
+                if (forceRefresh) {
+                    if (DEBUG)
+                        console.warn("### WARNING: \"" + this.name() + "\" fires \"refreshData\" in method \"_initCursor\".");
+                    this._moveCursorEnabled = true;
+                    this.event.fire({ type: 'refreshData', target: this });
+                }
             },
 
             getField: function (name) {
@@ -330,10 +353,15 @@ define(
                     this._setDataObj(value);
                     if ("onMoveCursor" in this) this.onMoveCursor(newVal);
 
-                    this.event.fire({
-                        type: 'moveCursor',
-                        target: this
-                    });
+                    if (this._moveCursorEnabled) {
+                        if (DEBUG)
+                            console.warn("### WARNING: \"" + this.name() + "\" fires \"moveCursor\" in method \"cursor\".");
+
+                        this.event.fire({
+                            type: 'moveCursor',
+                            target: this
+                        });
+                    }
                 }
 
                 return newVal;
@@ -492,6 +520,8 @@ define(
                         result = { result: "ERROR", message: "Data Object \"" + params.path.dataRoot + "\" doesn't longer exist!" };
                     else
                         self._setDataObj(self.cursor());
+                    if (DEBUG)
+                        console.warn("### WARNING: \"" + self.name() + "\" fires \"switchRoot\" in method \"_reloadObject\".");
                     self.event.fire({ type: 'switchRoot', target: self });
                     if (cb) {
                         cb(result);

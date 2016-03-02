@@ -206,7 +206,8 @@ define(
                         done(result);
                     })
                     .catch(function (err) {
-                        throw err;
+                        console.error("###ERROR: " + err.message);
+                        done({});
                     });
                 } else
                     done({});
