@@ -32,7 +32,8 @@ define(
                 All: 0,
                 CurrentOnly: 1,
                 CurrentAndChilds: 2,
-                CurrentAndEmptyChilds: 3
+                CurrentAndEmptyChilds: 3,
+                AllAndEmptyChilds: 4
             }
         };
 

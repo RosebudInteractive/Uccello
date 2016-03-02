@@ -66,16 +66,18 @@ define(
             makeRequest: function (type) {
                 var result = this._getReqElem();
 
-                if (type === Meta.ReqLevel.All) {
-                    function make_all(curr_res, elem) {
+                if ((type === Meta.ReqLevel.All) || (type === Meta.ReqLevel.AllAndEmptyChilds)) {
+                    function make_all(curr_res, elem, is_childs_empty) {
                         for (var i = 0; i < elem._childsCol.count() ; i++) {
                             var cur_elem = elem._childsCol.get(i);
                             var req_elem = cur_elem._getReqElem();
-                            make_all(req_elem, cur_elem);
+                            if (is_childs_empty)
+                                req_elem.isStub = true;
+                            make_all(req_elem, cur_elem, is_childs_empty);
                             curr_res.childs.push({ dataObject: req_elem });
                         };
                     };
-                    make_all(result, this);
+                    make_all(result, this, type === Meta.ReqLevel.AllAndEmptyChilds);
                 }
                 else {
                     if (type !== Meta.ReqLevel.CurrentOnly) {

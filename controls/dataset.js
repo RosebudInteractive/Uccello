@@ -184,7 +184,7 @@ define(
                             if (!this.objectTree())
                                 throw new Error("Dataset::_dataInit: Undefined \"ObjectTree\" reference!");
 
-                            params.expr = { model: this.objectTree().makeRequest(Meta.ReqLevel.CurrentAndEmptyChilds) };
+                            params.expr = { model: this.objectTree().makeRequest(Meta.ReqLevel.AllAndEmptyChilds) };
 
                             if (master) {
                                 var currObj = master.getCurrentDataObject();
