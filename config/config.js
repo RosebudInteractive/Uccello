@@ -91,7 +91,9 @@ define([], function () {
             { className: 'TreeViewItem', isUccello: true, component: 'controls/treeViewItem', viewset: false, metaType: ['content'] },
             { className: 'TreeView', isUccello: true, component: 'controls/treeView', viewset: false, metaType: ['content'] },
             { className: 'DbTreeViewItemType', isUccello: true, component: 'controls/dbTreeViewItemType', viewset: false, metaType: ['content'] },
-            { className: 'DbTreeView', isUccello: true, component: 'controls/dbTreeView', viewset: false, metaType: ['content'] }
+            { className: 'DbTreeView', isUccello: true, component: 'controls/dbTreeView', viewset: false, metaType: ['content'] },
+            { className: 'Layout', isUccello: true, component: 'controls/layout', viewset: false, metaType: ['content'] },
+            { className: 'AdaptiveContainer', isUccello: true, component: 'controls/adaptiveContainer', viewset: false, metaType: ['content'] }
         ],
 
         // остальные гуиды
@@ -191,7 +193,9 @@ define([], function () {
             'TreeView': '35400d0c-5465-00e8-c770-a1b04b4b8180',
             'TreeViewItem': '16eb3a02-7f2a-3001-096a-14c1b38586db',
             'DbTreeView': 'f91349d1-2254-cc67-07b3-792674725650',
-            'DbTreeViewItemType': '024cdaa7-9e63-5cb1-65a1-caaec6b93140'
+            'DbTreeViewItemType': '024cdaa7-9e63-5cb1-65a1-caaec6b93140',
+            'Layout': "8475e73d-06aa-4454-b02f-cf26a9cbabb6",
+            'AdaptiveContainer': "d889ec6c-8083-4e53-815f-c135b1cab573",
         },
 
         REMOTE_RESULT: "XXX",
