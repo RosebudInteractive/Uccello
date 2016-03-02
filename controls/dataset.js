@@ -155,7 +155,7 @@ define(
 
                 function icb(res) {
                     if (DEBUG)
-                        console.warn("### WARNING: \"" + this.name() + "\" receives data.");
+                        console.warn("### WARNING: \"" + that.name() + "\" receives data.");
 
                     var dataRoot = that.getDB().getObj(res.guids[0]);
                     if (dataRoot)
