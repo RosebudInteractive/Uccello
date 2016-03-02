@@ -33,7 +33,7 @@ define(
 
 				pvt.$rootId = -1;
 
-				if (flds && flds.$sys && flds.$sys.$collection_index)
+				if (flds && flds.$sys && (typeof (flds.$sys.$collection_index) === "number"))
 				    pvt.$collection_index = flds.$sys.$collection_index;
 
 				if (!parent.obj) {	// корневой объект

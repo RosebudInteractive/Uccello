@@ -731,18 +731,20 @@ define(
 
             addObject: function (flds, cb) {
 
-                function addObjectCallback(objGuid) {
+                var self = this;
 
-                    //this.event.fire({ // TODO другое событие сделать
-                    //    type: 'modFld',
-                    //    target: this
-                    //});
+                function addObjectCallback(result) {
+
                     if (DEBUG)
-                        console.log("### addObjectCallback: " + JSON.stringify(objGuid));
+                        console.log("### addObjectCallback: " + JSON.stringify(result));
+
+                    if (result && (result.result === "OK") && result.keyValue) {
+                        self.cursor(result.keyValue);
+                    };
 
                     if (cb)
                         setTimeout(function () {
-                            cb(objGuid);
+                            cb(result);
                         }, 0);
                 };
 
