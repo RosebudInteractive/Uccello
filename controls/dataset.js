@@ -59,7 +59,8 @@ define(
                 this._predicate = null;
                 this._isWaitingForData = false;
                 this._isRootSwitched = false;
-                this._moveCursorEnabled = true;
+                this._moveCursorEventEnabled = true;
+                this._isParentChangingState = false;
 
                 if (this.get("OnMoveCursor"))
                     /*jshint evil: true */
@@ -89,12 +90,12 @@ define(
                     master.event.on({
                         type: 'beforeStateChange',
                         subscriber: this,
-                        callback: function (args) { this._propagateEvent(args); }
+                        callback: function (args) { this._propagateChangeStateEvent(args); }
                     });
                     master.event.on({
                         type: 'afterStateChange',
                         subscriber: this,
-                        callback: function (args) { this._propagateEvent(args); }
+                        callback: function (args) { this._propagateChangeStateEvent(args); }
                     });
                 }
             },
@@ -154,6 +155,13 @@ define(
             _dataInit: function (onlyMaster) {
 
                 if (!this.active()) return;
+
+                if (this._isParentChangingState)
+                {
+                    if (DEBUG)
+                        console.warn("### WARNING: \"" + this.name() + "\" receives \"_dataInit\" request while parent is changing STATE.");
+                    return;
+                };
 
                 if (this._isWaitingForData) {
                     if (DEBUG)
@@ -267,7 +275,7 @@ define(
             _initCursor: function (forceRefresh) {
                 var dataRoot = this.root();
                 if (forceRefresh)
-                    this._moveCursorEnabled = false;
+                    this._moveCursorEventEnabled = false;
 
                 if (dataRoot) {
                     var col = dataRoot.getCol("DataElements");
@@ -284,7 +292,7 @@ define(
                 if (forceRefresh) {
                     if (DEBUG)
                         console.warn("### WARNING: \"" + this.name() + "\" fires \"refreshData\" in method \"_initCursor\".");
-                    this._moveCursorEnabled = true;
+                    this._moveCursorEventEnabled = true;
                     this.event.fire({ type: 'refreshData', target: this });
                 }
             },
@@ -363,7 +371,7 @@ define(
                     this._setDataObj(value);
                     if ("onMoveCursor" in this) this.onMoveCursor(newVal);
 
-                    if (this._moveCursorEnabled) {
+                    if (this._moveCursorEventEnabled) {
                         if (DEBUG)
                             console.warn("### WARNING: \"" + this.name() + "\" fires \"moveCursor\" in method \"cursor\".");
 
@@ -579,12 +587,13 @@ define(
                         cb(result);
             },
 
-            _propagateEvent: function (args) {
+            _propagateChangeStateEvent: function (args) {
                 var keys = Object.keys(args);
                 var out_args = {};
                 for (var i = 0; i < keys.length ; i++)
                     out_args[keys[i]] = args[keys[i]];
                 out_args.target = this;
+                this._isParentChangingState = args.type === 'beforeStateChange';
                 this.event.fire(out_args);
             },
 
