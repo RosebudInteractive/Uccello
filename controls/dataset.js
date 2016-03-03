@@ -86,6 +86,16 @@ define(
                         subscriber: this,
                         callback: function () { this._switchRoot(); }
                     });
+                    master.event.on({
+                        type: 'beforeStateChange',
+                        subscriber: this,
+                        callback: function (args) { this._propagateEvent(args); }
+                    });
+                    master.event.on({
+                        type: 'afterStateChange',
+                        subscriber: this,
+                        callback: function (args) { this._propagateEvent(args); }
+                    });
                 }
             },
 
@@ -567,6 +577,15 @@ define(
                 else
                     if (cb)
                         cb(result);
+            },
+
+            _propagateEvent: function (args) {
+                var keys = Object.keys(args);
+                var out_args = {};
+                for (var i = 0; i < keys.length ; i++)
+                    out_args[keys[i]] = args[keys[i]];
+                out_args.target = this;
+                this.event.fire(out_args);
             },
 
             // $u.r2(function(){$u.get("DatasetCompany").edit(function(){console.log("Done!")})});
