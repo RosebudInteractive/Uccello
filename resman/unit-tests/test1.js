@@ -28,6 +28,22 @@ before(function() {
     Main.Config.init();
 });
 
+describe('#loadRes', function(){
+    it('Загрузить смешанный массив', function(done){
+        var _resManger = Main.Config.ResManager;
+        var _guids = [
+            '4a4abdb4-3e3b-85a7-09b9-5f15b4b187f9',
+            {resType : '7f93991a-4da9-4892-79c2-35fe44e69083', resName : 'crm-edit'},
+            {resType : '7f93991a-4da9-4892-79c2-35fe44e69083', resName : 'crm-list'}
+        ];
+
+        _resManger.loadRes(_guids, function(result) {
+            result.datas.should.be.lengthOf(2);
+            done();
+        })
+    })
+});
+
 describe('#get functions', function() {
     before(function () {
         var _cmd = [

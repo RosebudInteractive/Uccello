@@ -48,6 +48,27 @@ define([
                 //}
             },
 
+            findByType: function(resType, resName) {
+                var that = this;
+                var _name = resName;
+                return new Promise(promiseBody);
+
+                function promiseBody(resolve, reject) {
+                    that.getListByType(resType).then(
+                        function(resources) {
+                            var _resource = resources.find(function(resource) {
+                               return resource.name == _name
+                            });
+                            if (!_resource) {
+                                reject(ResUtils.newObjectError('No such resource'))
+                            } else {
+                                resolve(_resource)
+                            }
+                        }
+                    );
+                }
+            },
+
             getListByType: function (typeGuid) {
                 var that = this;
                 return new Promise(promiseBody);

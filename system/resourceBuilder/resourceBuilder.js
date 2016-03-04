@@ -1,9 +1,11 @@
 /**
  * Created by staloverov on 02.02.2016.
  */
+'use strict';
+
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
+    //var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 var _instance = null;
@@ -59,8 +61,9 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
             }
         }
 
-        var Builder = UccelloClass.extend({
-            init : function() {
+        //var Builder = UccelloClass.extend({
+        var _class = class Builder{
+            constructor() {
                 this.checkOptions();
 
                 this.sourceDir = UCCELLO_CONFIG.resourceBuilder.sourceDir;
@@ -74,9 +77,9 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                 this.sysResType = new SysResType(UCCELLO_CONFIG.resourceBuilder.types);
 
                 this.canBuildData = true;
-            },
+            }
 
-            checkOptions : function() {
+            checkOptions() {
                 if (!UCCELLO_CONFIG.resourceBuilder) {
                     throw new Error('ResourceBuilder options not found')
                 }
@@ -101,9 +104,9 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                     throw new Error('ResourceBuilder : Resource types not found')
                 }
 
-            },
+            }
 
-            addResource: function (resource, resType) {
+            addResource(resource, resType) {
                 var that = this;
 
                 function newResourceRecord() {
@@ -132,9 +135,9 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                     _resource
                 );
                 return _resource.fields.Id
-            },
+            }
 
-            addResVer: function (resource, resId, resType) {
+            addResVer(resource, resId, resType) {
                 var _body = JSON.stringify(resource);
                 var md5sum = Crypto.createHash('md5');
                 md5sum.update(_body);
@@ -164,9 +167,9 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                 );
 
                 return _resVer.fields.Id
-            },
+            }
 
-            addBuildRes : function (resVerId) {
+            addBuildRes(resVerId) {
                 var that = this;
 
                 function newBuildResRecord() {
@@ -190,9 +193,9 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                 );
 
                 return _buildRes.fields.Id
-            },
+            }
 
-            createResources : function(fileList, resTypeCode){
+            createResources(fileList, resTypeCode){
                 var that = this;
 
                 return new Promise(function(resolve, reject){
@@ -215,9 +218,9 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                         resolve();
                     }
                 })
-            },
+            }
 
-            prepare : function() {
+            prepare(){
                 var that = this;
 
                 return new Promise(function (resolve, reject){
@@ -271,9 +274,9 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                         reject(new Error('Can not build resources'))
                     }
                 })
-            },
+            }
 
-            saveFiles : function(done) {
+            saveFiles (done) {
                 var _typesSaved = false;
                 var _resSaved = false;
                 var _verSaved = false;
@@ -313,27 +316,38 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                     checkDone()
                 });
             }
-        });
+
+            static prepareFiles(){
+                return new Promise(function(resolve, reject) {
+                    getInstance().prepare().then(resolve, reject);
+                })
+
+            };
+
+            static kill(){
+                _instance = null;
+            };
+        };
 
         function getInstance(){
             if (!_instance) {
-                _instance = new Builder();
+                _instance = new _class();
             }
 
             return _instance;
         }
 
-        Builder.prepareFiles = function(){
-            return new Promise(function(resolve, reject) {
-                getInstance().prepare().then(resolve, reject);
-            })
+        //Builder.prepareFiles = function(){
+        //    return new Promise(function(resolve, reject) {
+        //        getInstance().prepare().then(resolve, reject);
+        //    })
+        //
+        //};
+        //
+        //Builder.kill = function(){
+        //    _instance = null;
+        //};
 
-        };
-
-        Builder.kill = function(){
-            _instance = null;
-        };
-
-        return Builder;
+        return _class;
     }
 );
