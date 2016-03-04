@@ -196,68 +196,74 @@ define(
                         var rgp = rg;
                         if (rgi) rgp = rgi;
 
-                        var objTree = this.getSerialized("ObjectTree") ? this.getSerialized("ObjectTree") : undefined;
+                        // Если (dataRootGuid && onlyMaster) === true, то это означает, что у нас есть ссылка на инстанс рута данных на сервере
+                        //   и происходит начальная ициализация данных - в этом случае необходимо просто запросить рут данных,
+                        //   не делая запрос к БД.
+                        if (!(dataRootGuid && onlyMaster)) {
 
-                        if (objTree) {
-                            if (!this.objectTree())
-                                throw new Error("Dataset::_dataInit: Undefined \"ObjectTree\" reference!");
+                            var objTree = this.getSerialized("ObjectTree") ? this.getSerialized("ObjectTree") : undefined;
 
-                            params.expr = { model: this.objectTree().makeRequest(Meta.ReqLevel.AllAndEmptyChilds) };
+                            if (objTree) {
+                                if (!this.objectTree())
+                                    throw new Error("Dataset::_dataInit: Undefined \"ObjectTree\" reference!");
 
-                            if (master) {
-                                var currObj = master.getCurrentDataObject();
-                                if (currObj) {
-                                    var alias = this.objectTree().alias();
-                                    var dataRoot = currObj.getDataRoot(alias);
-                                    if (dataRoot) {
+                                params.expr = { model: this.objectTree().makeRequest(Meta.ReqLevel.AllAndEmptyChilds) };
 
-                                        if (master.getState() === Meta.State.Edit) {
-                                            this.root(dataRoot);
-                                            this._isRootSwitched = true;
-                                            this._initCursor(true);
-                                            needToQuery = false;
+                                if (master) {
+                                    var currObj = master.getCurrentDataObject();
+                                    if (currObj) {
+                                        var alias = this.objectTree().alias();
+                                        var dataRoot = currObj.getDataRoot(alias);
+                                        if (dataRoot) {
+
+                                            if (master.getState() === Meta.State.Edit) {
+                                                this.root(dataRoot);
+                                                this._isRootSwitched = true;
+                                                this._initCursor(true);
+                                                needToQuery = false;
+                                            }
+                                            else {
+
+                                                params.path = {
+                                                    globalRoot: dataRoot.getRoot().getGuid(),
+                                                    dataRoot: dataRoot.getGuid(),
+                                                    parent: dataRoot.getParent().getGuid(),
+                                                    parentColName: dataRoot.getColName()
+                                                };
+
+                                                var keyVal = master.getField(currObj._keyField);
+                                                var parentField = dataRoot.parentField();
+                                                if (!parentField)
+                                                    throw new Error("Dataset::_dataInit: \"" + alias + "\" Undefined \"ParentField\"!");
+
+                                                if (!this._predicate)
+                                                    this._predicate = new Predicate(this.getDB(), {});
+                                                this._predicate
+                                                    .addConditionWithClear({ field: parentField, op: "=", value: keyVal });
+
+                                                params.expr.predicate = this.getDB().serialize(this._predicate);
+                                                rgp = params.path.dataRoot;
+                                            }
+
                                         }
-                                        else {
-
-                                            params.path = {
-                                                globalRoot: dataRoot.getRoot().getGuid(),
-                                                dataRoot: dataRoot.getGuid(),
-                                                parent: dataRoot.getParent().getGuid(),
-                                                parentColName: dataRoot.getColName()
-                                            };
-
-                                            var keyVal = master.getField(currObj._keyField);
-                                            var parentField = dataRoot.parentField();
-                                            if (!parentField)
-                                                throw new Error("Dataset::_dataInit: \"" + alias + "\" Undefined \"ParentField\"!");
-
-                                            if (!this._predicate)
-                                                this._predicate = new Predicate(this.getDB(), {});
-                                            this._predicate
-                                                .addConditionWithClear({ field: parentField, op: "=", value: keyVal });
-
-                                            params.expr.predicate = this.getDB().serialize(this._predicate);
-                                            rgp = params.path.dataRoot;
-                                        }
-
+                                        else
+                                            throw new Error("Dataset::_dataInit: Undefined \"DataRoot\"!");
                                     }
-                                    else
-                                        throw new Error("Dataset::_dataInit: Undefined \"DataRoot\"!");
-                                }
-                                else {
-                                    // Родительский DataSet пустой!
-                                    this._isRootSwitched = true;
-                                    this.root(null);
-                                    this._initCursor(true);
-                                    needToQuery = false;
-                                    //throw new Error("Dataset::_dataInit: Undefined \"CurrentDataObject\"!");
+                                    else {
+                                        // Родительский DataSet пустой!
+                                        this._isRootSwitched = true;
+                                        this.root(null);
+                                        this._initCursor(true);
+                                        needToQuery = false;
+                                        //throw new Error("Dataset::_dataInit: Undefined \"CurrentDataObject\"!");
+                                    }
+                                };
+                            }
+                            else {
+                                if (master) { // если детейл, то экспрешн
+                                    params.expr = master.getField("Id");
                                 }
                             };
-                        }
-                        else {
-                            if (master) { // если детейл, то экспрешн
-                                params.expr = master.getField("Id");
-                            }
                         };
 
                         if (needToQuery) {

@@ -8,9 +8,9 @@
  * @module MemDataBase
  */
 define(
-	["../system/event", "../system/utils", "./memProtoObj", "./memCol", "./memObj", "./memMetaRoot", "./memMetaObj",
+	["../system/event", "../system/utils", "./memObjLog", "./memProtoObj", "./memCol", "./memObj", "./memMetaRoot", "./memMetaObj",
         "./memMetaObjFields", "./memMetaObjCols", "../metaData/metaDataMgr"],
-	function (Event, Utils, MemProtoObj, MemCollection, MemObj, MemMetaRoot, MemMetaObj, MemMetaObjFields, MemMetaObjCols, MetaDataMgr) {
+	function (Event, Utils, MemObjLog, MemProtoObj, MemCollection, MemObj, MemMetaRoot, MemMetaObj, MemMetaObjFields, MemMetaObjCols, MetaDataMgr) {
 
 
 		var metaObjFieldsGuid =  UCCELLO_CONFIG.guids.metaObjFieldsGuid;
