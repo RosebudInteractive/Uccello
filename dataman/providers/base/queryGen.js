@@ -140,6 +140,7 @@ define(
                             cnt = set_sql_aliases(ch_query, cnt);
                         });
                     };
+                    return cnt;
                 };
                 return set_sql_aliases(request, 0);
             },
@@ -185,6 +186,10 @@ define(
                 this._setSqlAliases(request);
 
                 req_walk(request, function (req, parent) {
+
+                    if (req.isStub)
+                        return;
+
                     _.forEach(req.model.fields(), function (field) {
                         attrs.push(self._escapeField(field.name(), req.sqlAlias));
                     });

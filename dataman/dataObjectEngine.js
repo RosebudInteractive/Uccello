@@ -13,6 +13,7 @@ define(
         var METADATA_FILE_NAME = UCCELLO_CONFIG.dataPath + "meta/metaTables.json";
         var METADATA_DIR_NAME = UCCELLO_CONFIG.dataPath + "meta";
         var META_DATA_MGR_GUID = "77153254-7f08-6810-017b-c99f7ea8cddf@2009";
+        var PREDICATE_POOL_SIZE = 20;
 
         var iDataObjectEngine = {
 
@@ -37,6 +38,8 @@ define(
                 this._constructHolder = construct_holder;
                 this._options = opts;
                 this._schemas = {};
+                this._predicates_idle = [];
+                this._predicates_busy = {};
                 this.Meta = Meta;
 
                 var self = this;
@@ -53,7 +56,8 @@ define(
 
                 this._provider = null;
                 this._query = null;
-                this._tmpPredicate = this.newPredicate();
+                for (var i = 0; i < PREDICATE_POOL_SIZE; i++)
+                    this._createPredicate();
 
                 if (opts.connection && opts.connection.provider) {
                     try {
@@ -158,8 +162,31 @@ define(
                 return this._dataBase;
             },
 
+            _createPredicate: function () {
+                var pobj = new Predicate(this._dataBase, {});
+                this._predicates_idle.push(pobj);
+                return pobj;
+            },
+
+            releasePredicate: function (predicate) {
+                if (predicate) {
+                    var guid = predicate.getGuid();
+                    var pobj = this._predicates_busy[guid];
+                    if (pobj) {
+                        pobj.clearConditions();
+                        delete this._predicates_busy[guid];
+                        this._predicates_idle.push(pobj);
+                    };
+                };
+            },
+
             newPredicate: function () {
-                return new Predicate(this._dataBase, {});
+                var result;
+                if (this._predicates_idle.length > 0)
+                    result = this._predicates_idle.pop();
+                else
+                    result = this._createPredicate();
+                return result;
             },
 
             deserializePredicate: function (serialized_obj, predicate) {
@@ -170,16 +197,31 @@ define(
                 return result;
             },
 
-            saveSchemaToFile: function (dir, schema_name) {
+            saveSchemaToFile: function (dir, schema_name, entity_name) {
                 var fs = require('fs');
                 var path = require('path');
-                var models = this.getSchema(schema_name) ? this.getSchema(schema_name).models() : null;
+                var method;
+                switch (entity_name) {
+                    case "model":
+                        method = "models";
+                        break;
+                    case "objectTree":
+                        method = "objectTrees";
+                        break;
+                    default:
+                        if (!entity_name)
+                            method = "models"
+                        else
+                            throw new Error("Entity \"" + entity_name + "\" isn't supported!");
+                        break;
+                }
+                var models = this.getSchema(schema_name) ? this.getSchema(schema_name)[method].apply(this.getSchema(schema_name)) : null;
                 if (!models)
                     throw new Error("Schema \"" + schema_name + "\" doesn't exist.");
 
                 _.forEach(models, function (model) {
                     fs.writeFileSync(path.format({ dir: dir, base: model.name() + ".json" }),
-                        JSON.stringify(model.getDB().serialize(model)),
+                        JSON.stringify(model.getDB().serialize(model, true)),
                         { encoding: "utf8" })
                 }, this);
             },
@@ -454,16 +496,17 @@ define(
                                         var key = model.getPrimaryKey();
                                         if (!key)
                                             throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
-                                        self._tmpPredicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
+                                        var predicate = self.newPredicate();
+                                        predicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
 
                                         if (val.data.rowVersion) {
                                             var rwField = model.getRowVersionField();
                                             if (!rwField)
                                                 throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
-                                            self._tmpPredicate.addCondition({ field: rwField.name(), op: "=", value: val.data.rowVersion });
+                                            predicate.addCondition({ field: rwField.name(), op: "=", value: val.data.rowVersion });
                                         };
 
-                                        promise = self._query.update(model, val.data.fields, self._tmpPredicate,
+                                        promise = self._query.update(model, val.data.fields, predicate,
                                             {
                                                 transaction: transaction,
                                                 updOptions: {
@@ -575,6 +618,12 @@ define(
                     throw new Error("Can't find model " + JSON.stringify(query.dataObject) + ".");
 
                 request.alias = query.dataObject.alias ? query.dataObject.alias : request.model.name();
+                if (query.dataObject.parentField)
+                    request.parentField = query.dataObject.parentField;
+                if (query.dataObject.isStub)
+                    request.isStub = query.dataObject.isStub;
+                if (query.is_single)
+                    request.is_single = query.is_single;
 
                 if (_.isArray(query.dataObject.childs) && (query.dataObject.childs.length > 0))
                     _.forEach(query.dataObject.childs, function (ch_query) {
@@ -807,6 +856,12 @@ define(
                     }
                 };
 
+                if (request.alias)
+                    result.fields.Alias = request.alias;
+
+                if (request.parentField)
+                    result.fields.ParentField = request.parentField;
+
                 function make_types_arr() {
                     var types = {};
 
@@ -924,6 +979,18 @@ define(
                 _.forEach(rawData, function (data) {
                     data_walk(data, request);
                 });
+
+                if (request.is_single) {
+                    var curr_guid = result.$sys.guid;
+                    var req_types = result.$sys.requiredTypes;
+                    if (result.collections.DataElements.length === 1) {
+                        result = result.collections.DataElements[0];
+                        result.$sys.guid = curr_guid;
+                        result.$sys.requiredTypes = req_types;
+                    }
+                    else
+                        result = null;
+                };
 
                 return result;
             },

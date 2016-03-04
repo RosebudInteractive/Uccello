@@ -1,9 +1,15 @@
 /**
- * Created by kiknadze on 18.02.2016.
+ * Created by kiknadze on 01.03.2016.
+ * Переименование коллекции Form -> Children и переименование ResElemName
  */
+
 
 var fs = require('fs');
 var path = require('path');
+var Config = require('../../../config/config.js')
+var config = new Config();
+
+var resNames = {};
 
 if (process.argv.length == 2) {
     console.log("Please provide folder with forms in arguments");
@@ -11,6 +17,12 @@ if (process.argv.length == 2) {
 } if (process.argv.length > 3) {
     console.log("Please provide only one parameter in arguments");
     process.exit(-1);
+}
+
+var classNames = {};
+for (var name in config.classGuids) {
+    var guid = config.classGuids[name];
+    classNames[guid] = name;
 }
 
 var formsPath = process.argv[2];
@@ -45,55 +57,41 @@ fs.stat(formsPath, function(err, stats) {
     process.exit(0);
 });
 
-function guid() {
-    function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000)
-            .toString(16)
-            .substring(1);
-    }
-    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-        s4() + '-' + s4() + s4() + s4();
-}
-
 function convertObject(form) {
-    if (form["$sys"].typeGuid == "10217b8e-b1f8-4221-a419-f20735219dd2") return null;
+    if (form["$sys"].typeGuid != "10217b8e-b1f8-4221-a419-f20735219dd2") return null;
 
-    var resName = 1;
+    if ("Children" in form.collections) return null;
+    form.collections.Children = form.collections.Form;
+    delete form.collections.Form;
 
-    var converted = {
-        "$sys": {
-            "guid": form["$sys"].guid,
-            "typeGuid": "10217b8e-b1f8-4221-a419-f20735219dd2"
-        },
-        "fields": {
-            "Id": 1,
-            "ResName": form.fields.Title
-        },
-        "collections": {
-            "Form": [form]
-        }
-    };
+    convertControl(form.collections.Children[0]);
 
-    form["$sys"].guid = guid();
-    convertControl(form, resName);
-
-    return converted;
+    return form;
 }
 
-function convertControl(control, resName) {
-    control.fields.ResElemName = resName.toString();
-    resName++;
+function convertControl(control) {
+    control.fields.Id = control.fields.ResElemName;
+
+    if (!(control.fields.Name) || control.fields.Name in resNames) {
+        var className = classNames[control.$sys.typeGuid] || "UnknownClass";
+        resNum = 1;
+        while ((className + resNum) in resNames) resNum++;
+        var resName = className + resNum;
+        control.fields.ResElemName = resName;
+        resNames[resName] = true;
+    } else {
+        control.fields.ResElemName = control.fields.Name
+        resNames[control.fields.ResElemName] = true;
+    }
+
     var cols = control.collections;
     if (cols) {
         for (var colName in cols) {
             var collection = cols[colName];
             for (var i in collection) {
-                resName = convertControl(collection[i], resName);
+                convertControl(collection[i]);
             }
         }
     }
     return resName;
 }
-
-
-

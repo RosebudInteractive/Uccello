@@ -139,6 +139,7 @@ define(
                         if (self._currState() === Meta.State.Edit)
                             obj._currState(Meta.State.Insert);
                         localResult.newObject = obj.getGuid();
+                        localResult.keyValue = obj.get(self._keyField);
                     };
                     if (cb)
                         setTimeout(function () {

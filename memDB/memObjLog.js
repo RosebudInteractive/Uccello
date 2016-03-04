@@ -99,16 +99,25 @@ define(
 				var k=1;
 				while ((this.pvt.versions[sver+k]==undefined) && (sver+k<=ver)) k++;
 				if (this.pvt.versions[sver+k]==undefined) return null;
+
+				function next_delta_item(c) {
+				    var res = {};
+				    res.guid = c.obj.getGuid();
+				    deltaIdx[s] = delta.items.length;
+				    delta.items.push(res);
+				    return res;
+				};
 				
 				var start=this.pvt.versions[sver+k];
 				for (var i=start; i<log.length; i++) {
 					var c = log[i];
 					var s = c.obj.getGuid();
                     if (!(s in deltaIdx)) {
-						var curd = {};
-						curd.guid = c.obj.getGuid();
-						deltaIdx[s] = delta.items.length;
-                        delta.items.push(curd); 
+                        var curd = next_delta_item(c);
+                        //var curd = {};
+						//curd.guid = c.obj.getGuid();
+						//deltaIdx[s] = delta.items.length;
+                        //delta.items.push(curd); 
 						// TODO добавить элемент для идентификации
 					}
                     else 
@@ -122,10 +131,17 @@ define(
 								curd.fields[fld] = c.flds[fld].new;
 							break;
 						// добавление объекта в иерархию
-						case "add":
-							curd.add = c.adObj;
+					    case "add":
+					        if (curd.deleted) {
+					            //curd = next_delta_item(c);
+					            curd.replace = c.adObj;
+					            delete curd.deleted;
+					        }
+					        else
+					            curd.add = c.adObj;
 							curd.parentGuid = c.guid;
 							curd.parentColName = c.colName; 
+							curd.added = 1;
 							break;
 						// подписка на корневой элемент
 						case "subscribe":
@@ -137,7 +153,13 @@ define(
 							break;
 						// удаление объекта из иерархии
 						case "del":
-						    curd.del = c.delObj;
+						    if (curd.added) {
+						        //curd = next_delta_item(c);
+						        delete curd.added;
+						        delete curd.add;
+						        delete curd.replace;
+                            }
+						    //curd.del = c.delObj; // не нужно тело удаленного объекта тащить!!!
 						    curd.parentGuid = c.guid;
 							curd.parentColName = c.colName;
 							curd.deleted = 1;
@@ -178,12 +200,25 @@ define(
 						o.getCol(c.parentColName)._del(db.getObj(c.guid));
 					}
 					else {
-						if ("add" in c) {							
-							var o = db.getObj(c.parentGuid);
-							cb = db.getDefaultCompCallback();
-							db.deserialize(c.add, { obj: o, colName: c.parentColName }, cb );
-							
-						}
+					    if ("add" in c) {
+					        var o = db.getObj(c.parentGuid);
+					        cb = db.getDefaultCompCallback();
+					        db.deserialize(c.add, { obj: o, colName: c.parentColName }, cb);
+
+					    }
+					    else
+					        if ("replace" in c) {
+					            var o = db.getObj(c.parentGuid);
+					            var index = o.getCol(c.parentColName)._del(db.getObj(c.guid));
+					            cb = db.getDefaultCompCallback();
+					            if (typeof (index) === "number") {
+					                if (!c.replace.$sys)
+					                    c.replace.$sys = {};
+					                c.replace.$sys.$collection_index = index;
+					            };
+					            db.deserialize(c.replace, { obj: o, colName: c.parentColName }, cb);
+
+					        };
 						var o2 = db.getObj(c.guid);
 						if (o2) 
 							for (var cf in c.fields) o2.set(cf,c.fields[cf], false, true);

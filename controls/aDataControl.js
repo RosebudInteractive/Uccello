@@ -60,12 +60,12 @@ define(
 					ds.event.on({
 						type: "beforeStateChange",
 						subscriber: this,
-						callback: function() { this._isRendered(false); console.log("beforeStateChange", arguments)}
+						callback: function() { this._isRendered(false); console.log("beforeStateChange", this, arguments)}
 					});
 					ds.event.on({
 						type: "afterStateChange",
 						subscriber: this,
-						callback: function() { this._isRendered(false); console.log("afterStateChange", arguments)}
+						callback: function() { this._isRendered(false); console.log("afterStateChange", this, arguments)}
 					});
 					ds.event.on({
 						type: "mod%AutoEdit",

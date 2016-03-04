@@ -9,12 +9,12 @@ define(
 
             className: "ResForm",
             classGuid: UCCELLO_CONFIG.classGuids.ResForm,
-            metaCols: [{"cname": "Form", "ctype": "UObject"}],
+            metaCols: [{"cname": "Children", "ctype": "UObject"}],
 
             elemNamePrefix: "Element",
 
             getForm: function () {
-                var formCol = this.getCol("Form");
+                var formCol = this.getCol("Children");
                 if (formCol.count() == 0) return null;
                 else return formCol.get(0);
             }

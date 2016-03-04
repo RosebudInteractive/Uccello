@@ -25,10 +25,14 @@ define(
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
                 if (params) {
-                    this._editSet("");
-                    this._childEdCnt(0);
-                    this._currState(Meta.State.Browse);
-                    this._prevState(Meta.State.Browse);
+                    if (!this._editSet())
+                        this._editSet("");
+                    if (!this._childEdCnt())
+                        this._childEdCnt(0);
+                    if (!this._currState())
+                        this._currState(Meta.State.Browse);
+                    if (!this._prevState())
+                        this._prevState(Meta.State.Browse);
                 };
             },
 

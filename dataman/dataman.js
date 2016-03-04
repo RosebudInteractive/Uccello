@@ -26,8 +26,6 @@ define(
 				this.pvt.dataObjectEngine = new DataObjectEngine(router, controller,
                     construct_holder, rpc, UCCELLO_CONFIG.dataman);
 
-				this.pvt.predicate = this.pvt.dataObjectEngine.newPredicate();
-
 				this.pvt.dataSource = 'local'; // 'local' or 'mysql'
                 router.add('query', function(){ return that.query.apply(that, arguments); });
 
@@ -72,14 +70,16 @@ define(
                 if (expression && expression.model) {
                     var predicate;
                     if (expression.predicate) {
-                        predicate = this.pvt.predicate =
-                            this.pvt.dataObjectEngine.deserializePredicate(
+                        // TODO: Здесь каждый раз надо новый предикат создавать !!!
+                        predicate = this.pvt.dataObjectEngine.deserializePredicate(
                                 expression.predicate,
-                                this.pvt.predicate
+                                this.pvt.dataObjectEngine.newPredicate()
                             );
                     };
 
                     var query = { dataObject: expression.model, dataGuid: guidRoot, predicate: predicate };
+                    if (expression.is_single)
+                        query.is_single = expression.is_single;
                     this._loadData(query, done);
                 }
                 else {
@@ -206,7 +206,8 @@ define(
                         done(result);
                     })
                     .catch(function (err) {
-                        throw err;
+                        console.error("###ERROR: " + err.message);
+                        done({});
                     });
                 } else
                     done({});
@@ -230,8 +231,10 @@ define(
                 var that = this;
                 if (this.pvt.dataObjectEngine.hasConnection()) {
                     var query = { dataObject: { guid: guidRoots[typeGuid] }, dataGuid: typeGuid };
-                    if (condition)
-                        query.predicate = this.pvt.predicate.addConditionWithClear(condition);
+                    if (condition) {
+                        var predicate = this.pvt.dataObjectEngine.newPredicate();
+                        query.predicate = predicate.addConditionWithClear(condition);
+                    }
                     this._loadData(query, done);
                 } else
                     if (source == 'mysql') {
