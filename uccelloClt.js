@@ -282,6 +282,10 @@ define(
                 var s = this.pvt.clientConnection.socket;
                 var p = { socket: s, proxyServer: this.pvt.proxyServer, proxyWfe: this.pvt.proxyWfe }
                 p.formGuids = params.formGuids;
+			    // Кроме формы подписываемся на ресурсы, на которые она
+			    //   НЕПОСРЕДСТВЕННО ссылается (depth = 1)
+                if (p.formGuids)
+                    p.depth = 1;
                 p.constructHolder = this.pvt.constructHolder; //  ссылка на хранилище конструкторов
 
                 if (params.side == 'client') {

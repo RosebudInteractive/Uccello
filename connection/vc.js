@@ -131,7 +131,7 @@ define(
 						if (forms == null) forms = "all";
 						else if (forms == "") forms = [];
 						//var cm2 = that.getContextCM();
-						p.cm.userEventHandler(p.cm, p.cm.getRoots, [forms, { rtype: "res", depth: 1 }, cb2]);
+						p.cm.userEventHandler(p.cm, p.cm.getRoots, [forms, { rtype: "res", depth: params.depth ? params.depth : 0 }, cb2]);
 					},this.pvt.proxyServer);
 
 				}
