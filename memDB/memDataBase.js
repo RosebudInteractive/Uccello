@@ -1101,6 +1101,20 @@ define(
 		            }
 		        }
 
+		        // формирование списка рутов для подписки с учетом зависимостей
+		        if ((rgsubs.length > 0) && (params.depth > 0)) {
+		            var dep_res = [];
+		            var init_res = rgsubs.concat();
+		            for (var i = 0; i < params.depth; i++) {
+		                dep_res = this.getResolvedResRefs(init_res);
+		                if (dep_res.length > 0) {
+		                    Array.prototype.push.apply(rgsubs, dep_res);
+		                    init_res = dep_res.concat();
+		                } else
+		                    break;
+		            };
+		        };
+
 		        // просто подписать остальные руты
 		        for (i = 0; i < rgsubs.length; i++) {
 		            root = this.getRoot(rgsubs[i]);
@@ -1961,8 +1975,51 @@ define(
 		    },
 
 		    /**
-             * Возвращает конструктор MetaDataMgr
-             * 
+             * Возвращает массив GUID-ов разрешенных внешних ссылок на ресурсы для множества objects,
+             *   представляющего из себя массив GUID-ов
+             *
+             * @param {Array} objects Исходное множество объектов
+             * @return {Array} Список разрешенных ссылок на ресурсы (массив GUID-ов)
+             */
+		    getResolvedResRefs: function (objects) {
+		        var result = [];
+		        var self = this;
+		        var curr_guids = {};
+
+		        objects.forEach(function (guid) {
+		            curr_guids[guid] = true;
+		        });
+
+		        objects.forEach(function (root) {
+		            self._iterateChilds(self.getObj(root), true, function (obj, lvl) {
+		                var objRefs = self.pvt.refTo[obj.getGuid()];
+		                if (objRefs) {
+		                    var keys = Object.keys(objRefs);
+		                    keys.forEach(function (key) {
+		                        var link = objRefs[key];
+		                        if (link.val.objRef && link.val.is_external &&
+                                    (link.val.objRef.isInstanceOf(UCCELLO_CONFIG.classGuids.Resource)||
+                                    link.val.objRef.isInstanceOf(UCCELLO_CONFIG.classGuids.ResElem))) {
+		                            // Разрешенная внешняя ссылка на ресурс
+		                            var res_guid = link.val.objRef.getRoot().getGuid();
+		                            if (!curr_guids[res_guid]) {
+		                                curr_guids[res_guid] = true;
+		                                result.push(res_guid);
+		                            };
+		                        };
+		                    });
+		                };
+		            });
+		        });
+
+		        return result;
+		    },
+
+		    /**
+             * Возвращает массив неразрешенных внешних ссылок для множества objects
+             *
+             * @param {Array} objects Исходное множество объектов
+             * @return {Array} Список неразрешенных ссылок: массив {guidRes, resName, resType}
              */
 		    getUnresolvedRefs: function (objects) {
 		        var uRefsByGuid = {};
