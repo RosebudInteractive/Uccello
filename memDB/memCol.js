@@ -28,6 +28,7 @@ define(
 	                obj: obj
 	            });
 
+	            var res_idx = this._elems.length;
 	            if (typeof (index) === "number") {
 	                if ((index >= 0) && (index <= this._elems.length)) {
 	                    for(var guid in this._guidIndex)
@@ -36,6 +37,7 @@ define(
                         
 	                    this._elems.splice(index, 0, obj);
 	                    this._guidIndex[obj.getGuid()] = index;
+	                    res_idx = index;
 
                     }
 	                else
@@ -44,7 +46,7 @@ define(
 	            }
 	            else {
 	                this._elems.push(obj);
-	                this._guidIndex[obj.getGuid()] = this._elems.length - 1;
+	                this._guidIndex[obj.getGuid()] = res_idx;
 	            };
 
 	            if (this._obj.getLog().getActive()) {
@@ -54,7 +56,7 @@ define(
 	                this._obj.getLog().add(o);
 	            }
 	            var p = this.getParent();
-	            p.logColModif("add", this._name, obj);
+	            p.logColModif("add", this._name, obj, res_idx);
 
 	            this.fire({
 	                type: "add",
@@ -75,6 +77,7 @@ define(
 	                };
 	            });
 
+	            return res_idx;
 	        },
 
 	        _del: function (obj) {
@@ -98,7 +101,7 @@ define(
 	                    }
 	                    this.getDB().onDeleteObject(obj);  // уведомить свою базу данных
 	                    var p = this.getParent();
-	                    p.logColModif("del", this._name, obj);
+	                    p.logColModif("del", this._name, obj, result);
 
 	                    this.fire({
 	                        type: "del",

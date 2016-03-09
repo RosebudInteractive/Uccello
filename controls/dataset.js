@@ -104,12 +104,13 @@ define(
                 if (this.active()) this._dataInit(true);
             },
 
-            _switchRoot: function () {
+            _onMasterSwitchRoot: function () {
                 var objTree = this.getSerialized("ObjectTree") ? this.getSerialized("ObjectTree") : undefined;
                 var master = this.master();
-                if (objTree && master) {
+                var result = objTree && master;
+                if (result) {
                     if (!this.objectTree())
-                        throw new Error("Dataset::processDelta: Undefined \"ObjectTree\" reference!");
+                        throw new Error("Dataset::_onMasterSwitchRoot: Undefined \"ObjectTree\" reference!");
                     var currObj = master.getCurrentDataObject();
                     if (currObj) {
                         var alias = this.objectTree().alias();
@@ -119,37 +120,29 @@ define(
                     }
                     else
                         this.pvt.dataObj = null;
+                }
+                return result;
+            },
 
+            _switchRoot: function () {
+                if (this._onMasterSwitchRoot()) {
                     if (DEBUG)
                         console.warn("### WARNING: \"" + this.name() + "\" fires \"switchRoot\" in method \"_switchRoot\".");
                     this.event.fire({ type: 'switchRoot', target: this });
-                }
+                };
             },
 
             processDelta: function () {
-
-                if (this.isFldModified("Cursor", "pd")) {
-                    var objTree = this.getSerialized("ObjectTree") ? this.getSerialized("ObjectTree") : undefined;
-                    var master = this.master();
-                    if (objTree && master) {
-                        //if (!this.objectTree())
-                        //    throw new Error("Dataset::processDelta: Undefined \"ObjectTree\" reference!");
-                        //var currObj = master.getCurrentDataObject();
-                        //if (currObj) {
-                        //    var alias = this.objectTree().alias();
-                        //    var dataRoot = currObj.getDataRoot(alias);
-                        //    this.root(dataRoot);
-                        //    this._setDataObj(this.cursor());
-                        //}
-                        //else
-                        //    this.pvt.dataObj = null;
-                    }
-                    else
+                //
+                // Вне зависимости от того, поменялся ли курсор обновляем ссылку
+                //   на текущий объект данных: данные могли поменяться !!!
+                //   (надо научиться проверять поменялись ли данные)
+                //
+                //if (this.isFldModified("Cursor", "pd")) {
+                    if (!this._onMasterSwitchRoot())
                         this._setDataObj(this.cursor());
-                }
-
+                //}
                 this._isProcessed(true);
-
             },
 
             _dataInit: function (onlyMaster) {

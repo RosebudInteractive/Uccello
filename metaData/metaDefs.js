@@ -6,7 +6,6 @@ define(
     [],
     function () {
         var Meta = {
-            DATA_LOG_NAME: "data_log",
             ROW_VERSION_FNAME: "__version",
             Db: {
                 Name: "DataEngineDB",
