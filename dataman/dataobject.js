@@ -18,7 +18,6 @@ define(
                 this._childsCol = null;
                 this._childs = {};
                 if (params) {
-                    this.resetModifFldLog(Meta.DATA_LOG_NAME);
                     this._childsCol = this.getCol("Childs");
                     if (this._childsCol)
                         this._childsCol.on({

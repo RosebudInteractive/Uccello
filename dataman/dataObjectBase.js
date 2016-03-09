@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../process/processObject', '../metaData/metaDefs'],
-    function (ProcessObject, Meta) {
+    ['../process/processObject', '../metaData/metaDefs', '../memDB/memVirtualLog'],
+    function (ProcessObject, Meta, MemVirtualLog) {
         var DataObjectBase = ProcessObject.extend({
 
             className: "DataObjectBase",
@@ -23,6 +23,7 @@ define(
             _persFields: {},
 
             init: function (cm, params) {
+                this._editVLog = null;
                 UccelloClass.super.apply(this, [cm, params]);
                 if (params) {
                     if (!this._editSet())
@@ -58,21 +59,21 @@ define(
                 return {};
             },
 
-            getOldValue: function (fldName, is_serialized) {
+            getOldValue: function (fldName, editLog, is_serialized) {
                 var result = undefined;
                 if (!this.isMaster())
                     throw new Error("Can't read \"old value\" of \""
                         + this.className + "." + fldName + "\" in \"Slave\" mode.");
 
-                if (this.isFldModified(fldName, Meta.DATA_LOG_NAME))
-                    result = this.getOldFldVal(fldName, Meta.DATA_LOG_NAME, is_serialized)
+                if (this.isFldModified(fldName, editLog))
+                    result = this.getOldFldVal(fldName, editLog) // здесь всегда сериализованное значение !
                 else
                     result = is_serialized ? this.getSerialized(fldName) : this.get(fldName);
 
                 return result;
             },
 
-            getModifications: function (state) {
+            getModifications: function (state, editLog) {
                 var result = null;
                 if (state === Meta.State.Insert) {
                     var fields = {};
@@ -92,21 +93,21 @@ define(
                     };
                 }
                 else
-                    if (this.countModifiedFields(Meta.DATA_LOG_NAME) > 0) {
-                        var data = {
-                            key: this._keyField ? this.getOldValue(this._keyField, true) : null,
-                            rowVersion: this.rowVersionFname ? this.getOldValue(this.rowVersionFname, true) : null
-                        };
+                    if (this.countModifiedFields(editLog) > 0) {
+                        var data = {};
                         var dataObj = { op: "update", model: this.className, data: data };
                         for (var fldName in this._persFields) {
-                            if (this.isFldModified(fldName, Meta.DATA_LOG_NAME)) {
+                            if (this.isFldModified(fldName, editLog)) {
                                 if (!data.fields)
                                     data.fields = {};
                                 data.fields[fldName] = this.getSerialized(fldName);
                             };
                         };
-                        if (data.fields)
+                        if (data.fields) {
+                            data.key = this._keyField ? this.getOldValue(this._keyField, editLog, true) : null;
+                            data.rowVersion = this.rowVersionFname ? this.getOldValue(this.rowVersionFname, editLog, true) : null;
                             result = dataObj;
+                        };
                     };
                 return result;
             },
@@ -194,6 +195,8 @@ define(
                 var result = { result: "OK" };
                 try {
                     if (!this._checkIfCanSave(true)) {
+                        if (this._editVLog)
+                            result = this._editVLog.rollback();
                         this._editSet("");
                         this._setNewState(Meta.State.Browse);
                         this._childLeaveEdit();
@@ -201,9 +204,12 @@ define(
                             var state = data_obj._currState();
                             if ((state === Meta.State.Edit) || (state === Meta.State.Insert)) {
                                 data_obj._currState(Meta.State.Browse);
-                                //data_obj.resetModifFldLog(Meta.DATA_LOG_NAME);
                             };
                         });
+                        if (this._editVLog) {
+                            this.getDB().getDbLog().destroyVirtualLog(this._editVLog);
+                            this._editVLog = null;
+                        };
                     };
                 } catch (err) {
                     result = { result: "ERROR", message: err.message };
@@ -234,7 +240,6 @@ define(
 
                         var ignore_child_save = self._editSet().length === 0;
                         var obj_updated = [];
-                        var is_self_changed = false;
                         var is_done = false;
 
                         function local_cb(result) {
@@ -260,13 +265,9 @@ define(
                                         self._setNewState(Meta.State.Browse);
                                         // 2 раза, потому что был вызов _setPendingState
                                         self._childLeaveEdit(2);
-                                        if (is_self_changed)
-                                            self.resetModifFldLog(Meta.DATA_LOG_NAME);
 
                                         for (var i = 0; i < pending_childs.length; i++) {
                                             pending_childs[i].obj._currState(Meta.State.Browse);
-                                            pending_childs[i].obj.resetModifFldLog(Meta.DATA_LOG_NAME);
-                                            //pending_childs[i].obj.removeModifFldLog(Meta.DATA_LOG_NAME);
                                         };
                                     }
                                     else
@@ -277,23 +278,27 @@ define(
                                     for (var i = 0; i < pending_childs.length; i++)
                                         pending_childs[i].obj._currState(pending_childs[i].state);
 
-                                };
+                                }
+                                else
+                                    if (self._editVLog) {
+                                        self.getDB().getDbLog().destroyVirtualLog(self._editVLog);
+                                        self._editVLog = null;
+                                    }
                             };
 
                             if (cb)
                                 cb(result);
                         };
 
-                        if ((!ignore_child_save) && (typeof ($data) !== "undefined") && $data) {
+                        if ((!ignore_child_save) && (typeof ($data) !== "undefined") && $data && this._editVLog) {
                             var batch = [];
-                            var dataObj = this.getModifications(Meta.State.Edit);
+                            var dataObj = this.getModifications(Meta.State.Edit, this._editVLog);
                             if (dataObj) {
                                 batch.push(dataObj);
                                 obj_updated.push(this);
-                                is_self_changed = true;
                             }
                             for (var i = 0; i < pending_childs.length; i++) {
-                                var dataObj = pending_childs[i].obj.getModifications(pending_childs[i].state);
+                                var dataObj = pending_childs[i].obj.getModifications(pending_childs[i].state, this._editVLog);
                                 if (dataObj) {
                                     batch.push(dataObj);
                                     obj_updated.push(pending_childs[i].obj);
@@ -335,6 +340,7 @@ define(
                             if (data_obj._currState() === Meta.State.Browse)
                                 data_obj._currState(Meta.State.Edit);
                         });
+                        this._editVLog = this.getDB().getDbLog().createVirtualLog(MemVirtualLog.SubscriptionMode.CurrentAndAllChilds, this);
                     };
                 } catch (err) {
                     result = { result: "ERROR", message: err.message };

@@ -4,8 +4,8 @@
 }
 
 define(
-	['./memObjLog', '../system/event', '../system/utils'],
-	function (MemObjLog, Event, Utils) {
+	['./memObjLog', './memVirtualLog', '../system/event', '../system/utils'],
+	function (MemObjLog, MemVirtualLog, Event, Utils) {
 
 	    var DFLT_LOG = "def";
 
@@ -30,6 +30,7 @@ define(
 				pvt.cntFldModif = {};
 				pvt.cntColModif = {};
 				this.resetModifFldLog(this.dfltLogName, true);
+				this._ph_log_object = null;
 
 				pvt.$rootId = -1;
 
@@ -86,7 +87,7 @@ define(
 			    pvt.guid= this.getDB().makeGuid(fullGuid);
 
 				if (!parent.obj) {	// корневой объект				
-					pvt.log = new MemObjLog(this);	// создать лог записи изменений
+					pvt.log = new MemObjLog(this, true);	// создать лог записи изменений
 					// активизация корневого НЕ НУЖНА? TODO R2
 					// 20/4 - не факт, что это правильно, пока оставляем в комментах..
 					//if ((parent.mode == "RW") && (!parent.nolog) && (!pvt.db.isMaster())) // не мастер, то активируем, для мастера - на 1й подписке
@@ -275,7 +276,7 @@ define(
 			        this.getLog().add(o);
 			    }
 
-			    this._setModified(field, oldVal); // запоминаем измененные свойства
+			    this._setModified(field, oldVal, newVal); // запоминаем измененные свойства
 
 			    if (this.getParent())
 			        this.getParent().logColModif("mod", this.getColName(), this);
@@ -493,15 +494,23 @@ define(
 			},
 
 			isFldModified: function (fldName, log_name) {
-			    var logName = log_name ? log_name : this.dfltLogName;
-			    if (fldName in this.pvt.fldLog[logName])
-					return true;
-				else
-					return false;
-					
+			    var result;
+			    if (log_name instanceof MemVirtualLog) {
+			        result = log_name.isFldModified(fldName, this);
+			    }
+			    else {
+			        var logName = log_name ? log_name : this.dfltLogName;
+			        if (fldName in this.pvt.fldLog[logName])
+			            result = true;
+			        else
+			            result = false;
+			    };
+			    return result;
 			},
 			
-			_setModified: function (field, oldValue) {
+			_setModified: function (field, oldValue, newValue) {
+			    if (this._ph_log_object)
+			        this._ph_log_object.objFieldModified(this, field, oldValue, newValue);
 			    for (var logName in this.pvt.fldLog) {
 			        if (!this.isFldModified(field, logName)) {
 			            if (!(field in this.pvt.fldLog[logName])) this.pvt.cntFldModif[logName]++;
@@ -513,16 +522,30 @@ define(
 			},
 			
 			countModifiedFields: function (log_name) {
-			    var logName = log_name ? log_name : this.dfltLogName;
-			    return this.pvt.cntFldModif[logName] !== undefined ? this.pvt.cntFldModif[logName] : 0;
+			    var result;
+			    if (log_name instanceof MemVirtualLog) {
+			        result = log_name.countModifiedFields(this);
+			    }
+			    else {
+			        var logName = log_name ? log_name : this.dfltLogName;
+			        result = this.pvt.cntFldModif[logName] !== undefined ? this.pvt.cntFldModif[logName] : 0;
+			    };
+			    return result;
 			},
 			
 			getOldFldVal: function (fldName, log_name) {
-			    var logName = log_name ? log_name : this.dfltLogName;
-			    if (fldName in this.pvt.fldLog[logName])
-			        return this.pvt.fldLog[logName][fldName];
-				else
-					return undefined;
+			    var result;
+			    if (log_name instanceof MemVirtualLog) {
+			        result = log_name.getOldFldVal(fldName, this);
+			    }
+			    else {
+			        var logName = log_name ? log_name : this.dfltLogName;
+			        if (fldName in this.pvt.fldLog[logName])
+			            result = this.pvt.fldLog[logName][fldName];
+			        else
+			            result = undefined;
+			    };
+			    return result;
 			},
 			
 			resetModifFldLog: function (log_name, trueFlag) {
@@ -546,7 +569,10 @@ define(
 			    delete this.pvt.cntFldModif[logName];
 			},
 
-			logColModif: function (op, colName, obj) {
+			logColModif: function (op, colName, obj, obj_index) {
+			    if (this._ph_log_object)
+			        this._ph_log_object.objColModified(this, op, colName, obj, obj_index);
+
 			    for (var logName in this.pvt.colLog) {
 			        var colLog = this.pvt.colLog[logName];
 			        if (!colLog) {
@@ -566,21 +592,47 @@ define(
 			},
 
 			countModifiedCols: function (log_name) {
-			    var logName = log_name ? log_name : this.dfltLogName;
-			    return this.pvt.cntColModif[logName] !== undefined ? this.pvt.cntColModif[logName] : 0;
+			    var result;
+			    if (log_name instanceof MemVirtualLog) {
+			        result = log_name.countModifiedCols(this);
+			    }
+			    else {
+			        var logName = log_name ? log_name : this.dfltLogName;
+			        result = this.pvt.cntColModif[logName] !== undefined ? this.pvt.cntColModif[logName] : 0;
+			    };
+			    return result;
 			},
 			
 			getLogCol: function (colName, log_name) {
-			    var logName = log_name ? log_name : this.dfltLogName;
-			    return this.pvt.colLog[logName][colName];
+			    var result;
+			    if (log_name instanceof MemVirtualLog) {
+			        result = log_name.getLogCol(colName, this);
+			    }
+			    else {
+			        var logName = log_name ? log_name : this.dfltLogName;
+			        result = this.pvt.colLog[logName][colName];
+			    };
+			    return result;
 			},
 			
-			// возвращает true, если данные были изменены
+	        // возвращает true, если данные были изменены _setLogObject
 			isDataModified: function (log_name) {
-			    var logName = log_name ? log_name : this.dfltLogName;
-			    return this.pvt.isModified[logName] ? this.pvt.isModified[logName] : false;
-			}
-		});
+			    var result;
+			    if (log_name instanceof MemVirtualLog) {
+			        result = log_name.isDataModified(this);
+			    }
+			    else {
+			        var logName = log_name ? log_name : this.dfltLogName;
+			        result = this.pvt.isModified[logName] ? this.pvt.isModified[logName] : false;
+			    };
+			    return result;
+			},
+
+			_setLogObject: function (log_obj) {
+			    this._ph_log_object = log_obj;
+			},
+
+	    });
 		return MemProtoObj;
 	}
 );

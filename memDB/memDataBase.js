@@ -53,6 +53,10 @@ define(
 		        pvt.subscribers = {}; 		// все базы-подписчики
 		        pvt.dataRoots = {};         // список всех dataRoots
 
+		        // создать лог записи изменений
+		        this._dbLog = new MemObjLog(this);
+		        this._dbLog.setActive(true);
+
 		        if ("guid" in params)
 		            pvt.guid = params.guid;
 		        else
@@ -115,6 +119,10 @@ define(
 
 		    getConstructHolder: function () {
 		        return this.pvt.constructHolder;
+		    },
+
+		    getDbLog: function () {
+		        return this._dbLog;
 		    },
 
 		    /**
