@@ -254,6 +254,24 @@ define(
                 return { sqlCmd: result + ";", params: params, type: this.queryTypes.UPDATE, meta: model };
             },
 
+            deleteQuery: function (model, predicate, options) {
+                var query = "DELETE FROM <%= table %>";
+                var attrs = [];
+                var self = this;
+                var params = [];
+
+                var values = { table: this.escapeId(model.name()) };
+                var result = _.template(query)(values).trim();
+                if (predicate) {
+                    var cond_sql = this._predicateToSql(model, predicate, params);
+                    if (cond_sql.length > 0)
+                        result += " WHERE " + cond_sql;
+                }
+                else
+                    throw new Error("Delete operation without predicate isn't allowed.");
+                return { sqlCmd: result + ";", params: params, type: this.queryTypes.DELETE, meta: model };
+            },
+
             insertQuery: function (model, vals, options) {
                 var query = "<%= before %>INSERT INTO <%= table %> (<%= fields%>)<%= output %> VALUES (<%= values%>)<%= after %>";
                 var params = [];

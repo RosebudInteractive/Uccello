@@ -458,12 +458,11 @@ define(
                 var curr_obj = this.getCurrentDataObject();
                 if (curr_obj)
                     state = curr_obj._currState()
-                else
-                    if (this.cachedUpdates() === true) {
-                        var root = this.root();
-                        if (root)
-                            state = root._currState();
-                    };
+                else {
+                    var root = this.root();
+                    if (root)
+                        state = root._currState();
+                }
                 return state;
             },
 
@@ -482,9 +481,9 @@ define(
             },
 
             /**
-         *  добавить новый объект в коллекцию
-         * @param flds - поля объекта для инициализации
-         */
+             *  добавить новый объект в коллекцию
+             * @param flds - поля объекта для инициализации
+            */
             //addObject: function (flds, cb) {
 
             //    var args = {
@@ -776,7 +775,29 @@ define(
                 };
 
                 this.root().newObject(flds, {}, addObjectCallback);
+            },
 
+            deleteObject: function (options, cb) {
+
+                var self = this;
+
+                function delObjectCallback(result) {
+
+                    if (DEBUG)
+                        console.log("### delObjectCallback: " + JSON.stringify(result));
+
+                    if (result && (result.result === "OK") && result.keyValue) {
+                        self.cursor(result.keyValue);
+                    };
+
+                    if (cb)
+                        setTimeout(function () {
+                            cb(result);
+                        }, 0);
+                };
+
+                if (this.root() && this.getCurrentDataObject())
+                    this.root().deleteObject(this.getCurrentDataObject().getGuid, options, delObjectCallback);
             }
         });
         return Dataset;

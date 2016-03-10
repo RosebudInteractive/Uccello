@@ -119,7 +119,14 @@ define(
                             };
                         }
                         else
-                            res = results;
+                            if (query_type === this._queryTypes.DELETE) {
+                                res = {
+                                    affectedRows: affectedRows,
+                                    changedRows: 0
+                                };
+                            }
+                            else
+                                res = results;
                 else {
                     res = {
                         affectedRows: affectedRows,

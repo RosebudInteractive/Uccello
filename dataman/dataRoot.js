@@ -76,6 +76,17 @@ define(
                 return result;
             },
 
+            deleteObject: function (obj_guid, options, cb) {
+                var result = null;
+
+                var args = [];
+                Array.prototype.push.apply(args, arguments);
+                args.unshift("deleteObject");
+                result = this._methodCall.apply(this, args);
+
+                return result;
+            },
+
             _create_child_collections: function (parent_obj, constrHolder) {
                 var childs = this.getRequestTree();
                 var keys = Object.keys(childs);
@@ -180,6 +191,79 @@ define(
                 else {
                     setTimeout(function () {
                         afterObjCreate({ result: "OK" });
+                    }, 0);
+                };
+            },
+
+            _$local_deleteObject: function (obj_guid, options, cb) {
+
+                var db = this.getDB();
+                var obj = db.getObj(obj_guid);
+                var self = this;
+
+                function afterObjDelete(result) {
+                    var localResult = result;
+                    if (localResult.result === "OK") {
+
+                        var isSuccess = true;
+                        if (result.detail) {
+                            isSuccess = (result.detail.length === 1) && (result.detail[0].affectedRows === 1);
+                            if(!isSuccess)
+                                localResult = {
+                                    result: "ERROR",
+                                    message: "Deleted object already has been deleted or modified!"
+                                };
+                        }
+
+                        if (isSuccess) {
+                            var col = self.getCol("DataElements");
+                            var idx = col._del(obj);
+                            if (typeof (idx) === "number") {
+                                var newIdx = col.count() > idx ? idx : (col.count() - 1);
+                                if (newIdx >= 0) {
+                                    var newObj = col.get(newIdx);
+                                    if (newObj._keyField) {
+                                        localResult.newObject = newObj.getGuid();
+                                        localResult.keyValue = newObj.get(newObj._keyField);
+                                    }
+                                }
+                            }
+                        };
+                    };
+
+                    if (cb)
+                        setTimeout(function () {
+                            cb(localResult);
+                        }, 0);
+                };
+
+                var f_cb_now = true;
+                var result = { result: "OK" };
+                if (obj && (obj.getParent() === this)) {
+                    if ((typeof ($data) !== "undefined") && $data) {
+                        if (this._currState() === Meta.State.Browse) {
+                            if (obj.isPersistable() && obj._keyField) {
+                                f_cb_now = false;
+                                var data = {};
+                                var opData = { op: "delete", model: obj.className, data: data };
+                                data.key = obj.getSerialized(obj._keyField);
+                                data.rowVersion = obj.rowVersionFname ? obj.getSerialized(obj.rowVersionFname) : null;
+                                var batch = [];
+                                batch.push(opData);
+                                $data.execBatch(batch, options, afterObjDelete);
+                            };
+                        }
+                    }
+                }
+                else
+                    result = {
+                        result: "ERROR",
+                        message: "Deleted object doesn't belong to current data root or doesn' exist."
+                    };
+
+                if (f_cb_now) {
+                    setTimeout(function () {
+                        afterObjDelete(result);
                     }, 0);
                 };
             }
