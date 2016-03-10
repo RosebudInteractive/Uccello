@@ -21,11 +21,33 @@ define(
                     res_elem_type: UCCELLO_CONFIG.classGuids.AControl
                 }},
                 {fname:"Width", ftype:"string"},
-                {fname:"Height", ftype:"string"}
+                {fname:"Height", ftype:"string"},
+                {fname:"MinTargetWidth", ftype: "int"},
+                {fname:"MaxTargetWidth", ftype:"int"},
+                {fname:"TabNumber", ftype:"int"}
             ],
 
             init: function(cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
+            },
+
+            _onDirtyRender: function(result) {
+                var container = this._getContainer();
+                container._isRendered(false);
+                this.pvt.isRendered = false;
+            },
+
+            /*_isRendered: function(value) {
+                UccelloClass.super.apply(this, [value]);
+                var container = this._getContainer();
+                if (container) container._isRendered(false);
+            },*/
+
+            _getContainer: function() {
+                var parent = this.getParentComp();
+                while (parent && parent.className != "AdaptiveContainer")
+                    parent = parent.getParentComp();
+                return parent;
             },
 
             /**
@@ -48,7 +70,20 @@ define(
 
             control: function (value) {
                 return this._genericSetter("Control", value);
+            },
+
+            minTargetWidth: function(value) {
+                return this._genericSetter("MinTargetWidth", value);
+            },
+
+            maxTargetWidth: function(value) {
+                return this._genericSetter("MaxTargetWidth", value);
+            },
+
+            tabNumber: function(value) {
+                return this._genericSetter("TabNumber", value);
             }
+
         });
         return LayersContainer;
     }

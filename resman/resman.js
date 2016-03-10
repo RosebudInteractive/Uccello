@@ -16,6 +16,12 @@ define(
     ],
     function(ControlMgr, Predicate, Directories, Builds, Resources, ResUtils, ResVersions) {
 
+        function arrayHasObjects(guids) {
+            return guids.some(function(guid){
+                return typeof guid == 'object'
+            })
+        }
+
         var Resman = UccelloClass.extend({
 
             init: function (controller, constructHolder, proxy, options) {
@@ -77,31 +83,105 @@ define(
                 });
             },
 
+            convertArray: function (guids) {
+                var that = this;
+                return new Promise(function (resolve, reject) {
+                    that.loadDirectories(promiseBody);
+
+                    function promiseBody() {
+                        var _result = [];
+                        var _count = 0;
+
+                        function addElement(guid) {
+                            _count++;
+                            var _index = _result.findIndex(function(element){
+                                return element == guid;
+                            });
+
+                            if (_index == -1) {
+                                _result.push(guid)
+                            }
+                        }
+
+                        guids.forEach(function (element) {
+                            if (typeof element == 'object') {
+                                if ((element.hasOwnProperty('resType')) && (element.hasOwnProperty('resName'))) {
+                                    that.resources.findByType(element.resType, element.resName).then(
+                                        function (resource) {
+                                            addElement(resource.resGuid);
+                                            if (_count == guids.length) {
+                                                resolve(_result)
+                                            }
+                                        }
+                                    );
+                                }
+                            } else {
+                                if (typeof element == 'string') {
+                                    addElement(element);
+                                    if (_count == guids.length) {
+                                        resolve(_result)
+                                    }
+                                } else {
+                                    reject(ResUtils.newSystemError('Unexpected element type'));
+                                }
+                            }
+
+                        });
+                    }
+                });
+            },
+
             /**
              * Загрузить ресурс
              * @returns {obj}
              */
             // todo : совместить с Proto1
             loadRes: function (guids, done) {
-                if (this.dbMode.canUse) {
-                    var _promise = this.getResources(guids);
-                    _promise.then(function (bodies) {
-                        var _array = [];
-                        for (var body in bodies) {
-                            if (bodies.hasOwnProperty(body) && (body != 'count')) {
-                                _array.push(JSON.parse(bodies[body]))
+                var that = this;
+
+                function loadBodies(guids) {
+                    var _promise = that.getResources(guids);
+                    _promise.then(
+                        function (bodies) {
+                            var _array = [];
+                            for (var body in bodies) {
+                                if (bodies.hasOwnProperty(body) && (body != 'count')) {
+                                    _array.push(JSON.parse(bodies[body]))
+                                }
                             }
+                            done({datas: _array})
+                        },
+                        function(reason) {
+                            done({datas: [], result : 'ERROR', message : reason.message})
                         }
-                        done({datas: _array})
-                    })
+                    )
+                }
+
+                if (this.dbMode.canUse) {
+                    if (arrayHasObjects(guids)) {
+                        this.convertArray(guids).then(
+                            function(convertedArray) {
+                                loadBodies(convertedArray)
+                            },
+                            function(reason) {
+                                done({datas: [], result : 'ERROR', message : reason.message})
+                            }
+                        );
+                    } else {
+                        loadBodies(guids);
+                    }
                 } else {
-                    var _result = [];
-                    guids.forEach(function (guid) {
-                        var gr = guid.slice(0, 36);
-                        var json = require(UCCELLO_CONFIG.dataPath + 'forms/' + gr + '.json');
-                        _result.push(json)
-                    });
-                    done({datas: _result})
+                    if (arrayHasObjects(guids)) {
+                        done({datas: [], result : 'ERROR', message : 'Array of guids has object'})
+                    } else {
+                        var _result = [];
+                        guids.forEach(function (guid) {
+                            var gr = guid.slice(0, 36);
+                            var json = require(UCCELLO_CONFIG.dataPath + 'forms/' + gr + '.json');
+                            _result.push(json)
+                        });
+                        done({datas: _result, result : 'OK'})
+                    }
                 }
             },
 
@@ -223,7 +303,7 @@ define(
                             if (!build.isConfirmed) {
                                 that.resources.createNew(resource).then(
                                     function (resourcesGuid) {
-                                        resolve({result: 'OK', resourcesGuid: resourcesGuid})
+                                        resolve({result: 'OK', resourceGuid: resourcesGuid})
                                     },
                                     function (reason) {
                                         reject(reason)
