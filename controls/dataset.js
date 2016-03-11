@@ -208,8 +208,8 @@ define(
                                         var alias = this.objectTree().alias();
                                         var dataRoot = currObj.getDataRoot(alias);
                                         if (dataRoot) {
-
-                                            if (master.getState() === Meta.State.Edit) {
+                                            var master_state = master.getState();
+                                            if ((master_state === Meta.State.Edit) || (master_state === Meta.State.Insert)) {
                                                 this.root(dataRoot);
                                                 this._isRootSwitched = true;
                                                 this._initCursor(true);
@@ -349,8 +349,10 @@ define(
                     if (curr_obj) {
                         var curr_state = curr_obj._currState();
                         result = curr_state === Meta.State.Browse;
-                        if ((!result) && this.master())
-                            result = this.master().getState() === Meta.State.Edit;
+                        if ((!result) && this.master()) {
+                            var master_state = this.master().getState();
+                            result = (master_state === Meta.State.Edit) || (master_state === Meta.State.Insert);
+                        };
                     }
                     else
                         result = true;

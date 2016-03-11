@@ -213,7 +213,8 @@ define(
 	                if ("deleted" in c) {
 	                    var o = db.getObj(c.parentGuid);
 	                    // TODO коллбэк на удаление 
-	                    o.getCol(c.parentColName)._del(db.getObj(c.guid));
+	                    if (o)
+	                        o.getCol(c.parentColName)._del(db.getObj(c.guid));
 	                }
 	                else {
 	                    if ("add" in c) {
