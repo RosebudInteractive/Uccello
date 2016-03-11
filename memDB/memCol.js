@@ -92,6 +92,10 @@ define(
 	                        obj: obj
 	                    });
 
+	                    for (var guid in this._guidIndex)
+	                        if (this._guidIndex[guid] > i)
+	                            this._guidIndex[guid]--;
+
 	                    this._elems.splice(i, 1);
 
 	                    if (this._obj.getLog().getActive()) { // записать в лог если активен
