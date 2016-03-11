@@ -442,8 +442,13 @@ define(
 	                                        if (!item.delObj.$sys)
 	                                            item.delObj.$sys = {};
 	                                        item.delObj.$sys.$collection_index = item.obj_index;
-	                                        col._add(item.obj, item.obj_index);
 	                                        var rsObj = this._db.deserialize(item.delObj, { obj: parent, colName: item.colName }, cb);
+
+	                                        // Логгируем восстановление объекта
+	                                        var o = { adObj: item.delObj, obj: rsObj, colName: item.colName, guid: item.guid, type: "add" };
+	                                        parent.getLog().add(o);
+	                                        parent.logColModif("add", item.colName, rsObj);
+
 	                                        var logs = this._objects[item.guid];
 	                                        // Добавляем восстановленный объект в логи родителя.
 	                                        for (var log in logs)
