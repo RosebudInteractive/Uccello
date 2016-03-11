@@ -797,7 +797,7 @@ define(
                 };
 
                 if (this.root() && this.getCurrentDataObject())
-                    this.root().deleteObject(this.getCurrentDataObject().getGuid, options, delObjectCallback);
+                    this.root().deleteObject(this.getCurrentDataObject().getGuid(), options, delObjectCallback);
             }
         });
         return Dataset;

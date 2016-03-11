@@ -578,7 +578,7 @@ define(
 	                var obj_rec = self._objects[obj_guid];
 	                if (obj_rec) {
 	                    for (var log in obj_rec) {
-	                        delete obj_rec[log].log.objects[obj_guid];
+	                        delete self._virtualLogs[obj_rec[log].log.getGuid()].objects[obj_guid];
 	                    }
 	                };
 	                delete self._objects[obj_guid];
