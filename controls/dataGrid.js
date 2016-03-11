@@ -129,9 +129,34 @@ define(
             },
 
 
-
             editable: function(value) {
                 return this._genericSetter("Editable", value);
+            },
+
+            canMoveCursor: function(ds) {
+                ds = ds || this.dataset();
+                var result = ds && ds.canMoveCursor();
+                if (result) {
+                    var details = this._getDetailDatasets(ds);
+                    for (var i = 0; (i < details.length && result); i++) {
+                        result = result && details[i].canMoveCursor();
+                        result = result && this.canMoveCursor(details[i]);
+                    }
+                }
+                return result;
+            },
+
+            _getDetailDatasets: function(ds) {
+                ds = ds || this.dataset();
+                var result = [];
+                if (ds) {
+                    var model = ds.getParentComp();
+                    var datasets = model.getCol("Datasets");
+                    for (var i = 0; i < datasets.count(); i++) {
+                        if (datasets.get(i).master() == ds) result.push(datasets.get(i));
+                    }
+                }
+                return result;
             }
     });
         return DataGrid;
