@@ -479,7 +479,20 @@ define(
             },
 
             getCurrentDataObject: function () {
-                return this.pvt.dataObj;
+                var result = this.pvt.dataObj;
+                if (result) {
+                    var root=this.root();
+                    if (root) {
+                        var col = root.getCol("DataElements");
+                        if (!(col.get(col.indexOf(result)) === result)) {
+                            result = this.pvt.dataObj = null;
+                        };
+                    }
+                    else {
+                        result = this.pvt.dataObj = null;
+                    };
+                };
+                return result;
             },
 
             /**
