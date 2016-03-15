@@ -56,6 +56,10 @@ define(
                 delete this._childs[args.obj.get("Alias")];
             },
 
+            isPersistable: function () {
+                return true;
+            },
+
             getRequestTree: function (alias) {
                 var result = {};
                 var parent = this.getParent();

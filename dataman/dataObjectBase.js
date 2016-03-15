@@ -24,6 +24,7 @@ define(
 
             init: function (cm, params) {
                 this._editVLog = null;
+                this._objList = null;
                 UccelloClass.super.apply(this, [cm, params]);
                 if (params) {
                     if (!this._editSet())
@@ -59,6 +60,10 @@ define(
                 return {};
             },
 
+            isPersistable: function () {
+                return false;
+            },
+
             getOldValue: function (fldName, editLog, is_serialized) {
                 var result = undefined;
                 if (!this.isMaster())
@@ -75,40 +80,42 @@ define(
 
             getModifications: function (state, editLog) {
                 var result = null;
-                if (state === Meta.State.Insert) {
-                    var fields = {};
-                    fields.Guid = this.getGuidRes();
-                    var ver_fld_name = this.rowVersionFname;
-                    for (var fldName in this._persFields) {
-                        if (ver_fld_name !== fldName) {
-                            var val = this.getSerialized(fldName);
-                            if (val !== undefined)
-                                fields[fldName] = val;
-                        };
-                    };
-                    result = {
-                        op: "insert",
-                        model: this.className,
-                        data: { fields: fields }
-                    };
-                }
-                else
-                    if (this.countModifiedFields(editLog) > 0) {
-                        var data = {};
-                        var dataObj = { op: "update", model: this.className, data: data };
+                if (this.isPersistable()) {
+                    if (state === Meta.State.Insert) {
+                        var fields = {};
+                        fields.Guid = this.getGuidRes();
+                        var ver_fld_name = this.rowVersionFname;
                         for (var fldName in this._persFields) {
-                            if (this.isFldModified(fldName, editLog)) {
-                                if (!data.fields)
-                                    data.fields = {};
-                                data.fields[fldName] = this.getSerialized(fldName);
+                            if (ver_fld_name !== fldName) {
+                                var val = this.getSerialized(fldName);
+                                if (val !== undefined)
+                                    fields[fldName] = val;
                             };
                         };
-                        if (data.fields) {
-                            data.key = this._keyField ? this.getOldValue(this._keyField, editLog, true) : null;
-                            data.rowVersion = this.rowVersionFname ? this.getOldValue(this.rowVersionFname, editLog, true) : null;
-                            result = dataObj;
+                        result = {
+                            op: "insert",
+                            model: this.className,
+                            data: { fields: fields }
                         };
-                    };
+                    }
+                    else
+                        if (this.countModifiedFields(editLog) > 0) {
+                            var data = {};
+                            var dataObj = { op: "update", model: this.className, data: data };
+                            for (var fldName in this._persFields) {
+                                if (this.isFldModified(fldName, editLog)) {
+                                    if (!data.fields)
+                                        data.fields = {};
+                                    data.fields[fldName] = this.getSerialized(fldName);
+                                };
+                            };
+                            if (data.fields) {
+                                data.key = this._keyField ? this.getOldValue(this._keyField, editLog, true) : null;
+                                data.rowVersion = this.rowVersionFname ? this.getOldValue(this.rowVersionFname, editLog, true) : null;
+                                result = dataObj;
+                            };
+                        };
+                };
                 return result;
             },
 
@@ -210,6 +217,7 @@ define(
                             this.getDB().getDbLog().destroyVirtualLog(this._editVLog);
                             this._editVLog = null;
                         };
+                        this._objList = null;
                     };
                 } catch (err) {
                     result = { result: "ERROR", message: err.message };
@@ -240,25 +248,32 @@ define(
 
                         var ignore_child_save = self._editSet().length === 0;
                         var obj_updated = [];
+                        var obj_deleted = [];
                         var is_done = false;
 
                         function local_cb(result) {
                             if (!ignore_child_save) {
                                 var isSuccess = false;
                                 if (result.result === "OK") {
-                                    if (result.detail && (result.detail.length === obj_updated.length)) {
+                                    if (result.detail && (result.detail.length === (obj_updated.length + obj_deleted.length))) {
                                         var nobj = 0;
                                         var cur_obj;
-                                        for (var i = 0; i < obj_updated.length; i++) {
+                                        for (var i = 0; i < obj_deleted.length; i++) {
                                             if (result.detail[i].affectedRows === 1) {
                                                 nobj++;
-                                                cur_obj = obj_updated[i];
+                                            };
+                                        };
+                                        i = obj_deleted.length;
+                                        for (var j = 0; j < obj_updated.length; i++, j++) {
+                                            if (result.detail[i].affectedRows === 1) {
+                                                nobj++;
+                                                cur_obj = obj_updated[j];
                                                 // «апоминаем новое значение версии записи.
                                                 if (cur_obj.rowVersionFname && result.detail[i].rowVersion)
                                                     cur_obj.set(cur_obj.rowVersionFname, result.detail[i].rowVersion, false, true);
                                             };
                                         };
-                                        isSuccess = nobj === obj_updated.length;
+                                        isSuccess = nobj === (obj_updated.length + obj_deleted.length);
                                     };
                                     if (isSuccess) {
                                         self._editSet("");
@@ -284,6 +299,7 @@ define(
                                         self.getDB().getDbLog().destroyVirtualLog(self._editVLog);
                                         self._editVLog = null;
                                     }
+                                self._objList = null;
                             };
 
                             if (cb)
@@ -292,6 +308,15 @@ define(
 
                         if ((!ignore_child_save) && (typeof ($data) !== "undefined") && $data && this._editVLog) {
                             var batch = [];
+
+                            if (this._objList)
+                                for (var i = 0; i < this._objList.length; i++) {
+                                    if (!this.getDB().getObj(this._objList[i].guid)) {
+                                        obj_deleted.push(this._objList[i].guid);
+                                        batch.push(this._objList[i].opData);
+                                    }
+                                };
+
                             var dataObj = this.getModifications(Meta.State.Edit, this._editVLog);
                             if (dataObj) {
                                 batch.push(dataObj);
@@ -341,6 +366,17 @@ define(
                                 data_obj._currState(Meta.State.Edit);
                         });
                         this._editVLog = this.getDB().getDbLog().createVirtualLog(MemVirtualLog.SubscriptionMode.CurrentAndAllChilds, this);
+                        this._objList = [];
+                        var self = this;
+                        this.getDB()._iterateChilds(this, false, function (data_obj, lvl) {
+                            if (data_obj.isPersistable() && data_obj._keyField) {
+                                var data = {};
+                                var opData = { op: "delete", model: data_obj.className, data: data };
+                                data.key = data_obj.getOldValue(data_obj._keyField, self._editVLog, true);
+                                data.rowVersion = data_obj.rowVersionFname ? data_obj.getOldValue(data_obj.rowVersionFname, self._editVLog, true) : null;
+                                self._objList.push({ guid: data_obj.getGuid(), opData: opData });
+                            };
+                        });
                     };
                 } catch (err) {
                     result = { result: "ERROR", message: err.message };

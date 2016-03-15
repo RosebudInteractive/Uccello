@@ -85,6 +85,19 @@ define(
                 });
             },
 
+            "delete": function (model, predicate, options) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    var sql = self._query_gen.deleteQuery(model, predicate);
+                    self._engine.releasePredicate(predicate);
+                    resolve(self._runQuery(sql, options).then(function (result) {
+                        //console.log(JSON.stringify(result));
+                        return result;
+                    })
+                    );
+                });
+            },
+
             setTableRowId: function (model, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {

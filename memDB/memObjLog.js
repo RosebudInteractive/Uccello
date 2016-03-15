@@ -213,7 +213,8 @@ define(
 	                if ("deleted" in c) {
 	                    var o = db.getObj(c.parentGuid);
 	                    // TODO коллбэк на удаление 
-	                    o.getCol(c.parentColName)._del(db.getObj(c.guid));
+	                    if (o)
+	                        o.getCol(c.parentColName)._del(db.getObj(c.guid));
 	                }
 	                else {
 	                    if ("add" in c) {
@@ -442,8 +443,13 @@ define(
 	                                        if (!item.delObj.$sys)
 	                                            item.delObj.$sys = {};
 	                                        item.delObj.$sys.$collection_index = item.obj_index;
-	                                        col._add(item.obj, item.obj_index);
 	                                        var rsObj = this._db.deserialize(item.delObj, { obj: parent, colName: item.colName }, cb);
+
+	                                        // Логгируем восстановление объекта
+	                                        var o = { adObj: item.delObj, obj: rsObj, colName: item.colName, guid: item.guid, type: "add" };
+	                                        parent.getLog().add(o);
+	                                        parent.logColModif("add", item.colName, rsObj);
+
 	                                        var logs = this._objects[item.guid];
 	                                        // Добавляем восстановленный объект в логи родителя.
 	                                        for (var log in logs)
@@ -578,7 +584,7 @@ define(
 	                var obj_rec = self._objects[obj_guid];
 	                if (obj_rec) {
 	                    for (var log in obj_rec) {
-	                        delete obj_rec[log].log.objects[obj_guid];
+	                        delete self._virtualLogs[obj_rec[log].log.getGuid()].objects[obj_guid];
 	                    }
 	                };
 	                delete self._objects[obj_guid];

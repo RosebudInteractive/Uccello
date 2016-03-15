@@ -514,6 +514,27 @@ define(
                                                 }
                                             });
                                         break;
+
+                                    case "delete":
+
+                                        if ((!val.data) || (!val.data.key))
+                                            throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
+
+                                        var key = model.getPrimaryKey();
+                                        if (!key)
+                                            throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
+                                        var predicate = self.newPredicate();
+                                        predicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
+
+                                        if (val.data.rowVersion) {
+                                            var rwField = model.getRowVersionField();
+                                            if (!rwField)
+                                                throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
+                                            predicate.addCondition({ field: rwField.name(), op: "=", value: val.data.rowVersion });
+                                        };
+
+                                        promise = self._query.delete(model, predicate, { transaction: transaction });
+                                        break;
                                 };
                                 return promise;
                             });

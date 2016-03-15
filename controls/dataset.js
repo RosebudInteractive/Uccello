@@ -208,8 +208,8 @@ define(
                                         var alias = this.objectTree().alias();
                                         var dataRoot = currObj.getDataRoot(alias);
                                         if (dataRoot) {
-
-                                            if (master.getState() === Meta.State.Edit) {
+                                            var master_state = master.getState();
+                                            if ((master_state === Meta.State.Edit) || (master_state === Meta.State.Insert)) {
                                                 this.root(dataRoot);
                                                 this._isRootSwitched = true;
                                                 this._initCursor(true);
@@ -349,8 +349,10 @@ define(
                     if (curr_obj) {
                         var curr_state = curr_obj._currState();
                         result = curr_state === Meta.State.Browse;
-                        if ((!result) && this.master())
-                            result = this.master().getState() === Meta.State.Edit;
+                        if ((!result) && this.master()) {
+                            var master_state = this.master().getState();
+                            result = (master_state === Meta.State.Edit) || (master_state === Meta.State.Insert);
+                        };
                     }
                     else
                         result = true;
@@ -458,12 +460,11 @@ define(
                 var curr_obj = this.getCurrentDataObject();
                 if (curr_obj)
                     state = curr_obj._currState()
-                else
-                    if (this.cachedUpdates() === true) {
-                        var root = this.root();
-                        if (root)
-                            state = root._currState();
-                    };
+                else {
+                    var root = this.root();
+                    if (root)
+                        state = root._currState();
+                }
                 return state;
             },
 
@@ -478,13 +479,26 @@ define(
             },
 
             getCurrentDataObject: function () {
-                return this.pvt.dataObj;
+                var result = this.pvt.dataObj;
+                if (result) {
+                    var root=this.root();
+                    if (root) {
+                        var col = root.getCol("DataElements");
+                        if (!(col.get(col.indexOf(result)) === result)) {
+                            result = this.pvt.dataObj = null;
+                        };
+                    }
+                    else {
+                        result = this.pvt.dataObj = null;
+                    };
+                };
+                return result;
             },
 
             /**
-         *  добавить новый объект в коллекцию
-         * @param flds - поля объекта для инициализации
-         */
+             *  добавить новый объект в коллекцию
+             * @param flds - поля объекта для инициализации
+            */
             //addObject: function (flds, cb) {
 
             //    var args = {
@@ -776,7 +790,29 @@ define(
                 };
 
                 this.root().newObject(flds, {}, addObjectCallback);
+            },
 
+            deleteObject: function (options, cb) {
+
+                var self = this;
+
+                function delObjectCallback(result) {
+
+                    if (DEBUG)
+                        console.log("### delObjectCallback: " + JSON.stringify(result));
+
+                    if (result && (result.result === "OK") && result.keyValue) {
+                        self.cursor(result.keyValue);
+                    };
+
+                    if (cb)
+                        setTimeout(function () {
+                            cb(result);
+                        }, 0);
+                };
+
+                if (this.root() && this.getCurrentDataObject())
+                    this.root().deleteObject(this.getCurrentDataObject().getGuid(), options, delObjectCallback);
             }
         });
         return Dataset;
