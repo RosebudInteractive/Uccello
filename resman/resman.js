@@ -12,9 +12,10 @@ define(
         './builds',
         './resources',
         './resUtils',
-        './resVersions'
+        './resVersions',
+        'fs'
     ],
-    function(ControlMgr, Predicate, Directories, Builds, Resources, ResUtils, ResVersions) {
+    function(ControlMgr, Predicate, Directories, Builds, Resources, ResUtils, ResVersions, fs) {
 
         function arrayHasObjects(guids) {
             return guids.some(function(guid){
@@ -112,6 +113,10 @@ define(
                                             if (_count == guids.length) {
                                                 resolve(_result)
                                             }
+                                        },
+                                        function(reason){
+                                            _count++;
+                                            reject(reason)
                                         }
                                     );
                                 }
@@ -149,7 +154,7 @@ define(
                                     _array.push(JSON.parse(bodies[body]))
                                 }
                             }
-                            done({datas: _array})
+                            done({datas: _array, result : 'OK'})
                         },
                         function(reason) {
                             done({datas: [], result : 'ERROR', message : reason.message})
@@ -177,12 +182,23 @@ define(
                         var _result = [];
                         guids.forEach(function (guid) {
                             var gr = guid.slice(0, 36);
-                            var json = require(UCCELLO_CONFIG.dataPath + 'forms/' + gr + '.json');
+                            var _filePath = that.findPath(gr);
+                            if (!_filePath) {
+                                done({datas: [], result : 'ERROR', message : 'Can not found resource'});
+                                throw new Error('Can not found resource')
+                            }
+                            var json = require(_filePath.path + guid  + '.json');//UCCELLO_CONFIG.dataPath + 'forms/' + gr + '.json');
                             _result.push(json)
                         });
                         done({datas: _result, result : 'OK'})
                     }
                 }
+            },
+
+            findPath: function(guid){
+                return UCCELLO_CONFIG.resman.sourceDir.find(function(element){
+                    return fs.existsSync(element.path + guid  + '.json')
+                })
             },
 
             getResource: function (guid) {

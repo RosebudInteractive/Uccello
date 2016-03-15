@@ -196,6 +196,7 @@ define([], function () {
             'DbTreeViewItemType': '024cdaa7-9e63-5cb1-65a1-caaec6b93140',
             'Layout': "8475e73d-06aa-4454-b02f-cf26a9cbabb6",
             'AdaptiveContainer': "d889ec6c-8083-4e53-815f-c135b1cab573",
+            'ProcessDefinition' : "08b97860-179a-4292-a48d-bfb9535115d3"
         },
 
         REMOTE_RESULT: "XXX",

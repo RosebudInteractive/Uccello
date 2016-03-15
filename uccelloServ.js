@@ -47,23 +47,24 @@ define(
 				    constructHolder: this.pvt.constructHolder
 				});
 
+                this.pvt.resman = new Resman(that.getUserMgr().getController(), that.pvt.constructHolder, that.pvt.proxyServer);
+
 				this.pvt.proxyWfe = null;
 				if (options && options.engineSingleton) {
 				    options.engineSingleton.initInstance({
 				        dbController: this.getUserMgr().getController(),
 				        constructHolder: this.pvt.constructHolder,
-				        router: this.pvt.router
+				        router: this.pvt.router,
+                        resman: this.pvt.resman
 				    });
 				    this.pvt.wfe = options.engineSingleton.getInstance();
 				    this.pvt.proxyWfe = rpc._publ(this.pvt.wfe, this.pvt.wfe.getInterface());
 				    this.getUserMgr().proxyWfe(this.pvt.proxyWfe);
-				    this.createSimpleAddObjectProcessDef();
 				};
 
 				new ProcessDispatcher({ proxyWfe: this.pvt.proxyWfe });
 
 				this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder, rpc);
-                this.pvt.resman = new Resman(that.getUserMgr().getController(), that.pvt.constructHolder, that.pvt.proxyServer);
                 this.pvt.commServer = options.commServer;
 
                 this.getRouter().add('getGuids', function(data, done) {
@@ -154,67 +155,6 @@ define(
                 //        }
                 //    });
                 //});
-            },
-
-            createSimpleAddObjectProcessDef: function () {
-                if (this.pvt.wfe) {
-                    var wfe = this.pvt.wfe;
-                    var def = wfe.newProcessDefinition();
-                    def.definitionID("8349600e-3d0e-4d4e-90c8-93d42c443ab3");
-                    def.addParameter("CurrentObj").value("");
-                    def.addParameter("IsDone").value(false);
-
-                    //var taskStart = def.addUserTask("StartTask");
-                    var taskStart = def.addUserTask("StartTask", {
-                        moduleName: 'scriptTask',
-                        methodName: 'execObjMethodCreate'
-                    });
-
-                    var req = taskStart.addRequest("ObjCreateRequest");
-                    req.addParameter("objURI");
-                    req.addParameter("func");
-                    req.addParameter("args");
-
-                    //var taskScriptObjCreate = def.addScriptTask("ObjCreateScript", {
-                    //    moduleName: 'scriptTask',
-                    //    methodName: 'execObjMethodCreate'
-                    //});
-
-                    //var taskObjEdit = def.addUserTask("ObjEditTask");
-                    var taskObjEdit = def.addUserTask("ObjEditTask", {
-                        moduleName: 'scriptTask',
-                        methodName: 'execObjMethodEdit'
-                    });
-
-                    req = taskObjEdit.addRequest("ObjModifRequest");
-                    req.addParameter("objURI");
-                    req.addParameter("func");
-                    req.addParameter("args");
-
-                    //var taskScriptObjEdit = def.addScriptTask("ObjEditScript", {
-                    //    moduleName: 'scriptTask',
-                    //    methodName: 'execObjMethodEdit'
-                    //});
-
-                    var taskFin = def.addActivity('finish');
-                    var gateway = def.addExclusiveGateway('CheckIfDone');
-
-
-                    def.connect(taskStart, taskObjEdit);
-
-                    def.connect(taskObjEdit, gateway);
-                    def.connect(gateway, taskObjEdit, {
-                        moduleName: 'scriptTask',
-                        methodName: 'checkIfNotDone'
-                    });
-
-                    def.connect(gateway, taskFin, {
-                        moduleName: 'scriptTask',
-                        methodName: 'checkIfDone'
-                    });
-
-                    wfe.addProcessDefinition(def);
-                };
             },
 
 			getUserMgr: function() {

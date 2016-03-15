@@ -20,14 +20,19 @@ var _initializer = {
             uccelloPath     : _path.Uccello,
             webSocketServer : {port: 8082},
 
+            resman : {
+                useDb : true,
+                defaultProduct : 'ProtoOne',
+                sourceDir: [
+                    {path: _path.DbPath + '/forms/', type: 'FRM'},
+                    {path: _path.DbPath + '/processDefinitions/', type: 'PR_DEF'}
+                ]
+            },
+
             resourceBuilder : {
                 types: [
                     {Code: "FRM", Name: "User Form", ClassName: "ResForm", Description: "Пользовательская форма"},
-                    {Code: "TEST", Name: "Test Type", ClassName: "UserInfo", Description: "Тестовый тип"}
-                ],
-                sourceDir: [
-                    {path: _parentDir + '/../sourceFolder/FRM', type: 'FRM'},
-                    {path: _parentDir + '/../sourceFolder/TEST', type: 'TEST'}
+                    {Code: "PR_DEF", Name: "Process Definition", ClassName: "ProcessDefinition", Description: "Определение процесса"}
                 ],
                 destDir: './testFiles/',
                 productId: 2,

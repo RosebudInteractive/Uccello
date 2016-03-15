@@ -98,70 +98,38 @@ describe('#init', function(){
         );
     });
 
-    it('Не найдена настройка Source directory', function(done){
+    it('Не найдена настройка Source directory', function(){
         UCCELLO_CONFIG.resourceBuilder = {};
+        UCCELLO_CONFIG.resman = {};
 
-        Builder.prepareFiles().then(
-            function(){done(new Error('must be rejected'))},
-            function(err){
-                if (!err) {
-                    done('No defined error')
-                }
-                err.message.should.be.equal('ResourceBuilder : Source directory not found');
-                done();
-            }
-        );
+        return Builder.prepareFiles().should.be.rejectedWith('ResourceBuilder : Source directory not found');
     });
 
-    it('Не найдена настройка Destination directory', function(done){
+    it('Не найдена настройка Destination directory', function(){
         UCCELLO_CONFIG.resourceBuilder = {};
+        UCCELLO_CONFIG.resman = {sourceDir : [{path: './forms/', type: 'FRM'}]};
         UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
 
-        Builder.prepareFiles().then(
-            function(){done(new Error('must be rejected'))},
-            function(err){
-                if (!err) {
-                    done('No defined error')
-                }
-                err.message.should.be.equal('ResourceBuilder : Destination directory not found');
-                done();
-            }
-        );
+        return Builder.prepareFiles().should.be.rejectedWith('ResourceBuilder : Destination directory not found');
     });
 
-    it('Не найдена настройка ProductId', function(done){
+    it('Не найдена настройка ProductId', function(){
         UCCELLO_CONFIG.resourceBuilder = {};
         UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
         UCCELLO_CONFIG.resourceBuilder.destDir = './testFolder';
+        UCCELLO_CONFIG.resman = {sourceDir : [{path: './forms/', type: 'FRM'}]};
 
-        Builder.prepareFiles().then(
-            function(){done(new Error('must be rejected'))},
-            function(err){
-                if (!err) {
-                    done('No defined error')
-                }
-                err.message.should.be.equal('ResourceBuilder : ProductId not found');
-                done();
-            }
-        );
+        return Builder.prepareFiles().should.be.rejectedWith('ResourceBuilder : ProductId not found');
     });
 
-    it('Не найдена настройка CurrentBuildId', function(done){
+    it('Не найдена настройка CurrentBuildId', function() {
         UCCELLO_CONFIG.resourceBuilder = {};
         UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
         UCCELLO_CONFIG.resourceBuilder.destDir = './testFolder';
         UCCELLO_CONFIG.resourceBuilder.productId = 2;
+        UCCELLO_CONFIG.resman = {sourceDir : [{path: './forms/', type: 'FRM'}]};
 
-        Builder.prepareFiles().then(
-            function(){done(new Error('must be rejected'))},
-            function(err){
-                if (!err) {
-                    done('No defined error')
-                }
-                err.message.should.be.equal('ResourceBuilder : CurrentBuildId not found');
-                done();
-            }
-        );
+        return Builder.prepareFiles().should.be.rejectedWith('ResourceBuilder : CurrentBuildId not found');
     });
 
     it('Не найдена секция Types', function(){
@@ -170,7 +138,7 @@ describe('#init', function(){
         UCCELLO_CONFIG.resourceBuilder.destDir = './testFolder';
         UCCELLO_CONFIG.resourceBuilder.productId = 2;
         UCCELLO_CONFIG.resourceBuilder.currBuildId = 2;
-
+        UCCELLO_CONFIG.resman = {sourceDir : [{path: './forms/', type: 'FRM'}]};
 
         return Builder.prepareFiles().should.be.rejectedWith('ResourceBuilder : Resource types not found');
     });
@@ -217,8 +185,8 @@ describe('#Static method prepareFiles', function() {
     it('Вернуть ошибку "Нет файлов"', function () {
         deleteFolderRecursive('./emptyFolder');
         fs.mkdirSync('./emptyFolder');
-        UCCELLO_CONFIG.resourceBuilder.sourceDir = './emptyFolder';
+        UCCELLO_CONFIG.resman.sourceDir = [{path : './emptyFolder', type : 'FRM'}];
 
-        Builder.prepareFiles().should.be.rejectedWith('Resources built with errors')
+        return Builder.prepareFiles().should.be.rejectedWith('Resources built with errors')
     });
 });
