@@ -17,9 +17,11 @@ define(
                 { fname: "_PrevState", ftype: "int" }
             ],
 
-            rowVersionFname: null,
+            _rowVersionFname: null,
             _keyField: null,
             _parentField: null,
+            _typeIdField: null,
+            _typeIdVal: -1,
             _persFields: {},
 
             init: function (cm, params) {
@@ -47,11 +49,14 @@ define(
                         throw new Error("DataObject::set: Can't modify data-object in state \"" + Meta.stateToString(state) + "\".");
                     }
                     else
-                        if (this.rowVersionFname && (field === this.rowVersionFname))
+                        if (this._rowVersionFname && (field === this._rowVersionFname))
                             throw new Error("DataObject::set: Field \"" + field + "\" is READ ONLY.")
                         else
                             if (this._parentField && (field === this._parentField))
                                 throw new Error("DataObject::set: Field \"" + field + "\" is READ ONLY.");
+                            else
+                                if (this._typeIdField && (field === this._typeIdField))
+                                    throw new Error("DataObject::set: Field \"" + field + "\" is READ ONLY.");
                 };
                 UccelloClass.super.apply(this, [field, value, withCheckVal]);
             },
@@ -84,7 +89,7 @@ define(
                     if (state === Meta.State.Insert) {
                         var fields = {};
                         fields.Guid = this.getGuidRes();
-                        var ver_fld_name = this.rowVersionFname;
+                        var ver_fld_name = this._rowVersionFname;
                         for (var fldName in this._persFields) {
                             if (ver_fld_name !== fldName) {
                                 var val = this.getSerialized(fldName);
@@ -111,7 +116,7 @@ define(
                             };
                             if (data.fields) {
                                 data.key = this._keyField ? this.getOldValue(this._keyField, editLog, true) : null;
-                                data.rowVersion = this.rowVersionFname ? this.getOldValue(this.rowVersionFname, editLog, true) : null;
+                                data.rowVersion = this._rowVersionFname ? this.getOldValue(this._rowVersionFname, editLog, true) : null;
                                 result = dataObj;
                             };
                         };
@@ -269,8 +274,8 @@ define(
                                                 nobj++;
                                                 cur_obj = obj_updated[j];
                                                 // «апоминаем новое значение версии записи.
-                                                if (cur_obj.rowVersionFname && result.detail[i].rowVersion)
-                                                    cur_obj.set(cur_obj.rowVersionFname, result.detail[i].rowVersion, false, true);
+                                                if (cur_obj._rowVersionFname && result.detail[i].rowVersion)
+                                                    cur_obj.set(cur_obj._rowVersionFname, result.detail[i].rowVersion, false, true);
                                             };
                                         };
                                         isSuccess = nobj === (obj_updated.length + obj_deleted.length);
@@ -373,7 +378,7 @@ define(
                                 var data = {};
                                 var opData = { op: "delete", model: data_obj.className, data: data };
                                 data.key = data_obj.getOldValue(data_obj._keyField, self._editVLog, true);
-                                data.rowVersion = data_obj.rowVersionFname ? data_obj.getOldValue(data_obj.rowVersionFname, self._editVLog, true) : null;
+                                data.rowVersion = data_obj._rowVersionFname ? data_obj.getOldValue(data_obj._rowVersionFname, self._editVLog, true) : null;
                                 self._objList.push({ guid: data_obj.getGuid(), opData: opData });
                             };
                         });

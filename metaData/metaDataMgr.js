@@ -36,6 +36,9 @@ define(
                 this._modelsByRootName = {};
                 this._modelsByRootGuid = {};
                 this._modelRefs = {};
+                this._maxModelId = 0;
+                this._modelsByTypeId = {};
+                this._typeModel = null;
 
                 this._router = null;
 
@@ -78,6 +81,10 @@ define(
                         this.getDB()._metaDataMgr = this;
 
                 };
+            },
+
+            getTypeModel: function () {
+                return this._typeModel;
             },
 
             models: function () {
@@ -210,6 +217,29 @@ define(
                 return this._treesByName[name];
             },
 
+            addTypeObjModel: function () {
+                var params = {
+                    ini: {
+                        fields: {
+                            ResName: Meta.TYPE_MODEL_NAME,
+                            DataObjectGuid: Meta.TYPE_MODEL_GUID,
+                            DataRootName: Meta.TYPE_MODEL_RNAME,
+                            DataRootGuid: Meta.TYPE_MODEL_RGUID,
+                            IsTypeModel: true
+                        }
+                    }
+                };
+                var model = new MetaModel(this.getDB(), params);
+                return model
+                    .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey)
+                    .addField("Guid", { type: "guid", allowNull: true }, Meta.Field.System | Meta.Field.Hidden)
+                    .addField(Meta.ROW_VERSION_FNAME, { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion)
+                    .addField("TypeGuid", { type: "guid", allowNull: false })
+                    .addField("ModelName", { type: "string", length: 255, allowNull: false })
+                    .addField("ParentTypeId", { type: "dataRef", model: Meta.TYPE_MODEL_NAME, refAction: "parentRestrict", allowNull: true });
+
+            },
+
             addModel: function (name, guid, rootName, rootGuid) {
                 if (name) {
                     var params = {
@@ -219,6 +249,8 @@ define(
                                 DataObjectGuid: guid ? guid : this.getDB().getController().guid(),
                                 DataRootName: rootName ? rootName : "Root" + name,
                                 DataRootGuid: rootGuid ? rootGuid : this.getDB().getController().guid(),
+                                IsTypeModel: false,
+                                TypeId: ++this._maxModelId
                             }
                         }
                     };
@@ -226,7 +258,9 @@ define(
                     return model
                         .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey)
                         .addField("Guid", { type: "guid", allowNull: true }, Meta.Field.System | Meta.Field.Hidden)
-                        .addField(Meta.ROW_VERSION_FNAME, { type: "rowversion", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion);
+                        .addField(Meta.ROW_VERSION_FNAME, { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion)
+                        .addField("TypeId", { type: "dataRef", model: Meta.TYPE_MODEL_NAME, refAction: "parentRestrict", allowNull: false },
+                            Meta.Field.System | Meta.Field.TypeId);
 
                 } else
                     throw new Error("Model name is undefined.");
@@ -375,7 +409,7 @@ define(
                 constr += "\n\t\t],\n";
 
                 if (model.getRowVersionField())
-                    constr += "\t\trowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
+                    constr += "\t\t_rowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
 
                 is_first = true;
                 constr += "\t\t_persFields: {";
@@ -392,6 +426,11 @@ define(
 
                 if (model.getPrimaryKey())
                     constr += "\t\t_keyField: \"" + model.getPrimaryKey().name() + "\",\n";
+
+                if (model.getTypeIdField()) {
+                    constr += "\t\t_typeIdField: \"" + model.getTypeIdField().name() + "\",\n";
+                    constr += "\t\t_typeIdVal: " + model.getActualTypeId() + ",\n";
+                };
 
                 is_first = true;
                 for (var i = 0; i < fields.length; i++) {
@@ -419,10 +458,15 @@ define(
                     "\t\tmetaFields: [],\n";
 
                 if (model.getRowVersionField())
-                    constr += "\t\trowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
+                    constr += "\t\t_rowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
 
                 if (model.getPrimaryKey())
                     constr += "\t\t_keyField: \"" + model.getPrimaryKey().name() + "\",\n";
+
+                if (model.getTypeIdField()) {
+                    constr += "\t\t_typeIdField: \"" + model.getTypeIdField().name() + "\",\n";
+                    constr += "\t\t_typeIdVal: " + model.getActualTypeId() + ",\n";
+                };
 
                 constr += "\n" +
                     "\t\tinit: function(cm,params){\n" +
@@ -579,6 +623,24 @@ define(
                     var root_name = model.dataRootName();
                     var root_guid = model.dataRootGuid();
 
+                    if (model.isTypeModel()) {
+                        if (this._typeModel) {
+                            this.getDB()._deleteRoot(model);
+                            throw new Error("Type Model \"" + this._typeModel.name() + "\" is already defined.");
+                        };
+                        this._typeModel = model;
+                    }
+                    else {
+                        var type_id = model.getActualTypeId();
+                        if ((this._modelsByTypeId[type_id] !== undefined)) {
+                            type_id = ++this._maxModelId;
+                            model._setActualTypeId(type_id);
+                        };
+                        this._modelsByTypeId[type_id] = model;
+                        if (type_id > this._maxModelId)
+                            this._maxModelId = type_id;
+                    };
+
                     if ((this._modelsByName[name] !== undefined)
                             || (this._modelsByRootName[name] !== undefined)) {
                         this.getDB()._deleteRoot(model);
@@ -671,6 +733,7 @@ define(
                 var root_name = model.dataRootName();
                 var root_guid = model.dataRootGuid();
 
+                this._modelsByTypeId[model.getActualTypeId()] = model;
                 this._modelsByName[name] = model;
                 this._modelsByGuid[guid] = model;
                 this._modelRefs[guid] = args.obj;
@@ -761,6 +824,17 @@ define(
                 };
                 model.handlers.push(hdesc);
                 hdesc.obj.on(hdesc.handler);
+
+                hdesc = {
+                    obj: model.event,
+                    handler: {
+                        type: 'mod%IsTypeModel',
+                        subscriber: this,
+                        callback: this._getOnChangeModelReadOnlyProp(model, "IsTypeModel")
+                    }
+                };
+                model.handlers.push(hdesc);
+                hdesc.obj.on(hdesc.handler);
             },
 
             _onDeleteModelRef: function (args) {
@@ -778,6 +852,7 @@ define(
 
                 this._removeModelFromLinks(name);
 
+                delete this._modelsByTypeId[model.getActualTypeId()];
                 delete this._modelsByName[name];
                 delete this._modelsByGuid[guid];
                 delete this._modelRefs[guid];

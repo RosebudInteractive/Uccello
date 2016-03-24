@@ -304,6 +304,8 @@ define(
 
             key: "guid",
 
+            isRowVersionType: true,
+
             /**
              * The Guid Type.
              *

@@ -149,11 +149,12 @@ define(
             },
 
             updateQuery: function (model, vals, predicate, options) {
-                var opts = _.cloneDeep(options || {});
-                var rw = model.getRowVersionField();
-                if (rw)
-                    opts.output = " OUTPUT INSERTED." + this.escapeId(rw.name()) + " AS rowVersion";
-                var updateCmd = UccelloClass.super.apply(this, [model, vals, predicate, opts]);
+                //var opts = _.cloneDeep(options || {});
+                //var rw = model.getRowVersionField();
+                //if (rw)
+                //    opts.output = " OUTPUT INSERTED." + this.escapeId(rw.name()) + " AS rowVersion";
+                //var updateCmd = UccelloClass.super.apply(this, [model, vals, predicate, opts]);
+                var updateCmd = UccelloClass.super.apply(this, [model, vals, predicate, options]);
                 return updateCmd;
             },
 
@@ -191,16 +192,16 @@ define(
             insertQuery: function (model, vals) {
                 var options = {};
 
-                var rw = model.getRowVersionField();
-                if (rw)
-                    options.output = " OUTPUT INSERTED." + this.escapeId(rw.name()) + " AS rowVersion";
+                //var rw = model.getRowVersionField();
+                //if (rw)
+                //    options.output = " OUTPUT INSERTED." + this.escapeId(rw.name()) + " AS rowVersion";
 
                 var insertCmd = UccelloClass.super.apply(this, [model, vals, options]);
 
-                var pk = model.getPrimaryKey();
-                if (pk && vals[pk.name()]) {
-                    insertCmd.insertId = vals[pk.name()];
-                }
+                //var pk = model.getPrimaryKey();
+                //if (pk && vals[pk.name()]) {
+                //    insertCmd.insertId = vals[pk.name()];
+                //}
 
                 return insertCmd;
             },

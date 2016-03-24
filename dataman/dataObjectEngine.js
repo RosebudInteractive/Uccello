@@ -226,6 +226,51 @@ define(
                 }, this);
             },
 
+            saveSchemaTypesToFile: function (dir, schema_name) {
+                var fs = require('fs');
+                var path = require('path');
+                var schema = this.getSchema(schema_name);
+                if (!schema)
+                    throw new Error("Schema \"" + schema_name + "\" doesn't exist.");
+
+                var models = schema.models();
+                var data = {
+                    $sys: {
+                        guid: this._controller.guid(),
+                        typeGuid: Meta.TYPE_MODEL_RGUID
+                    },
+                    fields: {
+                        Id: 1,
+                        Name: Meta.TYPE_MODEL_RNAME
+                    },
+                    collections: {
+                        DataElements: []
+                    }
+                };
+                var elems = data.collections.DataElements;
+
+                _.forEach(models, function (model) {
+                    if (!model.isTypeModel()) {
+                        var elem = {
+                            $sys: {
+                                guid: this._controller.guid(),
+                                typeGuid: Meta.TYPE_MODEL_GUID
+                            },
+                            fields: {
+                                Id: model.getActualTypeId(),
+                                TypeGuid: model.dataObjectGuid(),
+                                ModelName: model.name()
+                            },
+                            collections: {}
+                        };
+                        elems.push(elem);
+                    };
+                }, this);
+
+                fs.writeFileSync(path.format({ dir: dir, base: "DATA_" + Meta.TYPE_MODEL_NAME + ".json" }),
+                    JSON.stringify(data), { encoding: "utf8" });
+            },
+
             transaction: function (batch, options) {
                 var result;
                 try {

@@ -38,19 +38,6 @@ define(
                 var row_version_fnames = [];
                 var query_type = sql.type;
 
-                function collectRowVersions(request) {
-                    var row_version_fname = request && request.model && request.model.getRowVersionField() ? request.model.getRowVersionField().name() : null;
-                    if (row_version_fname)
-                        row_version_fnames.push(request.sqlAlias ? request.sqlAlias + "_" + row_version_fname : row_version_fname);
-                    if (request && _.isArray(request.childs) && (request.childs.length > 0)) {
-                        _.forEach(request.childs, function (ch_query) {
-                            cnt = collectRowVersions(ch_query);
-                        });
-                    };
-                };
-
-                collectRowVersions(sql.meta);
-
                 if (_.isArray(results)) { // Результат SELECT ?
                     if ((query_type === this._queryTypes.ROWID) && (results.length === 2) && (results[0].length === 1)) {
                         res = {
@@ -61,15 +48,6 @@ define(
                     }
                     else {
                         res = results;
-                        if (row_version_fnames.length > 0) {
-                            res = _.cloneDeep(results);
-                            _.forEach(res, function (rec) {
-                                _.forEach(row_version_fnames, function (verfn) {
-                                    if (typeof (rec[verfn]) === "number")
-                                        rec[verfn] = rec[verfn].toString();
-                                });
-                            });
-                        };
                     };
                 }
                 else {

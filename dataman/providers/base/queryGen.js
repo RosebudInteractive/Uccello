@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['fs', 'lodash', '../../../predicate/predicate'],
-    function (Fs, _, Predicate) {
+    ['fs', 'lodash', '../../../system/utils', '../../../predicate/predicate'],
+    function (Fs, _, Utils, Predicate) {
 
         var TICK_CHAR = '`';
         var ALIAS_PREFIX = "t";
@@ -236,7 +236,24 @@ define(
                 var attrs = [];
                 var self = this;
                 var params = [];
-                var escVals = this._escapeValues(model, vals, params);
+
+                var curr_vals = _.cloneDeep(vals || {});
+
+                var tp_field = model.getTypeIdField();
+                if (tp_field) {
+                    var tp_fname = tp_field.name();
+                    var val = curr_vals[tp_fname];
+                    if ((typeof (val) != "undefined") && (val != model.getActualTypeId()))
+                        throw new Error("Invalid \"" + model.name() + "\" object type: " +
+                            val + ". Correct one is " + model.getActualTypeId() + ".");
+                };
+
+                var rw = model.getRowVersionField();
+                var row_version = Utils.guid();
+                if (rw && options.rowVersion)
+                    curr_vals[rw.name()] = row_version;
+
+                var escVals = this._escapeValues(model, curr_vals, params);
                 _.forEach(escVals, function (value, key) {
                     attrs.push(value.id + " = " + value.val);
                 });
@@ -251,7 +268,7 @@ define(
                     if (cond_sql.length > 0)
                         result += " WHERE " + cond_sql;
                 };
-                return { sqlCmd: result + ";", params: params, type: this.queryTypes.UPDATE, meta: model };
+                return { sqlCmd: result + ";", params: params, type: this.queryTypes.UPDATE, meta: model, rowVersion: row_version };
             },
 
             deleteQuery: function (model, predicate, options) {
@@ -275,7 +292,32 @@ define(
             insertQuery: function (model, vals, options) {
                 var query = "<%= before %>INSERT INTO <%= table %> (<%= fields%>)<%= output %> VALUES (<%= values%>)<%= after %>";
                 var params = [];
-                var escVals = this._escapeValues(model, vals, params);
+
+                var curr_vals = _.cloneDeep(vals || {});
+                var row_version = Utils.guid();
+                var rw = model.getRowVersionField();
+                if (rw)
+                    curr_vals[rw.name()] = row_version;
+
+                var insertId;
+                var pk = model.getPrimaryKey();
+                if (pk && curr_vals[pk.name()]) {
+                    insertId = curr_vals[pk.name()];
+                };
+
+                var tp_field = model.getTypeIdField();
+                if (tp_field) {
+                    var tp_fname = tp_field.name();
+                    var val = curr_vals[tp_fname];
+                    if (!val)
+                        curr_vals[tp_fname] = model.getActualTypeId()
+                    else
+                        if (val != model.getActualTypeId())
+                            throw new Error("Invalid \"" + model.name() + "\" object type: " +
+                                val + ". Correct one is " + model.getActualTypeId() + ".");
+                };
+
+                var escVals = this._escapeValues(model, curr_vals, params);
                 var attrs = [];
                 var values = [];
                 var self = this;
@@ -294,7 +336,14 @@ define(
                     fields: attrs.join(", "),
                     values: values.join(", ")
                 };
-                return { sqlCmd: _.template(query)(data).trim() + ";", params: params, type: this.queryTypes.INSERT, meta: model };
+
+                return {
+                    sqlCmd: _.template(query)(data).trim() + ";",
+                    params: params, type: this.queryTypes.INSERT,
+                    meta: model,
+                    rowVersion: row_version,
+                    insertId: insertId
+                };
             },
 
             execSql: function (sql) {

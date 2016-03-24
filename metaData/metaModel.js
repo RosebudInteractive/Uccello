@@ -19,7 +19,9 @@ define(
             metaFields: [
                 { fname: "DataObjectGuid", ftype: "string" },
                 { fname: "DataRootName", ftype: "string" },
-                { fname: "DataRootGuid", ftype: "string" }
+                { fname: "DataRootGuid", ftype: "string" },
+                { fname: "IsTypeModel", ftype: "boolean" },
+                { fname: "TypeId", ftype: "int" }
             ],
 
             elemNamePrefix: "Field",
@@ -40,13 +42,27 @@ define(
                 return this._genericSetter("DataRootGuid", value);
             },
 
+            isTypeModel: function (value) {
+                return this._genericSetter("IsTypeModel", value);
+            },
+
+            typeId: function (value) {
+                return this._genericSetter("TypeId", value);
+            },
+
+            getActualTypeId: function () {
+                return this._actTypeId === -1 ? this.typeId() : this._actTypeId;
+            },
+
             init: function (cm, params) {
                 this._fieldsByName = {};
                 this._fields = [];
                 this._primaryKey = null;
                 this._rowVersion = null;
+                this._typeId = null;
                 this._orderChangCounter = 0;
                 this._refs = {};
+                this._actTypeId = -1;
 
                 if (params)
                     this.eventsInit();  // WARNING !!! This line is essential !!! It initializes "Event" mixin.
@@ -89,6 +105,10 @@ define(
 
             getRowVersionField: function () {
                 return this._rowVersion;
+            },
+
+            getTypeIdField: function () {
+                return this._typeId;
             },
 
             addInternalField: function (name, flags, order) {
@@ -153,6 +173,10 @@ define(
                 return this.getDB()._metaDataMgr.outgoingLinks(this);
             },
 
+            _setActualTypeId: function (value) {
+                this._actTypeId = value;
+            },
+
             _addField: function (name, field_type, flags, order, is_internal) {
                 if (name && field_type) {
                     var params = {
@@ -214,6 +238,22 @@ define(
                             throw new Error("Row version field \"" + fieldName + "\" is already defined as \"" + self._rowVersion.name() + "\".");
                         };
                         self._rowVersion = fieldObj;
+                        var fieldType = fieldObj.fieldType();
+                        if (fieldType.allowNull()) {
+                            var newType = fieldType.serialize();
+                            newType.allowNull = false;
+                            fieldObj.fieldType(newType);
+                        };
+                    };
+
+                    if ((flags & Meta.Field.TypeId) !== 0) {
+
+                        if (self._typeId && (self._typeId !== fieldObj)) {
+
+                            fieldObj.set("Flags", oldFlags);
+                            throw new Error("TypeId field \"" + fieldName + "\" is already defined as \"" + self._typeId.name() + "\".");
+                        };
+                        self._typeId = fieldObj;
                         var fieldType = fieldObj.fieldType();
                         if (fieldType.allowNull()) {
                             var newType = fieldType.serialize();
@@ -398,6 +438,13 @@ define(
                     };
                     this._rowVersion = field;
                 };
+                if ((flags & Meta.Field.TypeId) !== 0) {
+                    if (this._typeId && (this._typeId !== field)) {
+                        this._fieldsCol._del(field);
+                        throw new Error("TypeId field \"" + name + "\" is already defined as \"" + this._typeId.name() + "\".");
+                    };
+                    this._typeId = field;
+                };
 
                 this._fields.splice(order, 0, field);
                 this._reindexFields();
@@ -464,6 +511,9 @@ define(
 
                     if (this._rowVersion === field)
                         this._rowVersion = null;
+
+                    if (this._typeId === field)
+                        this._typeId = null;
 
                     var fieldType = field.fieldType();
                     if (fieldType instanceof MemMetaType.DataRefType) {

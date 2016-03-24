@@ -6,8 +6,8 @@ if (typeof define !== 'function') {
 var currPath = __dirname;
 
 define(
-    ['path', '../base/queryGen', 'lodash', UCCELLO_CONFIG.uccelloPath + '/memDB/memMetaType'],
-    function (Path, Base, _, MemMetaType) {
+    ['path', '../../../system/utils', '../base/queryGen', 'lodash', UCCELLO_CONFIG.uccelloPath + '/memDB/memMetaType'],
+    function (Path, Utils, Base, _, MemMetaType) {
 
         var iniScriptPath = Path.resolve(currPath, "./scripts/dbInit.sql");
         var ROWID_TABLE_PREFIX = "__GEN_ROWID_";
@@ -105,22 +105,6 @@ define(
                 return batch;
             },
 
-            updateQuery: function (model, vals, predicate, options) {
-                var opts = _.cloneDeep(options || {});
-                var mysql_vals = _.cloneDeep(vals || {});
-                var rw = model.getRowVersionField();
-                var row_version;
-                if (rw && opts.rowVersion) {
-                    row_version = ((opts.rowVersion | 0) + 1) & 0x7FFFFFFF;
-                    if (!row_version)
-                        row_version = this.ROW_VERSION_INIT_VAL;
-                    mysql_vals[rw.name()] = row_version;
-                };
-                var updateCmd = UccelloClass.super.apply(this, [model, mysql_vals, predicate, opts]);
-                updateCmd.rowVersion = row_version.toString();
-                return updateCmd;
-            },
-
             setTableRowIdQuery: function (model) {
                 var vals = {};
                 var sql_params = [];
@@ -152,25 +136,8 @@ define(
                 };
             },
 
-            insertQuery: function (model, vals) {
-                var mysql_vals = _.cloneDeep(vals || {});
-                var rw = model.getRowVersionField();
-                if (rw)
-                    mysql_vals[rw.name()] = this.ROW_VERSION_INIT_VAL;
-                var insertCmd = UccelloClass.super.apply(this, [model, mysql_vals]);
-                insertCmd.rowVersion = this.ROW_VERSION_INIT_VAL.toString();
-                var pk = model.getPrimaryKey();
-                if (pk && vals[pk.name()]) {
-                    insertCmd.insertId = vals[pk.name()];
-                }
-                return insertCmd;
-            },
-
             escapeValue: function (s, type, params) {
-                var val = s;
-                if (type.isRowVersionType && (typeof (s) === "string"))
-                    val = s | 0;
-                return this.getNativeLib().escape(val);
+                return this.getNativeLib().escape(s);
             },
 
             escapeId: function (s) {

@@ -79,7 +79,10 @@ define(
                     self._engine.releasePredicate(predicate);
                     resolve(self._runQuery(sql, options).then(function (result) {
                             //console.log(JSON.stringify(result));
-                            return result;
+                            if (result.affectedRows && (result.affectedRows === 1))
+                                return result;
+                            else
+                                throw new Error("Data object has been modified by another user.");
                         })
                     );
                 });
@@ -91,9 +94,12 @@ define(
                     var sql = self._query_gen.deleteQuery(model, predicate);
                     self._engine.releasePredicate(predicate);
                     resolve(self._runQuery(sql, options).then(function (result) {
-                        //console.log(JSON.stringify(result));
-                        return result;
-                    })
+                            //console.log(JSON.stringify(result));
+                            if (result.affectedRows && (result.affectedRows === 1))
+                                return result;
+                            else
+                                throw new Error("Data object has been modified by another user.");
+                        })
                     );
                 });
             },
