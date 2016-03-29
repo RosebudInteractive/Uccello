@@ -75,14 +75,21 @@ define(
                 var self = this;
                 return new Promise(function (resolve, reject) {
                     var updOptions = _.cloneDeep(options && options.updOptions ? options.updOptions : {});
+                    var childLevel = model.getChildLevel();
                     var sql = self._query_gen.updateQuery(model, values, predicate, updOptions);
                     self._engine.releasePredicate(predicate);
                     resolve(self._runQuery(sql, options).then(function (result) {
                             //console.log(JSON.stringify(result));
-                            if (result.affectedRows && (result.affectedRows === 1))
-                                return result;
+                            if (result.length === (childLevel + 1)) {
+                                for (var i = 0; i < result.length; i++) {
+                                    if (!(result[i].affectedRows && (result[i].affectedRows === 1)))
+                                        throw new Error("Data object has been modified by another user.");
+                                }
+                                return result[0];
+                            }
                             else
-                                throw new Error("Data object has been modified by another user.");
+                                throw new Error("Inconsistent \"UPDATE\" result.");
+
                         })
                     );
                 });
@@ -91,7 +98,8 @@ define(
             "delete": function (model, predicate, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
-                    var sql = self._query_gen.deleteQuery(model, predicate);
+                    var delOptions = _.cloneDeep(options && options.delOptions ? options.delOptions : {});
+                    var sql = self._query_gen.deleteQuery(model, predicate, delOptions);
                     self._engine.releasePredicate(predicate);
                     resolve(self._runQuery(sql, options).then(function (result) {
                             //console.log(JSON.stringify(result));
@@ -124,7 +132,8 @@ define(
                 var self = this;
                 return new Promise(function (resolve, reject) {
                     vals = _.cloneDeep(values);
-                    var pk = model.getPrimaryKey();
+                    var childLevel = model.getChildLevel();
+                    var pk = model.getClassPrimaryKey();
                     if (!pk) {
                         reject(new Error("Missing PK: \"" + model.name() + "\"."));
                     }
@@ -143,7 +152,10 @@ define(
                                 if (!vals[pk.name()])
                                     vals[pk.name()] = res.insertId;
                                 var sql = self._query_gen.insertQuery(model, vals);
-                                return self._runQuery(sql, options);
+                                return self._runQuery(sql, options).then(function (result) {
+                                    //console.log(JSON.stringify(result));
+                                    return result[0];
+                                });
                             };
                         }));
                     };

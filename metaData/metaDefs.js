@@ -8,6 +8,8 @@ define(
         var Meta = {
 
             ROW_VERSION_FNAME: "GuidVer",
+            TYPE_ID_FNAME: "TypeId",
+            PARENT_REF_FNAME: "ParentId",
 
             TYPE_MODEL_NAME: "SysDataObjTypes",
             TYPE_MODEL_GUID: "758aa62e-3898-4dfe-aebb-662785b6c833",
@@ -26,7 +28,8 @@ define(
                 Internal: 8,
                 System: 16,
                 RowVersion: 32,
-                TypeId: 64
+                TypeId: 64,
+                ParentRef: 128
             },
 
             State: {

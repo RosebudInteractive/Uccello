@@ -85,7 +85,8 @@ define(
                     engine: this._options.provider_options.engine
                 };
                 batch.push({ sqlCmd: _.template(query)(values).trim() + ";", params: [] });
-                batch.push({ sqlCmd: _.template(query_gen)({ table: this.escapeId(ROWID_TABLE_PREFIX + model.name()) }).trim() + ";", params: [] });
+                if (model.getChildLevel() === 0)
+                    batch.push({ sqlCmd: _.template(query_gen)({ table: this.escapeId(ROWID_TABLE_PREFIX + model.name()) }).trim() + ";", params: [] });
 
                 return batch;
             },
@@ -95,7 +96,7 @@ define(
             },
 
             rollbackTransactionQuery: function () {
-                return { sqlCmd: "ROLLBACK TRANSACTION;", params: [], type: this.queryTypes.ROLLBACK_TRAN };
+                return { sqlCmd: "IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;", params: [], type: this.queryTypes.ROLLBACK_TRAN };
             },
 
             startTransactionQuery: function () {
@@ -161,11 +162,12 @@ define(
             setTableRowIdQuery: function (model) {
                 var vals = {};
                 var sql_params = [];
+                var base_model = model.getBaseModel();
                 var stringType = (MemMetaType.createTypeObject("datatype", this.getEngine().getDB()))
                     .setValue({ type: "string", length: 255 });
-                vals.table = this.escapeValue(model.name(), stringType, sql_params);
-                vals.rid_table = this.escapeValue(ROWID_TABLE_PREFIX + model.name(), stringType, sql_params);
-                vals.pk = this.escapeValue(model.getPrimaryKey().name(), stringType, sql_params);
+                vals.table = this.escapeValue(base_model.name(), stringType, sql_params);
+                vals.rid_table = this.escapeValue(ROWID_TABLE_PREFIX + base_model.name(), stringType, sql_params);
+                vals.pk = this.escapeValue(base_model.getPrimaryKey().name(), stringType, sql_params);
 
                 var query = "EXEC _sys_sp_set_row_id @TableName = <%= table %>, @RowIdTableName = <%= rid_table %>, @RowIdFieldName = <%= pk %>";
                 return {
@@ -177,9 +179,10 @@ define(
             getNextRowIdQuery: function (model) {
                 var vals = {};
                 var sql_params = [];
+                var base_model = model.getBaseModel();
                 var stringType = (MemMetaType.createTypeObject("datatype", this.getEngine().getDB()))
                     .setValue({ type: "string", length: 255 });
-                vals.table = this.escapeValue(ROWID_TABLE_PREFIX + model.name(), stringType, sql_params);
+                vals.table = this.escapeValue(ROWID_TABLE_PREFIX + base_model.name(), stringType, sql_params);
 
                 var query = "EXEC _sys_sp_get_row_id @TableName = <%= table %>";
                 return {

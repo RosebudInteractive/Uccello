@@ -48,6 +48,7 @@ define(
 
                 this._isConstrReady = false;
                 this._constructors = { byName: {}, byGuid: {} };
+                this._isClassFieldsReady = false;
 
                 UccelloClass.super.apply(this, [cm, params]);
 
@@ -63,7 +64,7 @@ define(
                         subscriber: this,
                         callback: this._onDeleteModelRef
                     });
-                    
+
                     this.getDB().event.on({
                         type: 'addRoot',
                         subscriber: this,
@@ -159,8 +160,21 @@ define(
 
                 for (var i = 0; i < guids.length; i++) {
                     var code = this.getObjConstrByGuid(guids[i]);
-                    if (code)
+                    if (code) {
+                        if (code.isDataObject) {
+                            var model = this.getModelByGuid(guids[i]);
+                            var ancestors = model.getAncestors();
+                            if (ancestors && (ancestors.length > 0)) {
+                                for (var j = 0; j < ancestors.length; j++) {
+                                    var guid_ancestor = ancestors[j].dataObjectGuid();
+                                    var code_ancestor = this.getObjConstrByGuid(guid_ancestor);
+                                    if(code_ancestor)
+                                        constrArr.push({ guid: guid_ancestor, code: code_ancestor });
+                                };
+                            };
+                        }
                         constrArr.push({ guid: guids[i], code: code });
+                    }
                 };
 
                 if (callback)
@@ -208,7 +222,7 @@ define(
                         _model = model;
                     } else
                         throw new Error("MetaDataMgr::deleteObjectTree: Invalid argument type.");
-                if (_model){
+                if (_model) {
                     this.getDB()._deleteRoot(_model);
                 };
             },
@@ -241,29 +255,12 @@ define(
             },
 
             addModel: function (name, guid, rootName, rootGuid) {
-                if (name) {
-                    var params = {
-                        ini: {
-                            fields: {
-                                ResName: name,
-                                DataObjectGuid: guid ? guid : this.getDB().getController().guid(),
-                                DataRootName: rootName ? rootName : "Root" + name,
-                                DataRootGuid: rootGuid ? rootGuid : this.getDB().getController().guid(),
-                                IsTypeModel: false,
-                                TypeId: ++this._maxModelId
-                            }
-                        }
-                    };
-                    var model = new MetaModel(this.getDB(), params);
-                    return model
-                        .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey)
-                        .addField("Guid", { type: "guid", allowNull: true }, Meta.Field.System | Meta.Field.Hidden)
-                        .addField(Meta.ROW_VERSION_FNAME, { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion)
-                        .addField("TypeId", { type: "dataRef", model: Meta.TYPE_MODEL_NAME, refAction: "parentRestrict", allowNull: false },
-                            Meta.Field.System | Meta.Field.TypeId);
-
-                } else
-                    throw new Error("Model name is undefined.");
+                return this._addEmptyModel(name, guid, rootName, rootGuid)
+                    .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey)
+                    .addField("Guid", { type: "guid", allowNull: true }, Meta.Field.System | Meta.Field.Hidden)
+                    .addField(Meta.ROW_VERSION_FNAME, { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion)
+                    .addField(Meta.TYPE_ID_FNAME, { type: "dataRef", model: Meta.TYPE_MODEL_NAME, refAction: "parentRestrict", allowNull: false },
+                        Meta.Field.System | Meta.Field.TypeId);
             },
 
             deleteModel: function (model) {
@@ -329,6 +326,26 @@ define(
                 };
             },
 
+            _addEmptyModel: function (name, guid, rootName, rootGuid) {
+                if (name) {
+                    var params = {
+                        ini: {
+                            fields: {
+                                ResName: name,
+                                DataObjectGuid: guid ? guid : this.getDB().getController().guid(),
+                                DataRootName: rootName ? rootName : "Root" + name,
+                                DataRootGuid: rootGuid ? rootGuid : this.getDB().getController().guid(),
+                                IsTypeModel: false,
+                                TypeId: ++this._maxModelId
+                            }
+                        }
+                    };
+                    var model = new MetaModel(this.getDB(), params);
+                    return model;
+                } else
+                    throw new Error("Model name is undefined.");
+            },
+
             _createObj: function (code, params, name) {
                 var obj = null;
                 if (code) {
@@ -341,7 +358,73 @@ define(
             },
 
             _getModelRef: function (model) {
-                 return this._modelRefs[model.dataObjectGuid()];
+                return this._modelRefs[model.dataObjectGuid()];
+            },
+
+            _rebuildClassFields: function () {
+                if (!this._isClassFieldsReady) {
+                    var names = Object.keys(this._modelsByName);
+
+                    for (var i = 0; i < names.length; i++) {
+                        var model = this._modelsByName[names[i]];
+                        model._ancestors = null;
+                        model._classFields = null;
+                        model._classFieldsByName = null;
+                        model._outgoingClassLinks = null;
+                    };
+
+                    var self = this;
+                    function buildClassTbl(model, flds, class_fields, ancestors) {
+                        if (!model._classFields) {
+
+                            var parent_ref = model.getParentRefField();
+                            if (parent_ref) {
+                                var parent_name = parent_ref.fieldType().model();
+                                var model_name = model.name();
+                                var parent_model = self._linksTo[model_name] && self._linksTo[model_name][parent_ref.name()] ?
+                                    self._linksTo[model_name][parent_ref.name()].dst : null;
+                                if (parent_model)
+                                    buildClassTbl(parent_model, flds, class_fields, ancestors)
+                                else
+                                    throw new Error("Undefined parent reference: " + model_name + " --> " + parent_name);
+                            };
+
+                            model._childLevel = ancestors.length;
+                            model._ancestors = ancestors.concat();
+                            model._classFields = class_fields.concat();
+
+                            var fields_arr = model.fields();
+                            for (var i = 0; i < fields_arr.length; i++) {
+                                var fname = fields_arr[i].name();
+                                var flags = fields_arr[i].flags();
+                                if ((model._childLevel === 0) ||
+                                    ((flags & (Meta.Field.RowVersion + Meta.Field.ParentRef)) === 0)) {
+                                    if (flds[fname])
+                                        throw new Error("Field \"" + model.name() + "::" + fname + "\" is already defined in ancestors!");
+                                    flds[fname] = true;
+                                    model._classFields.push({ field: fields_arr[i], model: model, level: model._childLevel });
+                                };
+                            };
+                        }
+                        else {
+                            for (var i = 0; i < model._classFields.length; i++) {
+                                flds[model._classFields[i].field.name()] = true;
+                            };
+                        };
+
+                        ancestors.length = 0;
+                        class_fields.length = 0;
+                        Array.prototype.push.apply(ancestors, model._ancestors);
+                        Array.prototype.push.apply(class_fields, model._classFields);
+                        ancestors.push(model);
+                    };
+
+                    for (var i = 0; i < names.length; i++) {
+                        var model = this._modelsByName[names[i]];
+                        buildClassTbl(model, {}, [], []);
+                    };
+                    this._isClassFieldsReady = true;
+                };
             },
 
             _rebuildConstructors: function () {
@@ -349,6 +432,7 @@ define(
                     if (Object.keys(this._linksUnresolved).length > 0)
                         throw new Error("Schema contains unresolved references.");
 
+                    this._rebuildClassFields();
                     this._constructors = { byName: {}, byGuid: {} };
 
                     var names = Object.keys(this._modelsByName);
@@ -382,6 +466,9 @@ define(
             _getObjConstr: function (model) {
 
                 var fields = model.fields();
+                var classFields = model.getClassFields(); // Поля с учетом наследования
+                var childLevel = model.getChildLevel();
+
                 var header =
                  "return Parent.extend({\n";
 
@@ -398,39 +485,41 @@ define(
 
                 var is_first = true;
                 for (i = 0; i < fields.length; i++) {
-                    if ((fields[i].flags() & (Meta.Field.Internal | Meta.Field.Hidden)) === 0) {
+                    var flags = fields[i].flags();
+                    if (((flags & (Meta.Field.Internal | Meta.Field.Hidden | Meta.Field.ParentRef | Meta.Field.RowVersion)) === 0) ||
+                        ((flags & (Meta.Field.RowVersion)) !== 0) && (childLevel === 0)) {
                         if (!is_first)
                             constr += ",\n";
                         is_first = false;
                         constr += "\t\t\t{fname: \"" + fields[i].get("ResElemName") + "\", ftype: " +
                             JSON.stringify(fields[i].get("FieldType").serialize()) + "}";
-                    }
+                    };
                 };
                 constr += "\n\t\t],\n";
 
-                if (model.getRowVersionField())
+                if (model.getRowVersionField() && (childLevel === 0))
                     constr += "\t\t_rowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
 
                 is_first = true;
                 constr += "\t\t_persFields: {";
-                for (i = 0; i < fields.length; i++) {
-                    var flags = fields[i].get("Flags");
+                for (i = 0; i < classFields.length; i++) {
+                    var flags = classFields[i].field.get("Flags");
                     if (!(flags & Meta.Field.Hidden)) {
                         if (!is_first)
                             constr += ",";
                         is_first = false;
-                        constr += "\n\t\t\t\"" + fields[i].get("ResElemName") + "\": true";
+                        constr += "\n\t\t\t\"" + classFields[i].field.get("ResElemName") + "\": true";
                     };
                 };
                 constr += "\n\t\t},\n";
 
-                if (model.getPrimaryKey())
+                if (model.getPrimaryKey() && (childLevel === 0))
                     constr += "\t\t_keyField: \"" + model.getPrimaryKey().name() + "\",\n";
 
-                if (model.getTypeIdField()) {
+                if (model.getTypeIdField() && (childLevel === 0)) {
                     constr += "\t\t_typeIdField: \"" + model.getTypeIdField().name() + "\",\n";
-                    constr += "\t\t_typeIdVal: " + model.getActualTypeId() + ",\n";
                 };
+                constr += "\t\t_typeIdVal: " + model.getActualTypeId() + ",\n";
 
                 is_first = true;
                 for (var i = 0; i < fields.length; i++) {
@@ -446,7 +535,8 @@ define(
                     };
                 };
 
-                return { parentGuid: UCCELLO_CONFIG.classGuids.DataObject, constrBody: constr + footer };
+                var parentGuid = childLevel > 0 ? model.getAncestors()[childLevel - 1].dataObjectGuid() : UCCELLO_CONFIG.classGuids.DataObject;
+                return { parentGuid: parentGuid, constrBody: constr + footer, isDataObject: true };
             },
 
             _getRootConstr: function (model) {
@@ -460,11 +550,11 @@ define(
                 if (model.getRowVersionField())
                     constr += "\t\t_rowVersionFname: \"" + model.getRowVersionField().name() + "\",\n";
 
-                if (model.getPrimaryKey())
-                    constr += "\t\t_keyField: \"" + model.getPrimaryKey().name() + "\",\n";
+                if (model.getClassPrimaryKey())
+                    constr += "\t\t_keyField: \"" + model.getClassPrimaryKey().name() + "\",\n";
 
-                if (model.getTypeIdField()) {
-                    constr += "\t\t_typeIdField: \"" + model.getTypeIdField().name() + "\",\n";
+                if (model.getClassTypeIdField()) {
+                    constr += "\t\t_typeIdField: \"" + model.getClassTypeIdField().name() + "\",\n";
                     constr += "\t\t_typeIdVal: " + model.getActualTypeId() + ",\n";
                 };
 
@@ -478,7 +568,7 @@ define(
                     "\t\t}\n" +
                     "\t});";
 
-                return { parentGuid: UCCELLO_CONFIG.classGuids.DataRoot, constrBody: constr };
+                return { parentGuid: UCCELLO_CONFIG.classGuids.DataRoot, constrBody: constr, isDataObject: false };
             },
 
             _buildConstr: function (code) {
@@ -518,6 +608,7 @@ define(
 
             _addLink: function (args) {
                 this._isConstrReady = false;
+                this._isClassFieldsReady = false;
 
                 var model = args.target;
                 var modelName = model.name();
@@ -548,6 +639,7 @@ define(
 
             _removeLink: function (args) {
                 this._isConstrReady = false;
+                this._isClassFieldsReady = false;
 
                 var model = args.target;
                 var modelName = model.name();
@@ -565,6 +657,7 @@ define(
 
             _addModelToLinks: function (name, model) {
                 this._isConstrReady = false;
+                this._isClassFieldsReady = false;
 
                 var linksFrom = null;
                 var links = Object.keys(this._linksUnresolved);
@@ -583,6 +676,7 @@ define(
 
             _removeModelFromLinks: function (name) {
                 this._isConstrReady = false;
+                this._isClassFieldsReady = false;
 
                 var linksTo = this._linksTo[name];
                 if (linksTo) {
@@ -712,7 +806,7 @@ define(
                 else
                     if (model instanceof MetaObjTree) {
                         var name = model.name();
-                        var obj=this._treesByName[name];
+                        var obj = this._treesByName[name];
                         if (obj !== undefined) {
                             obj.objTree.event.off(obj.hdesc);
                             delete this._treesByName[name];
@@ -722,9 +816,10 @@ define(
 
             _onAddModelRef: function (args) {
                 this._isConstrReady = false;
+                this._isClassFieldsReady = false;
 
                 var model = args.obj.tableRef();
-                if(!model)
+                if (!model)
                     throw new Error("MetaDataMgr::_onAddModelRef: Empty or unresolved table reference.");
 
                 var name = model.name();
@@ -775,6 +870,7 @@ define(
                         subscriber: this,
                         callback: function (args) {
                             self._isConstrReady = false;
+                            self._isClassFieldsReady = false;
                         }
                     }
                 };
@@ -839,6 +935,7 @@ define(
 
             _onDeleteModelRef: function (args) {
                 this._isConstrReady = false;
+                this._isClassFieldsReady = false;
 
                 var model = args.obj.tableRef();
                 if (!model)
