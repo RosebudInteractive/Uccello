@@ -318,9 +318,47 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                 });
             }
 
+            generateSourceFiles(){
+                var _count = 0;
+                return new Promise(function(resolve, reject) {
+                    UCCELLO_CONFIG.resman.sourceDir.forEach(function(source){
+                        if (source.hasOwnProperty('generator')){
+                            if (fs.existsSync(source.generator)) {
+                                var _generator = require(source.generator)
+                            } else {
+                                reject(new Error('can not found generator for ' + source.type))
+                            }
+
+                            if (_generator.hasOwnProperty('generate')) {
+                                _generator.generate(source.path).then(
+                                    function(){
+                                        _count++;
+                                        if (_count == UCCELLO_CONFIG.resman.sourceDir.length) {
+                                            resolve()
+                                        }
+                                    },
+                                    reject)
+                            } else {
+                                reject(new Error('can not generate ' + source.type + ' resources'))
+                            }
+                        } else {
+                            _count++;
+                            if (_count == UCCELLO_CONFIG.resman.sourceDir.length) {
+                                resolve()
+                            }
+                        }
+                    })
+                })
+            }
+
             static prepareFiles(){
                 return new Promise(function(resolve, reject) {
-                    getInstance().prepare().then(resolve, reject);
+                    getInstance().generateSourceFiles().then(
+                        function(){
+                            getInstance().prepare().then(resolve, reject);
+                        },
+                        reject
+                    );
                 })
 
             };

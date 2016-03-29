@@ -19,13 +19,14 @@ var _initializer = {
             dataPath        : _path.DbPath,
             uccelloPath     : _path.Uccello,
             webSocketServer : {port: 8082},
+            masaccioPath: __dirname + '/../../../../Masaccio/wfe/',
 
             resman : {
                 useDb : true,
                 defaultProduct : 'ProtoOne',
                 sourceDir: [
                     {path: _path.DbPath + '/forms/', type: 'FRM'},
-                    {path: _path.DbPath + '/processDefinitions/', type: 'PR_DEF'}
+                    {path: _path.DbPath + '/processDefinitions/', type: 'PR_DEF', generator: __dirname + './../generators/processDefGenerator.js'}
                 ]
             },
 
@@ -67,6 +68,11 @@ var _initializer = {
             done(err, row);
         }
         this.uccelloServ = new UccelloServ({authenticate: fakeAuthenticate});
+
+        var EngineSingleton = require(this.getConfig().masaccioPath + 'engineSingleton');
+        this.constructHolder = this.uccelloServ.pvt.constructHolder;
+        var dbc = this.uccelloServ.getUserMgr().getController();
+        EngineSingleton.initInstance({dbController : dbc, constructHolder : this.constructHolder});
     }
 };
 
