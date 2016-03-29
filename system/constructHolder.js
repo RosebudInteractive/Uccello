@@ -220,7 +220,7 @@ define(
             addCompByConstr: function (classGuid, code) {
                 var Constructor = null;
                 var parent = this.getComponent(code.parentGuid) ? this.getComponent(code.parentGuid).constr : null;
-                if (parent) {
+                if (parent && (!this.pvt.components[classGuid])) {
                     var constrFunc = new Function("Parent", code.constrBody);
                     Constructor = constrFunc(parent);
                     this.pvt.components[classGuid] = { constr: Constructor, viewsets: {}, code: code };

@@ -19,7 +19,9 @@ define(
             metaFields: [
                 { fname: "DataObjectGuid", ftype: "string" },
                 { fname: "DataRootName", ftype: "string" },
-                { fname: "DataRootGuid", ftype: "string" }
+                { fname: "DataRootGuid", ftype: "string" },
+                { fname: "IsTypeModel", ftype: "boolean" },
+                { fname: "TypeId", ftype: "int" }
             ],
 
             elemNamePrefix: "Field",
@@ -40,13 +42,35 @@ define(
                 return this._genericSetter("DataRootGuid", value);
             },
 
+            isTypeModel: function (value) {
+                return this._genericSetter("IsTypeModel", value);
+            },
+
+            typeId: function (value) {
+                return this._genericSetter("TypeId", value);
+            },
+
+            getActualTypeId: function () {
+                return this._actTypeId === -1 ? this.typeId() : this._actTypeId;
+            },
+
             init: function (cm, params) {
                 this._fieldsByName = {};
                 this._fields = [];
                 this._primaryKey = null;
                 this._rowVersion = null;
+                this._typeId = null;
                 this._orderChangCounter = 0;
                 this._refs = {};
+                this._actTypeId = -1;
+                this._metaDataMgr = null;
+                this._parentRef = null;
+                this._childLevel = 0;
+
+                this._ancestors = null;
+                this._classFields = null;
+                this._classFieldsByName = null;
+                this._outgoingClassLinks = null;
 
                 if (params)
                     this.eventsInit();  // WARNING !!! This line is essential !!! It initializes "Event" mixin.
@@ -80,15 +104,86 @@ define(
 
                     if (!this.getDB()._metaDataMgr)
                         new (this.getDB().getMetaDataMgrConstructor())(this.getDB(), {});
+                    this._metaDataMgr = this.getDB()._metaDataMgr;
                 };
+            },
+
+            getMetaDataMgr: function () {
+                return this._metaDataMgr;
             },
 
             getPrimaryKey: function () {
                 return this._primaryKey;
             },
 
+            getClassPrimaryKey: function () {
+                var res = this._primaryKey;
+                if (this._parentRef) {
+                    this._metaDataMgr._rebuildClassFields();
+                    res = this._ancestors[0].getPrimaryKey();
+                };
+                return res;
+            },
+
             getRowVersionField: function () {
                 return this._rowVersion;
+            },
+
+            getTypeIdField: function () {
+                return this._typeId;
+            },
+
+            getClassTypeIdField: function () {
+                var res = this._typeId;
+                if (this._parentRef) {
+                    this._metaDataMgr._rebuildClassFields();
+                    res = this._ancestors[0].getTypeIdField();
+                };
+                return res;
+            },
+
+            getParentRefField: function () {
+                return this._parentRef;
+            },
+
+            getAncestors: function () {
+                this._metaDataMgr._rebuildClassFields();
+                return this._ancestors;
+            },
+
+            getClassFields: function () {
+                this._metaDataMgr._rebuildClassFields();
+                return this._classFields;
+            },
+
+            getChildLevel: function () {
+                this._metaDataMgr._rebuildClassFields();
+                return this._childLevel;
+            },
+
+            getParentNames: function () {
+                this._metaDataMgr._rebuildClassFields();
+                var result = {};
+                result[this.name()] = this;
+                this._ancestors.forEach(function (ancestor) {
+                    result[ancestor.name()] = ancestor;
+                });
+                return result;
+            },
+
+            inherit: function (name, guid, rootName, rootGuid) {
+                var res = null;
+
+                if (!this._metaDataMgr)
+                    throw new Error("MetaModel::inherit: MetaDataMgr doesn't exists!");
+
+                res = this._metaDataMgr._addEmptyModel(name, guid, rootName, rootGuid)
+                    .addField(Meta.PARENT_REF_FNAME, { type: "dataRef", model: this.name(), refAction: "parentCascade", allowNull: false },
+                        Meta.Field.System | Meta.Field.PrimaryKey | Meta.Field.Hidden | Meta.Field.ParentRef)
+                    .addField(Meta.ROW_VERSION_FNAME, { type: "guid", allowNull: false },
+                        Meta.Field.System | Meta.Field.Hidden | Meta.Field.RowVersion);
+
+                return res;
             },
 
             addInternalField: function (name, flags, order) {
@@ -137,6 +232,20 @@ define(
                 return res;
             },
 
+            getClassField: function (field) {
+                this._buildClassFldDict();
+
+                var res;
+                if (typeof field === "string") {
+                    res = this._classFields[this._classFieldsByName[field]].field;
+                } else
+                    if (typeof field === "number") {
+                        if ((field >= 0) && (field < this._classFields.length))
+                            res = this._classFields[field].field;
+                    };
+                return res;
+            },
+
             getResElemByName: function (name) {
                 return this.getField(name);
             },
@@ -150,7 +259,49 @@ define(
             },
 
             outgoingLinks: function () {
-                return this.getDB()._metaDataMgr.outgoingLinks(this);
+                return this._metaDataMgr.outgoingLinks(this);
+            },
+
+            getBaseModel: function () {
+                var ancestors = this.getAncestors();
+                var res = this;
+                if (ancestors.length > 0)
+                    res = ancestors[0];
+                return res;
+            },
+
+            outgoingClassLinks: function () {
+                this._buildClassFldDict();
+                if (!this._outgoingClassLinks) {
+                    var ancestors = this.getAncestors().concat();
+                    ancestors.push(this);
+                    var res = this._outgoingClassLinks = {};
+                    var self = this;
+                    ancestors.forEach(function (model) {
+                        var links = self._metaDataMgr.outgoingLinks(model);
+                        links = links[model.name()];
+                        var keys = Object.keys(links);
+                        for (var i = 0; i < keys.length; i++) {
+                            if (self._classFieldsByName[keys[i]]) {
+                                res[keys[i]] = links[keys[i]];
+                            };
+                        };
+                    });
+                }
+                return this._outgoingClassLinks;
+            },
+
+            _setActualTypeId: function (value) {
+                this._actTypeId = value;
+            },
+
+            _buildClassFldDict: function () {
+                this._metaDataMgr._rebuildClassFields();
+                if (!this._classFieldsByName) {
+                    this._classFieldsByName = {};
+                    for (var i = 0; i < this._classFields.length; i++)
+                        this._classFieldsByName[this._classFields[i].field.name()] = i;
+                }
             },
 
             _addField: function (name, field_type, flags, order, is_internal) {
@@ -214,6 +365,43 @@ define(
                             throw new Error("Row version field \"" + fieldName + "\" is already defined as \"" + self._rowVersion.name() + "\".");
                         };
                         self._rowVersion = fieldObj;
+                        var fieldType = fieldObj.fieldType();
+                        if (fieldType.allowNull()) {
+                            var newType = fieldType.serialize();
+                            newType.allowNull = false;
+                            fieldObj.fieldType(newType);
+                        };
+                    };
+
+                    if ((flags & Meta.Field.TypeId) !== 0) {
+
+                        if (self._typeId && (self._typeId !== fieldObj)) {
+
+                            fieldObj.set("Flags", oldFlags);
+                            throw new Error("TypeId field \"" + fieldName + "\" is already defined as \"" + self._typeId.name() + "\".");
+                        };
+                        if (self._parentRef) {
+
+                            fieldObj.set("Flags", oldFlags);
+                            throw new Error("TypeId field can be defined only in Base model class.");
+                        };
+                        self._typeId = fieldObj;
+                        var fieldType = fieldObj.fieldType();
+                        if (fieldType.allowNull()) {
+                            var newType = fieldType.serialize();
+                            newType.allowNull = false;
+                            fieldObj.fieldType(newType);
+                        };
+                    };
+
+                    if ((flags & Meta.Field.ParentRef) !== 0) {
+
+                        if (self._parentRef && (self._parentRef !== fieldObj)) {
+
+                            fieldObj.set("Flags", oldFlags);
+                            throw new Error("ParentRef field \"" + fieldName + "\" is already defined as \"" + self._parentRef.name() + "\".");
+                        };
+                        self._parentRef = fieldObj;
                         var fieldType = fieldObj.fieldType();
                         if (fieldType.allowNull()) {
                             var newType = fieldType.serialize();
@@ -398,6 +586,20 @@ define(
                     };
                     this._rowVersion = field;
                 };
+                if ((flags & Meta.Field.TypeId) !== 0) {
+                    if (this._typeId && (this._typeId !== field)) {
+                        this._fieldsCol._del(field);
+                        throw new Error("TypeId field \"" + name + "\" is already defined as \"" + this._typeId.name() + "\".");
+                    };
+                    this._typeId = field;
+                };
+                if ((flags & Meta.Field.ParentRef) !== 0) {
+                    if (this._parentRef && (this._parentRef !== field)) {
+                        this._fieldsCol._del(field);
+                        throw new Error("ParentRef field \"" + name + "\" is already defined as \"" + this._parentRef.name() + "\".");
+                    };
+                    this._parentRef = field;
+                };
 
                 this._fields.splice(order, 0, field);
                 this._reindexFields();
@@ -464,6 +666,12 @@ define(
 
                     if (this._rowVersion === field)
                         this._rowVersion = null;
+
+                    if (this._typeId === field)
+                        this._typeId = null;
+
+                    if (this._parentRef === field)
+                        this._parentRef = null;
 
                     var fieldType = field.fieldType();
                     if (fieldType instanceof MemMetaType.DataRefType) {

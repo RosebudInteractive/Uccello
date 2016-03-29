@@ -49,7 +49,7 @@ define(
                         dbparams: {
                             name: Meta.Db.Name,
                             kind: "master",
-                            guid: Meta.Db.Guid,
+                            guid: opts.auto_gen_db_guid ? this._controller.guid() : Meta.Db.Guid,
                             constructHolder: construct_holder
                         }
                     });
@@ -182,8 +182,10 @@ define(
 
             newPredicate: function () {
                 var result;
-                if (this._predicates_idle.length > 0)
+                if (this._predicates_idle.length > 0) {
                     result = this._predicates_idle.pop();
+                    result.clearConditions();
+                }
                 else
                     result = this._createPredicate();
                 return result;
@@ -224,6 +226,51 @@ define(
                         JSON.stringify(model.getDB().serialize(model, true)),
                         { encoding: "utf8" })
                 }, this);
+            },
+
+            saveSchemaTypesToFile: function (dir, schema_name) {
+                var fs = require('fs');
+                var path = require('path');
+                var schema = this.getSchema(schema_name);
+                if (!schema)
+                    throw new Error("Schema \"" + schema_name + "\" doesn't exist.");
+
+                var models = schema.models();
+                var data = {
+                    $sys: {
+                        guid: this._controller.guid(),
+                        typeGuid: Meta.TYPE_MODEL_RGUID
+                    },
+                    fields: {
+                        Id: 1,
+                        Name: Meta.TYPE_MODEL_RNAME
+                    },
+                    collections: {
+                        DataElements: []
+                    }
+                };
+                var elems = data.collections.DataElements;
+
+                _.forEach(models, function (model) {
+                    if (!model.isTypeModel()) {
+                        var elem = {
+                            $sys: {
+                                guid: this._controller.guid(),
+                                typeGuid: Meta.TYPE_MODEL_GUID
+                            },
+                            fields: {
+                                Id: model.getActualTypeId(),
+                                TypeGuid: model.dataObjectGuid(),
+                                ModelName: model.name()
+                            },
+                            collections: {}
+                        };
+                        elems.push(elem);
+                    };
+                }, this);
+
+                fs.writeFileSync(path.format({ dir: dir, base: "DATA_" + Meta.TYPE_MODEL_NAME + ".json" }),
+                    JSON.stringify(data), { encoding: "utf8" });
             },
 
             transaction: function (batch, options) {
@@ -496,20 +543,18 @@ define(
                                         var key = model.getPrimaryKey();
                                         if (!key)
                                             throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
-                                        var predicate = self.newPredicate();
-                                        predicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
 
                                         if (val.data.rowVersion) {
                                             var rwField = model.getRowVersionField();
                                             if (!rwField)
                                                 throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
-                                            predicate.addCondition({ field: rwField.name(), op: "=", value: val.data.rowVersion });
                                         };
 
-                                        promise = self._query.update(model, val.data.fields, predicate,
+                                        promise = self._query.update(model, val.data.fields, null,
                                             {
                                                 transaction: transaction,
                                                 updOptions: {
+                                                    key: val.data.key,
                                                     rowVersion: val.data.rowVersion
                                                 }
                                             });
@@ -523,17 +568,20 @@ define(
                                         var key = model.getPrimaryKey();
                                         if (!key)
                                             throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
-                                        var predicate = self.newPredicate();
-                                        predicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
 
                                         if (val.data.rowVersion) {
                                             var rwField = model.getRowVersionField();
                                             if (!rwField)
                                                 throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
-                                            predicate.addCondition({ field: rwField.name(), op: "=", value: val.data.rowVersion });
                                         };
 
-                                        promise = self._query.delete(model, predicate, { transaction: transaction });
+                                        promise = self._query.delete(model, null, {
+                                            transaction: transaction,
+                                            delOptions: {
+                                                key: val.data.key,
+                                                rowVersion: val.data.rowVersion
+                                            }
+                                        });
                                         break;
                                 };
                                 return promise;
@@ -946,8 +994,8 @@ define(
                                     "collections": {}
                                 };
 
-                                _.forEach(request.model.fields(), function (field) {
-                                    var fld_name = field.name();
+                                _.forEach(request.model.getClassFields(), function (class_field) {
+                                    var fld_name = class_field.field.name();
                                     if (fld_name !== "Guid") {
                                         var data_fld_name = request.sqlAlias ? request.sqlAlias + "_" + fld_name : fld_name;
                                         if (data[data_fld_name] !== undefined)
