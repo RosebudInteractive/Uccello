@@ -288,10 +288,13 @@ define(
                                         return res;
                                     });
                             }, function (err) {
-                                return tran.rollback()
-                                    .then(function () {
-                                        return Promise.reject(err);
-                                    });
+                                if (err.dbError === true)
+                                    return Promise.reject(err)
+                                else
+                                    return tran.rollback()
+                                        .then(function () {
+                                            return Promise.reject(err);
+                                        });
                             });
                     }
                     else

@@ -96,7 +96,7 @@ define(
             },
 
             rollbackTransactionQuery: function () {
-                return { sqlCmd: "IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;", params: [], type: this.queryTypes.ROLLBACK_TRAN };
+                return { sqlCmd: "ROLLBACK TRANSACTION;", params: [], type: this.queryTypes.ROLLBACK_TRAN };
             },
 
             startTransactionQuery: function () {
