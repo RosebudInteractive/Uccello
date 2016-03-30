@@ -246,7 +246,7 @@ define(
                 var model = new MetaModel(this.getDB(), params);
                 return model
                     .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey)
-                    .addField("Guid", { type: "guid", allowNull: true }, Meta.Field.System | Meta.Field.Hidden)
+                    .addField("Guid", { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.Hidden)
                     .addField(Meta.ROW_VERSION_FNAME, { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion)
                     .addField("TypeGuid", { type: "guid", allowNull: false })
                     .addField("ModelName", { type: "string", length: 255, allowNull: false })
@@ -257,7 +257,7 @@ define(
             addModel: function (name, guid, rootName, rootGuid) {
                 return this._addEmptyModel(name, guid, rootName, rootGuid)
                     .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey)
-                    .addField("Guid", { type: "guid", allowNull: true }, Meta.Field.System | Meta.Field.Hidden)
+                    .addField("Guid", { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.Hidden)
                     .addField(Meta.ROW_VERSION_FNAME, { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion)
                     .addField(Meta.TYPE_ID_FNAME, { type: "dataRef", model: Meta.TYPE_MODEL_NAME, refAction: "parentRestrict", allowNull: false },
                         Meta.Field.System | Meta.Field.TypeId);
