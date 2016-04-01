@@ -25,7 +25,8 @@ define(
             tranRollback: "function",
             getNextRowId: "function",
             execBatch: "function",
-            execSql: "function"
+            execSql: "function",
+            importDir: "function"
         };
 
         var DataObjectEngine = UccelloClass.extend({
@@ -934,8 +935,7 @@ define(
                 if (request.parentField)
                     result.fields.ParentField = request.parentField;
 
-                function make_types_arr() {
-                    var types = {};
+                function make_types_arr(required_types, types) {
 
                     function _make_types_arr(arr, request, level, request_tree) {
 
@@ -970,10 +970,13 @@ define(
                         };
                         return request_tree;
                     };
-                    return _make_types_arr(result.$sys.requiredTypes, request, 0, null);
+                    return _make_types_arr(required_types, request, 0, null);
                 };
 
-                var request_tree = make_types_arr();
+                var required_types = result.$sys.requiredTypes;
+                var required_types_dict = {};
+
+                var request_tree = make_types_arr(required_types, required_types_dict);
                 if (request_tree)
                     result.fields.RequestTree = JSON.stringify(request_tree);
 
@@ -1005,6 +1008,39 @@ define(
                                             data_obj.fields[fld_name] = data[data_fld_name];
                                     };
                                 });
+
+                                if (request.childs_info) {
+                                    // DataObject имеет наследников !
+                                    var tp_fname = request.sqlAlias ? request.sqlAlias + "_" +
+                                        request.childs_info.typeFieldName : request.childs_info.typeFieldName;
+                                    var tp_val = data[tp_fname];
+                                    if (tp_val) {
+                                        var info = request.childs_info[tp_val];
+                                        if (info) {
+                                            if (!info.isBase) {
+                                                var type_guid = info.model.dataObjectGuid();
+                                                if (!required_types_dict[type_guid]) {
+                                                    required_types.push(type_guid);
+                                                    required_types_dict[type_guid] = true;
+                                                }
+                                                data_obj.$sys.typeGuid = type_guid; // Меняем тип DataObject
+                                                // Добавляем поля наследника
+                                                _.forEach(info.extraFields, function (extra_field) {
+                                                    var data_fld_name = request.sqlAlias ? request.sqlAlias + "_" + extra_field.alias : extra_field.alias;
+                                                    if (data[data_fld_name] !== undefined)
+                                                        data_obj.fields[extra_field.fname] = data[data_fld_name];
+                                                });
+                                            };
+                                        }
+                                        else
+                                            throw new Error("Unknown type value: \"" + tp_val + "\" : Model: \"" + request.model.name() +
+                                                "\" : Guid: \"" + guid + "\".");
+                                    }
+                                    else
+                                        throw new Error("Type field is empty: \"" + request.model.name() +
+                                            "\" : Guid: \"" + guid + "\".");
+
+                                };
 
                                 parent_obj.collections.DataElements.push(data_obj);
 

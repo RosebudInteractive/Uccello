@@ -68,7 +68,9 @@ define(
                 this._childLevel = 0;
 
                 this._ancestors = null;
+                this._descendants = null;
                 this._classFields = null;
+                this._ownFields = null;
                 this._classFieldsByName = null;
                 this._outgoingClassLinks = null;
 
@@ -151,9 +153,19 @@ define(
                 return this._ancestors;
             },
 
+            getDescendants: function () {
+                this._metaDataMgr._rebuildClassFields();
+                return this._descendants;
+            },
+
             getClassFields: function () {
                 this._metaDataMgr._rebuildClassFields();
                 return this._classFields;
+            },
+
+            getOwnFields: function () {
+                this._metaDataMgr._rebuildClassFields();
+                return this._ownFields;
             },
 
             getChildLevel: function () {
