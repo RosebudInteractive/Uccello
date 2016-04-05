@@ -91,6 +91,7 @@ define(
             },
 
             _formatError: function (err) {
+                err.dbError = true;
                 return err;
             },
 
@@ -100,9 +101,8 @@ define(
                 var meta = sql.meta;
                 var row_version_fname = meta && meta.model && meta.model.getRowVersionField() ? meta.model.getRowVersionField().name() : null;
 
-                if (_.isArray(results)) // Результат SELECT ?
-                    if (((query_type === this._queryTypes.INSERT) ||
-                        (query_type === this._queryTypes.ROWID)) && (results.length === 1)) {
+                if (_.isArray(results))
+                    if ((query_type === this._queryTypes.ROWID) && (results.length === 1)) {
                         res = {
                             affectedRows: affectedRows,
                             changedRows: 0,
@@ -114,19 +114,27 @@ define(
                             res = {
                                 affectedRows: affectedRows,
                                 changedRows: 0,
-                                insertId: results.length === 1 ? results[0].insertId : null,
-                                rowVersion: results.length === 1 ? results[0].rowVersion : null
+                                rowVersion: sql.rowVersion
                             };
                         }
                         else
-                            if (query_type === this._queryTypes.DELETE) {
+                            if (query_type === this._queryTypes.INSERT) {
                                 res = {
                                     affectedRows: affectedRows,
-                                    changedRows: 0
+                                    changedRows: 0,
+                                    rowVersion: sql.rowVersion,
+                                    insertId: sql.insertId
                                 };
                             }
                             else
-                                res = results;
+                                if (query_type === this._queryTypes.DELETE) {
+                                    res = {
+                                        affectedRows: affectedRows,
+                                        changedRows: 0
+                                    };
+                                }
+                                else
+                                    res = results;
                 else {
                     res = {
                         affectedRows: affectedRows,

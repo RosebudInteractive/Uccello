@@ -36,7 +36,7 @@ define(
                 if (this._proxyWfe && this.dispMethodCallTable[objTypeGuid]
                     && this.dispMethodCallTable[objTypeGuid][obj_method]) {
 
-                    // Последний аргумент д.б. callback !
+                    // РџРѕСЃР»РµРґРЅРёР№ Р°СЂРіСѓРјРµРЅС‚ Рґ.Р±. callback !
                     if ((args.length < 1) || (typeof args[args.length - 1] !== "function"))
                         throw new Error("The last argument of the \"process dispathed\" function \"" + obj_method + "\" should be a callback !");
 
@@ -84,7 +84,7 @@ define(
                 };
 
                 if (procArgs.isNewProcess)
-                    this._proxyWfe.startProcessInstanceAndWait(procArgs.processDefGuid, procArgs.requestName, procArgs.processTimeout, sendResponse);
+                    this._proxyWfe.startProcessInstanceAndWait(procArgs.processDefName, procArgs.requestName, procArgs.processTimeout, sendResponse);
                 else {
                     var res = { result: "ERROR" };
                     var isDone = true;
@@ -143,7 +143,8 @@ define(
                 // RootLead.newObject
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.RootLead]["newObject"] = {
                     isNewProcess: true,
-                    processDefGuid: "8349600e-3d0e-4d4e-90c8-93d42c443ab3",
+                    //processDefGuid: "8349600e-3d0e-4d4e-90c8-93d42c443ab3",
+                    processDefName: "First test process",
                     requestName: "ObjCreateRequest",
                     processTimeout: 10000,
                     timeout: 10000
@@ -152,7 +153,7 @@ define(
                 // DataLead
                 this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead] = {};
                 // DataLead.edit
-                //this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["edit"] = { // Метод "edit" (также как и "save", "cancel") перегружать через процесс нельзя !!!
+                //this.dispMethodCallTable[UCCELLO_CONFIG.classGuids.DataLead]["edit"] = { // РњРµС‚РѕРґ "edit" (С‚Р°РєР¶Рµ РєР°Рє Рё "save", "cancel") РїРµСЂРµРіСЂСѓР¶Р°С‚СЊ С‡РµСЂРµР· РїСЂРѕС†РµСЃСЃ РЅРµР»СЊР·СЏ !!!
                 //    requestName: "ObjModifRequest",
                 //    timeout: 10000
                 //};

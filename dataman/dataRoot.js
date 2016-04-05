@@ -140,8 +140,8 @@ define(
                             && (result.detail[0].insertId !== undefined)) {
                             if (self._keyField)
                                 _flds.fields[self._keyField] = result.detail[0].insertId;
-                            if (self.rowVersionFname && (result.detail[0].rowVersion !== undefined))
-                                _flds.fields[self.rowVersionFname] = result.detail[0].rowVersion;
+                            if (self._rowVersionFname && (result.detail[0].rowVersion !== undefined))
+                                _flds.fields[self._rowVersionFname] = result.detail[0].rowVersion;
                         };
                         var params = { parent: self, colName: "DataElements", ini: _flds };
 
@@ -172,6 +172,10 @@ define(
                             if (val)
                                 _flds.fields[pfname] = val;
                         }
+                    };
+
+                    if (this._typeIdField && (this._typeIdVal != -1)) {
+                        _flds.fields[this._typeIdField] = this._typeIdVal;
                     };
 
                     if (this._currState() === Meta.State.Edit) {
@@ -247,7 +251,7 @@ define(
                                 var data = {};
                                 var opData = { op: "delete", model: obj.className, data: data };
                                 data.key = obj.getSerialized(obj._keyField);
-                                data.rowVersion = obj.rowVersionFname ? obj.getSerialized(obj.rowVersionFname) : null;
+                                data.rowVersion = obj._rowVersionFname ? obj.getSerialized(obj._rowVersionFname) : null;
                                 var batch = [];
                                 batch.push(opData);
                                 $data.execBatch(batch, options, afterObjDelete);

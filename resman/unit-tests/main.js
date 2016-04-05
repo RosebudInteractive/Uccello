@@ -61,7 +61,11 @@ var _initializer = {
             },
             resman : {
                 useDb : true,
-                defaultProduct : 'ProtoOne'
+                defaultProduct : 'ProtoOne',
+                sourceDir: [
+                    {path: _path.DbPath + '/forms/', type: 'FRM'},
+                    {path: _path.DbPath + '/processDefinitions/', type: 'PR_DEF'}
+                ]
             }
         };
     },

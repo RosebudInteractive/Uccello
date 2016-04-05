@@ -35,6 +35,18 @@ define(
                 return this._elemsByName[name] ? this._elemsByName[name].resElemObj : null;
             },
 
+            getModelDescription: function () {
+                return { name: "SysResVer" };
+            },
+
+            check: function () {
+                return true;
+            },
+
+            onSave: function (data_object) {
+                return true;
+            },
+
             _counter: function (value) {
                 return this._genericSetter("_Counter", value);
             },

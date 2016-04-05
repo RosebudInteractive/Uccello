@@ -3,11 +3,12 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['fs', 'lodash', '../../../predicate/predicate'],
-    function (Fs, _, Predicate) {
+    ['fs', 'lodash', '../../../system/utils', '../../../predicate/predicate'],
+    function (Fs, _, Utils, Predicate) {
 
         var TICK_CHAR = '`';
         var ALIAS_PREFIX = "t";
+        var EXTRA_PREFIX = "#";
 
         var QueryGen = UccelloClass.extend({
 
@@ -145,19 +146,100 @@ define(
                 return set_sql_aliases(request, 0);
             },
 
-            _escapeField: function (field_name, table_alias, is_fld_only) {
+            _escapeField: function (field_name, table_alias, is_fld_only, field_alias) {
                 var field = this.escapeId(field_name);
                 if (table_alias)
                     field = this.escapeId(table_alias) + "." + field +
-                        (is_fld_only ? "" : " AS " + this.escapeId(table_alias + "_" + field_name));
+                        (is_fld_only ? "" : (" AS " + (field_alias ? this.escapeId(field_alias) : this.escapeId(table_alias + "_" + field_name))));
                 return field;
             },
 
-            _escapeTable: function (table_name, table_alias) {
-                var table = this.escapeId(table_name);
+            _escapeTable: function (model, table_alias, childs_info) {
+                var table = (typeof (model) === "string") ? this.escapeId(model) : this.getModelSubQuery(model, childs_info);
+                if (!table)
+                    table = this.escapeId(model.name());
                 if (table_alias)
                     table += " AS " + this.escapeId(table_alias);
                 return table;
+            },
+
+            getModelSubQuery: function (model, childs_info) {
+                var res = null;
+                var childLevel = model.getChildLevel();
+                var descendants = model.getDescendants();
+                if ((childLevel > 0) || (descendants.length > 0)) {
+                    var query = "(SELECT <%= fields%> FROM <%= tables%>)";
+                    var attrs = [];
+                    var tables = [];
+
+                    var ancestors = model.getAncestors().concat();
+                    ancestors.push(model);
+                    var classFields = model.getClassFields();
+                    var self = this;
+
+                    _.forEach(classFields, function (classField) {
+                        attrs.push(self._escapeField(classField.field.name(), ALIAS_PREFIX + classField.level, true));
+                    });
+
+                    var prev_model = null;
+                    var table;
+                    _.forEach(ancestors, function (cmodel, idx) {
+                        table = self._escapeTable(cmodel.name(), ALIAS_PREFIX + idx);
+                        if (idx > 0) {
+                            table = "JOIN " + table + " ON" + self._escapeField(cmodel.getPrimaryKey().name(), ALIAS_PREFIX + idx, true) + " = " +
+                                        self._escapeField(prev_model.getPrimaryKey().name(), ALIAS_PREFIX + (idx - 1), true);
+                        };
+                        tables.push(table);
+                        prev_model = cmodel;
+                    });
+
+                    if (descendants.length > 0) {
+                        var extra_count = 0;
+                        var curr_idx = ancestors.length;
+                        var pk_model = self._escapeField(model.getPrimaryKey().name(), ALIAS_PREFIX + (curr_idx - 1), true);
+
+                        childs_info.baseFields = {};
+                        _.forEach(classFields, function (classField) {
+                            childs_info.baseFields[classField.field.name()] = true;
+                        });
+                        childs_info.typeFieldName = model.getClassTypeIdField().name();
+                        var typedef = childs_info[model.getActualTypeId()] = {};
+                        typedef.model = model;
+                        typedef.isBase = true;
+                        typedef.extraFields = [];
+
+                        childs_info.extraFields = [];
+
+                        function walk_descendants(curr_model, extra_fields) {
+                            var curr_dsc = curr_model.getDescendants();
+                            _.forEach(curr_dsc, function (cmodel) {
+                                typedef = childs_info[cmodel.getActualTypeId()] = {};
+                                typedef.model = cmodel;
+                                typedef.extraFields = extra_fields.concat();
+                                table = self._escapeTable(cmodel.name(), ALIAS_PREFIX + curr_idx);
+                                table = "LEFT JOIN " + table + " ON " + self._escapeField(cmodel.getPrimaryKey().name(), ALIAS_PREFIX + curr_idx, true) + " = " +
+                                            pk_model;
+                                tables.push(table);
+                                var own_fields = cmodel.getOwnFields();
+                                _.forEach(own_fields, function (field) {
+                                    var alias = EXTRA_PREFIX + (++extra_count);
+                                    var fname = field.name();
+                                    typedef.extraFields.push({ alias: alias, fname: fname });
+                                    attrs.push(self._escapeField(fname, ALIAS_PREFIX + curr_idx, false, alias));
+                                    childs_info.extraFields.push(alias);
+                                });
+                                curr_idx++;
+                                walk_descendants(cmodel, typedef.extraFields);
+                            });
+                        };
+
+                        walk_descendants(model, []);
+                    };
+
+                    var values = { tables: tables.join(" "), fields: attrs.join(", ") };
+                    res = _.template(query)(values).trim();
+                };
+                return res;
             },
 
             selectQuery: function (request, predicate) {
@@ -190,25 +272,37 @@ define(
                     if (req.isStub)
                         return;
 
-                    _.forEach(req.model.fields(), function (field) {
-                        attrs.push(self._escapeField(field.name(), req.sqlAlias));
+                    var childs_info = {};
+                    var tbl_expr = self._escapeTable(req.model, req.sqlAlias, childs_info);
+
+                    _.forEach(req.model.getClassFields(), function (class_field) {
+                        attrs.push(self._escapeField(class_field.field.name(), req.sqlAlias));
                     });
+
+                    if (childs_info.typeFieldName) {
+                        req.childs_info = childs_info;
+                        _.forEach(childs_info.extraFields, function (extra_field) {
+                            attrs.push(self._escapeField(extra_field, req.sqlAlias));
+                        });
+                        delete childs_info.extraFields;
+                    };
+
                     var tbl = null;
                     if (parent) {
                         var parent_name = parent.model.name()
+                        var parents = parent.model.getParentNames();
                         var tbl_name = req.model.name()
-                        var refs = req.model.outgoingLinks();
-                        refs = refs && refs[tbl_name] ? refs[tbl_name] : null;
+                        var refs = req.model.outgoingClassLinks();
                         if (refs) {
                             var keys = Object.keys(refs);
                             for (var i = 0; i < keys.length; i++) {
-                                if (refs[keys[i]].dst && (refs[keys[i]].dstName === parent_name) &&
+                                if (refs[keys[i]].dst && (parents[refs[keys[i]].dstName]) &&
                                     ((!req.parentField)||(req.parentField === keys[i]))) {
                                     if (!req.parentField)
                                         req.parentField = keys[i];
-                                    tbl = "LEFT JOIN " + self._escapeTable(req.model.name(), req.sqlAlias) +
+                                    tbl = "LEFT JOIN " + tbl_expr +
                                         " ON " + self._escapeField(keys[i], req.sqlAlias, true) + " = " +
-                                        self._escapeField(parent.model.getPrimaryKey().name(), parent.sqlAlias, true);
+                                        self._escapeField(parent.model.getClassPrimaryKey().name(), parent.sqlAlias, true);
                                     break;
                                 }
                             };
@@ -217,14 +311,14 @@ define(
                             throw new Error("\"" + tbl_name + "\" has no parent \"" + parent_name + "\".");
                     }
                     else
-                        tbl = self._escapeTable(req.model.name(), req.sqlAlias);
+                        tbl = tbl_expr;
                     tables.push(tbl);
                 });
 
                 var values = { tables: tables.join("\n  "), fields: attrs.join(", ") };
                 var result = _.template(query)(values).trim();
                 if (predicate) {
-                    var cond_sql = this._predicateToSql(request.model, predicate, params, request.sqlAlias);
+                    var cond_sql = this._predicateToSql(request.model, predicate, params, request.sqlAlias, true);
                     if (cond_sql.length > 0)
                         result += "\nWHERE " + cond_sql;
                 };
@@ -232,69 +326,168 @@ define(
             },
 
             updateQuery: function (model, vals, predicate, options) {
+                // Предикаты пока не поддерживаем (из-за наследования)
+                //
                 var query = "UPDATE <%= table %> SET <%= fields%><%= output %>";
-                var attrs = [];
+
+                var curr_vals = _.cloneDeep(vals || {});
+
+                var ancestors = model.getAncestors().concat();
+                ancestors.push(model);
+                var base_model = ancestors[0];
+
+                var tp_field = base_model.getTypeIdField();
+                if (tp_field) {
+                    var tp_fname = tp_field.name();
+                    var val = curr_vals[tp_fname];
+                    if ((typeof (val) != "undefined") && (val != model.getActualTypeId()))
+                        throw new Error("Invalid \"" + model.name() + "\" object type: " +
+                            val + ". Correct one is " + model.getActualTypeId() + ".");
+                };
+
+                var batch = [];
+                var row_version = Utils.guid();
+
                 var self = this;
-                var params = [];
-                var escVals = this._escapeValues(model, vals, params);
-                _.forEach(escVals, function (value, key) {
-                    attrs.push(value.id + " = " + value.val);
+                _.forEach(ancestors, function (curr_model, idx) {
+                    var attrs = [];
+                    var params = [];
+
+                    var rw = curr_model.getRowVersionField();
+                    if (rw && options.rowVersion)
+                        curr_vals[rw.name()] = row_version;
+
+                    var escVals = self._escapeValues(curr_model, curr_vals, params);
+                    _.forEach(escVals, function (value, key) {
+                        attrs.push(value.id + " = " + value.val);
+                    });
+                    var values = {
+                        table: self.escapeId(curr_model.name()),
+                        output: options && options.output ? options.output : "",
+                        fields: attrs.join(", ")
+                    };
+                    var result = _.template(query)(values).trim();
+                    if (options.key) {
+
+                        var curr_predicate = self._engine.newPredicate();
+                        curr_predicate.addCondition({ field: curr_model.getPrimaryKey().name(), op: "=", value: options.key });
+                        if (options.rowVersion && rw)
+                            curr_predicate.addCondition({ field: rw.name(), op: "=", value: options.rowVersion });
+
+                        var cond_sql = self._predicateToSql(curr_model, curr_predicate, params);
+                        if (cond_sql.length > 0)
+                            result += " WHERE " + cond_sql;
+                        self._engine.releasePredicate(curr_predicate);
+                    }
+                    else
+                        throw new Error("Update operation without PRIMARY KEY value isn't allowed.");
+                    batch.push({ sqlCmd: result + ";", params: params, type: self.queryTypes.UPDATE, meta: curr_model, rowVersion: row_version });
                 });
-                var values = {
-                    table: this.escapeId(model.name()),
-                    output: options && options.output ? options.output : "",
-                    fields: attrs.join(", ")
-                };
-                var result = _.template(query)(values).trim();
-                if (predicate) {
-                    var cond_sql = this._predicateToSql(model, predicate, params);
-                    if (cond_sql.length > 0)
-                        result += " WHERE " + cond_sql;
-                };
-                return { sqlCmd: result + ";", params: params, type: this.queryTypes.UPDATE, meta: model };
+                return batch;
             },
 
             deleteQuery: function (model, predicate, options) {
+                // Предикаты пока не поддерживаем (из-за наследования)
+                //
                 var query = "DELETE FROM <%= table %>";
                 var attrs = [];
                 var self = this;
                 var params = [];
 
-                var values = { table: this.escapeId(model.name()) };
+                var base_model = model.getBaseModel();
+                var values = { table: this.escapeId(base_model.name()) };
                 var result = _.template(query)(values).trim();
-                if (predicate) {
-                    var cond_sql = this._predicateToSql(model, predicate, params);
+
+                if (options.key) {
+
+                    var curr_predicate = self._engine.newPredicate();
+                    curr_predicate.addCondition({ field: base_model.getPrimaryKey().name(), op: "=", value: options.key });
+                    var rw = base_model.getRowVersionField();
+                    if (options.rowVersion && rw)
+                        curr_predicate.addCondition({ field: rw.name(), op: "=", value: options.rowVersion });
+
+                    var cond_sql = self._predicateToSql(base_model, curr_predicate, params);
                     if (cond_sql.length > 0)
                         result += " WHERE " + cond_sql;
+                    self._engine.releasePredicate(curr_predicate);
                 }
                 else
-                    throw new Error("Delete operation without predicate isn't allowed.");
-                return { sqlCmd: result + ";", params: params, type: this.queryTypes.DELETE, meta: model };
+                    throw new Error("Delete operation without PRIMARY KEY value isn't allowed.");
+
+                return { sqlCmd: result + ";", params: params, type: this.queryTypes.DELETE, meta: base_model };
             },
 
             insertQuery: function (model, vals, options) {
                 var query = "<%= before %>INSERT INTO <%= table %> (<%= fields%>)<%= output %> VALUES (<%= values%>)<%= after %>";
                 var params = [];
-                var escVals = this._escapeValues(model, vals, params);
-                var attrs = [];
-                var values = [];
-                var self = this;
-                _.forEach(model.fields(), function (field) {
-                    var idValPair = escVals[field.name()];
-                    if (idValPair) {
-                        attrs.push(idValPair.id);
-                        values.push(idValPair.val);
-                    }
-                });
-                var data = {
-                    before: options && options.before ? options.before : "",
-                    output: options && options.output ? options.output : "",
-                    after: options && options.after ? options.after : "",
-                    table: this.escapeId(model.name()),
-                    fields: attrs.join(", "),
-                    values: values.join(", ")
+
+                var ancestors = model.getAncestors().concat();
+                ancestors.push(model);
+                var base_model = ancestors[0];
+
+                var curr_vals = _.cloneDeep(vals || {});
+                var row_version = Utils.guid();
+                var rw = base_model.getRowVersionField();
+                if (rw)
+                    curr_vals[rw.name()] = row_version;
+
+                var insertId;
+                var pk = base_model.getPrimaryKey();
+                if (pk && curr_vals[pk.name()]) {
+                    insertId = curr_vals[pk.name()];
                 };
-                return { sqlCmd: _.template(query)(data).trim() + ";", params: params, type: this.queryTypes.INSERT, meta: model };
+
+                var tp_val;
+                var tp_field = base_model.getTypeIdField();
+                if (tp_field) {
+                    var tp_fname = tp_field.name();
+                    var val = tp_val = curr_vals[tp_fname];
+                    if (!val)
+                        curr_vals[tp_fname] = tp_val = model.getActualTypeId()
+                    else
+                        if (val != model.getActualTypeId())
+                            throw new Error("Invalid \"" + model.name() + "\" object type: " +
+                                val + ". Correct one is " + model.getActualTypeId() + ".");
+                };
+
+                var batch = [];
+                var self = this;
+                _.forEach(ancestors, function (curr_model, idx) {
+
+                    pk = curr_model.getPrimaryKey();
+                    if (pk && insertId)
+                        curr_vals[pk.name()] = insertId;
+                    rw = curr_model.getRowVersionField();
+                    if (rw && row_version)
+                        curr_vals[rw.name()] = row_version;
+
+                    var escVals = self._escapeValues(curr_model, curr_vals, params);
+                    var attrs = [];
+                    var values = [];
+
+                    _.forEach(escVals, function (val, key) {
+                        attrs.push(val.id);
+                        values.push(val.val);
+                    });
+
+                    var data = {
+                        before: options && options.before ? options.before : "",
+                        output: options && options.output ? options.output : "",
+                        after: options && options.after ? options.after : "",
+                        table: self.escapeId(curr_model.name()),
+                        fields: attrs.join(", "),
+                        values: values.join(", ")
+                    };
+
+                    batch.push({
+                        sqlCmd: _.template(query)(data).trim() + ";",
+                        params: params, type: self.queryTypes.INSERT,
+                        meta: curr_model,
+                        rowVersion: row_version,
+                        insertId: insertId
+                    });
+                });
+                return batch;
             },
 
             execSql: function (sql) {
@@ -342,7 +535,7 @@ define(
                 throw new Error("\"escapeValue\" wasn't implemented in descendant.");
             },
 
-            _predicateToSql: function predicateToString(model, predicate, params, table_alias) {
+            _predicateToSql: function predicateToString(model, predicate, params, table_alias, use_class_fields) {
                 var result = "";
                 var cond_arr = [];
 
@@ -355,7 +548,7 @@ define(
                         res = this._predicateToSql(model, cond, params, table_alias);
                     else {
 
-                        var field = model.getField(cond.fieldName());
+                        var field = use_class_fields ? model.getClassField(cond.fieldName()) : model.getField(cond.fieldName());
                         if (!field)
                             throw new Error("Predicate error: Unknown field \"" + cond.fieldName() + "\" in model \"" + model.name() + "\".");
 
@@ -434,7 +627,9 @@ define(
                             id: self.escapeId(key),
                             val: self.escapeValue(value, field.fieldType(), params),
                         };
-                    };
+                    }
+                    else
+                        delete result[key];
                 });
                 return result;
             },

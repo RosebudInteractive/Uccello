@@ -25,7 +25,8 @@ define(
             tranRollback: "function",
             getNextRowId: "function",
             execBatch: "function",
-            execSql: "function"
+            execSql: "function",
+            importDir: "function"
         };
 
         var DataObjectEngine = UccelloClass.extend({
@@ -49,7 +50,7 @@ define(
                         dbparams: {
                             name: Meta.Db.Name,
                             kind: "master",
-                            guid: Meta.Db.Guid,
+                            guid: opts.auto_gen_db_guid ? this._controller.guid() : Meta.Db.Guid,
                             constructHolder: construct_holder
                         }
                     });
@@ -182,8 +183,10 @@ define(
 
             newPredicate: function () {
                 var result;
-                if (this._predicates_idle.length > 0)
+                if (this._predicates_idle.length > 0) {
                     result = this._predicates_idle.pop();
+                    result.clearConditions();
+                }
                 else
                     result = this._createPredicate();
                 return result;
@@ -226,6 +229,51 @@ define(
                 }, this);
             },
 
+            saveSchemaTypesToFile: function (dir, schema_name) {
+                var fs = require('fs');
+                var path = require('path');
+                var schema = this.getSchema(schema_name);
+                if (!schema)
+                    throw new Error("Schema \"" + schema_name + "\" doesn't exist.");
+
+                var models = schema.models();
+                var data = {
+                    $sys: {
+                        guid: this._controller.guid(),
+                        typeGuid: Meta.TYPE_MODEL_RGUID
+                    },
+                    fields: {
+                        Id: 1,
+                        Name: Meta.TYPE_MODEL_RNAME
+                    },
+                    collections: {
+                        DataElements: []
+                    }
+                };
+                var elems = data.collections.DataElements;
+
+                _.forEach(models, function (model) {
+                    if (!model.isTypeModel()) {
+                        var elem = {
+                            $sys: {
+                                guid: this._controller.guid(),
+                                typeGuid: Meta.TYPE_MODEL_GUID
+                            },
+                            fields: {
+                                Id: model.getActualTypeId(),
+                                TypeGuid: model.dataObjectGuid(),
+                                ModelName: model.name()
+                            },
+                            collections: {}
+                        };
+                        elems.push(elem);
+                    };
+                }, this);
+
+                fs.writeFileSync(path.format({ dir: dir, base: "DATA_" + Meta.TYPE_MODEL_NAME + ".json" }),
+                    JSON.stringify(data), { encoding: "utf8" });
+            },
+
             transaction: function (batch, options) {
                 var result;
                 try {
@@ -241,10 +289,13 @@ define(
                                         return res;
                                     });
                             }, function (err) {
-                                return tran.rollback()
-                                    .then(function () {
-                                        return Promise.reject(err);
-                                    });
+                                if (err.dbError === true)
+                                    return Promise.reject(err)
+                                else
+                                    return tran.rollback()
+                                        .then(function () {
+                                            return Promise.reject(err);
+                                        });
                             });
                     }
                     else
@@ -496,20 +547,18 @@ define(
                                         var key = model.getPrimaryKey();
                                         if (!key)
                                             throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
-                                        var predicate = self.newPredicate();
-                                        predicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
 
                                         if (val.data.rowVersion) {
                                             var rwField = model.getRowVersionField();
                                             if (!rwField)
                                                 throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
-                                            predicate.addCondition({ field: rwField.name(), op: "=", value: val.data.rowVersion });
                                         };
 
-                                        promise = self._query.update(model, val.data.fields, predicate,
+                                        promise = self._query.update(model, val.data.fields, null,
                                             {
                                                 transaction: transaction,
                                                 updOptions: {
+                                                    key: val.data.key,
                                                     rowVersion: val.data.rowVersion
                                                 }
                                             });
@@ -523,17 +572,20 @@ define(
                                         var key = model.getPrimaryKey();
                                         if (!key)
                                             throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
-                                        var predicate = self.newPredicate();
-                                        predicate.addConditionWithClear({ field: key.name(), op: "=", value: val.data.key });
 
                                         if (val.data.rowVersion) {
                                             var rwField = model.getRowVersionField();
                                             if (!rwField)
                                                 throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
-                                            predicate.addCondition({ field: rwField.name(), op: "=", value: val.data.rowVersion });
                                         };
 
-                                        promise = self._query.delete(model, predicate, { transaction: transaction });
+                                        promise = self._query.delete(model, null, {
+                                            transaction: transaction,
+                                            delOptions: {
+                                                key: val.data.key,
+                                                rowVersion: val.data.rowVersion
+                                            }
+                                        });
                                         break;
                                 };
                                 return promise;
@@ -883,8 +935,7 @@ define(
                 if (request.parentField)
                     result.fields.ParentField = request.parentField;
 
-                function make_types_arr() {
-                    var types = {};
+                function make_types_arr(required_types, types) {
 
                     function _make_types_arr(arr, request, level, request_tree) {
 
@@ -919,10 +970,13 @@ define(
                         };
                         return request_tree;
                     };
-                    return _make_types_arr(result.$sys.requiredTypes, request, 0, null);
+                    return _make_types_arr(required_types, request, 0, null);
                 };
 
-                var request_tree = make_types_arr();
+                var required_types = result.$sys.requiredTypes;
+                var required_types_dict = {};
+
+                var request_tree = make_types_arr(required_types, required_types_dict);
                 if (request_tree)
                     result.fields.RequestTree = JSON.stringify(request_tree);
 
@@ -946,14 +1000,47 @@ define(
                                     "collections": {}
                                 };
 
-                                _.forEach(request.model.fields(), function (field) {
-                                    var fld_name = field.name();
+                                _.forEach(request.model.getClassFields(), function (class_field) {
+                                    var fld_name = class_field.field.name();
                                     if (fld_name !== "Guid") {
                                         var data_fld_name = request.sqlAlias ? request.sqlAlias + "_" + fld_name : fld_name;
                                         if (data[data_fld_name] !== undefined)
                                             data_obj.fields[fld_name] = data[data_fld_name];
                                     };
                                 });
+
+                                if (request.childs_info) {
+                                    // DataObject имеет наследников !
+                                    var tp_fname = request.sqlAlias ? request.sqlAlias + "_" +
+                                        request.childs_info.typeFieldName : request.childs_info.typeFieldName;
+                                    var tp_val = data[tp_fname];
+                                    if (tp_val) {
+                                        var info = request.childs_info[tp_val];
+                                        if (info) {
+                                            if (!info.isBase) {
+                                                var type_guid = info.model.dataObjectGuid();
+                                                if (!required_types_dict[type_guid]) {
+                                                    required_types.push(type_guid);
+                                                    required_types_dict[type_guid] = true;
+                                                }
+                                                data_obj.$sys.typeGuid = type_guid; // Меняем тип DataObject
+                                                // Добавляем поля наследника
+                                                _.forEach(info.extraFields, function (extra_field) {
+                                                    var data_fld_name = request.sqlAlias ? request.sqlAlias + "_" + extra_field.alias : extra_field.alias;
+                                                    if (data[data_fld_name] !== undefined)
+                                                        data_obj.fields[extra_field.fname] = data[data_fld_name];
+                                                });
+                                            };
+                                        }
+                                        else
+                                            throw new Error("Unknown type value: \"" + tp_val + "\" : Model: \"" + request.model.name() +
+                                                "\" : Guid: \"" + guid + "\".");
+                                    }
+                                    else
+                                        throw new Error("Type field is empty: \"" + request.model.name() +
+                                            "\" : Guid: \"" + guid + "\".");
+
+                                };
 
                                 parent_obj.collections.DataElements.push(data_obj);
 

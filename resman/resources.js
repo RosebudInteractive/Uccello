@@ -64,6 +64,9 @@ define([
                             } else {
                                 resolve(_resource)
                             }
+                        },
+                        function(reason){
+                            reject(reason)
                         }
                     );
                 }

@@ -19,15 +19,21 @@ var _initializer = {
             dataPath        : _path.DbPath,
             uccelloPath     : _path.Uccello,
             webSocketServer : {port: 8082},
+            masaccioPath: __dirname + '/../../../../Masaccio/wfe/',
+
+            resman : {
+                useDb : true,
+                defaultProduct : 'ProtoOne',
+                sourceDir: [
+                    {path: _path.DbPath + '/forms/', type: 'FRM'},
+                    {path: _path.DbPath + '/processDefinitions/', type: 'PR_DEF', generator: __dirname + './../generators/processDefGenerator.js'}
+                ]
+            },
 
             resourceBuilder : {
                 types: [
                     {Code: "FRM", Name: "User Form", ClassName: "ResForm", Description: "Пользовательская форма"},
-                    {Code: "TEST", Name: "Test Type", ClassName: "UserInfo", Description: "Тестовый тип"}
-                ],
-                sourceDir: [
-                    {path: _parentDir + '/../sourceFolder/FRM', type: 'FRM'},
-                    {path: _parentDir + '/../sourceFolder/TEST', type: 'TEST'}
+                    {Code: "PR_DEF", Name: "Process Definition", ClassName: "ProcessDefinition", Description: "Определение процесса"}
                 ],
                 destDir: './testFiles/',
                 productId: 2,
@@ -62,6 +68,11 @@ var _initializer = {
             done(err, row);
         }
         this.uccelloServ = new UccelloServ({authenticate: fakeAuthenticate});
+
+        var EngineSingleton = require(this.getConfig().masaccioPath + 'engineSingleton');
+        this.constructHolder = this.uccelloServ.pvt.constructHolder;
+        var dbc = this.uccelloServ.getUserMgr().getController();
+        EngineSingleton.initInstance({dbController : dbc, constructHolder : this.constructHolder});
     }
 };
 

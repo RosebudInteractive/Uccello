@@ -66,7 +66,7 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
             constructor() {
                 this.checkOptions();
 
-                this.sourceDir = UCCELLO_CONFIG.resourceBuilder.sourceDir;
+                this.sourceDir = UCCELLO_CONFIG.resman.sourceDir;
                 this.outputDir = UCCELLO_CONFIG.resourceBuilder.destDir;
                 this.productId = UCCELLO_CONFIG.resourceBuilder.productId;
                 this.currBuildId = UCCELLO_CONFIG.resourceBuilder.currBuildId;
@@ -84,7 +84,7 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                     throw new Error('ResourceBuilder options not found')
                 }
 
-                if (!UCCELLO_CONFIG.resourceBuilder.sourceDir) {
+                if ((!UCCELLO_CONFIG.resman) ||(!UCCELLO_CONFIG.resman.sourceDir)) {
                     throw new Error('ResourceBuilder : Source directory not found')
                 }
 
@@ -224,32 +224,33 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                 var that = this;
 
                 return new Promise(function (resolve, reject){
-                    if (that.canBuildData) {
-                        var _handledTypesCount = 0;
-                        var _errors = [];
+                    var _handledTypesCount = 0;
+                    var _errors = [];
 
-                        function checkDone() {
-                            if (_handledTypesCount == that.sourceDir.length) {
-                                that.saveFiles(function(){
-                                    if (_errors.length == 0) {
-                                        resolve()
-                                    } else {
-                                        var _err = new Error('Resources built with errors.');
-                                        _err.details = _errors.slice();
+                    function checkDone() {
+                        if (_handledTypesCount == that.sourceDir.length) {
+                            that.saveFiles(function(){
+                                if (_errors.length == 0) {
+                                    resolve()
+                                } else {
+                                    var _err = new Error('Resources built with errors.');
+                                    _err.details = _errors.slice();
 
-                                        reject(_err);
-                                    }
-                                });
-                            }
+                                    reject(_err);
+                                }
+                            });
                         }
+                    }
 
+
+                    if (that.canBuildData) {
                         that.sourceDir.forEach(function(element){
 
                             var _list = fs.readdirSync(element.path);
 
                             if (_list.length != 0) {
                                 _list.forEach(function(fileName, index, array){
-                                    array[index] = element.path + '/' + fileName;
+                                    array[index] = element.path + fileName;
                                 });
 
                                 that.createResources(_list, element.type).then(
@@ -317,9 +318,47 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                 });
             }
 
+            generateSourceFiles(){
+                var _count = 0;
+                return new Promise(function(resolve, reject) {
+                    UCCELLO_CONFIG.resman.sourceDir.forEach(function(source){
+                        if (source.hasOwnProperty('generator')){
+                            if (fs.existsSync(source.generator)) {
+                                var _generator = require(source.generator)
+                            } else {
+                                reject(new Error('can not found generator for ' + source.type))
+                            }
+
+                            if (_generator.hasOwnProperty('generate')) {
+                                _generator.generate(source.path).then(
+                                    function(){
+                                        _count++;
+                                        if (_count == UCCELLO_CONFIG.resman.sourceDir.length) {
+                                            resolve()
+                                        }
+                                    },
+                                    reject)
+                            } else {
+                                reject(new Error('can not generate ' + source.type + ' resources'))
+                            }
+                        } else {
+                            _count++;
+                            if (_count == UCCELLO_CONFIG.resman.sourceDir.length) {
+                                resolve()
+                            }
+                        }
+                    })
+                })
+            }
+
             static prepareFiles(){
                 return new Promise(function(resolve, reject) {
-                    getInstance().prepare().then(resolve, reject);
+                    getInstance().generateSourceFiles().then(
+                        function(){
+                            getInstance().prepare().then(resolve, reject);
+                        },
+                        reject
+                    );
                 })
 
             };
