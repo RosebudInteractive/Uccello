@@ -93,7 +93,9 @@ define([], function () {
             { className: 'DbTreeViewItemType', isUccello: true, component: 'controls/dbTreeViewItemType', viewset: false, metaType: ['content'] },
             { className: 'DbTreeView', isUccello: true, component: 'controls/dbTreeView', viewset: false, metaType: ['content'] },
             { className: 'Layout', isUccello: true, component: 'controls/layout', viewset: false, metaType: ['content'] },
-            { className: 'AdaptiveContainer', isUccello: true, component: 'controls/adaptiveContainer', viewset: false, metaType: ['content'] }
+            { className: 'AdaptiveContainer', isUccello: true, component: 'controls/adaptiveContainer', viewset: false, metaType: ['content'] },
+            { className: 'FormDesigner', isUccello: true, component: 'controls/formDesigner', viewset: false, metaType: ['content'] },
+            { className: 'DesignerControl', isUccello: true, component: 'controls/designerControl', viewset: false, metaType: ['content'] }
         ],
 
         // остальные гуиды
@@ -196,6 +198,8 @@ define([], function () {
             'DbTreeViewItemType': '024cdaa7-9e63-5cb1-65a1-caaec6b93140',
             'Layout': "8475e73d-06aa-4454-b02f-cf26a9cbabb6",
             'AdaptiveContainer': "d889ec6c-8083-4e53-815f-c135b1cab573",
+            'FormDesigner': "08ee6c54-8e09-4c67-821b-3bcaf68971a9",
+            'DesignerControl': "77fa5850-4d05-4757-96b4-9edfde2a4bb7"
             'ProcessDefinition' : "08b97860-179a-4292-a48d-bfb9535115d3"
         },
 
