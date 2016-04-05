@@ -1018,7 +1018,8 @@ define(
 
 		        if (objArr) {
 		            for (var i = 0; i < objArr.length; i++) {
-		                this.getListOfTypes(objArr[i], types);
+		                if (objArr[i])
+		                    this.getListOfTypes(objArr[i], types);
 		            };
 		            if (types.arrTypes.length > 0) {
 		                var constructHolder = this.pvt.constructHolder ? this.pvt.constructHolder :

@@ -8,6 +8,7 @@ define(
 
         var TICK_CHAR = '`';
         var ALIAS_PREFIX = "t";
+        var EXTRA_PREFIX = "#";
 
         var QueryGen = UccelloClass.extend({
 
@@ -145,16 +146,16 @@ define(
                 return set_sql_aliases(request, 0);
             },
 
-            _escapeField: function (field_name, table_alias, is_fld_only) {
+            _escapeField: function (field_name, table_alias, is_fld_only, field_alias) {
                 var field = this.escapeId(field_name);
                 if (table_alias)
                     field = this.escapeId(table_alias) + "." + field +
-                        (is_fld_only ? "" : " AS " + this.escapeId(table_alias + "_" + field_name));
+                        (is_fld_only ? "" : (" AS " + (field_alias ? this.escapeId(field_alias) : this.escapeId(table_alias + "_" + field_name))));
                 return field;
             },
 
-            _escapeTable: function (model, table_alias) {
-                var table = (typeof (model) === "string") ? this.escapeId(model) : this.getModelSubQuery(model);
+            _escapeTable: function (model, table_alias, childs_info) {
+                var table = (typeof (model) === "string") ? this.escapeId(model) : this.getModelSubQuery(model, childs_info);
                 if (!table)
                     table = this.escapeId(model.name());
                 if (table_alias)
@@ -162,10 +163,11 @@ define(
                 return table;
             },
 
-            getModelSubQuery: function (model) {
+            getModelSubQuery: function (model, childs_info) {
                 var res = null;
                 var childLevel = model.getChildLevel();
-                if (childLevel > 0) {
+                var descendants = model.getDescendants();
+                if ((childLevel > 0) || (descendants.length > 0)) {
                     var query = "(SELECT <%= fields%> FROM <%= tables%>)";
                     var attrs = [];
                     var tables = [];
@@ -180,8 +182,9 @@ define(
                     });
 
                     var prev_model = null;
+                    var table;
                     _.forEach(ancestors, function (cmodel, idx) {
-                        var table = self._escapeTable(cmodel.name(), ALIAS_PREFIX + idx);
+                        table = self._escapeTable(cmodel.name(), ALIAS_PREFIX + idx);
                         if (idx > 0) {
                             table = "JOIN " + table + " ON" + self._escapeField(cmodel.getPrimaryKey().name(), ALIAS_PREFIX + idx, true) + " = " +
                                         self._escapeField(prev_model.getPrimaryKey().name(), ALIAS_PREFIX + (idx - 1), true);
@@ -189,6 +192,49 @@ define(
                         tables.push(table);
                         prev_model = cmodel;
                     });
+
+                    if (descendants.length > 0) {
+                        var extra_count = 0;
+                        var curr_idx = ancestors.length;
+                        var pk_model = self._escapeField(model.getPrimaryKey().name(), ALIAS_PREFIX + (curr_idx - 1), true);
+
+                        childs_info.baseFields = {};
+                        _.forEach(classFields, function (classField) {
+                            childs_info.baseFields[classField.field.name()] = true;
+                        });
+                        childs_info.typeFieldName = model.getClassTypeIdField().name();
+                        var typedef = childs_info[model.getActualTypeId()] = {};
+                        typedef.model = model;
+                        typedef.isBase = true;
+                        typedef.extraFields = [];
+
+                        childs_info.extraFields = [];
+
+                        function walk_descendants(curr_model, extra_fields) {
+                            var curr_dsc = curr_model.getDescendants();
+                            _.forEach(curr_dsc, function (cmodel) {
+                                typedef = childs_info[cmodel.getActualTypeId()] = {};
+                                typedef.model = cmodel;
+                                typedef.extraFields = extra_fields.concat();
+                                table = self._escapeTable(cmodel.name(), ALIAS_PREFIX + curr_idx);
+                                table = "LEFT JOIN " + table + " ON " + self._escapeField(cmodel.getPrimaryKey().name(), ALIAS_PREFIX + curr_idx, true) + " = " +
+                                            pk_model;
+                                tables.push(table);
+                                var own_fields = cmodel.getOwnFields();
+                                _.forEach(own_fields, function (field) {
+                                    var alias = EXTRA_PREFIX + (++extra_count);
+                                    var fname = field.name();
+                                    typedef.extraFields.push({ alias: alias, fname: fname });
+                                    attrs.push(self._escapeField(fname, ALIAS_PREFIX + curr_idx, false, alias));
+                                    childs_info.extraFields.push(alias);
+                                });
+                                curr_idx++;
+                                walk_descendants(cmodel, typedef.extraFields);
+                            });
+                        };
+
+                        walk_descendants(model, []);
+                    };
 
                     var values = { tables: tables.join(" "), fields: attrs.join(", ") };
                     res = _.template(query)(values).trim();
@@ -226,9 +272,21 @@ define(
                     if (req.isStub)
                         return;
 
+                    var childs_info = {};
+                    var tbl_expr = self._escapeTable(req.model, req.sqlAlias, childs_info);
+
                     _.forEach(req.model.getClassFields(), function (class_field) {
                         attrs.push(self._escapeField(class_field.field.name(), req.sqlAlias));
                     });
+
+                    if (childs_info.typeFieldName) {
+                        req.childs_info = childs_info;
+                        _.forEach(childs_info.extraFields, function (extra_field) {
+                            attrs.push(self._escapeField(extra_field, req.sqlAlias));
+                        });
+                        delete childs_info.extraFields;
+                    };
+
                     var tbl = null;
                     if (parent) {
                         var parent_name = parent.model.name()
@@ -242,7 +300,7 @@ define(
                                     ((!req.parentField)||(req.parentField === keys[i]))) {
                                     if (!req.parentField)
                                         req.parentField = keys[i];
-                                    tbl = "LEFT JOIN " + self._escapeTable(req.model, req.sqlAlias) +
+                                    tbl = "LEFT JOIN " + tbl_expr +
                                         " ON " + self._escapeField(keys[i], req.sqlAlias, true) + " = " +
                                         self._escapeField(parent.model.getClassPrimaryKey().name(), parent.sqlAlias, true);
                                     break;
@@ -253,7 +311,7 @@ define(
                             throw new Error("\"" + tbl_name + "\" has no parent \"" + parent_name + "\".");
                     }
                     else
-                        tbl = self._escapeTable(req.model, req.sqlAlias);
+                        tbl = tbl_expr;
                     tables.push(tbl);
                 });
 

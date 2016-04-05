@@ -36,9 +36,9 @@ define(
                             self._connection.commitTransaction(processTran);
                             break;
 
-                        //case self._queryTypes.ROLLBACK_TRAN:
-                        //    self._connection.rollbackTransaction(processTran);
-                        //    break;
+                        case self._queryTypes.ROLLBACK_TRAN:
+                            self._connection.rollbackTransaction(processTran);
+                            break;
 
                         default:
 
@@ -91,6 +91,7 @@ define(
             },
 
             _formatError: function (err) {
+                err.dbError = true;
                 return err;
             },
 
@@ -100,7 +101,7 @@ define(
                 var meta = sql.meta;
                 var row_version_fname = meta && meta.model && meta.model.getRowVersionField() ? meta.model.getRowVersionField().name() : null;
 
-                if ((_.isArray(results)) && (query_type !== this._queryTypes.ROLLBACK_TRAN))
+                if (_.isArray(results))
                     if ((query_type === this._queryTypes.ROWID) && (results.length === 1)) {
                         res = {
                             affectedRows: affectedRows,

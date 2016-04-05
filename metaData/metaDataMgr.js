@@ -368,7 +368,9 @@ define(
                     for (var i = 0; i < names.length; i++) {
                         var model = this._modelsByName[names[i]];
                         model._ancestors = null;
+                        model._descendants = null;
                         model._classFields = null;
+                        model._ownFields = null;
                         model._classFieldsByName = null;
                         model._outgoingClassLinks = null;
                     };
@@ -387,11 +389,14 @@ define(
                                     buildClassTbl(parent_model, flds, class_fields, ancestors)
                                 else
                                     throw new Error("Undefined parent reference: " + model_name + " --> " + parent_name);
+                                parent_model._descendants.push(model);
                             };
 
                             model._childLevel = ancestors.length;
                             model._ancestors = ancestors.concat();
                             model._classFields = class_fields.concat();
+                            model._ownFields = [];
+                            model._descendants = [];
 
                             var fields_arr = model.fields();
                             for (var i = 0; i < fields_arr.length; i++) {
@@ -403,6 +408,7 @@ define(
                                         throw new Error("Field \"" + model.name() + "::" + fname + "\" is already defined in ancestors!");
                                     flds[fname] = true;
                                     model._classFields.push({ field: fields_arr[i], model: model, level: model._childLevel });
+                                    model._ownFields.push(fields_arr[i]);
                                 };
                             };
                         }
