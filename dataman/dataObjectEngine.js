@@ -266,6 +266,9 @@ define(
                             },
                             collections: {}
                         };
+                        var ancestors = model.getAncestors();
+                        if (ancestors.length > 0)
+                            elem.fields.ParentTypeId = ancestors[ancestors.length - 1].getActualTypeId();
                         elems.push(elem);
                     };
                 }, this);
