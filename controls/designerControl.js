@@ -33,8 +33,8 @@ define(
                 return this._genericSetter("TypeGuid", value);
             },
 
-            dataSet: function(value) {
-                return this._genericSetter("DataSet", value);
+            dataset: function(value) {
+                return this._genericSetter("Dataset", value);
             }
         });
         return DesignerControl;
