@@ -3,7 +3,7 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['./TranDefs', 'bluebird', 'lodash'],
+    ['./tranDefs', 'bluebird', 'lodash'],
     function (TranDefs, Promise, _) {
 
         var _curr_tran_id = 0;
