@@ -292,13 +292,13 @@ define(
                                         return res;
                                     });
                             }, function (err) {
-                                if (err.dbError === true)
-                                    return Promise.reject(err)
-                                else
-                                    return tran.rollback()
-                                        .then(function () {
-                                            return Promise.reject(err);
-                                        });
+                                return tran.rollback()
+                                    .then(function () {
+                                        return Promise.reject(err);
+                                    }, function () {
+                                        // В случае ошибки ROLLBACK просто ее игнорируем
+                                        return Promise.reject(err);
+                                    });
                             });
                     }
                     else

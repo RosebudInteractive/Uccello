@@ -3,12 +3,12 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['./metaObjTreeElemRoot', './metaDefs'],
-    function (MetaObjTreeElemRoot, Meta) {
-        var MetaObjTreeElem = MetaObjTreeElemRoot.extend({
+    ['./dbTreeModelRoot', './metaDefs'],
+    function (DbTreeModelRoot, Meta) {
+        var DbTreeModel = DbTreeModelRoot.extend({
 
-            className: "MetaObjTreeElem",
-            classGuid: UCCELLO_CONFIG.classGuids.MetaObjTreeElem,
+            className: "DbTreeModel",
+            classGuid: UCCELLO_CONFIG.classGuids.DbTreeModel,
             metaFields: [
                 { fname: "Alias", ftype: "string" },
                 {
@@ -51,6 +51,6 @@ define(
             },
 
         });
-        return MetaObjTreeElem;
+        return DbTreeModel;
     }
 );

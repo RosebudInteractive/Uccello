@@ -3,15 +3,15 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../resman/dataTypes/resource', './metaObjTreeElemRoot', './metaObjTreeElem', './metaModel', './metaModelField', './metaDefs'],
-    function (Resource, MetaObjTreeElemRoot, MetaObjTreeElem, MetaModel, MetaModelField, Meta) {
-        var MetaObjTree = Resource.extend({
+    ['../resman/dataTypes/resource', './dbTreeModelRoot', './dbTreeModel', './metaModel', './metaModelField', './metaDefs'],
+    function (Resource, DbTreeModelRoot, DbTreeModel, MetaModel, MetaModelField, Meta) {
+        var DataModel = Resource.extend({
 
-            className: "MetaObjTree",
-            classGuid: UCCELLO_CONFIG.classGuids.MetaObjTree,
+            className: "DataModel",
+            classGuid: UCCELLO_CONFIG.classGuids.DataModel,
 
             metaCols: [
-                { "cname": "TreeRoot", "ctype": "MetaObjTreeElemRoot" }
+                { "cname": "TreeRoot", "ctype": "DbTreeModelRoot" }
             ],
 
             elemNamePrefix: "DataSource",
@@ -49,7 +49,7 @@ define(
             },
 
             getDSConstructor: function () {
-                return MetaObjTreeElem;
+                return DbTreeModel;
             },
 
             _createRootDS: function (model) {
@@ -65,9 +65,9 @@ define(
                     if (model)
                         ModelRef = model;
                     else
-                        throw new Error("MetaObjTree::_createRootDS: Model argument is empty!");
+                        throw new Error("DataModel::_createRootDS: Model argument is empty!");
 
-                return new MetaObjTreeElemRoot(this.getDB(), {
+                return new DbTreeModelRoot(this.getDB(), {
                     ini: { fields: { ResElemName: "RootDS", ModelRef: ModelRef } },
                     parent: this,
                     colName: "TreeRoot"
@@ -86,6 +86,6 @@ define(
             }
         });
 
-        return MetaObjTree;
+        return DataModel;
     }
 );

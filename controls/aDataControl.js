@@ -13,7 +13,7 @@ define(
 			metaFields: [{
 			    fname: "Dataset", ftype: {
 			        type: "ref",
-			        res_elem_type: UCCELLO_CONFIG.classGuids.Dataset
+			        res_elem_type: UCCELLO_CONFIG.classGuids.DatasetBase
 			    }
 			}],
 
@@ -30,9 +30,8 @@ define(
 				var ds = this.dataset();
 				if (ds) { 
 				    if (!ds._isProcessed()) ds.processDelta(); // если у датасета processDelta еще не вызван, то вызвать его
-				    var root = ds.root(), dsmod = false;
-				    if (root) dsmod = root.isDataModified("pd");
-					if (ds.isFldModified("Root","pd") || ds.isFldModified("Cursor","pd") || dsmod) this._isRendered(false);
+				    var dsmod = ds.isDataSourceModified("pd");
+					if (ds.isFldModified("Cursor","pd") || dsmod) this._isRendered(false);
 				}
 				this._isProcessed(true);
 

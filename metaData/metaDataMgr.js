@@ -4,9 +4,9 @@ if (typeof define !== 'function') {
 }
 define(
     ['../system/uobject', './metaModel', '../dataman/dataobject', '../dataman/dataRoot',
-        './metaDefs', './metaModelRef', './metaLinkRef', './metaObjTree', './metaObjTreeElemRoot'],
+        './metaDefs', './metaModelRef', './metaLinkRef', './dataModel', './dbTreeModelRoot'],
     function (UObject, MetaModel, DataObject, DataRoot, Meta,
-        MetaModelRef, MetaLinkRef, MetaObjTree, MetaObjTreeElemRoot) {
+        MetaModelRef, MetaLinkRef, DataModel, DbTreeModelRoot) {
 
         var REMOTE_RESULT = "XXX";
 
@@ -204,7 +204,7 @@ define(
                         else
                             throw new Error("MetaDataMgr::addObjectTree: Model argument is empty!");
 
-                    var obj_tree = new MetaObjTree(this.getDB(), { ini: { fields: { ResName: ResName } } });
+                    var obj_tree = new DataModel(this.getDB(), { ini: { fields: { ResName: ResName } } });
                     obj_tree._createRootDS(ModelRef);
                     return obj_tree;
 
@@ -218,7 +218,7 @@ define(
                 if (typeof model === "string") {
                     _model = this._treesByName[name];
                 } else
-                    if (model instanceof MetaObjTree) {
+                    if (model instanceof DataModel) {
                         _model = model;
                     } else
                         throw new Error("MetaDataMgr::deleteObjectTree: Invalid argument type.");
@@ -780,7 +780,7 @@ define(
                         model._addLinkIfRef(fields[i]);
                 }
                 else
-                    if (model instanceof MetaObjTree) {
+                    if (model instanceof DataModel) {
                         name = model.name();
                         if (this._treesByName[name] !== undefined) {
                             this.getDB()._deleteRoot(model);
@@ -810,7 +810,7 @@ define(
                         this._modelsCol._del(ref);
                 }
                 else
-                    if (model instanceof MetaObjTree) {
+                    if (model instanceof DataModel) {
                         var name = model.name();
                         var obj = this._treesByName[name];
                         if (obj !== undefined) {

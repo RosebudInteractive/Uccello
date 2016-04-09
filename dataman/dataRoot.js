@@ -231,6 +231,10 @@ define(
                                         localResult.keyValue = newObj.get(newObj._keyField);
                                     }
                                 }
+                                else {
+                                    localResult.newObject = null;
+                                    localResult.keyValue = null;
+                                };
                             }
                         };
                     };
