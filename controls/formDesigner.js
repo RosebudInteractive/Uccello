@@ -39,8 +39,168 @@ define(
 
             currentLayout: function(value) {
                 return this._genericSetter("CurrentLayout", value);
+            },
+
+            generateFrom: function() {
+                var guidMap = {};
+                var id = 1;
+                var layouts = [];
+                var children = [];
+                var sObj = {
+                    "$sys": {
+                        "guid": Utils.guid(),
+                        "typeGuid":  UCCELLO_CONFIG.classGuids.AdaptiveContainer
+                    },
+                    "fields": {
+                        "Id": id++,
+                        "Name": "AdaptiveContainer" + id,
+                        "Background": "#ffffff",
+                        "Width": "100%",
+                        "Height": "100%",
+                        "ResElemName": "Gen_AdaptiveContainer" + id
+                    },
+                    "collections": {
+                        "Children": children,
+                        "Layouts": layouts
+                    }
+                };
+
+                var ctrlCol = this.getCol("Controls");
+
+                for (var i = 0; i < ctrlCol.count(); i++) {
+                    var ctrl = ctrlCol.get(i);
+                    var tGuid = ctrl.typeGuid();
+                    var c = {
+                        "$sys": {
+                            "guid": Utils.guid(),
+                            "typeGuid":  tGuid
+                        },
+                        "fields": {
+                            "Id": id++,
+                            "Name": tGuid + "_" + id,
+                            "Width": "100%",
+                            "Height": "100%",
+                            "ResElemName": tGuid + "_" + id
+                        },
+                        "collections": {}
+                    };
+                    guidMap[ctrl.getGuid()] = c.$sys.guid;
+
+                    if (tGuid == "55d59ec4-77ac-4296-85e1-def78aa93d55") { // GenDataGrid
+                        c.collections.Columns = [];
+                        var gColumns = c.collections.Columns;
+                        var dsName = ctrl.dataset();
+                        var ds = this._getDSByName(dsName);
+                        if (ds) {
+                            c.fields.Dataset = ds.getGuid();
+                            var fields = ds.getCol("Fields");
+                            for (var j = 0; j < fields.count(); j++) {
+                                var f = fields.get(j);
+                                var gCol = {
+                                    "$sys": {
+                                        "guid": Utils.guid(),
+                                        "typeGuid": UCCELLO_CONFIG.classGuids.DataColumn
+                                    },
+                                    "fields": {
+                                        "Id": id++,
+                                        "Label": f.name(),
+                                        "Field": f.getGuid().split("@")[0],
+                                        "ResElemName": "DataColumn_" + id
+                                    }
+                                }
+
+                                gColumns.push(gCol);
+                            }
+                        }
+                    }
+
+
+
+                    children.push(c);
+
+                }
+                var lCol = this.getCol("Layouts");
+                for (var i = 0; i < lCol.count(); i++) {
+                    this._genLayouts(layouts, guidMap, lCol.get(i), {id : id} );
+                }
+
+
+                var children = this.getCol("Children");
+                var forDel = [];
+                for (var i = 0; i < children.count(); i++) {
+                    var ch = children.get(i);
+                    if (ch.className = "AdaptiveContainer") forDel.push(ch);
+                }
+
+                for (i = 0; i < forDel.length; i++) children._del(forDel[i]);
+
+                var db = this.getDB();
+                var colName = "Children";
+                var p = {
+                    colName: colName,
+                    obj: this
+                };
+
+                var resObj = db.deserialize(sObj, p, db.pvt.defaultCompCallback);
+
+                // Логгируем добавление поддерева
+                var mg = this.getGuid();
+                var o = {adObj: sObj, obj: resObj, colName: colName, guid: mg, type: "add"};
+                this.getLog().add(o);
+                this.logColModif("add", colName, resObj);
+            },
+
+            _genLayouts: function(arr, guidMap, layout, id) {
+                var lObj = {
+                    "$sys": {
+                        "guid": Utils.guid(),
+                        "typeGuid": UCCELLO_CONFIG.classGuids.Layout
+                    },
+                    "fields": {
+                        "Id": id.id++,
+                        "Name": "Gen_Layout_" + id.id,
+                        "Width": layout.width(),
+                        "Height": layout.height(),
+                        "ResElemName": "Gen_Layout_" + id.id,
+                        "Direction": layout.direction(),
+                        "Control": layout.control() ? guidMap[layout.control().getGuid()] : null
+                    },
+                    "collections": {
+                        "Layouts": []
+                    }
+                };
+
+                if (!layout.control()) {
+                    var lCol = layout.getCol("Layouts");
+                    for (var i = 0; i < lCol.count(); i++) {
+                        this._genLayouts(lObj.collections.Layouts, guidMap, lCol.get(i), id );
+                    }
+                }
+                arr.push(lObj);
+            },
+
+            _getDSByName: function(name) {
+                var model = this._getModel();
+                if (model) {
+                    var col = model.getCol("Datasets");
+                    for (var i = 0; i < col.count(); i++)
+                        if (col.get(i).resElemName() == name) return col.get(i);
+                }
+                return null;
+            },
+
+            _getModel: function() {
+                var parent = this.getParentComp();
+                var children = parent.getCol("Children");
+                for (var i = 0; i < children.count(); i++) {
+                    var ch = children.get(i);
+                    if (ch.className == "ADataModel") return ch;
+                }
+
+                return null;
             }
         });
         return FormDesigner;
     }
 );
+
