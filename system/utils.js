@@ -40,3 +40,10 @@ if (typeof (module) === 'undefined')
     define([], function(){return Utils;});
 else
     module.exports = Utils;
+
+
+if (!String.prototype.endsWith) {
+    String.prototype.endsWith = function(suffix) {
+        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+    };
+}

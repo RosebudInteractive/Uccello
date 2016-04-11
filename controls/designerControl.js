@@ -16,7 +16,7 @@ define(
             metaCols: [],
             metaFields: [
                 {fname:"TypeGuid", ftype:"string"},
-                {fname: "Dataset", ftype:"string"}
+                {fname: "ControlProperties", ftype:"string"}
             ],
 
             init: function(cm, params) {
@@ -33,8 +33,8 @@ define(
                 return this._genericSetter("TypeGuid", value);
             },
 
-            dataset: function(value) {
-                return this._genericSetter("Dataset", value);
+            controlProperties: function(value) {
+                return this._genericSetter("ControlProperties", value);
             }
         });
         return DesignerControl;
