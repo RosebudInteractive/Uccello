@@ -88,8 +88,21 @@ define(
 
                     if (tGuid == "55d59ec4-77ac-4296-85e1-def78aa93d55") { // GenDataGrid
                         c.collections.Columns = [];
+                        c.fields.BigSize = true;
+                        c.fields.Alternate = false;
+                        c.fields.HorizontalLines = true;
+                        c.fields.HasFooter = false;
+                        c.fields.WhiteHeader = true;
                         var gColumns = c.collections.Columns;
-                        var dsName = ctrl.dataset();
+                        var propsStr = ctrl.controlProperties();
+                        var props = null;
+                        if (propsStr)
+                            props = JSON.parse(propsStr);
+
+                        var dsName = null;
+                        if (props.Dataset)
+                            dsName = props.Dataset;
+
                         var ds = this._getDSByName(dsName);
                         if (ds) {
                             c.fields.Dataset = ds.getGuid();
@@ -105,7 +118,8 @@ define(
                                         "Id": id++,
                                         "Label": f.name(),
                                         "Field": f.getGuid().split("@")[0],
-                                        "ResElemName": "DataColumn_" + id
+                                        "ResElemName": "DataColumn_" + id,
+                                        "Width": "50px"
                                     }
                                 }
 
@@ -113,11 +127,7 @@ define(
                             }
                         }
                     }
-
-
-
                     children.push(c);
-
                 }
                 var lCol = this.getCol("Layouts");
                 for (var i = 0; i < lCol.count(); i++) {
@@ -148,6 +158,7 @@ define(
                 var o = {adObj: sObj, obj: resObj, colName: colName, guid: mg, type: "add"};
                 this.getLog().add(o);
                 this.logColModif("add", colName, resObj);
+                this.getControlMgr().allDataInit(resObj);
             },
 
             _genLayouts: function(arr, guidMap, layout, id) {
@@ -180,7 +191,7 @@ define(
             },
 
             _getDSByName: function(name) {
-                var model = this._getModel();
+                var model = this.getModel();
                 if (model) {
                     var col = model.getCol("Datasets");
                     for (var i = 0; i < col.count(); i++)
@@ -189,7 +200,7 @@ define(
                 return null;
             },
 
-            _getModel: function() {
+            getModel: function() {
                 var parent = this.getParentComp();
                 var children = parent.getCol("Children");
                 for (var i = 0; i < children.count(); i++) {
