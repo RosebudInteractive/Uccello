@@ -16,7 +16,7 @@ define(
                         type: "ref",
                         external: true,
                         res_type: UCCELLO_CONFIG.classGuids.DataModel,
-                        res_elem_type: UCCELLO_CONFIG.classGuids.DbTreeModelRoot
+                        res_elem_type: UCCELLO_CONFIG.classGuids.BaseTreeModel
                     }
                 },
                 { fname: "Cursor", ftype: "string" },
@@ -131,7 +131,7 @@ define(
                 if (!this.objectTree().hasData() || !onlyMaster) {
                     if (onlyMaster && master) return; // если НЕ мастер, а детейл, то пропустить
 
-                    this.objectTree().loadData(onlyMaster, null, false, source);
+                    this.objectTree().loadData(onlyMaster, false, source);
                 }
                 else this._initCursor(false, "Dataset::_dataInit");
             },
@@ -197,20 +197,9 @@ define(
             },
 
             canMoveCursor: function () {
-                result = this.cachedUpdates();
-                if (!result) {
-                    var curr_obj = this.getCurrentDataObject();
-                    if (curr_obj) {
-                        var curr_state = curr_obj._currState();
-                        result = curr_state === Meta.State.Browse;
-                        if ((!result) && this.master()) {
-                            var master_state = this.master().getState();
-                            result = (master_state === Meta.State.Edit) || (master_state === Meta.State.Insert);
-                        };
-                    }
-                    else
-                        result = true;
-                };
+                result = false;
+                if (this.objectTree())
+                    result = this.objectTree().canMoveCursor(this.cachedUpdates());
                 return result;
             },
 

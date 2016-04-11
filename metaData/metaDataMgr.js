@@ -4,9 +4,9 @@ if (typeof define !== 'function') {
 }
 define(
     ['../system/uobject', './metaModel', '../dataman/dataobject', '../dataman/dataRoot',
-        './metaDefs', './metaModelRef', './metaLinkRef', './dataModel', './dbTreeModelRoot'],
+        './metaDefs', './metaModelRef', './metaLinkRef', './dataModel'],
     function (UObject, MetaModel, DataObject, DataRoot, Meta,
-        MetaModelRef, MetaLinkRef, DataModel, DbTreeModelRoot) {
+        MetaModelRef, MetaLinkRef, DataModel) {
 
         var REMOTE_RESULT = "XXX";
 
@@ -185,35 +185,21 @@ define(
                 return callback ? REMOTE_RESULT : constrArr;
             },
 
-            addObjectTree: function (name, model) {
+            addDataModel: function (name) {
                 if (name) {
 
                     var fields = {};
                     var ResName = name;
-                    var ModelRef;
 
-                    if (model instanceof MetaModel) {
-                        ModelRef = {
-                            guidInstanceRes: model.getGuid(),
-                            guidInstanceElem: model.getGuid(),
-                        };
-                    }
-                    else
-                        if (model)
-                            ModelRef = model;
-                        else
-                            throw new Error("MetaDataMgr::addObjectTree: Model argument is empty!");
-
-                    var obj_tree = new DataModel(this.getDB(), { ini: { fields: { ResName: ResName } } });
-                    obj_tree._createRootDS(ModelRef);
-                    return obj_tree;
+                    var data_model = new DataModel(this.getDB(), { ini: { fields: { ResName: ResName } } });
+                    return data_model;
 
                 }
                 else
                     throw new Error("Name is undefined.");
             },
 
-            deleteObjectTree: function (model) {
+            deleteDataModel: function (model) {
                 var _model;
                 if (typeof model === "string") {
                     _model = this._treesByName[name];
@@ -221,7 +207,7 @@ define(
                     if (model instanceof DataModel) {
                         _model = model;
                     } else
-                        throw new Error("MetaDataMgr::deleteObjectTree: Invalid argument type.");
+                        throw new Error("MetaDataMgr::deleteDataModel: Invalid argument type.");
                 if (_model) {
                     this.getDB()._deleteRoot(_model);
                 };

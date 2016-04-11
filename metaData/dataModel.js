@@ -3,15 +3,15 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../resman/dataTypes/resource', './dbTreeModelRoot', './dbTreeModel', './metaModel', './metaModelField', './metaDefs'],
-    function (Resource, DbTreeModelRoot, DbTreeModel, MetaModel, MetaModelField, Meta) {
+    ['../resman/dataTypes/resource', './dbTreeModelRoot', './dbTreeModel', './memTreeModelRoot', './memTreeModel', './metaModel'],
+    function (Resource, DbTreeModelRoot, DbTreeModel, MemTreeModelRoot, MemTreeModel, MetaModel) {
         var DataModel = Resource.extend({
 
             className: "DataModel",
             classGuid: UCCELLO_CONFIG.classGuids.DataModel,
 
             metaCols: [
-                { "cname": "TreeRoot", "ctype": "DbTreeModelRoot" }
+                { "cname": "TreeRoot", "ctype": "BaseTreeModel" }
             ],
 
             elemNamePrefix: "DataSource",
@@ -22,18 +22,19 @@ define(
 
             init: function (cm, params) {
 
+                this._trees = {};
                 UccelloClass.super.apply(this, [cm, params]);
 
                 if (params) {
                     this._rootCol = this.getCol("TreeRoot");
                     this._rootCol.on({
-                        type: 'beforeAdd',
+                        type: 'add',
                         subscriber: this,
-                        callback: this._onBeforeAddElem
+                        callback: this._onAddElem
                     }).on({
-                        type: 'beforeDel',
+                        type: 'del',
                         subscriber: this,
-                        callback: this._onBeforeDeleteElem
+                        callback: this._onDeleteElem
                     });
 
                     if (!this.getDB()._metaDataMgr)
@@ -41,49 +42,121 @@ define(
                 };
             },
 
-            getRootDS: function () {
-                var result = null;
-                if (this._rootCol.count() === 1)
-                    result = this._rootCol.get(0);
-                return result;
+            getTreeRoot: function (alias) {
+                return this._trees[alias] ? this._trees[alias].treeElem : null;
             },
 
-            getDSConstructor: function () {
+            getDbDSConstructor: function () {
                 return DbTreeModel;
             },
 
-            _createRootDS: function (model) {
-                var ModelRef;
+            getMemDSConstructor: function () {
+                return MemTreeModel;
+            },
 
-                if (model instanceof MetaModel) {
-                    ModelRef = {
-                        guidInstanceRes: model.getGuid(),
-                        guidInstanceElem: model.getGuid(),
-                    };
+            addDbTreeModel: function (alias, model) {
+                if (typeof (alias) === "string") {
+
+                    var ModelRef;
+
+                    if (model instanceof MetaModel) {
+                        ModelRef = {
+                            guidInstanceRes: model.getGuid(),
+                            guidInstanceElem: model.getGuid(),
+                        };
+                    }
+                    else
+                        if (model)
+                            ModelRef = model;
+                        else
+                            throw new Error("DataModel::addDbTreeModel: Model argument is empty!");
+
+                    var resElemName = alias;
+
+                    return new DbTreeModelRoot(this.getDB(), {
+                        ini: { fields: { ResElemName: resElemName, Alias: alias, ModelRef: ModelRef } },
+                        parent: this,
+                        colName: "TreeRoot"
+                    });
                 }
                 else
-                    if (model)
-                        ModelRef = model;
-                    else
-                        throw new Error("DataModel::_createRootDS: Model argument is empty!");
-
-                return new DbTreeModelRoot(this.getDB(), {
-                    ini: { fields: { ResElemName: "RootDS", ModelRef: ModelRef } },
-                    parent: this,
-                    colName: "TreeRoot"
-                });
-
+                    throw new Error("Alias is of wrong type or undefined.");
             },
 
-            _onBeforeAddElem: function (args) {
+            addMemTreeModel: function (alias, class_guid) {
+                if (typeof (alias) === "string") {
+
+                    if (typeof (class_guid) !== "string")
+                        throw new Error("DataModel::addMemTreeModel: Class Guid argument is empty!");
+
+                    var resElemName = alias;
+
+                    return new MemTreeModelRoot(this.getDB(), {
+                        ini: { fields: { ResElemName: resElemName, Alias: alias, RootClassGuid: class_guid } },
+                        parent: this,
+                        colName: "TreeRoot"
+                    });
+                }
+                else
+                    throw new Error("Alias is of wrong type or undefined.");
+            },
+
+            _onAddElem: function (args) {
+                var treeElem = args.obj;
                 var col = args.target;
-                if (col.count() > 0)
-                    throw new Error("Root DS already exists ! Can't add a new one.");
+                var alias = treeElem.alias();
+                if ((!alias) || (this._trees[alias] !== undefined)) {
+                    col._del(treeElem);
+                    var msg = "\"" + alias + "\" is already defined.";
+                    if (!alias)
+                        msg = "Alias can't be empty.";
+                    throw new Error(msg);
+                };
+                var handler = {
+                    type: 'mod%Alias',
+                    subscriber: this,
+                    callback: this._getOnAliasChangeProc(treeElem)
+                };
+                this._trees[alias] = {
+                    treeElem: treeElem,
+                    handler: handler
+                };
+                treeElem.event.on(handler);
             },
 
-            _onBeforeDeleteElem: function (args) {
-                throw new Error("Can't delete Root DS object.");
+            _onDeleteElem: function (args) {
+                var treeElem = args.obj;
+                var obj = this._trees[treeElem.alias()];
+                if (obj) {
+                    delete this._trees[treeElem.alias()];
+                    obj.treeElem.event.off(obj.handler);
+                };
+            },
+
+            _getOnAliasChangeProc: function (treeElem) {
+                var self = this;
+                var oldAlias = treeElem.alias();
+
+                return function (args) {
+                    var alias = treeElem.alias();
+
+                    if (alias !== oldAlias) {
+
+                        if (self._trees[alias] !== undefined) {
+                            treeElem.set("alias", oldAlias);
+                            throw new Error("Can't change alias from \"" +
+                                oldAlias + "\" to \"" + alias + "\". \"" + alias + "\" is already defined.");
+                        };
+
+                        var obj = self._trees[oldAlias];
+                        delete self._trees[oldAlias];
+                        self._trees[alias] = obj;
+
+                        oldAlias = alias;
+                    };
+                };
             }
+
         });
 
         return DataModel;

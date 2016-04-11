@@ -10,7 +10,6 @@ define(
             className: "DbTreeModel",
             classGuid: UCCELLO_CONFIG.classGuids.DbTreeModel,
             metaFields: [
-                { fname: "Alias", ftype: "string" },
                 {
                     fname: "FieldRef", ftype: {
                         type: "ref",
@@ -20,10 +19,6 @@ define(
                     }
                 }
             ],
-
-            alias: function (value) {
-                return this._genericSetter("Alias", value);
-            },
 
             fieldRef: function (value) {
                 return this._genericSetter("FieldRef", value);

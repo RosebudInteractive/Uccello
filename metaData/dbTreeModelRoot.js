@@ -3,9 +3,9 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../resman/dataTypes/resElem', './metaModel', './metaModelField', './metaDefs', '../predicate/predicate'],
-    function (ResElem, MetaModel, MetaModelField, Meta, Predicate) {
-        var DbTreeModelRoot = ResElem.extend({
+    ['./baseTreeModel', './metaModel', './metaModelField', './metaDefs', '../predicate/predicate'],
+    function (BaseTreeModel, MetaModel, MetaModelField, Meta, Predicate) {
+        var DbTreeModelRoot = BaseTreeModel.extend({
 
             className: "DbTreeModelRoot",
             classGuid: UCCELLO_CONFIG.classGuids.DbTreeModelRoot,
@@ -44,35 +44,12 @@ define(
                 return this._genericSetter("Root", value);
             },
 
-            alias: function (value) {
-                return null;
-            },
-
             init: function (cm, params) {
 
                 UccelloClass.super.apply(this, [cm, params]);
-                this._childs = {};
-                this._dataset = null;
-                this._masterDataset = null;
                 this._isWaitingForData = false;
                 this._isRootSwitched = false;
-                this._handlers = [];
-                this._predicate = null;
-
-                if (params) {
-                    this._childsCol = this.getCol("Childs");
-                    this._childsCol.on({
-                        type: 'add',
-                        subscriber: this,
-                        callback: this._onAddElem
-                    }).on({
-                        type: 'del',
-                        subscriber: this,
-                        callback: this._onDeleteElem
-                    });
-                };
             },
-
 
             edit: function (is_cached_upd, cb) {
                 var result = { result: "OK" };
@@ -213,6 +190,24 @@ define(
                 return result;
             },
 
+            canMoveCursor: function (is_cached_updates) {
+                var result = is_cached_updates;
+                if ((!result) && this._dataset) {
+                    var curr_obj = this._dataset.getCurrentDataObject();
+                    if (curr_obj) {
+                        var curr_state = curr_obj._currState();
+                        result = (curr_state === Meta.State.Browse) && (curr_obj._childEdCnt() === 0);
+                        if ((!result) && this._masterDataset) {
+                            var master_state = this._masterDataset.getState();
+                            result = (master_state === Meta.State.Edit) || (master_state === Meta.State.Insert);
+                        };
+                    }
+                    else
+                        result = true;
+                };
+                return result;
+            },
+
             getFirstCursorVal: function () {
                 var res = null;
                 var root = this.root();
@@ -344,7 +339,7 @@ define(
                 };
             },
 
-            loadData: function (isMasterOnly, singleObject, withSubTree, source) {
+            loadData: function (isMasterOnly, withSubTree, source) {
 
                 if (this._isWaitingForData) {
                     if (DEBUG)
@@ -383,7 +378,7 @@ define(
                             var alias = this.alias();
                             dataRoot = currObj.getDataRoot(alias);
                             if (dataRoot) {
-                                var master_state = this.getParent() ? this.getParent().getState() : Meta.State.Unknown;
+                                var master_state = this.getParentTreeElem() ? this.getParentTreeElem().getState() : Meta.State.Unknown;
                                 if ((master_state === Meta.State.Edit) || (master_state === Meta.State.Insert)) {
                                     this.root(dataRoot);
                                     needToQuery = false;
@@ -456,68 +451,8 @@ define(
                 }
             },
 
-            getDataset: function () {
-                return this._dataset;
-            },
-
-            getMasterDataset: function () {
-                return this._masterDataset;
-            },
-
-            setDataset: function (dataset) {
-                if (this._dataset)
-                    this._dataset.master(null);
-                this._dataset = dataset;
-                if (this._masterDataset && this._dataset)
-                    this._dataset.master(this._masterDataset);
-            },
-
-            setMasterDataset: function (master) {
-                this._unSubscribeAll();
-                this._masterDataset = master;
-                if (this._dataset)
-                    this._dataset.master(master);
-                this._subscribeAll();
-            },
-
-            registerDataset: function (dataset) {
-                this.setDataset(dataset);
-                for (var i = 0; i < this._childsCol.count() ; i++) {
-                    var cur_elem = this._childsCol.get(i);
-                    cur_elem.setMasterDataset(dataset);
-                };
-            },
-
-            unRegisterDataset: function () {
-                this.registerDataset(null);
-            },
-
-            _unSubscribeAll: function () {
-                this._handlers.forEach(function (elem) {
-                    elem.obj.off(elem.handler);
-                });
-                this._handlers.length = 0;
-            },
-
-            _subscribeAll: function () {
-                var master = this._masterDataset;
-                if (master) {
-                    var h = {
-                        type: 'moveCursor',
-                        subscriber: this,
-                        callback: function () { this.loadData(false, null, false, "DbTreeModelRoot::moveCursor"); }
-                    };
-                    master.event.on(h);
-                    this._handlers.push({ obj: master.event, handler: h });
-                };
-            },
-
-            getRootDS: function () {
-                return this.getRoot().getRootDS();
-            },
-
-            getDataSource: function (ds_name) {
-                return this._childs[ds_name] ? this._childs[ds_name].treeElem : null;
+            _onMasterMoveCursor: function () {
+                this.loadData(false, false, "DbTreeModelRoot::moveCursor");
             },
 
             makeRequest: function (type) {
@@ -558,7 +493,7 @@ define(
                 if (typeof ds === "string")
                     _ds = this.getDataSource(ds);
                 else
-                    if (ds instanceof this.getRoot().getDSConstructor())
+                    if (ds instanceof this.getRoot().getDbDSConstructor())
                         _ds = ds
                     else
                         throw new Error("DbTreeModelRoot::deleteDataSource: Invalid argument type.");
@@ -623,7 +558,7 @@ define(
                     parent: this,
                     colName: "Childs"
                 };
-                var elem_constr = this.getRoot().getDSConstructor();
+                var elem_constr = this.getRoot().getDbDSConstructor();
                 new elem_constr(this.getDB(), params);
                 return this;
             },
@@ -654,58 +589,6 @@ define(
                 return result;
             },
 
-            _onAddElem: function (args) {
-                var treeElem = args.obj;
-                var col = args.target;
-                var alias = treeElem.alias();
-                if (this._childs[alias] !== undefined) {
-                    col._del(treeElem);
-                    throw new Error("\"" + alias + "\" is already defined.");
-                }
-                var handler = {
-                    type: 'mod%Alias',
-                    subscriber: this,
-                    callback: this._getOnAliasChangeProc(treeElem)
-                };
-                this._childs[alias] = {
-                    treeElem: treeElem,
-                    handler: handler
-                };
-                treeElem.event.on(handler);
-            },
-
-            _onDeleteElem: function (args) {
-                var treeElem = args.obj;
-                var obj = this._childs[treeElem.alias()];
-                if (obj) {
-                    delete this._childs[treeElem.alias()];
-                    obj.treeElem.event.on(obj.handler);
-                };
-            },
-
-            _getOnAliasChangeProc: function (treeElem) {
-                var self = this;
-                var oldAlias = treeElem.alias();
-
-                return function (args) {
-                    var alias = treeElem.alias();
-
-                    if (alias !== oldAlias) {
-
-                        if (self._childs[alias] !== undefined) {
-                            treeElem.set("alias", oldAlias);
-                            throw new Error("Can't change alias from \"" +
-                                oldAlias + "\" to \"" + alias + "\". \"" + alias + "\" is already defined.");
-                        };
-
-                        var obj = self._childs[oldAlias];
-                        delete self._childs[oldAlias];
-                        self._childs[alias] = obj;
-
-                        oldAlias = alias;
-                    };
-                };
-            }
         });
 
         return DbTreeModelRoot;
