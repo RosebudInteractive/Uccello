@@ -4,8 +4,8 @@ if (typeof define !== 'function') {
 }
 
 define(
-    ['./baseTreeModel', './metaDefs'],
-    function (BaseTreeModel, Meta) {
+    ['./baseTreeModel', './metaDefs', '../memDB/memVirtualLog'],
+    function (BaseTreeModel, Meta, MemVirtualLog) {
         var MemTreeModelRoot = BaseTreeModel.extend({
 
             className: "MemTreeModelRoot",
@@ -54,10 +54,49 @@ define(
                 return this._genericSetter("RootClassGuid", value);
             },
 
+            _childIncEditCounter: function (n) {
+                for (var parent = this.getParent() ; parent; parent = parent.getParent()) {
+                    if (typeof (parent._childEdCnt) === "function")
+                        parent._childEdCnt(parent._childEdCnt() + n);
+                };
+            },
+
+            _childEnterEdit: function () {
+                var lvl = typeof (n) === "number" ? n : 1;
+                this._childIncEditCounter(lvl);
+            },
+
+            _childLeaveEdit: function (n) {
+                var lvl = typeof (n) === "number" ? (0 - n) : -1;
+                this._childIncEditCounter(lvl);
+            },
+
             edit: function (is_cached_upd, cb) {
                 var result = { result: "OK" };
 
                 try {
+                    if (!this._dataset)
+                        throw new Error("MemTreeModelRoot::edit: Dataset is not defined!");
+
+                    var obj = this._dataset.getCurrentDataObject();
+                    if (!obj)
+                        throw new Error("MemTreeModelRoot::edit: Current DataObject is not defined!");
+
+                    if (this._currState() !== Meta.State.Browse)
+                        throw new Error("Can't set \"Edit\" state, because current state is \"" +
+                            Meta.Meta.stateToString(this._currState()) + "\".");
+
+                    if (this._childEdCnt() >0)
+                        throw new Error("Can't set \"Edit\" state, because some of childs are in  \"Edit\" state.");
+
+                    this.getDB()._iterateChilds(this, true, function (tree_elem, lvl) {
+                        tree_elem._currState(Meta.State.Edit);
+                        tree_elem._editSet("");
+                    });
+                    this._editSet("current");
+                    this._childEnterEdit();
+                    this._editVLog = this.getDB().getDbLog().createVirtualLog(MemVirtualLog.SubscriptionMode.CurrentAndAllChilds, obj);
+
                 }
                 catch (err) {
                     result = { result: "ERROR", message: err.message };
@@ -67,11 +106,81 @@ define(
             },
 
             save: function (is_cached_upd, options, cb) {
-                throw new Error("BaseTreeModel: \"save\" wasn't implemented in descendant.");
+                var result = { result: "OK" };
+
+                try {
+                    if (!this._dataset)
+                        throw new Error("MemTreeModelRoot::save: Dataset is not defined!");
+
+                    var obj = this._dataset.getCurrentDataObject();
+                    if (!obj)
+                        throw new Error("MemTreeModelRoot::save: Current DataObject is not defined!");
+
+                    if (this._currState() !== Meta.State.Edit)
+                        throw new Error("Can't save object, because current state is \"" +
+                            Meta.Meta.stateToString(this._currState()) + "\".");
+
+                    if (this._editSet().length !== 0) {
+
+                        this.getDB()._iterateChilds(this, true, function (tree_elem, lvl) {
+                            tree_elem._currState(Meta.State.Browse);
+                            tree_elem._editSet("");
+                        });
+                        this._childLeaveEdit();
+                        if (this._editVLog) {
+                            this.getDB().getDbLog().destroyVirtualLog(this._editVLog);
+                            this._editVLog = null;
+                        }
+                    };
+                }
+                catch (err) {
+                    result = { result: "ERROR", message: err.message };
+                };
+                if (cb)
+                    cb(result);
             },
 
             cancel: function (is_cached_upd, cb) {
-                throw new Error("BaseTreeModel: \"cancel\" wasn't implemented in descendant.");
+                var result = { result: "OK" };
+
+                try {
+                    if (!this._dataset)
+                        throw new Error("MemTreeModelRoot::save: Dataset is not defined!");
+
+                    var obj = this._dataset.getCurrentDataObject();
+                    if (!obj)
+                        throw new Error("MemTreeModelRoot::save: Current DataObject is not defined!");
+
+                    if (this._currState() !== Meta.State.Edit)
+                        throw new Error("Can't cancel edit, because current state is \"" +
+                            Meta.Meta.stateToString(this._currState()) + "\".");
+
+                    if (this._editSet().length !== 0) {
+
+                        if (this._editVLog)
+                            result = this._editVLog.rollback();
+
+                        this.getDB()._iterateChilds(this, true, function (tree_elem, lvl) {
+                            tree_elem._currState(Meta.State.Browse);
+                            tree_elem._editSet("");
+                        });
+
+                        this._childLeaveEdit();
+
+                        if (this._editVLog) {
+                            this.getDB().getDbLog().destroyVirtualLog(this._editVLog);
+                            this._editVLog = null;
+                        }
+                    }
+                    else
+                        throw new Error("Can't cancel edit, because parent object is in \"Edit\" state.");
+
+                }
+                catch (err) {
+                    result = { result: "ERROR", message: err.message };
+                };
+                if (cb)
+                    cb(result);
             },
 
             addObject: function (flds, options, cb) {
@@ -163,7 +272,7 @@ define(
             },
 
             getState: function () {
-                return this.getRootTreeElem()._currState();
+                return this._currState();
             },
 
             isDataSourceModified: function (log) {
@@ -171,7 +280,14 @@ define(
             },
 
             canMoveCursor: function (is_cached_updates) {
-                return true;
+                var result = false;
+                var curr_state = this._currState();
+                result = (curr_state === Meta.State.Browse) && (this._childEdCnt() === 0);
+                if ((!result) && this.getParentTreeElem()) {
+                    var master_state = this.getParentTreeElem().getState();
+                    result = (master_state === Meta.State.Edit);
+                };
+                return result;
             },
 
             getFirstCursorVal: function () {
@@ -204,9 +320,11 @@ define(
                 var obj = null;
                 if (!this._is_root) {
                     var col = this.getDataCollection();
-                    var col_idx = col.indexOfGuid(curr_cursor);
-                    if ((typeof (col_idx) === "number") && (col_idx > 0))
-                        obj = col.get(--col_idx);
+                    if (col) {
+                        var col_idx = col.indexOfGuid(curr_cursor);
+                        if ((typeof (col_idx) === "number") && (col_idx > 0))
+                            obj = col.get(--col_idx);
+                    };
                 };
                 return obj ? obj.getGuid() : null;
             },
@@ -215,9 +333,11 @@ define(
                 var obj = null;
                 if (!this._is_root) {
                     var col = this.getDataCollection();
-                    var col_idx = col.indexOfGuid(curr_cursor);
-                    if ((typeof (col_idx) === "number") && (col_idx < (col.count() - 1)))
-                        obj = col.get(++col_idx);
+                    if (col) {
+                        var col_idx = col.indexOfGuid(curr_cursor);
+                        if ((typeof (col_idx) === "number") && (col_idx < (col.count() - 1)))
+                            obj = col.get(++col_idx);
+                    };
                 };
                 return obj ? obj.getGuid() : null;
             },
@@ -229,9 +349,11 @@ define(
                 }
                 else {
                     var col = this.getDataCollection();
-                    var col_idx = col.indexOfGuid(cursor_value);
-                    if (typeof (col_idx) === "number")
-                        obj = col.get(col_idx);
+                    if (col) {
+                        var col_idx = col.indexOfGuid(cursor_value);
+                        if (typeof (col_idx) === "number")
+                            obj = col.get(col_idx);
+                    };
                 };
                 return obj;
             },
@@ -258,7 +380,10 @@ define(
 
             init: function (cm, params) {
                 this._is_root = false;
+                this._editVLog = null;
+
                 UccelloClass.super.apply(this, [cm, params]);
+
                 if (params) {
                     if (!this._editSet())
                         this._editSet("");

@@ -452,7 +452,7 @@ define(
                 var lvl = typeof (n) === "number" ? n : 1;
                 for (var parent = this.getParent() ; parent; parent = parent.getParent()) {
                     if (typeof (parent._childEdCnt) === "function")
-                        parent._childEdCnt(this._childEdCnt() + lvl);
+                        parent._childEdCnt(parent._childEdCnt() + lvl);
                 };
             },
 
@@ -460,7 +460,7 @@ define(
                 var lvl = typeof (n) === "number" ? n : 1;
                 for (var parent = this.getParent() ; parent; parent = parent.getParent()) {
                     if (typeof (parent._childEdCnt) === "function")
-                        parent._childEdCnt(this._childEdCnt() - lvl);
+                        parent._childEdCnt(parent._childEdCnt() - lvl);
                 };
             },
 
