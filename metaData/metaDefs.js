@@ -7,6 +7,8 @@ define(
     function () {
         var Meta = {
 
+            DATA_OBJECT_WORKSPASE: "$Data",
+
             ROW_VERSION_FNAME: "GuidVer",
             TYPE_ID_FNAME: "TypeId",
             PARENT_REF_FNAME: "ParentId",

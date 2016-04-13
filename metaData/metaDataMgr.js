@@ -4,9 +4,9 @@ if (typeof define !== 'function') {
 }
 define(
     ['../system/uobject', './metaModel', '../dataman/dataobject', '../dataman/dataRoot',
-        './metaDefs', './metaModelRef', './metaLinkRef', './dataModel'],
+        './metaDefs', './metaModelRef', './metaLinkRef', './dataModel', '../memDB/memMetaType'],
     function (UObject, MetaModel, DataObject, DataRoot, Meta,
-        MetaModelRef, MetaLinkRef, DataModel) {
+        MetaModelRef, MetaLinkRef, DataModel, MetaTypes) {
 
         var REMOTE_RESULT = "XXX";
 
@@ -471,8 +471,9 @@ define(
                 footer += "\t\t}\n" + "\t});";
 
                 var constr = header +
-                    "\t\tclassName: \"" + model.get("ResName") + "\",\n" +
+                    "\t\tclassName: \"" + Meta.DATA_OBJECT_WORKSPASE + "." + model.get("ResName") + "\",\n" +
                     "\t\tclassGuid: \"" + model.get("DataObjectGuid") + "\",\n" +
+                    "\t\tmodelName: \"" + model.get("ResName") + "\",\n" +
                     "\t\tmetaFields: [\n";
 
                 var is_first = true;
@@ -534,9 +535,11 @@ define(
             _getRootConstr: function (model) {
 
                 var constr = "return Parent.extend({\n" +
-                    "\t\tclassName: \"" + model.get("DataRootName") + "\",\n" +
+                    "\t\tclassName: \"" + Meta.DATA_OBJECT_WORKSPASE + "." + model.get("DataRootName") + "\",\n" +
                     "\t\tclassGuid: \"" + model.get("DataRootGuid") + "\",\n" +
-                    "\t\tmetaCols: [{ \"cname\": \"DataElements\", \"ctype\": \"" + model.get("ResName") + "\" }],\n" +
+                    "\t\tmodelName: \"" + model.get("ResName") + "\",\n" +
+                    "\t\tmetaCols: [{ \"cname\": \"DataElements\", \"ctype\": \"" + Meta.DATA_OBJECT_WORKSPASE + "."
+                        + model.get("ResName") + "\" }],\n" +
                     "\t\tmetaFields: [],\n";
 
                 if (model.getRowVersionField())

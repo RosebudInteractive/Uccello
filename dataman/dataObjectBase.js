@@ -99,14 +99,14 @@ define(
                         };
                         result = {
                             op: "insert",
-                            model: this.className,
+                            model: this.modelName,
                             data: { fields: fields }
                         };
                     }
                     else
                         if (this.countModifiedFields(editLog) > 0) {
                             var data = {};
-                            var dataObj = { op: "update", model: this.className, data: data };
+                            var dataObj = { op: "update", model: this.modelName, data: data };
                             for (var fldName in this._persFields) {
                                 if (this.isFldModified(fldName, editLog)) {
                                     if (!data.fields)
@@ -376,7 +376,7 @@ define(
                         this.getDB()._iterateChilds(this, false, function (data_obj, lvl) {
                             if (data_obj.isPersistable() && data_obj._keyField) {
                                 var data = {};
-                                var opData = { op: "delete", model: data_obj.className, data: data };
+                                var opData = { op: "delete", model: data_obj.modelName, data: data };
                                 data.key = data_obj.getOldValue(data_obj._keyField, self._editVLog, true);
                                 data.rowVersion = data_obj._rowVersionFname ? data_obj.getOldValue(data_obj._rowVersionFname, self._editVLog, true) : null;
                                 self._objList.push({ guid: data_obj.getGuid(), opData: opData });

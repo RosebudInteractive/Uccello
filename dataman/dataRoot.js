@@ -179,12 +179,12 @@ define(
                     };
 
                     if (this._currState() === Meta.State.Edit) {
-                        $data.getNextRowId(objType.get("typeName"), options, afterObjCreate);
+                        $data.getNextRowId(this.modelName, options, afterObjCreate);
                     }
                     else {
                         var dataObj = {
                             op: "insert",
-                            model: objType.get("typeName"),
+                            model: this.modelName,
                             data: { fields: _flds.fields }
                         };
                         var batch = [];
@@ -253,7 +253,7 @@ define(
                             if (obj.isPersistable() && obj._keyField) {
                                 f_cb_now = false;
                                 var data = {};
-                                var opData = { op: "delete", model: obj.className, data: data };
+                                var opData = { op: "delete", model: obj.modelName, data: data };
                                 data.key = obj.getSerialized(obj._keyField);
                                 data.rowVersion = obj._rowVersionFname ? obj.getSerialized(obj._rowVersionFname) : null;
                                 var batch = [];
