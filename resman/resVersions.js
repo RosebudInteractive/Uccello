@@ -68,8 +68,18 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils'],
 
                 var _predicate = new Predicate(that.db, {});
                 _predicate.addCondition({field: "Id", op: "=", value: 0});
+
+                var _model = {name: "SysResVer"};
+                if ((fields) && (fields.ResBody)){
+                    var _resource = JSON.parse(fields.ResBody);
+                    if (_resource.hasOwnProperty('getModelDescription')){
+                        _model = _resource.getModelDescription()
+                    }
+                }
+
+
                 var _expression = {
-                    model: {name: "SysResVer"},
+                    model: _model, //{name: "SysResVer"},
                     predicate: that.db.serialize(_predicate)
                 };
 
@@ -84,6 +94,10 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils'],
 
                     that.db.getObj(_objectGuid).newObject({fields : fields}, _options, function (result) {
                         if (result.result == 'OK') {
+                            if ((_resource) && (_resource.hasOwnProperty('onSave'))){
+                                _resource.onSave(result.newObject)
+                            }
+
                             var _resVersion = new ResVersion(that.db.getObj(result.newObject));
                             resolve(_resVersion);
                         } else {

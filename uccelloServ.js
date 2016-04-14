@@ -176,15 +176,22 @@ define(
              * @returns {obj} - массив ресурсов в result.datas
              */
 			loadResources: function(rootGuids, done) {
-                this.pvt.resman.loadRes(rootGuids, done)
+                this.pvt.resman.loadRes(rootGuids, function(result){
+                    if (result.result === 'OK') {
+                        var _bodies = [];
+                        result.datas.forEach(function (element) {
+                            if (element.hasOwnProperty('resource')) {
+                                _bodies.push(element.resource)
+                            }
+                        })
+                        done({datas: _bodies, result : 'OK'})
+                    } else {
+                        done(result)
+                    }
+                })
 
-                //var result = [];
-                //for (var i=0; i<rootGuids.length; i++)
-					//result.push();
                 if (DEBUG)
 				    console.log("load resources");
-				//if (done !== undefined && (typeof done == "function")) done({ datas: result });
-				//return { datas: result };// временная заглушка
 			},
 
             /**

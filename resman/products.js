@@ -74,7 +74,11 @@ define([
 
             setCurrent : function(productCode) {
                 if ((!this.current) || (this.current.code != productCode)) {
-                    this.current = this.getByCode(productCode);
+                    var _current = this.getByCode(productCode);
+                    if (!_current) {
+                        throw ResUtils.newObjectError('Product [' + productCode + '] not found')
+                    }
+                    this.current = _current;
                     this.events.emit('changeCurrent');
                 }
             }

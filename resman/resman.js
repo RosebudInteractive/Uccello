@@ -147,11 +147,11 @@ define(
                 function loadBodies(guids) {
                     var _promise = that.getResources(guids);
                     _promise.then(
-                        function (bodies) {
+                        function (resultObj) {
                             var _array = [];
-                            for (var body in bodies) {
-                                if (bodies.hasOwnProperty(body) && (body != 'count')) {
-                                    _array.push(JSON.parse(bodies[body]))
+                            for (var element in resultObj) {
+                                if (resultObj.hasOwnProperty(element) && (element != 'count')) {
+                                    _array.push({id : resultObj[element].id, resource : JSON.parse(resultObj[element].body)})
                                 }
                             }
                             done({datas: _array, result : 'OK'})
@@ -187,8 +187,8 @@ define(
                                 done({datas: [], result : 'ERROR', message : 'Can not found resource'});
                                 throw new Error('Can not found resource')
                             }
-                            var json = require(_filePath.path + guid  + '.json');//UCCELLO_CONFIG.dataPath + 'forms/' + gr + '.json');
-                            _result.push(json)
+                            var json = require(_filePath.path + guid  + '.json');
+                            _result.push({resource : json})
                         });
                         done({datas: _result, result : 'OK'})
                     }
@@ -212,11 +212,11 @@ define(
                     that.loadDirectories(promiseBody);
 
                     function promiseBody() {
-                        that.resources.getBody(guid, function(body) {
-                            if (!body) {
+                        that.resources.getBody(guid, function(object) {
+                            if ((!object) || (!object.body)) {
                                 reject(ResUtils.newObjectError('Resource Not Found'))
                             } else {
-                                resolve(body)
+                                resolve(object)
                             }
                         });
                     }
@@ -237,8 +237,8 @@ define(
                         var _resultObj = {};
                         var _count = 0;
                         guids.forEach(function (guid) {
-                            that.resources.getBody(guid, function(body) {
-                                _resultObj[guid] = body;
+                            that.resources.getBody(guid, function(object) {
+                                _resultObj[guid] = object;
                                 _count++;
 
                                 if (_count == guids.length) {
