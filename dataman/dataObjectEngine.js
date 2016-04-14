@@ -111,7 +111,8 @@ define(
                     global.$data = rpc._publ(this, iDataObjectEngine); // Глобальная переменная для доступа к IDataObjectEngine
                     router.add('iDataObjectEngine', function (data, done) { done({ intf: iDataObjectEngine }); });
                 };
-                dataman.registerProvider(DATA_PROVIDER_NAME, this);
+                if (dataman)
+                    dataman.registerProvider(DATA_PROVIDER_NAME, this);
             },
 
             getGuid: function () {
