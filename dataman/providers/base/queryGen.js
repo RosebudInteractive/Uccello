@@ -140,7 +140,12 @@ define(
                         _.forEach(request.childs, function (ch_query) {
                             cnt = set_sql_aliases(ch_query, cnt);
                         });
-                    };
+                    }
+                    else {
+                        var descendants = request.model.getDescendants();
+                        if (descendants.length > 0)
+                            request.sqlAlias = ALIAS_PREFIX + (++cnt);
+                        };
                     return cnt;
                 };
                 return set_sql_aliases(request, 0);

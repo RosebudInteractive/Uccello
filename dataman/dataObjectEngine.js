@@ -266,6 +266,9 @@ define(
                             },
                             collections: {}
                         };
+                        var ancestors = model.getAncestors();
+                        if (ancestors.length > 0)
+                            elem.fields.ParentTypeId = ancestors[ancestors.length - 1].getActualTypeId();
                         elems.push(elem);
                     };
                 }, this);
@@ -289,13 +292,13 @@ define(
                                         return res;
                                     });
                             }, function (err) {
-                                if (err.dbError === true)
-                                    return Promise.reject(err)
-                                else
-                                    return tran.rollback()
-                                        .then(function () {
-                                            return Promise.reject(err);
-                                        });
+                                return tran.rollback()
+                                    .then(function () {
+                                        return Promise.reject(err);
+                                    }, function () {
+                                        // В случае ошибки ROLLBACK просто ее игнорируем
+                                        return Promise.reject(err);
+                                    });
                             });
                     }
                     else

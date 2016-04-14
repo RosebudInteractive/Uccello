@@ -4,9 +4,9 @@ if (typeof define !== 'function') {
 }
 define(
     ['../system/uobject', './metaModel', '../dataman/dataobject', '../dataman/dataRoot',
-        './metaDefs', './metaModelRef', './metaLinkRef', './metaObjTree', './metaObjTreeElemRoot'],
+        './metaDefs', './metaModelRef', './metaLinkRef', './dataModel', '../memDB/memMetaType'],
     function (UObject, MetaModel, DataObject, DataRoot, Meta,
-        MetaModelRef, MetaLinkRef, MetaObjTree, MetaObjTreeElemRoot) {
+        MetaModelRef, MetaLinkRef, DataModel, MetaTypes) {
 
         var REMOTE_RESULT = "XXX";
 
@@ -185,43 +185,29 @@ define(
                 return callback ? REMOTE_RESULT : constrArr;
             },
 
-            addObjectTree: function (name, model) {
+            addDataModel: function (name) {
                 if (name) {
 
                     var fields = {};
                     var ResName = name;
-                    var ModelRef;
 
-                    if (model instanceof MetaModel) {
-                        ModelRef = {
-                            guidInstanceRes: model.getGuid(),
-                            guidInstanceElem: model.getGuid(),
-                        };
-                    }
-                    else
-                        if (model)
-                            ModelRef = model;
-                        else
-                            throw new Error("MetaDataMgr::addObjectTree: Model argument is empty!");
-
-                    var obj_tree = new MetaObjTree(this.getDB(), { ini: { fields: { ResName: ResName } } });
-                    obj_tree._createRootDS(ModelRef);
-                    return obj_tree;
+                    var data_model = new DataModel(this.getDB(), { ini: { fields: { ResName: ResName } } });
+                    return data_model;
 
                 }
                 else
                     throw new Error("Name is undefined.");
             },
 
-            deleteObjectTree: function (model) {
+            deleteDataModel: function (model) {
                 var _model;
                 if (typeof model === "string") {
                     _model = this._treesByName[name];
                 } else
-                    if (model instanceof MetaObjTree) {
+                    if (model instanceof DataModel) {
                         _model = model;
                     } else
-                        throw new Error("MetaDataMgr::deleteObjectTree: Invalid argument type.");
+                        throw new Error("MetaDataMgr::deleteDataModel: Invalid argument type.");
                 if (_model) {
                     this.getDB()._deleteRoot(_model);
                 };
@@ -485,8 +471,9 @@ define(
                 footer += "\t\t}\n" + "\t});";
 
                 var constr = header +
-                    "\t\tclassName: \"" + model.get("ResName") + "\",\n" +
+                    "\t\tclassName: \"" + Meta.DATA_OBJECT_WORKSPASE + "." + model.get("ResName") + "\",\n" +
                     "\t\tclassGuid: \"" + model.get("DataObjectGuid") + "\",\n" +
+                    "\t\tmodelName: \"" + model.get("ResName") + "\",\n" +
                     "\t\tmetaFields: [\n";
 
                 var is_first = true;
@@ -548,9 +535,11 @@ define(
             _getRootConstr: function (model) {
 
                 var constr = "return Parent.extend({\n" +
-                    "\t\tclassName: \"" + model.get("DataRootName") + "\",\n" +
+                    "\t\tclassName: \"" + Meta.DATA_OBJECT_WORKSPASE + "." + model.get("DataRootName") + "\",\n" +
                     "\t\tclassGuid: \"" + model.get("DataRootGuid") + "\",\n" +
-                    "\t\tmetaCols: [{ \"cname\": \"DataElements\", \"ctype\": \"" + model.get("ResName") + "\" }],\n" +
+                    "\t\tmodelName: \"" + model.get("ResName") + "\",\n" +
+                    "\t\tmetaCols: [{ \"cname\": \"DataElements\", \"ctype\": \"" + Meta.DATA_OBJECT_WORKSPASE + "."
+                        + model.get("ResName") + "\" }],\n" +
                     "\t\tmetaFields: [],\n";
 
                 if (model.getRowVersionField())
@@ -780,7 +769,7 @@ define(
                         model._addLinkIfRef(fields[i]);
                 }
                 else
-                    if (model instanceof MetaObjTree) {
+                    if (model instanceof DataModel) {
                         name = model.name();
                         if (this._treesByName[name] !== undefined) {
                             this.getDB()._deleteRoot(model);
@@ -810,7 +799,7 @@ define(
                         this._modelsCol._del(ref);
                 }
                 else
-                    if (model instanceof MetaObjTree) {
+                    if (model instanceof DataModel) {
                         var name = model.name();
                         var obj = this._treesByName[name];
                         if (obj !== undefined) {

@@ -6,17 +6,17 @@ if (typeof define !== 'function') {
 define(
     ['./aComponent'],
     function(AComponent) {
-        var ADataModel = AComponent.extend({
+        var DatasetBase = AComponent.extend({
 
-            className: "ADataModel",
-            classGuid: UCCELLO_CONFIG.classGuids.ADataModel,
-            metaCols: [{ "cname": "Datasets", "ctype": "AComponent" }],
+            className: "DatasetBase",
+            classGuid: UCCELLO_CONFIG.classGuids.DatasetBase,
+            metaCols: [],
             metaFields: [],
 
             init: function(cm,params){
                 UccelloClass.super.apply(this, [cm, params]);
             }
         });
-        return ADataModel;
+        return DatasetBase;
     }
 );

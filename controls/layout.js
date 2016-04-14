@@ -18,7 +18,7 @@ define(
                 {fname:"Direction", ftype:"string"},
                 {fname:"Control", ftype:{
                     type: "ref",
-                    res_elem_type: UCCELLO_CONFIG.classGuids.AControl
+                    res_elem_type: UCCELLO_CONFIG.classGuids.AComponent
                 }},
                 {fname:"Width", ftype:"string"},
                 {fname:"Height", ftype:"string"},
@@ -45,7 +45,7 @@ define(
 
             _getContainer: function() {
                 var parent = this.getParentComp();
-                while (parent && parent.className != "AdaptiveContainer")
+                while (parent && parent.className != "AdaptiveContainer" && parent.className != "FormDesigner")
                     parent = parent.getParentComp();
                 return parent;
             },

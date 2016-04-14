@@ -30,14 +30,21 @@ define(
 						subscriber: this,
 						callback: this._onDirtyRender
 				});
-				
-				if (this.getCol("Children"))   // перенести в контейнер?
-				  this.getCol("Children").on({
-					type: "add",
-					subscriber: this,
-					callback: this._onDirtyRender
+
+				for (i = 0; i < this.countCol() ; i++) {
+					var cc = this.getCol(i);
+					cc.on({
+						type: "add",
+						subscriber: this,
+						callback: this._onDirtyRender
 					});
-				
+					cc.on({
+						type: "del",
+						subscriber: this,
+						callback: this._onDirtyRender
+					});
+				}
+
 				cm.add(this); // данные регистрируются в ControlMgr если они компоненты!
 
             },
