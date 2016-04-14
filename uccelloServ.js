@@ -47,7 +47,7 @@ define(
 				    constructHolder: this.pvt.constructHolder
 				});
 
-                this.pvt.resman = new Resman(that.getUserMgr().getController(), that.pvt.constructHolder, that.pvt.proxyServer);
+                this.pvt.resman = new Resman(this.getUserMgr().getController(), this.pvt.constructHolder, this.pvt.proxyServer);
 
 				this.pvt.proxyWfe = null;
 				if (options && options.engineSingleton) {
@@ -55,7 +55,8 @@ define(
 				        dbController: this.getUserMgr().getController(),
 				        constructHolder: this.pvt.constructHolder,
 				        router: this.pvt.router,
-                        resman: this.pvt.resman
+                        resman: this.pvt.resman,
+                        proxy : this.pvt.proxyServer
 				    });
 				    this.pvt.wfe = options.engineSingleton.getInstance();
 				    this.pvt.proxyWfe = rpc._publ(this.pvt.wfe, this.pvt.wfe.getInterface());
@@ -175,15 +176,22 @@ define(
              * @returns {obj} - массив ресурсов в result.datas
              */
 			loadResources: function(rootGuids, done) {
-                this.pvt.resman.loadRes(rootGuids, done)
+                this.pvt.resman.loadRes(rootGuids, function(result){
+                    if (result.result === 'OK') {
+                        var _bodies = [];
+                        result.datas.forEach(function (element) {
+                            if (element.hasOwnProperty('resource')) {
+                                _bodies.push(element.resource)
+                            }
+                        })
+                        done({datas: _bodies, result : 'OK'})
+                    } else {
+                        done(result)
+                    }
+                })
 
-                //var result = [];
-                //for (var i=0; i<rootGuids.length; i++)
-					//result.push();
                 if (DEBUG)
 				    console.log("load resources");
-				//if (done !== undefined && (typeof done == "function")) done({ datas: result });
-				//return { datas: result };// временная заглушка
 			},
 
             /**

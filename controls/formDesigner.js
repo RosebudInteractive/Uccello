@@ -100,7 +100,7 @@ define(
                             props = JSON.parse(propsStr);
 
                         var dsName = null;
-                        if (props.Dataset)
+                        if (props && props.Dataset)
                             dsName = props.Dataset;
 
                         var ds = this._getDSByName(dsName);

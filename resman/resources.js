@@ -149,11 +149,12 @@ define([
 
             getBody: function (guid, callback) {
                 if ((this.resources.has(guid)) && (this.resources.get(guid).state == ResUtils.state.loaded)) {
-                    callback(this.resources.get(guid).resBody)
+                    var _resource = this.resources.get(guid);
+                    callback({id : _resource.id, body : _resource.resBody})
                 } else {
                     this.queryResourceObj(guid, function (resource) {
                         if (resource) {
-                            callback(resource.resBody)
+                            callback({id : resource.id, body : resource.resBody})
                         } else {
                             callback(null)
                         }

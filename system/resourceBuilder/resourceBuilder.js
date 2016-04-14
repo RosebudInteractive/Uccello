@@ -5,7 +5,6 @@
 
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
-    //var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
 var _instance = null;
@@ -154,7 +153,7 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
                             "ResVer": 1,
                             "Hash": _md5,
                             "ResBody": _body,
-                            "Description": resType.fields.Description + ' ' + (resource.fields.Title || resource.fields.Name),
+                            "Description": resType.fields.Description + ' ' + (resource.fields.Title || resource.fields.ResName),
                             "ResId": resId
                         },
                         "collections": {}
@@ -375,17 +374,6 @@ define(['fs', UCCELLO_CONFIG.uccelloPath + 'system/utils', 'crypto', './metaInfo
 
             return _instance;
         }
-
-        //Builder.prepareFiles = function(){
-        //    return new Promise(function(resolve, reject) {
-        //        getInstance().prepare().then(resolve, reject);
-        //    })
-        //
-        //};
-        //
-        //Builder.kill = function(){
-        //    _instance = null;
-        //};
 
         return _class;
     }

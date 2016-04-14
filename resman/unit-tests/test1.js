@@ -18,7 +18,7 @@ function execSql(sql) {
             if (result.result === "OK") {
                 resolve()
             } else {
-                reject()
+                reject(new Error(result.message))
             }
         });
     })
@@ -33,8 +33,8 @@ describe('#loadRes', function(){
         var _resManger = Main.Config.ResManager;
         var _guids = [
             '4a4abdb4-3e3b-85a7-09b9-5f15b4b187f9',
-            {resType : '7f93991a-4da9-4892-79c2-35fe44e69083', resName : 'crm-edit'},
-            {resType : '7f93991a-4da9-4892-79c2-35fe44e69083', resName : 'crm-list'}
+            {resType : '10217b8e-b1f8-4221-a419-f20735219dd2', resName : 'crm-edit'},
+            {resType : '10217b8e-b1f8-4221-a419-f20735219dd2', resName : 'crm-list'}
         ];
 
         _resManger.loadRes(_guids, function(result) {
@@ -49,15 +49,16 @@ describe('#get functions', function() {
         var _cmd = [
             "update SysVersion set CurrBuildId = 2 where Id = 2",
             "delete from SysBuild where Id > 2",
-            "insert into SysResType (Id, Guid, Code, Name, ClassName, ResTypeGuid, Description)\n" +
+            "insert into SysResType (Id, Guid, GuidVer, TypeId, Code, Name, ClassName, ResTypeGuid, Description)\n" +
             "select (select max(Id) + 1 from SysResType),\n" +
-            "       'ebc35758-ff26-44f4-83d5-5c11f54e297c'," +
+            "       'ebc35758-ff26-44f4-83d5-5c11f54e297c',\n" +
+            "       '27a94bee-5f04-4d54-92cf-856845ed6cc7',\n" +
+            "       6,\n" +
             "       'TEST_TYPE',\n" +
             "       'TestType',\n" +
             "       'TestClass',\n" +
             "       '50612b0f-f828-41e4-b52c-8ffc5b319d0b',\n" +
             "       'Description'\n" +
-            "  from SysResType\n" +
             " where not exists (select Code from SysResType where Code = 'TEST_TYPE')"
         ];
 
@@ -65,26 +66,23 @@ describe('#get functions', function() {
     });
 
     describe('#getResource', function () {
-        it('Загрузить существующий ресурс', function (done) {
-                var _resManger = Main.Config.ResManager;
+        it('Загрузить существующий ресурс', function () {
+                //var _resManger = Main.Config.ResManager;
 
-                _resManger.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6').then(
-                    function (body) {
-                        body.should.be.exist;
-                        var _resource = JSON.parse(body);
+                return Main.Config.ResManager.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6').then(
+                    function (object) {
+                        object.should.be.exist;
+                        object.body.should.be.exist;
+                        object.id.should.be.at.least(0)
+                        var _resource = JSON.parse(object.body);
                         _resource.fields.should.be.exists;
-                        _resource.fields.Name.should.be.equal('MainForm');
-                        done();
-                    }, function (reason) {
-                        done(reason);
+                        _resource.fields.ResName.should.be.equal("company-list");
                     });
             }
         );
 
-        it('Запросить несуществующий ресурс', function (done) {
-            var _resManger = Main.Config.ResManager;
-
-            _resManger.getResource('ERROR').should.be.rejectedWith(Error).notify(done);
+        it('Запросить несуществующий ресурс', function () {
+            return Main.Config.ResManager.getResource('ERROR').should.be.rejectedWith(Error);
         });
     });
 
@@ -119,9 +117,9 @@ describe('#get functions', function() {
 
     describe('#getResByType', function () {
         it('Существующий тип', function () {
-            return Main.Config.ResManager.getResByType('7f93991a-4da9-4892-79c2-35fe44e69083').then(
+            return Main.Config.ResManager.getResByType('10217b8e-b1f8-4221-a419-f20735219dd2').then(
                 function (resources) {
-                    Object.keys(resources).should.have.lengthOf(22);
+                    Object.keys(resources).should.have.lengthOf(24);
                     for (guid in resources) {
                         if (!resources.hasOwnProperty(guid)) continue;
                         resources[guid].should.be.exists
@@ -145,9 +143,9 @@ describe('#get functions', function() {
 
     describe('#getResListByType', function () {
         it('Существующий тип', function () {
-            return Main.Config.ResManager.getResListByType('7f93991a-4da9-4892-79c2-35fe44e69083').then(
+            return Main.Config.ResManager.getResListByType('10217b8e-b1f8-4221-a419-f20735219dd2').then(
                 function (resources) {
-                    resources.should.have.lengthOf(22);
+                    resources.should.have.lengthOf(24);
                 }
             );
         });
@@ -172,13 +170,13 @@ describe('#modify functions', function(){
 
         it('Текущая сборка подверждена - Ошибка', function() {
             var _sql = 'update sysbuild\n' +
-                       '   set IsConfirmed = true\n' +
+                       '   set IsConfirmed = 1\n' +
                        ' where Id = (select CurrBuildId from sysversion where Id = 2)';
 
             var _newResource = {
                 name : 'Test',
                 code : 'TEST',
-                description : 'Descr',
+                description : 'Текущая сборка подверждена - Ошибка',
                 resGuid : 'e8f21877-f3ba-4508-89bf-270a35f0361c',
                 resTypeId : 1
             };
@@ -188,12 +186,12 @@ describe('#modify functions', function(){
             });
         });
 
-        describe('Текущая сборка не подверждена - ОК', function(){
+        describe('#Текущая сборка не подверждена - ОК', function(){
 
             var _newResource = {
                 name : 'Test',
                 code : 'TEST',
-                description : 'Descr',
+                description : 'Текущая сборка не подверждена - ОК',
                 resGuid : 'e8f21877-f3ba-4508-89bf-270a35f0361c',
                 resTypeId : 1
             };
@@ -201,10 +199,9 @@ describe('#modify functions', function(){
             before(function(){
                 var _sql = [
                     'update sysbuild\n' +
-                    '   set IsConfirmed = false\n' +
+                    '   set IsConfirmed = 0\n' +
                     ' where Id = (select CurrBuildId from sysversion where Id = 2)'
                     ,
-                    //"delete from sysresource where ResGuid = '" + _newResource.resGuid + "'"
                     "delete br\n" +
                     "  from sysbuildres br\n" +
                     "  join sysresver rv on rv.Id = br.ResVerId\n" +
@@ -226,7 +223,7 @@ describe('#modify functions', function(){
                 return Main.Config.ResManager.createNewResource(_newResource).then(function (result) {
                     result.should.be.exists;
                     result.result.should.be.equal('OK');
-                    result.resourcesGuid.should.not.be.empty;
+                    result.resourceGuid.should.not.be.empty;
                 });
             });
 
@@ -249,7 +246,7 @@ describe('#modify functions', function(){
             before(function(){
                 return execSql([
                     'update sysbuild\n' +
-                    '   set IsConfirmed = true\n' +
+                    '   set IsConfirmed = 1\n' +
                     ' where Id = (select CurrBuildId from sysversion where Id = 2)'
                 ]);
             });
@@ -260,16 +257,27 @@ describe('#modify functions', function(){
         });
 
         describe('#Текущая версия не подтвержена - ОК', function(){
-            before(function(){
+
+            var _newResource = {
+                name : 'Test',
+                code : 'TEST',
+                description : 'Текущая версия не подтвержена - ОК',
+                resGuid : 'e8f21877-f3ba-4508-89bf-270a35f0361c',
+                resTypeId : 1
+            };
+
+            before(function() {
                 var _sql = [
                     'update sysbuild\n' +
-                    '   set IsConfirmed = false\n' +
+                    '   set IsConfirmed = 0\n' +
                     ' where Id = (select CurrBuildId from sysversion where Id = 2)'
 
-                   //,"delete from sysresource where ResGuid = '" + _newResource.resGuid + "'"
+                    , "delete from sysresource where ResGuid = '" + _newResource.resGuid + "'"
                 ];
 
-                return execSql(_sql);
+                return execSql(_sql).then(function(){
+                    return Main.Config.ResManager.createNewResource(_newResource);
+                });
             });
 
             it('создание 1-ой новой версии ', function() {
@@ -279,7 +287,13 @@ describe('#modify functions', function(){
                         result.result.should.be.equal('OK');
                         result.resVersionId.should.not.be.empty;
                     }
-                );
+                )
+            });
+
+            after(function(){
+                var _sql = ["delete from sysresource where ResGuid = '" + _newResource.resGuid + "'"];
+
+                return execSql(_sql);
             });
         });
 
