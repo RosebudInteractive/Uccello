@@ -14,6 +14,7 @@ define(
         var METADATA_DIR_NAME = UCCELLO_CONFIG.dataPath + "meta";
         var META_DATA_MGR_GUID = "77153254-7f08-6810-017b-c99f7ea8cddf@2009";
         var PREDICATE_POOL_SIZE = 20;
+        var DATA_PROVIDER_NAME = "DbEngine";
 
         var iDataObjectEngine = {
 
@@ -31,7 +32,7 @@ define(
 
         var DataObjectEngine = UccelloClass.extend({
 
-            init: function (router, controller, construct_holder, rpc, options) {
+            init: function (dataman, router, controller, construct_holder, rpc, options) {
                 var opts = _.cloneDeep(options || {});
 
                 this._router = router;
@@ -110,6 +111,7 @@ define(
                     global.$data = rpc._publ(this, iDataObjectEngine); // Глобальная переменная для доступа к IDataObjectEngine
                     router.add('iDataObjectEngine', function (data, done) { done({ intf: iDataObjectEngine }); });
                 };
+                dataman.registerProvider(DATA_PROVIDER_NAME, this);
             },
 
             getGuid: function () {
@@ -709,6 +711,31 @@ define(
                 return request;
             },
 
+
+            requestData: function (guidRoot, expression, done) {
+                var predicate;
+                if (expression.predicate) {
+                    // TODO: Здесь каждый раз надо новый предикат создавать !!!
+                    predicate = this.deserializePredicate(
+                            expression.predicate,
+                            this.newPredicate()
+                        );
+                };
+
+                var query = { dataObject: expression.model, dataGuid: guidRoot, predicate: predicate };
+                if (expression.is_single)
+                    query.is_single = expression.is_single;
+
+                this.loadQuery(query)
+                .then(function (result) {
+                    done(result);
+                })
+                .catch(function (err) {
+                    console.error("###ERROR: " + err.message);
+                    done({});
+                });
+            },
+
             loadQuery: function (query, options) {
                 if (this.hasConnection()) {
 
@@ -916,6 +943,8 @@ define(
                 var objTypeGuid = request.model.dataObjectGuid();
                 var controller = this._controller;
                 var data_guid = dataGuid ? dataGuid : controller.guid();
+                var time = process.hrtime();
+                var tot_lines = 0;
 
                 var result = {
                     "$sys": {
@@ -1089,6 +1118,7 @@ define(
 
                 _.forEach(rawData, function (data) {
                     data_walk(data, request);
+                    ++tot_lines;
                 });
 
                 if (request.is_single) {
@@ -1103,6 +1133,8 @@ define(
                         result = null;
                 };
 
+                var diff = process.hrtime(time);
+                console.log("=== Process result time: " + ((diff[0] * 1e9 + diff[1]) / 1e9).toFixed(4) + " sec. ( " + tot_lines + " lines ) ===");
                 return result;
             },
 

@@ -21,9 +21,12 @@ define(
 				this.pvt.controller = controller;
 				this.pvt.constructHolder = construct_holder;
 
+				this._providers = {};
+				this._default_provider = null;
+
 				var that = this;
 
-				this.pvt.dataObjectEngine = new DataObjectEngine(router, controller,
+				this.pvt.dataObjectEngine = new DataObjectEngine(this, router, controller,
                     construct_holder, rpc, UCCELLO_CONFIG.dataman);
 
 				this.pvt.dataSource = 'local'; // 'local' or 'mysql'
@@ -48,7 +51,31 @@ define(
 		        return this.pvt.dataBase;
 		    },
 
-            query: function(data, done) {
+		    registerProvider: function (name, provider) {
+		        this._providers[name] = provider;
+		        if (!this._default_provider)
+		            this.setDefaultProvider(provider);
+		    },
+
+		    unRegisterProvider: function (name) {
+		        if (this.getDefaultProvider() === this._providers[name])
+		            this.setDefaultProvider(null);
+		        delete this._providers[name];
+		    },
+
+		    setDefaultProvider: function (provider) {
+		        this._default_provider = provider;
+		    },
+
+		    getDefaultProvider: function () {
+		        return this._default_provider;
+		    },
+
+		    getProvider: function (provider_name) {
+		        return this._providers[provider_name] ? this._providers[provider_name] : null;
+		    },
+
+		    query: function (data, done) {
 				var result = {};
                 var controller = this.pvt.controller;
                 var db = controller.getDB(data.dbGuid);
@@ -68,21 +95,23 @@ define(
             loadQuery: function (guidRoot, expression, done) {
                 var hehe = {};
                 if (expression && expression.model) {
-                    var predicate;
-                    if (expression.predicate) {
-                        // TODO: Здесь каждый раз надо новый предикат создавать !!!
-                        predicate = this.pvt.dataObjectEngine.deserializePredicate(
-                                expression.predicate,
-                                this.pvt.dataObjectEngine.newPredicate()
-                            );
-                    };
+                    var provider = null;
+                    if (expression.provider)
+                        provider = this.getProvider(expression.provider)
+                    else
+                        provider = this.getDefaultProvider();
 
-                    var query = { dataObject: expression.model, dataGuid: guidRoot, predicate: predicate };
-                    if (expression.is_single)
-                        query.is_single = expression.is_single;
-                    this._loadData(query, done);
+                    if (!provider) {
+                        console.error("###ERROR: " + expression.provider ?
+                            "Unknown provider: \"" + expression.provider + "\"!" : "Default provider isn't defined!");
+                        done({});
+                    }
+                    else
+                        provider.requestData(guidRoot, expression, done);
                 }
                 else {
+                    // Устаревшая часть, работает только с DatasetOld
+                    //
                     var gr = guidRoot.slice(0, 36);
                     switch (gr) {
                         case UCCELLO_CONFIG.guids.rootCompany:
