@@ -92,6 +92,7 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils'],
                         _options.transactionId = transactionId;
                     }
 
+                    // todo : сделать через Edit, пересчитать md5 & body после onSave
                     that.db.getObj(_objectGuid).newObject({fields : fields}, _options, function (result) {
                         if (result.result == 'OK') {
                             if ((_resource) && (_resource.hasOwnProperty('onSave'))){
