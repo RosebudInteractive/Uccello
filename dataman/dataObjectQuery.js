@@ -242,15 +242,15 @@ define(
 
                 function exec_query(cmd, connection) {
                     var query = new self._query(self._engine, connection, self._query_options);
-                    var start;
+                    var time;
                     if (self._trace.sqlCommands) {
                         console.log("Started: " + cmd.sqlCmd);
-                        start = new Date();
+                        time = process.hrtime();
                     };
                     return query.run(cmd).then(function (result) {
                         if (self._trace.sqlCommands) {
-                            var end = new Date();
-                            console.log("=== Elapsed time: " + ((end - start) / 1000.0).toFixed(4) + " sec. ===");
+                            var diff = process.hrtime(time);
+                            console.log("=== Elapsed time: " + ((diff[0] * 1e9 + diff[1]) / 1e9).toFixed(4) + " sec. ===");
                             console.log("Finished: " + cmd.sqlCmd);
                         };
                         return result;
