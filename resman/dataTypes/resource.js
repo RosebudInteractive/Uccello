@@ -44,7 +44,6 @@ define(
             },
 
             onSave: function (data_object) {
-                return true;
             },
 
             _counter: function (value) {

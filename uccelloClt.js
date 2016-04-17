@@ -97,6 +97,10 @@ define(
                         that.pvt.clientConnection.socket.send({ action: "iDataObjectEngine", type: 'method' }, function (result) {
                             window.$data = rpc._publProxy(result.intf.classGuid, clt.socket, result.intf); // публикуем прокси IDataObjectEngine
                         });
+
+                        that.pvt.clientConnection.socket.send({ action: "iProcessAdapter", type: 'method' }, function (result) {
+                            window.$processData = rpc._publProxy(result.intf.classGuid, clt.socket, result.intf); // публикуем прокси IProcessAdapter
+                        });
                     });
                 });
 

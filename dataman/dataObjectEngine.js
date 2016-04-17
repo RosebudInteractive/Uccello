@@ -14,7 +14,7 @@ define(
         var METADATA_DIR_NAME = UCCELLO_CONFIG.dataPath + "meta";
         var META_DATA_MGR_GUID = "77153254-7f08-6810-017b-c99f7ea8cddf@2009";
         var PREDICATE_POOL_SIZE = 20;
-        var DATA_PROVIDER_NAME = "DbEngine";
+        var DATA_ADAPTER_NAME = "dbData";
 
         var iDataObjectEngine = {
 
@@ -112,7 +112,7 @@ define(
                     router.add('iDataObjectEngine', function (data, done) { done({ intf: iDataObjectEngine }); });
                 };
                 if (dataman)
-                    dataman.registerProvider(DATA_PROVIDER_NAME, this);
+                    dataman.regDataAdapter(DATA_ADAPTER_NAME, this);
             },
 
             getGuid: function () {
