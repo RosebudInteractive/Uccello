@@ -471,7 +471,7 @@ define(
                 footer += "\t\t}\n" + "\t});";
 
                 var constr = header +
-                    "\t\tclassName: \"" + Meta.DATA_OBJECT_WORKSPASE + "." + model.get("ResName") + "\",\n" +
+                    "\t\tclassName: \"" + Meta.DATA_OBJECT_WORKSPACE + "." + model.get("ResName") + "\",\n" +
                     "\t\tclassGuid: \"" + model.get("DataObjectGuid") + "\",\n" +
                     "\t\tmodelName: \"" + model.get("ResName") + "\",\n" +
                     "\t\tmetaFields: [\n";
@@ -531,10 +531,10 @@ define(
             _getRootConstr: function (model) {
 
                 var constr = "return Parent.extend({\n" +
-                    "\t\tclassName: \"" + Meta.DATA_OBJECT_WORKSPASE + "." + model.get("DataRootName") + "\",\n" +
+                    "\t\tclassName: \"" + Meta.DATA_OBJECT_WORKSPACE + "." + model.get("DataRootName") + "\",\n" +
                     "\t\tclassGuid: \"" + model.get("DataRootGuid") + "\",\n" +
                     "\t\tmodelName: \"" + model.get("ResName") + "\",\n" +
-                    "\t\tmetaCols: [{ \"cname\": \"DataElements\", \"ctype\": \"" + Meta.DATA_OBJECT_WORKSPASE + "."
+                    "\t\tmetaCols: [{ \"cname\": \"DataElements\", \"ctype\": \"" + Meta.DATA_OBJECT_WORKSPACE + "."
                         + model.get("ResName") + "\" }],\n" +
                     "\t\tmetaFields: [],\n";
 
