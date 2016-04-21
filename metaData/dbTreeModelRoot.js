@@ -325,7 +325,7 @@ define(
                         this._predicate
                             .addConditionWithClear({ field: singleObject._keyField, op: "=", value: keyVal });
 
-                        params.expr.predicate = this.getDB().serialize(this._predicate);
+                        params.expr.predicate = this.getDB().serialize(this._predicate, true);
 
                         this._isWaitingForData = true;
                         this._requestData([singleObject.getGuid()], params, icb);
@@ -405,7 +405,7 @@ define(
                                     this._predicate
                                         .addConditionWithClear({ field: parentField, op: "=", value: keyVal });
 
-                                    params.expr.predicate = this.getDB().serialize(this._predicate);
+                                    params.expr.predicate = this.getDB().serialize(this._predicate, true);
                                     rgp = params.path.dataRoot;
                                 }
 

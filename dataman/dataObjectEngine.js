@@ -192,14 +192,16 @@ define(
                 }
                 else
                     result = this._createPredicate();
+                this._predicates_busy[result.getGuid()] = result;
                 return result;
             },
 
-            deserializePredicate: function (serialized_obj, predicate) {
-                var result = predicate ? predicate : new Predicate(this._dataBase, {});
+            deserializePredicate: function (serialized_obj) {
+                var result = this.newPredicate();
                 var so = _.cloneDeep(serialized_obj);
                 so.$sys.guid = result.getGuid();
                 result = this._dataBase.deserialize(so, {}, this._dataBase.getDefaultCompCallback());
+                this._predicates_busy[result.getGuid()] = result;
                 return result;
             },
 
@@ -715,13 +717,8 @@ define(
 
             requestData: function (guidRoot, expression, done) {
                 var predicate;
-                if (expression.predicate) {
-                    // TODO: Здесь каждый раз надо новый предикат создавать !!!
-                    predicate = this.deserializePredicate(
-                            expression.predicate,
-                            this.newPredicate()
-                        );
-                };
+                if (expression.predicate)
+                    predicate = this.deserializePredicate(expression.predicate);
 
                 var query = { dataObject: expression.model, dataGuid: guidRoot, predicate: predicate };
                 if (expression.is_single)
