@@ -24,7 +24,8 @@ define(
                 {fname:"Height", ftype:"string"},
                 {fname:"MinTargetWidth", ftype: "int"},
                 {fname:"MaxTargetWidth", ftype:"int"},
-                {fname:"TabNumber", ftype:"int"}
+                {fname:"TabNumber", ftype:"int"},
+                {fname:"SizeUnits", ftype:"int"}
             ],
 
             init: function(cm, params) {
@@ -82,6 +83,10 @@ define(
 
             tabNumber: function(value) {
                 return this._genericSetter("TabNumber", value);
+            },
+
+            sizeUnits: function(value) {
+                return this._genericSetter("SizeUnits", value);
             }
 
         });
