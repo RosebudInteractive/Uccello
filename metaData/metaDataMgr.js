@@ -512,17 +512,13 @@ define(
                 if (model.getTypeIdField() && (childLevel === 0)) {
                     constr += "\t\t_typeIdField: \"" + model.getTypeIdField().name() + "\",\n";
                 };
-                constr += "\t\t_typeIdVal: " + model.getActualTypeId() + ",\n";
+                constr += "\t\t_typeIdVal: " + model.getActualTypeId();
 
-                is_first = true;
                 for (var i = 0; i < fields.length; i++) {
                     if ((fields[i].flags() & (Meta.Field.Internal | Meta.Field.Hidden)) === 0) {
                         var method_name = this._genGetterName(fields[i].get("ResElemName"));
                         if (DataObject.prototype[method_name] === undefined) {
-                            if (!is_first)
-                                constr += ",\n";
-                            is_first = false;
-                            constr += "\n\t\t" + method_name + ": function (value) {\n" +
+                            constr += ",\n\n\t\t" + method_name + ": function (value) {\n" +
                                 "\t\t\treturn this._genericSetter(\"" + fields[i].get("ResElemName") + "\", value);\n\t\t}";
                         };
                     };
