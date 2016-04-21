@@ -121,7 +121,8 @@ define([], function () {
             'metaRootGuid': 'fc13e2b8-3600-b537-f9e5-654b7418c156',
             'metaObjGuid': '4dcd61c3-3594-7456-fd86-5a3527c5cdcc',
             'dataObjectEngineGuid': 'e4c765e8-9ae0-45c3-a28d-863d7cb08706',
-            'iDataObjectEngine': 'cfd5ae4d-5cf1-4fcf-9f5a-61c8b6499a08'
+            'iDataObjectEngine': 'cfd5ae4d-5cf1-4fcf-9f5a-61c8b6499a08',
+            'iProcessAdapter': '3ca4f812-b624-4dac-b7a1-67f8f4780f86'
         },
 
         // гуиды классов учелло

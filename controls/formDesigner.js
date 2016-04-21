@@ -130,8 +130,9 @@ define(
                     children.push(c);
                 }
                 var lCol = this.getCol("Layouts");
+                var ids = {id : id}
                 for (var i = 0; i < lCol.count(); i++) {
-                    this._genLayouts(layouts, guidMap, lCol.get(i), {id : id} );
+                    this._genLayouts(layouts, guidMap, lCol.get(i), ids );
                 }
 
 
@@ -174,7 +175,9 @@ define(
                         "Height": layout.height(),
                         "ResElemName": "Gen_Layout_" + id.id,
                         "Direction": layout.direction(),
-                        "Control": layout.control() ? guidMap[layout.control().getGuid()] : null
+                        "Control": layout.control() ? guidMap[layout.control().getGuid()] : null,
+                        "MinTargetWidth": layout.minTargetWidth(),
+                        "MaxTargetWidth": layout.maxTargetWidth()
                     },
                     "collections": {
                         "Layouts": []

@@ -21,8 +21,8 @@ define(
 				this.pvt.controller = controller;
 				this.pvt.constructHolder = construct_holder;
 
-				this._providers = {};
-				this._default_provider = null;
+				this._adapters = {};
+				this._default_adapter = null;
 
 				var that = this;
 
@@ -51,28 +51,28 @@ define(
 		        return this.pvt.dataBase;
 		    },
 
-		    registerProvider: function (name, provider) {
-		        this._providers[name] = provider;
-		        if (!this._default_provider)
-		            this.setDefaultProvider(provider);
+		    regDataAdapter: function (name, adapter) {
+		        this._adapters[name] = adapter;
+		        if (!this._default_adapter)
+		            this.setDefaultDataAdapter(adapter);
 		    },
 
-		    unRegisterProvider: function (name) {
-		        if (this.getDefaultProvider() === this._providers[name])
-		            this.setDefaultProvider(null);
-		        delete this._providers[name];
+		    unRegDataAdapter: function (name) {
+		        if (this.getDefaultDataAdapter() === this._adapters[name])
+		            this.setDefaultDataAdapter(null);
+		        delete this._adapters[name];
 		    },
 
-		    setDefaultProvider: function (provider) {
-		        this._default_provider = provider;
+		    setDefaultDataAdapter: function (adapter) {
+		        this._default_adapter = adapter;
 		    },
 
-		    getDefaultProvider: function () {
-		        return this._default_provider;
+		    getDefaultDataAdapter: function () {
+		        return this._default_adapter;
 		    },
 
-		    getProvider: function (provider_name) {
-		        return this._providers[provider_name] ? this._providers[provider_name] : null;
+		    getDataAdapter: function (adapter_name) {
+		        return this._adapters[adapter_name] ? this._adapters[adapter_name] : null;
 		    },
 
 		    query: function (data, done) {
@@ -94,20 +94,20 @@ define(
              */
             loadQuery: function (guidRoot, expression, done) {
                 var hehe = {};
-                if (expression && expression.model) {
-                    var provider = null;
-                    if (expression.provider)
-                        provider = this.getProvider(expression.provider)
+                if (expression && (expression.model || expression.adapter)) {
+                    var adapter = null;
+                    if (expression.adapter)
+                        adapter = this.getDataAdapter(expression.adapter)
                     else
-                        provider = this.getDefaultProvider();
+                        adapter = this.getDefaultDataAdapter();
 
-                    if (!provider) {
-                        console.error("###ERROR: " + expression.provider ?
-                            "Unknown provider: \"" + expression.provider + "\"!" : "Default provider isn't defined!");
+                    if (!adapter) {
+                        console.error("###ERROR: " + expression.adapter ?
+                            "Unknown data adapter: \"" + expression.adapter + "\"!" : "Default data adapter isn't defined!");
                         done({});
                     }
                     else
-                        provider.requestData(guidRoot, expression, done);
+                        adapter.requestData(guidRoot, expression, done);
                 }
                 else {
                     // Устаревшая часть, работает только с DatasetOld

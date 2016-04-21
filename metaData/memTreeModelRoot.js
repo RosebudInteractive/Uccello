@@ -86,7 +86,7 @@ define(
                         throw new Error("Can't set \"Edit\" state, because current state is \"" +
                             Meta.Meta.stateToString(this._currState()) + "\".");
 
-                    if (this._childEdCnt() >0)
+                    if (this._childEdCnt() > 0)
                         throw new Error("Can't set \"Edit\" state, because some of childs are in  \"Edit\" state.");
 
                     this.getDB()._iterateChilds(this, true, function (tree_elem, lvl) {
@@ -95,14 +95,39 @@ define(
                     });
                     this._editSet("current");
                     this._childEnterEdit();
-                    this._editVLog = this.getDB().getDbLog().createVirtualLog(MemVirtualLog.SubscriptionMode.CurrentAndAllChilds, obj);
+                    // Включаем лог изменений на сервере !
+                    this._createLog(obj.getGuid(), cb);
 
                 }
                 catch (err) {
                     result = { result: "ERROR", message: err.message };
+                    if (cb)
+                        setTimeout(function () {
+                            cb(result);
+                        }, 0);
                 };
-                if (cb)
-                    cb(result);
+            },
+
+            _createLog: function (obj_guid, cb) {
+                if (this.isMaster()) {
+                    var result = { result: "OK" };
+                    try {
+                        var obj = this.getDB().getObj(obj_guid);
+                        if (!obj)
+                            throw new Error("MemTreeModelRoot::_edit: DataObject \"" + obj_guid + "\" doesn't exist!");
+                        this._editVLog = this.getDB().getDbLog().createVirtualLog(MemVirtualLog.SubscriptionMode.CurrentAndAllChilds, obj);
+                    }
+                    catch (err) {
+                        result = { result: "ERROR", message: err.message };
+                    };
+                    if (cb)
+                        setTimeout(function () {
+                            cb(result);
+                        }, 0);
+                }
+                else {
+                    this.remoteCall('_createLog', [obj_guid], cb);
+                };
             },
 
             save: function (is_cached_upd, options, cb) {
@@ -127,17 +152,22 @@ define(
                             tree_elem._editSet("");
                         });
                         this._childLeaveEdit();
-                        if (this._editVLog) {
-                            this.getDB().getDbLog().destroyVirtualLog(this._editVLog);
-                            this._editVLog = null;
-                        }
-                    };
+                        // Удалить лог изменений
+                        this._destroyLog(false, cb);
+                    }
+                    else
+                        if (cb)
+                            setTimeout(function () {
+                                cb(result);
+                            }, 0);
                 }
                 catch (err) {
                     result = { result: "ERROR", message: err.message };
+                    if (cb)
+                        setTimeout(function () {
+                            cb(result);
+                        }, 0);
                 };
-                if (cb)
-                    cb(result);
             },
 
             cancel: function (is_cached_upd, cb) {
@@ -157,20 +187,14 @@ define(
 
                     if (this._editSet().length !== 0) {
 
-                        if (this._editVLog)
-                            result = this._editVLog.rollback();
-
                         this.getDB()._iterateChilds(this, true, function (tree_elem, lvl) {
                             tree_elem._currState(Meta.State.Browse);
                             tree_elem._editSet("");
                         });
 
                         this._childLeaveEdit();
-
-                        if (this._editVLog) {
-                            this.getDB().getDbLog().destroyVirtualLog(this._editVLog);
-                            this._editVLog = null;
-                        }
+                        // Удалить лог с откатом изменений
+                        this._destroyLog(true, cb);
                     }
                     else
                         throw new Error("Can't cancel edit, because parent object is in \"Edit\" state.");
@@ -178,9 +202,36 @@ define(
                 }
                 catch (err) {
                     result = { result: "ERROR", message: err.message };
+                    if (cb)
+                        setTimeout(function () {
+                            cb(result);
+                        }, 0);
                 };
-                if (cb)
-                    cb(result);
+            },
+
+            _destroyLog: function (with_rollback, cb) {
+                if (this.isMaster()) {
+                    var result = { result: "OK" };
+                    try {
+                        if (this._editVLog && with_rollback)
+                            result = this._editVLog.rollback();
+
+                        if (this._editVLog) {
+                            this.getDB().getDbLog().destroyVirtualLog(this._editVLog);
+                            this._editVLog = null;
+                        }
+                    }
+                    catch (err) {
+                        result = { result: "ERROR", message: err.message };
+                    };
+                    if (cb)
+                        setTimeout(function () {
+                            cb(result);
+                        }, 0);
+                }
+                else {
+                    this.remoteCall('_destroyLog', [with_rollback], cb);
+                };
             },
 
             addObject: function (flds, options, cb) {
@@ -194,26 +245,55 @@ define(
                     if (!col)
                         throw new Error("MemTreeModelRoot::addObject: Parent collection doesn't exist!");
 
-                    var objType = col.getColType();
-                    var params = { parent: col.getParent(), colName: col.getName(), ini: flds || {} };
-                    var objGuid = objType.getGuid();
-                    var cm = this.getControlMgr();
-                    var constrHolder = cm.getConstructHolder() ? cm.getConstructHolder() :
-                        (cm.getContext() ? cm.getContext().getConstructorHolder() : null);
-                    if (!constrHolder)
-                        throw new Error("MemTreeModelRoot::addObject: Undefined ConstructHolder !");
-                    var constr = constrHolder.getComponent(objGuid).constr;
-                    if (typeof (constr) !== "function")
-                        throw new Error("MemTreeModelRoot::addObject: Undefined object constructor: \"" + objGuid + "\" !");
-
-                    var obj = new constr(cm, params);
-                    result.newObject = obj.getGuid();
+                    this._addObject(flds, col.getParent().getGuid(), col.getName(), cb);
                 }
                 catch (err) {
                     result = { result: "ERROR", message: err.message };
+                    if (cb)
+                        setTimeout(function () {
+                            cb(result);
+                        }, 0);
                 };
-                if (cb)
-                    cb(result);
+            },
+
+            _addObject: function (flds, parent_guid, col_name, cb) {
+                if (this.isMaster()) {
+                    var result = { result: "OK" };
+                    try {
+                        var parent = this.getDB().getObj(parent_guid);
+                        if (!parent)
+                            throw new Error("MemTreeModelRoot::_addObject: Parent DataObject \"" + parent_guid + "\" doesn't exist!");
+
+                        var col = parent.getCol(col_name);
+                        if (!col)
+                            throw new Error("MemTreeModelRoot::_addObject: Parent collection \"" + col_name + "\" doesn't exist!");
+
+                        var objType = col.getColType();
+                        var params = { parent: parent, colName: col_name, ini: flds || {} };
+                        var objGuid = objType.getGuid();
+                        var cm = this.getControlMgr();
+                        var constrHolder = cm.getConstructHolder() ? cm.getConstructHolder() :
+                            (cm.getContext() ? cm.getContext().getConstructorHolder() : null);
+                        if (!constrHolder)
+                            throw new Error("MemTreeModelRoot::_addObject: Undefined ConstructHolder !");
+                        var constr = constrHolder.getComponent(objGuid).constr;
+                        if (typeof (constr) !== "function")
+                            throw new Error("MemTreeModelRoot::_addObject: Undefined object constructor: \"" + objGuid + "\" !");
+
+                        var obj = new constr(cm, params);
+                        result.newObject = obj.getGuid();
+                    }
+                    catch (err) {
+                        result = { result: "ERROR", message: err.message };
+                    };
+                    if (cb)
+                        setTimeout(function () {
+                            cb(result);
+                        }, 0);
+                }
+                else {
+                    this.remoteCall('_addObject', [flds, parent_guid, col_name], cb);
+                };
             },
 
             deleteObject: function (options, cb) {
@@ -234,23 +314,56 @@ define(
                     if (!col)
                         throw new Error("MemTreeModelRoot::deleteObject: Parent collection doesn't exist!");
 
-                    var idx = col._del(obj);
-                    if (typeof (idx) === "number") {
-                        var newIdx = col.count() > idx ? idx : (col.count() - 1);
-                        if (newIdx >= 0) {
-                            var newObj = col.get(newIdx);
-                            if (newObj._keyField)
-                                result.newObject = newObj.getGuid();
-                        }
-                        else
-                            result.newObject = null;
-                    }
+                    this._deleteObject(obj.getGuid(), cb);
                 }
                 catch (err) {
                     result = { result: "ERROR", message: err.message };
+                    if (cb)
+                        setTimeout(function () {
+                            cb(result);
+                        }, 0);
                 };
-                if (cb)
-                    cb(result);
+            },
+
+            _deleteObject: function (obj_guid, cb) {
+                if (this.isMaster()) {
+                    var result = { result: "OK" };
+                    try {
+                        var obj = this.getDB().getObj(obj_guid);
+                        if (!obj)
+                            throw new Error("MemTreeModelRoot::_addObject: Parent DataObject \"" + obj_guid + "\" doesn't exist!");
+
+                        var parent = obj.getParent();
+                        if (!parent)
+                            throw new Error("MemTreeModelRoot::_addObject: Parent of DataObject \"" + obj_guid + "\" doesn't exist!");
+
+                        var col = obj.getParentCol();
+                        if (!col)
+                            throw new Error("MemTreeModelRoot::_addObject: Parent collection doesn't exist!");
+
+                        var idx = col._del(obj);
+                        if (typeof (idx) === "number") {
+                            var newIdx = col.count() > idx ? idx : (col.count() - 1);
+                            if (newIdx >= 0) {
+                                var newObj = col.get(newIdx);
+                                if (newObj)
+                                    result.newObject = newObj.getGuid();
+                            }
+                            else
+                                result.newObject = null;
+                        };
+                    }
+                    catch (err) {
+                        result = { result: "ERROR", message: err.message };
+                    };
+                    if (cb)
+                        setTimeout(function () {
+                            cb(result);
+                        }, 0);
+                }
+                else {
+                    this.remoteCall('_deleteObject', [obj_guid], cb);
+                };
             },
 
             hasData: function () {
@@ -367,20 +480,64 @@ define(
             },
 
             loadData: function (isMasterOnly, withSubTree, source) {
+
+                if (this._isWaitingForData) {
+                    if (DEBUG)
+                        console.warn("### WARNING: \"" + this.name() + "\" receives \"loadData\" request while it's waiting for data.");
+                    return;
+                };
+
+                var self = this;
+
+                function local_cb(res) {
+                    if (DEBUG)
+                        console.warn("### WARNING: \"" + self.name() + "\" has received data.");
+
+                    var dataRoot = self.getDB().getObj(res.guids[0]);
+                    self.rootObj(dataRoot ? dataRoot : null);
+                    if (dataRoot && self._dataset)
+                        self._dataset.onDataChanged();
+                    self._isWaitingForData = false;
+                };
+
                 if (this._is_root) {
-                    if (!this.rootObj())
-                        this._requestObject();
+
+                    var dataRoot = this.rootObj();
+                    var dataRootGuid = this.getSerialized("RootObj") ? this.getSerialized("RootObj").guidInstanceRes : undefined;
+                    var rgp = dataRoot ? dataRoot.getGuid() : (dataRootGuid ? dataRootGuid : this.getDB().getController().guid());
+
+                    var needToQuery = true;
+                    var params = { expr: { adapter: "requestData" }, rtype: "data" };
+
+                    // Если (dataRootGuid && isMasterOnly) === true, то это означает, что у нас есть ссылка на инстанс рута данных на сервере
+                    //   и происходит начальная ициализация данных - в этом случае необходимо просто запросить рут данных,
+                    //   не делая запрос к БД.
+                    if (!(dataRootGuid && isMasterOnly)) {
+                    };
+
+                    self._isWaitingForData = false;
+                    this._requestData([rgp], params, local_cb);
                 }
                 else {
                     this.getDataCollection();
+                    if (this._dataset)
+                        this._dataset.onDataChanged();
                 };
-                if (this._dataset)
-                    this._dataset.onDataChanged();
+            },
+
+            _requestData: function (rootGuid, params, cb) {
+                if (this.isMaster())
+                    this.getControlMgr().getRoots(rootGuid, params, cb);
+                else {
+                    params.subDbGuid = this.getControlMgr().getGuid();
+                    this.remoteCall('_requestData', [rootGuid, params], cb);
+                }
             },
 
             init: function (cm, params) {
                 this._is_root = false;
                 this._editVLog = null;
+                this._isWaitingForData = false;
 
                 UccelloClass.super.apply(this, [cm, params]);
 

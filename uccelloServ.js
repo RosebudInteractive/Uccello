@@ -6,9 +6,9 @@ if (typeof define !== 'function') {
 define(
     ['./connection/socket', './system/logger', './dataman/dataman', 'ws', './connection/router', './connection/userSessionMgr',
 	'./system/rpc', './controls/controlMgr', './resman/resman', './system/constructHolder', './process/processDispatcher',
-    './system/tracer/manager'],
+    './system/tracer/manager', './dataman/adapters/processAdapter'],
     function (Socket, Logger, Dataman, WebSocketServer, Router, UserSessionMgr,
-        Rpc, ControlMgr, Resman, ConstructHolder, ProcessDispatcher, TraceManager) {
+        Rpc, ControlMgr, Resman, ConstructHolder, ProcessDispatcher, TraceManager, ProcessAdapter) {
 	
 		var guidServer = UCCELLO_CONFIG.guids.guidServer;
 	
@@ -79,7 +79,9 @@ define(
                     return result;
                 });
 				
-				
+                new ProcessAdapter(this.pvt.dataman, this.pvt.proxyWfe,
+                    this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder, rpc);
+
 				this.getRouter().add('testIntf', function(data, done) { done({ intf: interface1 }); }); 
 
                 this.getRouter().add('getSessions', function(data, done) {
