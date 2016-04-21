@@ -10,7 +10,6 @@ var should  = require('chai').should();
 var expect = require('chai').expect;
 
 var Main = require("./main");
-var ResUtils = require('./../resUtils');
 
 function execSql(sql) {
     return new Promise(function(resolve, reject) {
@@ -29,7 +28,15 @@ before(function() {
 });
 
 describe('#loadRes', function(){
-    it('Загрузить смешанный массив', function(done){
+    xdescribe('Работа с файлами', function(){
+        it('Загрузить смешанный массив - EXCEPT', function(done){
+
+        });
+
+        it('Загрузить массив Guid - OK', function(done){})
+    });
+
+    it('Загрузить смешанный массив - OK', function(done){
         var _resManger = Main.Config.ResManager;
         var _guids = [
             '4a4abdb4-3e3b-85a7-09b9-5f15b4b187f9',
@@ -40,6 +47,19 @@ describe('#loadRes', function(){
         _resManger.loadRes(_guids, function(result) {
             result.datas.should.be.lengthOf(2);
             done();
+        })
+    })
+});
+
+describe('#rebuildResources', function(){
+    it('Пересохранить ресурсы - OK', function(done){
+        Main.Config.ResManager.rebuildResources().
+        then(function(){
+            // check
+            done()
+        }).
+        catch(function(err){
+            done(err)
         })
     })
 });
@@ -67,8 +87,6 @@ describe('#get functions', function() {
 
     describe('#getResource', function () {
         it('Загрузить существующий ресурс', function () {
-                //var _resManger = Main.Config.ResManager;
-
                 return Main.Config.ResManager.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6').then(
                     function (object) {
                         object.should.be.exist;

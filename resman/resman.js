@@ -18,7 +18,7 @@ define(
     function(ControlMgr, Predicate, Directories, Builds, Resources, ResUtils, ResVersions, fs) {
 
         function arrayHasObjects(guids) {
-            return guids.some(function(guid){
+            return guids.some(function (guid) {
                 return typeof guid == 'object'
             })
         }
@@ -55,6 +55,13 @@ define(
                     this.builds = Builds.init(this.db, this.directories);
                     this.resources = new Resources(this.db, this.directories, this.builds);
                     this.resVersions = ResVersions.init(this.db);
+
+                    this.createComponentFunction = function (typeObj, parent, sobj) {
+                        var params = {ini: sobj, parent: parent.obj, colName: parent.colName};
+                        var constr = constructHolder.getComponent(typeObj.getGuid()).constr;
+                        return new constr(this.db, params);
+                    };
+
                 } else {
                     if (this.dbMode.init) {
                         console.log(this.dbMode.error);
@@ -63,7 +70,7 @@ define(
             },
 
             checkOptions: function () {
-                this.dbMode = {canUse : false, error : ''};
+                this.dbMode = {canUse: false, error: ''};
                 this.dbMode.canUse = ((UCCELLO_CONFIG.resman) && (UCCELLO_CONFIG.resman.useDb) || false);
                 if (!this.dbMode.canUse) {
                     this.dbMode.error = 'ResManager not in db mode';
@@ -95,7 +102,7 @@ define(
 
                         function addElement(guid) {
                             _count++;
-                            var _index = _result.findIndex(function(element){
+                            var _index = _result.findIndex(function (element) {
                                 return element == guid;
                             });
 
@@ -114,7 +121,7 @@ define(
                                                 resolve(_result)
                                             }
                                         },
-                                        function(reason){
+                                        function (reason) {
                                             _count++;
                                             reject(reason)
                                         }
@@ -151,13 +158,16 @@ define(
                             var _array = [];
                             for (var element in resultObj) {
                                 if (resultObj.hasOwnProperty(element) && (element != 'count')) {
-                                    _array.push({id : resultObj[element].id, resource : JSON.parse(resultObj[element].body)})
+                                    _array.push({
+                                        id: resultObj[element].id,
+                                        resource: JSON.parse(resultObj[element].body)
+                                    })
                                 }
                             }
-                            done({datas: _array, result : 'OK'})
+                            done({datas: _array, result: 'OK'})
                         },
-                        function(reason) {
-                            done({datas: [], result : 'ERROR', message : reason.message})
+                        function (reason) {
+                            done({datas: [], result: 'ERROR', message: reason.message})
                         }
                     )
                 }
@@ -165,11 +175,11 @@ define(
                 if (this.dbMode.canUse) {
                     if (arrayHasObjects(guids)) {
                         this.convertArray(guids).then(
-                            function(convertedArray) {
+                            function (convertedArray) {
                                 loadBodies(convertedArray)
                             },
-                            function(reason) {
-                                done({datas: [], result : 'ERROR', message : reason.message})
+                            function (reason) {
+                                done({datas: [], result: 'ERROR', message: reason.message})
                             }
                         );
                     } else {
@@ -177,22 +187,90 @@ define(
                     }
                 } else {
                     if (arrayHasObjects(guids)) {
-                        done({datas: [], result : 'ERROR', message : 'Array of guids has object'})
+                        done({datas: [], result: 'ERROR', message: 'Array of guids has object'})
                     } else {
                         var _result = [];
                         guids.forEach(function (guid) {
                             var gr = guid.slice(0, 36);
                             var _filePath = that.findPath(gr);
                             if (!_filePath) {
-                                done({datas: [], result : 'ERROR', message : 'Can not found resource'});
+                                done({datas: [], result: 'ERROR', message: 'Can not found resource'});
                                 throw new Error('Can not found resource')
                             }
-                            var json = require(_filePath.path + guid  + '.json');
-                            _result.push({resource : json})
+                            var json = require(_filePath.path + guid + '.json');
+                            _result.push({resource: json})
                         });
-                        done({datas: _result, result : 'OK'})
+                        done({datas: _result, result: 'OK'})
                     }
                 }
+            },
+
+            rebuildResources: function () {
+                var that = this;
+                return new Promise(function (resolve, reject) {
+                    if (!that.dbMode.canUse) {
+                        reject(ResUtils.newSystemError(that.dbMode.error));
+                        return;
+                    }
+
+                    that.loadDirectories(promiseBody);
+
+                    function promiseBody() {
+                        var _typeCount = that.directories.resTypes.length;
+                        var _count = 0;
+
+                        if (_typeCount == 0) {
+                            resolve()
+                        } else {
+                            that.directories.resTypes.forEach(function(resType) {
+                                that.getResByType(resType).
+                                then(function(resources) {
+                                    that._rebuildResourceList(resources)
+                                }).
+                                catch(reject).
+                                then(function(){
+                                    _count++;
+                                    if (_count == _typeCount){
+                                        resolve()
+                                    }
+                                }).
+                                catch(reject)
+                            })
+                        }
+                    }
+                });
+            },
+
+            _rebuildResourceList: function(list){
+                var that = this;
+
+                return new Promise(function(resolve, reject){
+                    var _resCount = 0;
+                    for (var element in list){
+                        if (list.hasOwnProperty(element)) {
+                            if (!element) {
+                                _resCount++
+                            } else {
+                                var _resource = that.db.deserialize(element, params, that.createComponentFunction);
+                                if (!_resource) {
+                                    reject(ResUtils.newObjectError('Can not deserialize object'))
+                                } else {
+                                    // TODO : необходимо вызвать сохраниение ресурса
+                                    _resource.save();
+                                    _resCount++;
+                                }
+                            }
+                        }
+
+                        check();
+                    }
+
+                    function check(){
+                        if (_resCount == Object.keys(list).length) {
+                            resolve();
+                        }
+                    }
+                })
             },
 
             findPath: function(guid){
