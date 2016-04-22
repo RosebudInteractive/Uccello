@@ -56,10 +56,11 @@ define(
                     this.resources = new Resources(this.db, this.directories, this.builds);
                     this.resVersions = ResVersions.init(this.db);
 
+                    var that = this;
                     this.createComponentFunction = function (typeObj, parent, sobj) {
                         var params = {ini: sobj, parent: parent.obj, colName: parent.colName};
                         var constr = constructHolder.getComponent(typeObj.getGuid()).constr;
-                        return new constr(this.db, params);
+                        return new constr(that.db, params);
                     };
 
                 } else {
@@ -216,25 +217,36 @@ define(
                     that.loadDirectories(promiseBody);
 
                     function promiseBody() {
-                        var _typeCount = that.directories.resTypes.length;
+                        var _typeCount = that.directories.resTypes.types.length;
                         var _count = 0;
 
                         if (_typeCount == 0) {
                             resolve()
                         } else {
-                            that.directories.resTypes.forEach(function(resType) {
-                                that.getResByType(resType).
+                            that.directories.resTypes.types.forEach(function(resType) {
+                                that.getResByType(resType.resTypeGuid).
                                 then(function(resources) {
-                                    that._rebuildResourceList(resources)
-                                }).
-                                catch(reject).
-                                then(function(){
-                                    _count++;
-                                    if (_count == _typeCount){
-                                        resolve()
-                                    }
-                                }).
-                                catch(reject)
+                                        that._rebuildResourceList(resources).then(
+                                            function(){
+                                                _count++;
+                                                if (_count == _typeCount){
+                                                    resolve()
+                                                }
+                                            }
+                                        )
+                                    },
+                                    function(err) {
+                                        reject(err)
+                                    }).
+                                //then(function(){
+                                //    _count++;
+                                //    if (_count == _typeCount){
+                                //        resolve()
+                                //    }
+                                //}).
+                                catch(function(err) {
+                                    reject(err)
+                                })
                             })
                         }
                     }
@@ -246,23 +258,31 @@ define(
 
                 return new Promise(function(resolve, reject){
                     var _resCount = 0;
+
+                    check();
+
                     for (var element in list){
                         if (list.hasOwnProperty(element)) {
-                            if (!element) {
+                            if (!(list[element] && list[element].resBody)) {
                                 _resCount++
                             } else {
-                                var _resource = that.db.deserialize(element, params, that.createComponentFunction);
+                                var _body = JSON.parse(list[element].resBody);
+                                var _resource = that.db.deserialize(_body, {}, that.createComponentFunction);
                                 if (!_resource) {
                                     reject(ResUtils.newObjectError('Can not deserialize object'))
                                 } else {
                                     // TODO : необходимо вызвать сохраниение ресурса
-                                    _resource.save();
-                                    _resCount++;
+                                    ResVersions.saveResBody(_resource, list[element]).
+                                    then(function(){
+                                        _resCount++;
+                                        check();
+                                    }).
+                                    catch(reject);
                                 }
                             }
                         }
 
-                        check();
+
                     }
 
                     function check(){
@@ -343,7 +363,7 @@ define(
                         that.resources.getListByType(typeGuid).then(
                             function(resources){
                                 resources.forEach(function (resource) {
-                                    _result[resource.resGuid] = resource.resBody
+                                    _result[resource.resGuid] = resource
                                 });
                                 resolve(_result)
                             },

@@ -19,37 +19,38 @@ var _initializer = {
             dataPath        : _path.DbPath,
             uccelloPath     : _path.Uccello,
             webSocketServer : {port: 8082},
+            masaccioPath: __dirname + '/../../../Masaccio/wfe/',
 
             dataman: {
-                connection: { //MSSQL
-                    host: "GALLO", // "SQL-SERVER"
-                    //port: 1435, //instanceName: "SQL2008R2"
+                //connection: { //MSSQL
+                //    host: "GALLO", // "SQL-SERVER"
+                //    port: 1435, //instanceName: "SQL2008R2"
+                    //username: "sa",
+                    //password: "",
+                    //database: "genetix_test",
+                    //provider: "mssql",
+                    //connection_options: { instanceName: "SQLEXPRESS", requestTimeout: 0 },
+                    //provider_options: {},
+                    //pool: {
+                    //    max: 5,
+                    //    min: 0,
+                    //    idle: 10000
+                    //}
+                //},
+                connection: { //MySql
+                    host: "localhost",
                     username: "sa",
-                    password: "",
-                    database: "masaccio_test",
-                    provider: "mssql",
-                    connection_options: { instanceName: "SQLEXPRESS" },
+                    password: "1q2w3e",
+                    database: "genetix_test",
+                    provider: "mysql",
+                    connection_options: { requestTimeout: 0 },
                     provider_options: {},
                     pool: {
                         max: 5,
                         min: 0,
                         idle: 10000
-                    }
+                    },
                 },
-                //connection: { //MySql
-                //    host: "localhost",
-                //    username: "sa",
-                //    password: "system",
-                //    database: "genetix_test",
-                //    provider: "mysql",
-                //    connection_options: {},
-                //    provider_options: {},
-                //    pool: {
-                //        max: 5,
-                //        min: 0,
-                //        idle: 10000
-                //    },
-                //},
                 importData: {
                     autoimport: false,
                     dir: "../../ProtoOne/data/tables"
@@ -96,6 +97,12 @@ var _initializer = {
             done(err, row);
         }
         this.uccelloServ = new UccelloServ({authenticate: fakeAuthenticate});
+
+        var EngineSingleton = require(this.getConfig().masaccioPath + 'engineSingleton');
+        this.constructHolder = this.uccelloServ.pvt.constructHolder;
+        var dbc = this.uccelloServ.getUserMgr().getController();
+        EngineSingleton.initInstance({dbController : dbc, constructHolder : this.constructHolder});
+
         this.ResManager = this.uccelloServ.pvt.resman;
     }
 };

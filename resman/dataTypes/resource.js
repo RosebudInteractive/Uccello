@@ -44,6 +44,7 @@ define(
             },
 
             onSave: function (data_object) {
+                return Promise.resolve();
             },
 
             _counter: function (value) {
