@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['bluebird', 'lodash', './transaction'],
-    function (Promise, _, Transaction) {
+    [/*'bluebird',*/ 'lodash', './transaction'],
+    function (/*Promise,*/ _, Transaction) {
 
         var Query = UccelloClass.extend({
 

@@ -1,4 +1,4 @@
-﻿if (typeof define !== 'function') {
+if (typeof define !== 'function') {
     var define = require('amdefine')(module);
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
@@ -6,9 +6,9 @@
 define(
     ['../controls/controlMgr', '../metaData/metaDataMgr', '../metaData/metaModel',
         '../metaData/metaModelField', '../metaData/metaDefs', '../metaData/metaModelRef', '../metaData/metaLinkRef',
-        'bluebird', 'lodash', './dataObjectQuery', '../predicate/predicate', './transaction', '../system/resourceBuilder/resourceBuilder'],
+        /*'bluebird',*/ 'lodash', './dataObjectQuery', '../predicate/predicate', './transaction', '../system/resourceBuilder/resourceBuilder'],
     function (ControlMgr, MetaDataMgr, MetaModel, MetaModelField, Meta, MetaModelRef, MetaLinkRef,
-        Promise, _, Query, Predicate, Transaction, ResourceBuilder) {
+        /*Promise,*/ _, Query, Predicate, Transaction, ResourceBuilder) {
 
         var METADATA_FILE_NAME = UCCELLO_CONFIG.dataPath + "meta/metaTables.json";
         var METADATA_DIR_NAME = UCCELLO_CONFIG.dataPath + "meta";

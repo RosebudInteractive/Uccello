@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['generic-pool', 'bluebird', 'lodash'],
-    function (Pooling, Promise, _) {
+    ['generic-pool', /*'bluebird',*/ 'lodash'],
+    function (Pooling, /*Promise,*/ _) {
 
         var defaultPoolingConfig = {
             max: 5,
