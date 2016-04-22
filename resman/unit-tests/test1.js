@@ -27,7 +27,7 @@ before(function() {
     Main.Config.init();
 });
 
-describe('#loadRes', function(){
+xdescribe('#loadRes', function(){
     xdescribe('Работа с файлами', function(){
         it('Загрузить смешанный массив - EXCEPT', function(done){
 
@@ -64,7 +64,7 @@ describe('#rebuildResources', function(){
     })
 });
 
-describe('#get functions', function() {
+xdescribe('#get functions', function() {
     before(function () {
         var _cmd = [
             "update SysVersion set CurrBuildId = 2 where Id = 2",
@@ -138,16 +138,17 @@ describe('#get functions', function() {
             return Main.Config.ResManager.getResByType('10217b8e-b1f8-4221-a419-f20735219dd2').then(
                 function (resources) {
                     Object.keys(resources).should.have.lengthOf(24);
-                    for (guid in resources) {
-                        if (!resources.hasOwnProperty(guid)) continue;
-                        resources[guid].should.be.exists
+                    for (var element in resources) {
+                        if (!resources.hasOwnProperty(element)) continue;
+                        resources[element].should.be.exists;
+                        resources[element].body.should.be.exists;
                     }
                 }
             );
         });
 
         it('Несуществующий тип', function () {
-            return Main.Config.ResManager.getResByType('ERRROR').should.be.rejectedWith(Error);
+            return Main.Config.ResManager.getResByType('ERRROR').should.be.rejectedWith('No such resource type');
         });
 
         it('Пустой тип', function () {
@@ -182,7 +183,7 @@ describe('#get functions', function() {
     });
 });
 
-describe('#modify functions', function(){
+xdescribe('#modify functions', function(){
 
     describe('#createNewResource', function() {
 
@@ -341,19 +342,3 @@ describe('#modify functions', function(){
         });
     });
 });
-
-
-
-/*$data.execSql({
-    cmd : "select * from sysproduct",
-    //dialect: {
-    //    mysql: "update sysproduct set description=concat('xxx ',description) where id=1",
-    //    mssql: "update sysproduct set description='xxx '+description where id=1"
-    //}
-}, {}, function (result) {
-    if (result.result === "OK") {
-        console.log(JSON.stringify(result));
-    }
-    else
-        throw new Error(result.message);
-});*/

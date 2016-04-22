@@ -19,6 +19,7 @@ var _initializer = {
             dataPath        : _path.DbPath,
             uccelloPath     : _path.Uccello,
             webSocketServer : {port: 8082},
+            masaccioPath: __dirname + '/../../../Masaccio/wfe/',
 
             dataman: {
                 connection: { //MSSQL
@@ -26,9 +27,9 @@ var _initializer = {
                     //port: 1435, //instanceName: "SQL2008R2"
                     username: "sa",
                     password: "",
-                    database: "masaccio_test",
+                    database: "genetix_test",
                     provider: "mssql",
-                    connection_options: { instanceName: "SQLEXPRESS" },
+                    connection_options: { instanceName: "SQLEXPRESS", requestTimeout: 0 },
                     provider_options: {},
                     pool: {
                         max: 5,
@@ -96,6 +97,12 @@ var _initializer = {
             done(err, row);
         }
         this.uccelloServ = new UccelloServ({authenticate: fakeAuthenticate});
+
+        var EngineSingleton = require(this.getConfig().masaccioPath + 'engineSingleton');
+        this.constructHolder = this.uccelloServ.pvt.constructHolder;
+        var dbc = this.uccelloServ.getUserMgr().getController();
+        EngineSingleton.initInstance({dbController : dbc, constructHolder : this.constructHolder});
+
         this.ResManager = this.uccelloServ.pvt.resman;
     }
 };
