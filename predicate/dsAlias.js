@@ -3,26 +3,15 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../system/uobject'],
-    function (UObject) {
+    ['../common/keyValuePair'],
+    function (KeyValuePair) {
 
-        var DsAlias = UObject.extend({
+        var DsAlias = KeyValuePair.extend({
 
             className: "DsAlias",
             classGuid: UCCELLO_CONFIG.classGuids.DsAlias,
             metaCols: [],
-            metaFields: [
-                { fname: "Name", ftype: "string" },
-                { fname: "Value", ftype: "string" }
-            ],
-
-            name: function (value) {
-                return this._genericSetter("Name", value);
-            },
-
-            value: function (value) {
-                return this._genericSetter("Value", value);
-            },
+            metaFields: [],
 
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
