@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../base/connectionMgr', 'bluebird', 'lodash'],
-    function (Base, Promise, _) {
+    ['../base/connectionMgr', /*'bluebird',*/ 'lodash'],
+    function (Base, /*Promise,*/ _) {
 
         var NATIVE_PACKAGE = "mysql";
 

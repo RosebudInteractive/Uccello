@@ -4,9 +4,9 @@ if (typeof define !== 'function') {
 }
 define(
     ['../system/uobject', './metaModel', '../dataman/dataobject', '../dataman/dataRoot',
-        './metaDefs', './metaModelRef', './metaLinkRef', './dataModel', '../memDB/memMetaType'],
+        './metaDefs', './metaModelRef', './metaLinkRef', './dataModel', '../memDB/memMetaType', './metaModelVirtual'],
     function (UObject, MetaModel, DataObject, DataRoot, Meta,
-        MetaModelRef, MetaLinkRef, DataModel, MetaTypes) {
+        MetaModelRef, MetaLinkRef, DataModel, MetaTypes, MetaModelVirtual) {
 
         var REMOTE_RESULT = "XXX";
 
