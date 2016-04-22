@@ -431,7 +431,6 @@ define(
 
             insertQuery: function (model, vals, options) {
                 var query = "<%= before %>INSERT INTO <%= table %> (<%= fields%>)<%= output %> VALUES (<%= values%>)<%= after %>";
-                var params = [];
 
                 var ancestors = model.getAncestors().concat();
                 ancestors.push(model);
@@ -465,6 +464,7 @@ define(
                 var batch = [];
                 var self = this;
                 _.forEach(ancestors, function (curr_model, idx) {
+                    var params = [];
 
                     pk = curr_model.getPrimaryKey();
                     if (pk && insertId)
