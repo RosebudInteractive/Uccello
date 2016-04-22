@@ -151,7 +151,17 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                     var _resourceObj = _root.getCol("DataElements").get(0);
 
                     if (!_resourceObj){
-                        reject(ResUtils.newObjectError('Can not resave resource, because resource has no version'))
+                        var _fields = {
+                            //$sys: {guid: _resourceObj.guid()},
+                            fields:{
+                                ResVer: _resourceObj.resVer(),
+                                Hash: _resourceObj.hash(),
+                                ResBody: _resourceObj.resBody(),
+                                Description: _resourceObj.description(),
+                                ResId: _resourceObj.resId()
+                            }
+                        };
+                        _addResourceObject(_resourceObj, resourceInstance, _fields).then(resolve, reject);;
                     } else {
                         _editResourceObject(_resourceObj, resourceInstance).then(resolve, reject);
                     }
@@ -183,35 +193,35 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
             })
         }
 
-        //function _addResourceObject(root, resourceInstance, options){
-        //    return new Promise(function(resolve, reject) {
-        //        root.edit(function(result){
-        //            if (result.result === 'OK') {
-        //                root.newObject({fields: fields}, options, function (result) {
-        //                    if (result.result == 'OK') {
-        //                        var _resourceObject = root.getDB().getObj(result.newObject);
-        //                        _saveObj(_resourceObject, resourceInstance).
-        //                        then(function(){
-        //                            root.save(options, function(result){
-        //                                if (result.result == 'OK') {
-        //                                    var _resVersion = new ResVersion(that.db.getObj(result.newObject));
-        //                                    resolve(_resVersion);
-        //                                } else {
-        //                                    reject(ResUtils.newDbError(result.message))
-        //                                }
-        //                            });
-        //                        }).
-        //                        catch(reject);
-        //                    } else {
-        //                        reject(ResUtils.newDbError(result.message))
-        //                    }
-        //                });
-        //            } else {
-        //                reject(ResUtils.newDbError(result.message))
-        //            }
-        //        });
-        //    })
-        //}
+        function _addResourceObject(root, resourceInstance, fields, options){
+            return new Promise(function(resolve, reject) {
+                root.edit(function(result){
+                    if (result.result === 'OK') {
+                        root.newObject({fields: fields}, options, function (result) {
+                            if (result.result == 'OK') {
+                                var _resourceObject = root.getDB().getObj(result.newObject);
+                                _saveObj(_resourceObject, resourceInstance).
+                                then(function(){
+                                    root.save(options, function(result){
+                                        if (result.result == 'OK') {
+                                            var _resVersion = new ResVersion(that.db.getObj(result.newObject));
+                                            resolve(_resVersion);
+                                        } else {
+                                            reject(ResUtils.newDbError(result.message))
+                                        }
+                                    });
+                                }).
+                                catch(reject);
+                            } else {
+                                reject(ResUtils.newDbError(result.message))
+                            }
+                        });
+                    } else {
+                        reject(ResUtils.newDbError(result.message))
+                    }
+                });
+            })
+        }
 
         function _saveObj(resObject, resInstance){
             return new Promise(function(resolve, reject){
