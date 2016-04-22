@@ -272,7 +272,7 @@ define(
                                     reject(ResUtils.newObjectError('Can not deserialize object'))
                                 } else {
                                     // TODO : необходимо вызвать сохраниение ресурса
-                                    ResVersions.saveResBody(_resource, list[element].id).
+                                    ResVersions.saveResBody(_resource, list[element]).
                                     then(function(){
                                         _resCount++;
                                         check();

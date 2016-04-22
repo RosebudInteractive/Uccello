@@ -13,6 +13,7 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
     function(Predicate, ResUtils, Crypto) {
 
         function ResVersion(resVersionObj) {
+            this.guid = resVersionObj.parseGuid(resVersionObj.pvt.guid).guid;
             this.id = resVersionObj.id();
             this.resVer = resVersionObj.resVer();
             this.hash = resVersionObj.hash();
@@ -123,7 +124,7 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
             }
         };
 
-        ResVersions.saveResBody = function(resourceInstance, resID, transactionId) {
+        ResVersions.saveResBody = function(resourceInstance, sysResVerObject, transactionId) {
             var that = _instance;
             return new Promise(function(resolve, reject){
                 if (!(resourceInstance['getModelDescription'] && resourceInstance['onSave'])) {
@@ -132,7 +133,7 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                 }
 
                 var _predicate = new Predicate(that.db, {});
-                _predicate.addCondition({field: "Id", op: "=", value: resID});
+                _predicate.addCondition({field: "Id", op: "=", value: sysResVerObject.id});
                 var _expression = {
                     model: resourceInstance.getModelDescription(),
                     predicate: that.db.serialize(_predicate)
@@ -152,16 +153,16 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
 
                     if (!_resourceObj){
                         var _fields = {
-                            //$sys: {guid: _resourceObj.guid()},
+                            $sys: {guid: sysResVerObject.verGuid},
                             fields:{
-                                ResVer: _resourceObj.resVer(),
-                                Hash: _resourceObj.hash(),
-                                ResBody: _resourceObj.resBody(),
-                                Description: _resourceObj.description(),
-                                ResId: _resourceObj.resId()
+                                ResVer: sysResVerObject.resVerNum,
+                                Hash: sysResVerObject.hash,
+                                ResBody: sysResVerObject.resBody,
+                                Description: sysResVerObject.verDescription,
+                                ResId: sysResVerObject.id
                             }
                         };
-                        _addResourceObject(_resourceObj, resourceInstance, _fields).then(resolve, reject);;
+                        _addResourceObject(_root, resourceInstance, _fields).then(resolve, reject);;
                     } else {
                         _editResourceObject(_resourceObj, resourceInstance).then(resolve, reject);
                     }

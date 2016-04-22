@@ -203,7 +203,8 @@ define([
                         _resource.hash = _resVer.hash;
                         _resource.resVerNum = _resVer.resVer;
                         _resource.verDescription = _resVer.description;
-                        _resource.verDescription = _resVer.description;
+                        _resource.resVerNum = _resVer.resVer;
+                        _resource.verGuid = _resVer.guid;
                     }
 
                     _resource.state = ResUtils.state.loaded;
