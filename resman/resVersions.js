@@ -133,7 +133,7 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                 }
 
                 var _predicate = new Predicate(that.db, {});
-                _predicate.addCondition({field: "Id", op: "=", value: sysResVerObject.id});
+                _predicate.addCondition({field: "Id", op: "=", value: sysResVerObject.resVerId});
                 var _expression = {
                     model: resourceInstance.getModelDescription(),
                     predicate: that.db.serialize(_predicate)
@@ -162,7 +162,7 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                                 ResId: sysResVerObject.id
                             }
                         };
-                        _addResourceObject(_root, resourceInstance, _fields).then(resolve, reject);;
+                        _addResourceObject(_root, resourceInstance, _fields).then(resolve, reject);
                     } else {
                         _editResourceObject(_resourceObj, resourceInstance).then(resolve, reject);
                     }
@@ -198,15 +198,15 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
             return new Promise(function(resolve, reject) {
                 root.edit(function(result){
                     if (result.result === 'OK') {
-                        root.newObject({fields: fields}, options, function (result) {
+                        root.newObject(fields, options, function (result) {
                             if (result.result == 'OK') {
                                 var _resourceObject = root.getDB().getObj(result.newObject);
                                 _saveObj(_resourceObject, resourceInstance).
                                 then(function(){
                                     root.save(options, function(result){
                                         if (result.result == 'OK') {
-                                            var _resVersion = new ResVersion(that.db.getObj(result.newObject));
-                                            resolve(_resVersion);
+                                            //var _resVersion = new ResVersion(that.db.getObj(result.newObject));
+                                            resolve();
                                         } else {
                                             reject(ResUtils.newDbError(result.message))
                                         }

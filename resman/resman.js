@@ -225,26 +225,21 @@ define(
                         } else {
                             that.directories.resTypes.types.forEach(function(resType) {
                                 that.getResByType(resType.resTypeGuid).
-                                then(function(resources) {
-                                        that._rebuildResourceList(resources).then(
-                                            function(){
-                                                _count++;
-                                                if (_count == _typeCount){
-                                                    resolve()
-                                                }
+                                then(function (resources) {
+                                    that._rebuildResourceList(resources).
+                                    then(
+                                        function () {
+                                            _count++;
+                                            if (_count == _typeCount) {
+                                                resolve()
                                             }
-                                        )
-                                    },
-                                    function(err) {
+                                        }
+                                    ).
+                                    catch(function (err) {
                                         reject(err)
-                                    }).
-                                //then(function(){
-                                //    _count++;
-                                //    if (_count == _typeCount){
-                                //        resolve()
-                                //    }
-                                //}).
-                                catch(function(err) {
+                                    })
+                                }).
+                                catch(function (err) {
                                     reject(err)
                                 })
                             })
@@ -277,12 +272,12 @@ define(
                                         _resCount++;
                                         check();
                                     }).
-                                    catch(reject);
+                                    catch(function(err){
+                                        reject(err)
+                                    });
                                 }
                             }
                         }
-
-
                     }
 
                     function check(){
