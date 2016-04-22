@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['fs', 'lodash', '../../../system/utils', '../../../predicate/predicate'],
-    function (Fs, _, Utils, Predicate) {
+    ['fs', 'lodash', '../../../system/utils', '../../../predicate/predicate', '../../../predicate/dsField'],
+    function (Fs, _, Utils, Predicate, DsField) {
 
         var TICK_CHAR = '`';
         var ALIAS_PREFIX = "t";
@@ -133,19 +133,25 @@ define(
                 };
             },
 
-            _setSqlAliases: function (request) {
+            _setSqlAliases: function (request, predicate_aliases) {
                 function set_sql_aliases(request, cnt) {
+                    var alias = predicate_aliases[request.alias];
                     if (!((cnt === 0) && _.isArray(request.childs) && (request.childs.length === 0))) {
                         request.sqlAlias = ALIAS_PREFIX + (++cnt);
+                        if (alias)
+                            alias.value(request.sqlAlias);
                         _.forEach(request.childs, function (ch_query) {
                             cnt = set_sql_aliases(ch_query, cnt);
                         });
                     }
                     else {
                         var descendants = request.model.getDescendants();
-                        if (descendants.length > 0)
+                        if ((descendants.length > 0) || alias) {
                             request.sqlAlias = ALIAS_PREFIX + (++cnt);
-                        };
+                            if (alias)
+                                alias.value(request.sqlAlias);
+                        }
+                    };
                     return cnt;
                 };
                 return set_sql_aliases(request, 0);
@@ -270,7 +276,8 @@ define(
                     _req_walk(request, null);
                 };
 
-                this._setSqlAliases(request);
+                var aliases = predicate ? predicate.getAliases() : {};
+                this._setSqlAliases(request, aliases);
 
                 req_walk(request, function (req, parent) {
 
@@ -543,6 +550,26 @@ define(
             _predicateToSql: function predicateToString(model, predicate, params, table_alias, use_class_fields) {
                 var result = "";
                 var cond_arr = [];
+                var self = this;
+
+                function convertArg(arg) {
+                    var result;
+                    if (arg instanceof DsField) {
+                        var val = arg.valValue();
+                        var alias = val.alias ? val.alias : table_alias;
+                        if (val.aliasName && (!val.alias))
+                            throw new Error("Predicate error: Alias \"" + val.aliasName + "\" value is undefined! Field: \"" + val.field + "\".");
+
+                        result = self._escapeField(val.field, alias, true);
+                    }
+                    else {
+                        var value = arg.valValue();
+                        var valType = arg.valType();
+                        if (value !== undefined)
+                            result = self._escapeValue(valType, value, params);
+                    };
+                    return result;
+                }
 
                 var conds = predicate.getCol("Conditions");
 
@@ -553,38 +580,42 @@ define(
                         res = this._predicateToSql(model, cond, params, table_alias);
                     else {
 
-                        var field = use_class_fields ? model.getClassField(cond.fieldName()) : model.getField(cond.fieldName());
-                        if (!field)
-                            throw new Error("Predicate error: Unknown field \"" + cond.fieldName() + "\" in model \"" + model.name() + "\".");
+                        var left_side = (cond.getCol("LeftValues").count() === 1) ? convertArg(cond.getCol("LeftValues").get(0)) : null;
+
+                        //var field = use_class_fields ? model.getClassField(cond.fieldName()) : model.getField(cond.fieldName());
+                        //if (!field)
+                        //    throw new Error("Predicate error: Unknown field \"" + cond.fieldName() + "\" in model \"" + model.name() + "\".");
 
                         var res_vals = "";
-                        var vals = cond.getCol("Values");
+                        var vals = cond.getCol("RightValues");
                         var val_arr = [];
 
                         for (var j = 0; j < vals.count() ; j++) {
-                            var value = vals.get(j).valValue();
+                            var value = convertArg(vals.get(j));
                             if (value !== undefined)
-                                val_arr.push(this._escapeValue(field, value, params));
+                                val_arr.push(value);
                         }
-                        if (val_arr.length > 0) {
+                        if (left_side && (val_arr.length > 0)) {
                             var arg_num = cond.allowedArgNumber();
                             var is_between = cond.op() === "between";
+                            var is_in = cond.op() === "in";
                             var sep = is_between ? " and " : ", ";
                             if (cond.isNegative())
                                 res += "(NOT ";
                             res += "(";
-                            res += this._escapeField(cond.fieldName(), table_alias, true) + " " + cond.op() + " ";
+                            res += left_side + " " + cond.op() + " ";
                             var num = arg_num.max === 0 ? val_arr.length : (arg_num.max > val_arr.length ? val_arr.length : arg_num.max);
                             if (arg_num.min > num)
                                 throw new Error("Invalid number of arguments: " + num + " for operation \"" + cond.op() + "\".");
-                            if ((num > 1) && (!is_between))
+                            var need_parenthesis = ((num > 1) && (!is_between)) || is_in;
+                            if (need_parenthesis)
                                 res += "(";
                             for (j = 0; j < num ; j++) {
                                 if (j > 0)
                                     res += sep;
                                 res += val_arr[j];
                             };
-                            if ((num > 1) && (!is_between))
+                            if (need_parenthesis)
                                 res += ")";
                             res += ")";
                             if (cond.isNegative())
@@ -616,9 +647,9 @@ define(
                 return result;
             },
 
-            _escapeValue: function (field, val, params) {
-                var value = field.fieldType().isComplex() ? field.fieldType().setValue(val, field.name(), null, true) : val;
-                return this.escapeValue(value, field.fieldType(), params);
+            _escapeValue: function (valType, val, params) {
+                var value = valType.isComplex() ? valType.setValue(val, "", null, true) : val;
+                return this.escapeValue(value, valType, params);
             },
 
             _escapeValues: function (model, vals, params) {

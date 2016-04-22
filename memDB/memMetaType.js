@@ -1513,7 +1513,7 @@ define(
                         try {
                             var tp, value;
                             if (_val.type) {
-                                tp = MetaTypes.createTypeObject(_val.type, this._refResolver, typedvalueTypeCodes, false);
+                                tp = MetaTypes.createTypeObject(_val.type, this._refResolver, typedvalueTypeCodes, true/*false*/);
                                 if (_val.value !== undefined)
                                     value = tp.setValue(_val.value, null, null, true);
                             }

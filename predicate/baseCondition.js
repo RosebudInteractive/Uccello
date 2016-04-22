@@ -10,13 +10,13 @@ define(
 
             className: "BaseCondition",
             classGuid: UCCELLO_CONFIG.classGuids.BaseCondition,
-            metaCols: [{ "cname": "Parameters", "ctype": "BaseParameter" }],
             metaFields: [{ fname: "IsNegative", ftype: "boolean" }],
 
             init: function (cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
                 if (params) {
                     this._paramsByName = {};
+                    this._aliasesByName = {};
                 };
             },
 
@@ -24,59 +24,65 @@ define(
                 return this._genericSetter("IsNegative", value);
             },
 
-            deleteParameter: function (name) {
-                var parameter = this._paramsByName[name];
-                if (parameter)
-                    this.getCol("Parameters")._del(parameter);
+            isParameterHolder: function () {
+                return false;
             },
 
-            addParameter: function (param) {
-                var param_holder = this.getParent() ? this.getParent : this;
+            isAliasHolder: function () {
+                return false;
+            },
 
-                if (!param.name)
-                    throw new Error("Parameter name is undefined.");
+            getParameterHolder: function () {
+                var result = this.isParameterHolder() ? this : null;
+                var parent = this;
+                while (parent = parent.getParent())
+                    result = parent.isParameterHolder() ? parent : result;
+                return result;
+            },
 
-                if (!param.ptype)
-                    throw new Error("Parameter type (field \"ptype\") is undefined.");
-
-                var parameter = param_holder._paramsByName[param.name];
-                var is_new = false;
-                if (!parameter) {
-                    is_new = true;
-                    var ini_params = {
-                        ini: {
-                            fields: {
-                                Name: param.name
-                            }
-                        },
-                        parent: param_holder,
-                        colName: "Parameters"
-                    };
-                    parameter = new Parameter(this.getDB(), ini_params);
-                };
-
-                var pvalue = { type: param.ptype };
-                if (param.value)
-                    pvalue.value = param.value;
-
-                try {
-
-                    parameter.value(pvalue);
-
-                } catch (err) {
-
-                    if (is_new)
-                        param_holder.getCol("Parameters")._del(parameter);
-                    throw err;
-                };
-
-                return this;
+            getAliasHolder: function () {
+                var result = this.isAliasHolder() ? this : null;
+                var parent = this;
+                while (parent = parent.getParent())
+                    result = parent.isAliasHolder() ? parent : result;
+                return result;
             },
 
             getParameter: function (name) {
-                var param_holder = this.getParent() ? this.getParent : this;
-                return param_holder._paramsByName[name];
+                var param_holder = this.getParameterHolder();
+                return param_holder && param_holder._paramsByName[name] ?
+                    param_holder._paramsByName[name].parameter : null;
             },
+
+            getParams: function () {
+                var result = {};
+                var param_holder = this.getParameterHolder();
+                if (param_holder) {
+                    var keys = Object.keys(param_holder._paramsByName);
+                    for (var i = 0; i < keys.length; i++) {
+                        result[keys[i]] = param_holder._paramsByName[keys[i]].parameter;
+                    };
+                }
+                return result;
+            },
+
+            getAlias: function (name) {
+                var alias_holder = this.getAliasHolder();
+                return alias_holder && alias_holder._aliasesByName[name] ?
+                    alias_holder._aliasesByName[name].alias : null;
+            },
+
+            getAliases: function () {
+                var result = {};
+                var alias_holder = this.getAliasHolder();
+                if (alias_holder) {
+                    var keys = Object.keys(alias_holder._aliasesByName);
+                    for (var i = 0; i < keys.length; i++) {
+                        result[keys[i]] = alias_holder._aliasesByName[keys[i]].alias;
+                    };
+                }
+                return result;
+            }
         });
 
         return BaseCondition;
