@@ -54,6 +54,10 @@ define(
                 return this._actTypeId === -1 ? this.typeId() : this._actTypeId;
             },
 
+            isVirtual: function () {
+                return false;
+            },
+
             init: function (cm, params) {
                 this._fieldsByName = {};
                 this._fields = [];
