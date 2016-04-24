@@ -67,7 +67,6 @@ define(
 
                 this._engine = engine;
                 this._options = options ? _.cloneDeep(options) : {};
-                this._providerId = PROVIDER_ID;
 
                 this._connectionMgr = this._createConnectionMgr();
                 this._queryGen = this._createQueryGen();

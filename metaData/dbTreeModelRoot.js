@@ -208,6 +208,10 @@ define(
                 return result;
             },
 
+            canEdit: function () {
+                return this.root() ? this.root().canEdit() : false;
+            },
+
             getFirstCursorVal: function () {
                 var res = null;
                 var root = this.root();

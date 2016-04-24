@@ -31,7 +31,8 @@ define(
                 System: 16,
                 RowVersion: 32,
                 TypeId: 64,
-                ParentRef: 128
+                ParentRef: 128,
+                Guid: 256
             },
 
             State: {

@@ -265,6 +265,14 @@ metaDataMgr.addModel("DataAddress", "16ec0891-1144-4577-f437-f98699464948", "Roo
     .addField("address", { type: "string", length: 255 })
     .addInternalField("CurrentProcess");
 
+metaDataMgr.addVirtualModel("VirtualAddress", "4e447618-1da8-42cc-b38e-792aedc40c55", "RootVAddress", "bf23f959-450e-4f5b-bd2b-770cfbf54d4f")
+    .setDefaultSQL("select id, parent, country, city, address from DataAddress")
+    .addField("id", { type: "int" })
+    .addField("parent", { type: "dataRef", model: "DataTstContact", refAction: "parentRestrict", allowNull: false })
+    .addField("country", { type: "string", length: 255 })
+    .addField("city", { type: "string", length: 255 })
+    .addField("address", { type: "string", length: 255 });
+
 metaDataMgr.addDataModel("DataModelTest").addDbTreeModel("DataCompanyTree", { resName: "DataTstCompany" })
     .addDataSource({
         model: { resName: "DataTstContact" },
