@@ -88,11 +88,12 @@ define(
                 return this._typeModel;
             },
 
-            models: function () {
+            models: function (exclude_virtual) {
                 var result = [];
                 var keys = Object.keys(this._modelsByName);
                 for (var i = 0; i < keys.length; i++)
-                    result.push(this._modelsByName[keys[i]]);
+                    if (!(exclude_virtual && this._modelsByName[keys[i]].isVirtual()))
+                        result.push(this._modelsByName[keys[i]]);
                 return result;
             },
 

@@ -768,7 +768,7 @@ define(
                                 return self._query.showForeignKeys().then(function (result) {
                                         var curr_promise = Promise.resolve();
                                         if (result.length > 0) {
-                                            var models = self._metaDataMgr.models();
+                                            var models = self._metaDataMgr.models(true);
                                             var fk_list = _.filter(result, function (fk) {
                                                 var tbl_name = fk.dst_table.toLowerCase();
                                                 var tbls = _.filter(models, function (model) {
@@ -870,7 +870,7 @@ define(
                                         return resolve(createRefs([]));
                                 }).then(function (result) {
                                     var fin_result = result;
-                                    return self._seqExec(self._metaDataMgr.models(), function (model) {
+                                    return self._seqExec(self._metaDataMgr.models(true), function (model) {
                                         return self._query.setTableRowId(model);
                                     }).then(function (result_rowid) {
                                         return fin_result.concat(result_rowid);

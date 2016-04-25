@@ -181,6 +181,17 @@ define(
                 return true;
             },
 
+            getParameter: function (name) {
+                return null;
+            },
+
+            getParams: function () {
+                return {};
+            },
+
+            setParameter: function (name) {
+            },
+
             _unSubscribeAll: function () {
                 this._handlers.forEach(function (elem) {
                     elem.obj.off(elem.handler);
