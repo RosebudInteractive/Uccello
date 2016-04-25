@@ -22,35 +22,35 @@ var _initializer = {
             masaccioPath: __dirname + '/../../../Masaccio/wfe/',
 
             dataman: {
-                connection: { //MSSQL
-                    host: "GALLO", // "SQL-SERVER"
-                    port: 1435, //instanceName: "SQL2008R2"
-                    username: "sa",
-                    password: "",
-                    database: "masaccio_test",
-                    provider: "mssql",
-                    connection_options: { instanceName: "SQLEXPRESS", requestTimeout: 0 },
+                //connection: { //MSSQL
+                    //host: "GALLO", // "SQL-SERVER"
+                    //port: 1435, //instanceName: "SQL2008R2"
+                    //username: "sa",
+                    //password: "",
+                    //database: "masaccio_test",
+                    //provider: "mssql",
+                    //connection_options: { instanceName: "SQLEXPRESS", requestTimeout: 0 },
+                    //provider_options: {},
+                    //pool: {
+                    //    max: 5,
+                    //    min: 0,
+                    //    idle: 10000
+                    //}
+                //},
+                connection: { //MySql
+                    host: "localhost",
+                    username: "root",
+                    password: "1q2w3e",
+                    database: "genetix_test",
+                    provider: "mysql",
+                    connection_options: { requestTimeout: 0 },
                     provider_options: {},
                     pool: {
                         max: 5,
                         min: 0,
                         idle: 10000
-                    }
+                    },
                 },
-                //connection: { //MySql
-                //    host: "localhost",
-                //    username: "sa",
-                //    password: "1q2w3e",
-                //    database: "genetix_test",
-                //    provider: "mysql",
-                //    connection_options: { requestTimeout: 0 },
-                //    provider_options: {},
-                //    pool: {
-                //        max: 5,
-                //        min: 0,
-                //        idle: 10000
-                //    },
-                //},
                 importData: {
                     autoimport: false,
                     dir: "../../ProtoOne/data/tables"
