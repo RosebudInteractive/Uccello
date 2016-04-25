@@ -98,7 +98,7 @@ metaDataMgr.addModel("SysBuild", "7099d28d-1d32-425a-b95f-5c8e793d9763", "RootSy
 
 metaDataMgr.addModel("SysBuildRes", "039c1cb9-0fdf-49e9-8bb9-e720aa9fe9d1", "RootSysBuildRes", "e610fea3-5b38-44b5-aeab-e2d5fa084759")
     .addField("BuildId", { type: "dataRef", model: "SysBuild", refAction: "parentCascade", allowNull: false })
-    .addField("ResVerId", { type: "dataRef", model: "SysResVer", refAction: "parentRestrict", allowNull: false });
+    .addField("ResVerId", { type: "dataRef", model: "SysResVer", refAction: "parentCascade", allowNull: false });
 
 metaDataMgr.addModel("SysResType", "44df18c7-646e-45ed-91ba-6b99acedf40b", "RootSysResType", "db56d8c4-d0e9-4cee-88b8-3038de6eee31")
     .addField("Code", { type: "string", length: 50, allowNull: false })
