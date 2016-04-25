@@ -232,7 +232,7 @@ define(
                 var model = new MetaModel(this.getDB(), params);
                 return model
                     .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey)
-                    .addField("Guid", { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.Hidden)
+                    .addField("Guid", { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.Hidden | Meta.Field.Guid)
                     .addField(Meta.ROW_VERSION_FNAME, { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion)
                     .addField("TypeGuid", { type: "guid", allowNull: false })
                     .addField("ModelName", { type: "string", length: 255, allowNull: false })
@@ -243,10 +243,14 @@ define(
             addModel: function (name, guid, rootName, rootGuid) {
                 return this._addEmptyModel(name, guid, rootName, rootGuid)
                     .addField("Id", { type: "int", allowNull: false }, Meta.Field.System | Meta.Field.PrimaryKey)
-                    .addField("Guid", { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.Hidden)
+                    .addField("Guid", { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.Hidden | Meta.Field.Guid)
                     .addField(Meta.ROW_VERSION_FNAME, { type: "guid", allowNull: false }, Meta.Field.System | Meta.Field.RowVersion)
                     .addField(Meta.TYPE_ID_FNAME, { type: "dataRef", model: Meta.TYPE_MODEL_NAME, refAction: "parentRestrict", allowNull: false },
                         Meta.Field.System | Meta.Field.TypeId);
+            },
+
+            addVirtualModel: function (name, guid, rootName, rootGuid) {
+                return this._addEmptyModel(name, guid, rootName, rootGuid, true);
             },
 
             deleteModel: function (model) {
@@ -283,6 +287,26 @@ define(
                 return this._modelsByRootGuid[guid];
             },
 
+            outgoingDbRefsLinks: function (model) {
+                var result = {};
+                var keys = [];
+                if (!model)
+                    keys = Object.keys(this._linksTo)
+                else {
+                    var key = model.toString();
+                    if (model instanceof MetaModel)
+                        key = model.name();
+                    if (this._linksTo[key])
+                        keys.push(key);
+                };
+                for (var i = 0; i < keys.length; i++) {
+                    var model = this.getModel(keys[i]);
+                    if (model && (!model.isVirtual()))
+                        result[keys[i]] = this._linksTo[keys[i]];
+                };
+                return result;
+            },
+
             outgoingLinks: function (model) {
                 var result = {};
                 var keys = [];
@@ -300,6 +324,21 @@ define(
                 return result;
             },
 
+            checkSchema: function () {
+                if (Object.keys(this._linksUnresolved).length > 0)
+                    throw new Error("Schema contains unresolved references.");
+                var refs = Object.keys(this._linksFrom);
+                for (var i = 0; i < refs.length; i++) {
+                    var model = this.getModel(refs[i]);
+                    if (!model)
+                        throw new Error("Referenced model \"" + refs[i] + "\" doesn't exist!")
+                    else
+                        if (model.isVirtual())
+                            throw new Error("References to virtual model \"" + refs[i] + "\" aren't allowed!")
+                };
+                this._rebuildClassFields();
+            },
+
             _addExistingModels: function () {
                 var db = this.getDB();
                 var root_count = db.countRoot();
@@ -312,7 +351,7 @@ define(
                 };
             },
 
-            _addEmptyModel: function (name, guid, rootName, rootGuid) {
+            _addEmptyModel: function (name, guid, rootName, rootGuid, is_virtual) {
                 if (name) {
                     var params = {
                         ini: {
@@ -321,12 +360,16 @@ define(
                                 DataObjectGuid: guid ? guid : this.getDB().getController().guid(),
                                 DataRootName: rootName ? rootName : "Root" + name,
                                 DataRootGuid: rootGuid ? rootGuid : this.getDB().getController().guid(),
-                                IsTypeModel: false,
-                                TypeId: ++this._maxModelId
+                                IsTypeModel: false
                             }
                         }
                     };
-                    var model = new MetaModel(this.getDB(), params);
+
+                    if (!is_virtual)
+                        params.ini.fields.TypeId = ++this._maxModelId;
+
+                    var constr = is_virtual ? MetaModelVirtual : MetaModel;
+                    var model = new constr(this.getDB(), params);
                     return model;
                 } else
                     throw new Error("Model name is undefined.");
@@ -421,10 +464,8 @@ define(
 
             _rebuildConstructors: function () {
                 if (!this._isConstrReady) {
-                    if (Object.keys(this._linksUnresolved).length > 0)
-                        throw new Error("Schema contains unresolved references.");
 
-                    this._rebuildClassFields();
+                    this.checkSchema();
                     this._constructors = { byName: {}, byGuid: {} };
 
                     var names = Object.keys(this._modelsByName);
@@ -514,6 +555,11 @@ define(
                 };
                 constr += "\t\t_typeIdVal: " + model.getActualTypeId();
 
+                if (model.isVirtual()) {
+                    constr += ",\n\n\t\tisReadOnly: function () {\n\t\t\treturn true;\n\t\t}";
+                    constr += ",\n\n\t\isPersistable: function () {\n\t\t\treturn false;\n\t\t}";
+                };
+
                 for (var i = 0; i < fields.length; i++) {
                     if ((fields[i].flags() & (Meta.Field.Internal | Meta.Field.Hidden)) === 0) {
                         var method_name = this._genGetterName(fields[i].get("ResElemName"));
@@ -548,6 +594,9 @@ define(
                     constr += "\t\t_typeIdField: \"" + model.getClassTypeIdField().name() + "\",\n";
                     constr += "\t\t_typeIdVal: " + model.getActualTypeId() + ",\n";
                 };
+
+                if (model.isVirtual())
+                    constr += "\n\t\tisReadOnly: function () {\n\t\t\treturn true;\n\t\t},\n";
 
                 constr += "\n" +
                     "\t\tinit: function(cm,params){\n" +

@@ -258,7 +258,7 @@ define(
                 var elems = data.collections.DataElements;
 
                 _.forEach(models, function (model) {
-                    if (!model.isTypeModel()) {
+                    if ((!model.isTypeModel()) && (!model.isVirtual())) {
                         var elem = {
                             $sys: {
                                 guid: this._controller.guid(),
@@ -648,8 +648,10 @@ define(
                         var create = [];
 
                         _.forEach(models, function (model) {
-                            operations.push({ model: model, isDrop: true });
-                            create.push({ model: model, isDrop: false });
+                            if (!model.isVirtual()) {
+                                operations.push({ model: model, isDrop: true });
+                                create.push({ model: model, isDrop: false });
+                            };
                         });
                         Array.prototype.push.apply(operations, create);
 
@@ -885,7 +887,7 @@ define(
                 if (this.hasConnection()) {
                     var self = this;
                     return new Promise(function (resolve, reject) {
-                        var links = self._metaDataMgr.outgoingLinks();
+                        var links = self._metaDataMgr.outgoingDbRefsLinks();
                         resolve(self._seqExec(links, function (model, key) {
                             return self._seqExec(model, function (ref, key) {
                                 return self._query.createLink(ref);
@@ -1015,8 +1017,15 @@ define(
                 function data_walk(data, request) {
 
                     function _data_walk(data, request, parent, parent_obj, curr_path) {
-                        var guid_fname = request.sqlAlias ? request.sqlAlias + "_Guid" : "Guid";
-                        var guid = data[guid_fname];
+                        var guid;
+                        var guidField = request.model.getClassGuidField();
+                        if (guidField) {
+                            var guid_fname = request.sqlAlias ? request.sqlAlias + "_" + guidField.name() : guidField.name();
+                            guid = data[guid_fname];
+                        }
+                        else
+                            if (request.model.isVirtual())
+                                guid = controller.guid();
                         if (guid) {
                             var curr_obj = objects[guid];
                             if (!curr_obj) {
@@ -1032,11 +1041,11 @@ define(
 
                                 _.forEach(request.model.getClassFields(), function (class_field) {
                                     var fld_name = class_field.field.name();
-                                    if (fld_name !== "Guid") {
+                                    if (class_field.field !== guidField) {
                                         var data_fld_name = request.sqlAlias ? request.sqlAlias + "_" + fld_name : fld_name;
                                         if (data[data_fld_name] !== undefined)
                                             data_obj.fields[fld_name] = data[data_fld_name];
-                                    };
+                                    }
                                 });
 
                                 if (request.childs_info) {

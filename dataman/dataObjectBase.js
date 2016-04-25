@@ -30,20 +30,22 @@ define(
                 UccelloClass.super.apply(this, [cm, params]);
                 if (params) {
                     if (!this._editSet())
-                        this._editSet("");
+                        this.set("_EditSet", "", false, true);
                     if (!this._childEdCnt())
-                        this._childEdCnt(0);
+                        this.set("_ChildEdCnt", 0, false, true);
                     if (!this._currState())
-                        this._currState(Meta.State.Browse);
+                        this.set("_CurrState", Meta.State.Browse, false, true);
                     if (!this._prevState())
-                        this._prevState(Meta.State.Browse);
+                        this.set("_PrevState", Meta.State.Browse, false, true);
                 };
             },
 
             set: function (field, value, withCheckVal, isApplyLog) {
                 if (typeof (field) !== "string")
                     throw new Error("DataObject::set: Invalid type of field name: \"" + typeof (field) + "\".");
-                if ((!isApplyLog) && (value !== undefined) && (this._persFields[field] !== undefined)) {
+                if ((!isApplyLog) && (value !== undefined) && (this.isReadOnly() || (this._persFields[field] !== undefined))) {
+                    if (this.isReadOnly())
+                        throw new Error("DataObject::set: Data Object \"" + this.modelName + "\"is READ ONLY.");
                     var state = this._currState();
                     if ((state !== Meta.State.Edit) && (state !== Meta.State.Insert)) {
                         throw new Error("DataObject::set: Can't modify data-object in state \"" + Meta.stateToString(state) + "\".");
@@ -124,20 +126,50 @@ define(
                 return result;
             },
 
-            edit: function (cb) {
-                var callback = arguments.length > 0 ? arguments[arguments.length - 1] : null;
-                if (typeof (callback) !== "function")
-                    throw new Error("DataObjectBase::edit Invalid callback type \"" + typeof (callback) + "\".");
+            isReadOnly: function () {
+                return false;
+            },
 
-                var args = [];
-                var local_name = "_$local_edit";
-                if (!this.isMaster()) {
-                    for (var i = 0; i < (arguments.length - 1) ; i++)
-                        args[i] = arguments[i];
-                    this.remoteCall(local_name, args, callback);
-                }
-                else
-                    this[local_name].apply(this, arguments);
+            canEdit: function () {
+                var result = this.isReadOnly();
+                if (!result)
+                    this._iterateChilds(function (data_obj) {
+                        result = result || data_obj.isReadOnly();
+                    });
+                return (!result);
+            },
+
+            edit: function (cb) {
+
+                try {
+                    this._iterateChilds(function (data_obj) {
+                        if (data_obj.isReadOnly())
+                            throw new Error("Data Object \"" + data_obj.modelName + "\" is READ ONLY!");
+                    });
+
+                    var callback = arguments.length > 0 ? arguments[arguments.length - 1] : null;
+                    if (typeof (callback) !== "function")
+                        throw new Error("DataObjectBase::edit Invalid callback type \"" + typeof (callback) + "\".");
+
+                    var args = [];
+                    var local_name = "_$local_edit";
+                    if (!this.isMaster()) {
+                        for (var i = 0; i < (arguments.length - 1) ; i++)
+                            args[i] = arguments[i];
+                        this.remoteCall(local_name, args, callback);
+                    }
+                    else
+                        this[local_name].apply(this, arguments);
+                } catch (err) {
+                    if (cb) {
+                        setTimeout(function () {
+                            cb({ result: "ERROR", message: err.message });
+                        }, 0);
+                    }
+                    else
+                        throw err;
+                };
+
             },
 
             save: function (options, cb) {

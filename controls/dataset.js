@@ -203,6 +203,13 @@ define(
                 return result;
             },
 
+            canEdit: function () {
+                result = false;
+                if (this.objectTree())
+                    result = this.objectTree().canEdit();
+                return result;
+            },
+
             cursor: function (value) {
                 var oldVal = this._genericSetter("Cursor");
                 var newVal = this._genericSetter("Cursor", value);

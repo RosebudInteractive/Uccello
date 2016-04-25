@@ -177,6 +177,10 @@ define(
             makeRequest: function () {
             },
 
+            canEdit: function () {
+                return true;
+            },
+
             _unSubscribeAll: function () {
                 this._handlers.forEach(function (elem) {
                     elem.obj.off(elem.handler);

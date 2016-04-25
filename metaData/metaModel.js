@@ -63,6 +63,7 @@ define(
                 this._fields = [];
                 this._primaryKey = null;
                 this._rowVersion = null;
+                this._guidField = null;
                 this._typeId = null;
                 this._orderChangCounter = 0;
                 this._refs = {};
@@ -131,6 +132,10 @@ define(
                 return res;
             },
 
+            getGuidField: function () {
+                return this._guidField;
+            },
+
             getRowVersionField: function () {
                 return this._rowVersion;
             },
@@ -144,6 +149,15 @@ define(
                 if (this._parentRef) {
                     this._metaDataMgr._rebuildClassFields();
                     res = this._ancestors[0].getTypeIdField();
+                };
+                return res;
+            },
+
+            getClassGuidField: function () {
+                var res = this._guidField;
+                if (this._parentRef) {
+                    this._metaDataMgr._rebuildClassFields();
+                    res = this._ancestors[0].getGuidField();
                 };
                 return res;
             },
@@ -359,6 +373,11 @@ define(
 
                     if ((flags & Meta.Field.PrimaryKey) !== 0) {
 
+                        if (self.isVirtual()) {
+                            fieldObj.set("Flags", oldFlags);
+                            throw new Error("Virtual model can't have Primary Key.");
+                        };
+
                         if (self._primaryKey && (self._primaryKey !== fieldObj)) {
 
                             fieldObj.set("Flags", oldFlags);
@@ -375,6 +394,11 @@ define(
 
                     if ((flags & Meta.Field.RowVersion) !== 0) {
 
+                        if (self.isVirtual()) {
+                            fieldObj.set("Flags", oldFlags);
+                            throw new Error("Virtual model can't have Row Version field.");
+                        };
+
                         if (self._rowVersion && (self._rowVersion !== fieldObj)) {
 
                             fieldObj.set("Flags", oldFlags);
@@ -389,7 +413,33 @@ define(
                         };
                     };
 
+                    if ((flags & Meta.Field.Guid) !== 0) {
+
+                        if (self.isVirtual()) {
+                            fieldObj.set("Flags", oldFlags);
+                            throw new Error("Virtual model can't have Guid field.");
+                        };
+
+                        if (self._guidField && (self._guidField !== fieldObj)) {
+
+                            fieldObj.set("Flags", oldFlags);
+                            throw new Error("Guid field \"" + fieldName + "\" is already defined as \"" + self._guidField.name() + "\".");
+                        };
+                        self._guidField = fieldObj;
+                        var fieldType = fieldObj.fieldType();
+                        if (fieldType.allowNull()) {
+                            var newType = fieldType.serialize();
+                            newType.allowNull = false;
+                            fieldObj.fieldType(newType);
+                        };
+                    };
+
                     if ((flags & Meta.Field.TypeId) !== 0) {
+
+                        if (self.isVirtual()) {
+                            fieldObj.set("Flags", oldFlags);
+                            throw new Error("Virtual model can't have TypeId field.");
+                        };
 
                         if (self._typeId && (self._typeId !== fieldObj)) {
 
@@ -411,6 +461,11 @@ define(
                     };
 
                     if ((flags & Meta.Field.ParentRef) !== 0) {
+
+                        if (self.isVirtual()) {
+                            fieldObj.set("Flags", oldFlags);
+                            throw new Error("Virtual model can't have ParentRef field.");
+                        };
 
                         if (self._parentRef && (self._parentRef !== fieldObj)) {
 
@@ -589,6 +644,10 @@ define(
                     throw new Error("Invalid field \"" + name + "\" order: " + order + " .");
                 };
                 if ((flags & Meta.Field.PrimaryKey) !== 0) {
+                    if (this.isVirtual()) {
+                        this._fieldsCol._del(field);
+                        throw new Error("Virtual model can't have Primary key field.");
+                    };
                     if (this._primaryKey && (this._primaryKey !== field)) {
                         this._fieldsCol._del(field);
                         throw new Error("Primary key \"" + name + "\" is already defined as \"" + this._primaryKey.name() + "\".");
@@ -596,13 +655,32 @@ define(
                     this._primaryKey = field;
                 };
                 if ((flags & Meta.Field.RowVersion) !== 0) {
+                    if (this.isVirtual()) {
+                        this._fieldsCol._del(field);
+                        throw new Error("Virtual model can't have Row version field.");
+                    };
                     if (this._rowVersion && (this._rowVersion !== field)) {
                         this._fieldsCol._del(field);
                         throw new Error("Row version field \"" + name + "\" is already defined as \"" + this._rowVersion.name() + "\".");
                     };
                     this._rowVersion = field;
                 };
+                if ((flags & Meta.Field.Guid) !== 0) {
+                    if (this.isVirtual()) {
+                        this._fieldsCol._del(field);
+                        throw new Error("Virtual model can't have Guid field.");
+                    };
+                    if (this._guidField && (this._guidField !== field)) {
+                        this._fieldsCol._del(field);
+                        throw new Error("Guid field \"" + name + "\" is already defined as \"" + this._guidField.name() + "\".");
+                    };
+                    this._guidField = field;
+                };
                 if ((flags & Meta.Field.TypeId) !== 0) {
+                    if (this.isVirtual()) {
+                        this._fieldsCol._del(field);
+                        throw new Error("Virtual model can't have TypeId field.");
+                    };
                     if (this._typeId && (this._typeId !== field)) {
                         this._fieldsCol._del(field);
                         throw new Error("TypeId field \"" + name + "\" is already defined as \"" + this._typeId.name() + "\".");
@@ -610,6 +688,10 @@ define(
                     this._typeId = field;
                 };
                 if ((flags & Meta.Field.ParentRef) !== 0) {
+                    if (this.isVirtual()) {
+                        this._fieldsCol._del(field);
+                        throw new Error("Virtual model can't have ParentRef field.");
+                    };
                     if (this._parentRef && (this._parentRef !== field)) {
                         this._fieldsCol._del(field);
                         throw new Error("ParentRef field \"" + name + "\" is already defined as \"" + this._parentRef.name() + "\".");
@@ -682,6 +764,9 @@ define(
 
                     if (this._rowVersion === field)
                         this._rowVersion = null;
+
+                    if (this._guidField === field)
+                        this._guidField = null;
 
                     if (this._typeId === field)
                         this._typeId = null;

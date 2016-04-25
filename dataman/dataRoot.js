@@ -67,23 +67,45 @@ define(
 
             newObject: function (flds, options, cb) {
                 var result = null;
+                try {
+                    if(this.isReadOnly())
+                        throw new Error("Dataset \"" + data_obj.modelName + "\" is READ ONLY!");
 
-                var args = [];
-                Array.prototype.push.apply(args, arguments);
-                args.unshift("newObject");
-                result = this._methodCall.apply(this, args);
-
+                    var args = [];
+                    Array.prototype.push.apply(args, arguments);
+                    args.unshift("newObject");
+                    result = this._methodCall.apply(this, args);
+                } catch (err) {
+                    if (cb) {
+                        setTimeout(function () {
+                            cb({ result: "ERROR", message: err.message });
+                        }, 0);
+                    }
+                    else
+                        throw err;
+                };
                 return result;
             },
 
             deleteObject: function (obj_guid, options, cb) {
                 var result = null;
+                try {
+                    if (this.isReadOnly())
+                        throw new Error("Dataset \"" + data_obj.modelName + "\" is READ ONLY!");
 
-                var args = [];
-                Array.prototype.push.apply(args, arguments);
-                args.unshift("deleteObject");
-                result = this._methodCall.apply(this, args);
-
+                    var args = [];
+                    Array.prototype.push.apply(args, arguments);
+                    args.unshift("deleteObject");
+                    result = this._methodCall.apply(this, args);
+                } catch (err) {
+                    if (cb) {
+                        setTimeout(function () {
+                            cb({ result: "ERROR", message: err.message });
+                        }, 0);
+                    }
+                    else
+                        throw err;
+                };
                 return result;
             },
 
