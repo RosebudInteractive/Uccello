@@ -334,8 +334,9 @@ define(
 					var found = false, title = result.target.resName();
 					var col = this.getCol('Resources');
 					for(var i= 0, len=col.count(); i<len; i++) {
-						if (title == col.get(i).resName())
-							found = true;
+						//if (title == col.get(i).resName())
+						if (title == col.get(i).title())
+						        found = true;
 					}
 					var id = ++this.pvt.vcrCounter;
 					if (found || !title) title += id;
