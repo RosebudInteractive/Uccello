@@ -205,6 +205,8 @@ define([
                         _resource.verDescription = _resVer.description;
                         _resource.resVerNum = _resVer.resVer;
                         _resource.verGuid = _resVer.guid;
+                        _resource.resVerId = _resVer.id;
+                        _resource.resVerInstance = _resVer.instanceGuid;
                     }
 
                     _resource.state = ResUtils.state.loaded;

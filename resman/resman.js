@@ -225,26 +225,21 @@ define(
                         } else {
                             that.directories.resTypes.types.forEach(function(resType) {
                                 that.getResByType(resType.resTypeGuid).
-                                then(function(resources) {
-                                        that._rebuildResourceList(resources).then(
-                                            function(){
-                                                _count++;
-                                                if (_count == _typeCount){
-                                                    resolve()
-                                                }
+                                then(function (resources) {
+                                    that._rebuildResourceList(resources).
+                                    then(
+                                        function () {
+                                            _count++;
+                                            if (_count == _typeCount) {
+                                                resolve()
                                             }
-                                        )
-                                    },
-                                    function(err) {
+                                        }
+                                    ).
+                                    catch(function (err) {
                                         reject(err)
-                                    }).
-                                //then(function(){
-                                //    _count++;
-                                //    if (_count == _typeCount){
-                                //        resolve()
-                                //    }
-                                //}).
-                                catch(function(err) {
+                                    })
+                                }).
+                                catch(function (err) {
                                     reject(err)
                                 })
                             })
@@ -264,7 +259,8 @@ define(
                     for (var element in list){
                         if (list.hasOwnProperty(element)) {
                             if (!(list[element] && list[element].resBody)) {
-                                _resCount++
+                                _resCount++;
+                                check();
                             } else {
                                 var _body = JSON.parse(list[element].resBody);
                                 var _resource = that.db.deserialize(_body, {}, that.createComponentFunction);
@@ -273,16 +269,24 @@ define(
                                 } else {
                                     // TODO : необходимо вызвать сохраниение ресурса
                                     ResVersions.saveResBody(_resource, list[element]).
-                                    then(function(){
-                                        _resCount++;
-                                        check();
+                                    then(function(resVersion) {
+                                        that.builds.loadCurrentBuild(function (build) {
+                                            build.addResVersion(resVersion.id).
+                                            then(function () {
+                                                _resCount++;
+                                                check();
+                                            }).
+                                            catch(function(err) {
+                                                reject(err)
+                                            })
+                                        })
                                     }).
-                                    catch(reject);
+                                    catch(function(err){
+                                        reject(err)
+                                    });
                                 }
                             }
                         }
-
-
                     }
 
                     function check(){

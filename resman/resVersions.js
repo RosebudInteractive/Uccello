@@ -13,6 +13,7 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
     function(Predicate, ResUtils, Crypto) {
 
         function ResVersion(resVersionObj) {
+            this.instanceGuid = resVersionObj.pvt.guid;
             this.guid = resVersionObj.parseGuid(resVersionObj.pvt.guid).guid;
             this.id = resVersionObj.id();
             this.resVer = resVersionObj.resVer();
@@ -128,12 +129,12 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
             var that = _instance;
             return new Promise(function(resolve, reject){
                 if (!(resourceInstance['getModelDescription'] && resourceInstance['onSave'])) {
-                    //reject(ResUtils.newObjectError('Resource can not be saved'))
-                    resolve()
+                    reject(ResUtils.newObjectError('Resource can not be saved'))
+                    //resolve()
                 }
 
                 var _predicate = new Predicate(that.db, {});
-                _predicate.addCondition({field: "Id", op: "=", value: sysResVerObject.id});
+                _predicate.addCondition({field: "Id", op: "=", value: sysResVerObject.resVerId});
                 var _expression = {
                     model: resourceInstance.getModelDescription(),
                     predicate: that.db.serialize(_predicate)
@@ -151,10 +152,10 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                     var _root = that.db.getObj(_objectGuid);
                     var _resourceObj = _root.getCol("DataElements").get(0);
 
-                    if (!_resourceObj){
+                    if (!_resourceObj) {
                         var _fields = {
                             $sys: {guid: sysResVerObject.verGuid},
-                            fields:{
+                            fields: {
                                 ResVer: sysResVerObject.resVerNum,
                                 Hash: sysResVerObject.hash,
                                 ResBody: sysResVerObject.resBody,
@@ -162,7 +163,13 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                                 ResId: sysResVerObject.id
                             }
                         };
-                        _addResourceObject(_root, resourceInstance, _fields).then(resolve, reject);;
+
+                        _deleteInstance(sysResVerObject).
+                        then(function () {_addResourceObject(_root, resourceInstance, _fields).then(resolve, reject)}
+                        ).
+                        catch(function(err) {
+                            reject(err)
+                        });
                     } else {
                         _editResourceObject(_resourceObj, resourceInstance).then(resolve, reject);
                     }
@@ -172,6 +179,36 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
 
         };
 
+        function _deleteInstance(sysResVerObject){
+            var that = _instance;
+
+            return new Promise(function(resolve, reject){
+
+                var _predicate = new Predicate(that.db, {});
+                _predicate.addCondition({field: "Guid", op: "=", value: sysResVerObject.verGuid});
+                var _expression = {model: {name: "SysResVer"}, predicate: that.db.serialize(_predicate)};
+
+                that.db.getRoots([that.queryGuid], {rtype: "data", expr: _expression}, function(guids) {
+                    var _objectGuid = guids.guids[0];
+                    that.queryGuid = _objectGuid;
+
+                    var _root = that.db.getObj(_objectGuid);
+                    if (_root.getCol('DataElements').count() > 0) {
+                        var _instance = _root.getCol('DataElements').get(0).pvt.guid;
+                        _root.deleteObject(_instance, {}, function (result) {
+                            if (result.result == 'OK') {
+                                resolve()
+                            } else {
+                                reject(new Error(result.message))
+                            }
+                        })
+                    } else {
+                        resolve()
+                    }
+                })
+            })
+        }
+
         function _editResourceObject(resourceObj, resourceInstance) {
             return new Promise(function (resolve, reject) {
                 resourceObj.edit(function (result) {
@@ -180,7 +217,8 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                         then(function(){
                             resourceObj.save({}, function (result) {
                                 if (result.result === 'OK') {
-                                    resolve()
+                                    var _resVersion = new ResVersion(resourceObj);
+                                    resolve(_resVersion);
                                 } else {
                                     reject(ResUtils.newDbError(result.message))
                                 }
@@ -198,14 +236,14 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
             return new Promise(function(resolve, reject) {
                 root.edit(function(result){
                     if (result.result === 'OK') {
-                        root.newObject({fields: fields}, options, function (result) {
+                        root.newObject(fields, options, function (result) {
                             if (result.result == 'OK') {
                                 var _resourceObject = root.getDB().getObj(result.newObject);
                                 _saveObj(_resourceObject, resourceInstance).
                                 then(function(){
                                     root.save(options, function(result){
                                         if (result.result == 'OK') {
-                                            var _resVersion = new ResVersion(that.db.getObj(result.newObject));
+                                            var _resVersion = new ResVersion(_resourceObject);
                                             resolve(_resVersion);
                                         } else {
                                             reject(ResUtils.newDbError(result.message))

@@ -48,26 +48,45 @@ define([
 
                 function promiseBody(resolve, reject) {
                     var _predicate = new Predicate(that.db, {});
-                    _predicate.addCondition({field: "Id", op: "=", value: 0});
+                    _predicate.addCondition({field: "ResVerId", op: "=", value: resVersionId});
+                    _predicate.addCondition({field: "BuildId", op: "=", value: that.id});
                     var _expression = { model: {name: "SysBuildRes"}, predicate: that.db.serialize(_predicate) };
 
                     that.db.getRoots([that.queryBuildResGuid], {rtype: "data", expr: _expression}, function (guids) {
                         var _objectGuid = guids.guids[0];
                         that.queryBuildResGuid = _objectGuid;
 
+                        if (that.db.getObj(_objectGuid).getCol('DataElements').count() > 0) {
+                            resolve();
+                            return
+                        }
+
                         var _options = {};
                         if (transactionId) {
                             _options.transactionId = transactionId;
                         }
 
-                        that.db.getObj(_objectGuid).newObject({
-                            fields: {
-                                BuildId: that.id,
-                                ResVerId: resVersionId
-                            }
-                        }, _options, function (result) {
-                            if (result.result == 'OK') {
-                                resolve()
+                        var _root = that.db.getObj(_objectGuid);
+                        _root.edit(function(result){
+                            if (result.result === 'OK') {
+                                _root.newObject({
+                                    fields: {
+                                        BuildId: that.id,
+                                        ResVerId: resVersionId
+                                    }
+                                }, _options, function (result) {
+                                    if (result.result == 'OK') {
+                                        _root.save(_options, function (result) {
+                                            if (result.result == 'OK') {
+                                                resolve()
+                                            } else {
+                                                reject(ResUtils.newDbError(result.message));
+                                            }
+                                        })
+                                    } else {
+                                        reject(ResUtils.newDbError(result.message));
+                                    }
+                                })
                             } else {
                                 reject(ResUtils.newDbError(result.message));
                             }
