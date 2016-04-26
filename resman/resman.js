@@ -259,7 +259,8 @@ define(
                     for (var element in list){
                         if (list.hasOwnProperty(element)) {
                             if (!(list[element] && list[element].resBody)) {
-                                _resCount++
+                                _resCount++;
+                                check();
                             } else {
                                 var _body = JSON.parse(list[element].resBody);
                                 var _resource = that.db.deserialize(_body, {}, that.createComponentFunction);
@@ -268,9 +269,17 @@ define(
                                 } else {
                                     // TODO : необходимо вызвать сохраниение ресурса
                                     ResVersions.saveResBody(_resource, list[element]).
-                                    then(function(){
-                                        _resCount++;
-                                        check();
+                                    then(function(resVersion) {
+                                        that.builds.loadCurrentBuild(function (build) {
+                                            build.addResVersion(resVersion.id).
+                                            then(function () {
+                                                _resCount++;
+                                                check();
+                                            }).
+                                            catch(function(err) {
+                                                reject(err)
+                                            })
+                                        })
                                     }).
                                     catch(function(err){
                                         reject(err)
