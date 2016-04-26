@@ -131,7 +131,7 @@ define(
             insert: function (model, values, options) {
                 var self = this;
                 return new Promise(function (resolve, reject) {
-                    vals = _.cloneDeep(values);
+                    var vals = _.cloneDeep(values);
                     var childLevel = model.getChildLevel();
                     var pk = model.getClassPrimaryKey();
                     if (!pk) {

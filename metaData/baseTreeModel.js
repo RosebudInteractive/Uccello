@@ -189,7 +189,7 @@ define(
                 return {};
             },
 
-            setParameter: function (name) {
+            setParameter: function (name, value) {
             },
 
             _unSubscribeAll: function () {
