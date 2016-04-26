@@ -65,7 +65,7 @@ define(
 
 				new ProcessDispatcher({ proxyWfe: this.pvt.proxyWfe });
 
-				this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder, rpc);
+				this.pvt.dataman = new Dataman(this.getRouter(), that.getUserMgr().getController(), this.pvt.constructHolder, rpc, this.pvt.resman);
                 this.pvt.commServer = options.commServer;
 
                 this.getRouter().add('getGuids', function(data, done) {

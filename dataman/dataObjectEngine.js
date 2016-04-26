@@ -32,7 +32,7 @@ define(
 
         var DataObjectEngine = UccelloClass.extend({
 
-            init: function (dataman, router, controller, construct_holder, rpc, options) {
+            init: function (dataman, router, controller, construct_holder, rpc, options, resman) {
                 var opts = _.cloneDeep(options || {});
 
                 this._router = router;
@@ -42,6 +42,7 @@ define(
                 this._schemas = {};
                 this._predicates_idle = [];
                 this._predicates_busy = {};
+                this._resMan = resman ? resman : null;
                 this.Meta = Meta;
 
                 var self = this;
@@ -864,7 +865,7 @@ define(
                                             });
                                         }).then(function (result) {
                                             return createRefs(result);
-                                        }));
+                                         }));
                                     }
                                     else
                                         return resolve(createRefs([]));
@@ -873,8 +874,13 @@ define(
                                     return self._seqExec(self._metaDataMgr.models(true), function (model) {
                                         return self._query.setTableRowId(model);
                                     }).then(function (result_rowid) {
-                                        return fin_result.concat(result_rowid);
-                                    });;
+                                        var promise = Promise.resolve();
+                                        if (self._resMan)
+                                            promise = self._resMan.rebuildResources();
+                                        return promise.then(function () {
+                                            return fin_result.concat(result_rowid);
+                                        })
+                                    });
                                 });
                             });
                     });

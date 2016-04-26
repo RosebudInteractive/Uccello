@@ -15,7 +15,7 @@ define(
 
         var Dataman = UccelloClass.extend({
 
-		    init: function (router, controller, construct_holder, rpc) {
+		    init: function (router, controller, construct_holder, rpc, resman) {
 				this.pvt = {};
 				this.pvt.router = router;
 				this.pvt.controller = controller;
@@ -27,7 +27,7 @@ define(
 				var that = this;
 
 				this.pvt.dataObjectEngine = new DataObjectEngine(this, router, controller,
-                    construct_holder, rpc, UCCELLO_CONFIG.dataman);
+                    construct_holder, rpc, UCCELLO_CONFIG.dataman, resman);
 
 				this.pvt.dataSource = 'local'; // 'local' or 'mysql'
                 router.add('query', function(){ return that.query.apply(that, arguments); });
@@ -46,6 +46,10 @@ define(
                     });
                 }
 			},
+
+		    _getDataObjectEngine: function () {
+		        return this.pvt.dataObjectEngine;
+		    },
 
 		    getDB: function () {
 		        return this.pvt.dataBase;
