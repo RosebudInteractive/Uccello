@@ -175,7 +175,7 @@ define(
 		        this._deleteResFromNameMap(obj);
 
 		        for (var i = 0; i < this.pvt.robjs.length; i++) {
-		            if (this.pvt.robjs === obj) {
+		            if (this.pvt.robjs.obj === obj) {
 		                this.pvt.robjs.splice(i, 1);
 		                break;
 		            }
