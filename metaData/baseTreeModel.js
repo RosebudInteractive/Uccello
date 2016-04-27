@@ -95,7 +95,6 @@ define(
                 this._dataset = null;
                 this._masterDataset = null;
                 this._handlers = [];
-                this._predicate = null;
 
                 UccelloClass.super.apply(this, [cm, params]);
 

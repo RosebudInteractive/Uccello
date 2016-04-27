@@ -1,3 +1,5 @@
+'use strict';
+
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
@@ -201,6 +203,7 @@ define(
                 var result = this.newPredicate();
                 var so = _.cloneDeep(serialized_obj);
                 so.$sys.guid = result.getGuid();
+                delete so["ver"]; // Удаляем версию рута, она здесь неактуальна
                 result = this._dataBase.deserialize(so, {}, this._dataBase.getDefaultCompCallback());
                 this._predicates_busy[result.getGuid()] = result;
                 return result;
@@ -530,77 +533,76 @@ define(
                 var res_promise;
                 var self = this;
 
+                function batchFunc(transaction) {
+                    return self._seqExec(batch, function (val) {
+
+                        var promise = Promise.resolve();
+                        var model = self._metaDataMgr.getModel(val.model);
+                        if (!model)
+                            throw new Error("execBatch::Model \"" + val.model + "\" doesn't exist.");
+
+                        switch (val.op) {
+
+                            case "insert":
+
+                                promise = self._query.insert(model, val.data.fields, { transaction: transaction });
+                                break;
+
+                            case "update":
+
+                                if ((!val.data) || (!val.data.key))
+                                    throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
+
+                                var key = model.getPrimaryKey();
+                                if (!key)
+                                    throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
+
+                                if (val.data.rowVersion) {
+                                    var rwField = model.getRowVersionField();
+                                    if (!rwField)
+                                        throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
+                                };
+
+                                promise = self._query.update(model, val.data.fields, null,
+                                    {
+                                        transaction: transaction,
+                                        updOptions: {
+                                            key: val.data.key,
+                                            rowVersion: val.data.rowVersion
+                                        }
+                                    });
+                                break;
+
+                            case "delete":
+
+                                if ((!val.data) || (!val.data.key))
+                                    throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
+
+                                var key = model.getPrimaryKey();
+                                if (!key)
+                                    throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
+
+                                if (val.data.rowVersion) {
+                                    var rwField = model.getRowVersionField();
+                                    if (!rwField)
+                                        throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
+                                };
+
+                                promise = self._query.delete(model, null, {
+                                    transaction: transaction,
+                                    delOptions: {
+                                        key: val.data.key,
+                                        rowVersion: val.data.rowVersion
+                                    }
+                                });
+                                break;
+                        };
+                        return promise;
+                    });
+                };
+
                 try {
                     if (this.hasConnection() && (batch.length > 0)) {
-
-                        function batchFunc(transaction) {
-                            return self._seqExec(batch, function (val) {
-
-                                var promise = Promise.resolve();
-                                var model = self._metaDataMgr.getModel(val.model);
-                                if (!model)
-                                    throw new Error("execBatch::Model \"" + val.model + "\" doesn't exist.");
-
-                                switch (val.op) {
-
-                                    case "insert":
-
-                                        promise = self._query.insert(model, val.data.fields, { transaction: transaction });
-                                        break;
-
-                                    case "update":
-
-                                        if ((!val.data) || (!val.data.key))
-                                            throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
-
-                                        var key = model.getPrimaryKey();
-                                        if (!key)
-                                            throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
-
-                                        if (val.data.rowVersion) {
-                                            var rwField = model.getRowVersionField();
-                                            if (!rwField)
-                                                throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
-                                        };
-
-                                        promise = self._query.update(model, val.data.fields, null,
-                                            {
-                                                transaction: transaction,
-                                                updOptions: {
-                                                    key: val.data.key,
-                                                    rowVersion: val.data.rowVersion
-                                                }
-                                            });
-                                        break;
-
-                                    case "delete":
-
-                                        if ((!val.data) || (!val.data.key))
-                                            throw new Error("execBatch::Key for operation \"" + val.op + "\" doesn't exist.");
-
-                                        var key = model.getPrimaryKey();
-                                        if (!key)
-                                            throw new Error("execBatch::Model \"" + val.model + "\" hasn't PRIMARY KEY.");
-
-                                        if (val.data.rowVersion) {
-                                            var rwField = model.getRowVersionField();
-                                            if (!rwField)
-                                                throw new Error("execBatch::Model \"" + val.model + "\" hasn't row version field.");
-                                        };
-
-                                        promise = self._query.delete(model, null, {
-                                            transaction: transaction,
-                                            delOptions: {
-                                                key: val.data.key,
-                                                rowVersion: val.data.rowVersion
-                                            }
-                                        });
-                                        break;
-                                };
-                                return promise;
-                            });
-                        };
-
                         res_promise = this.transaction(batchFunc, options);
                     }
                     else
@@ -1036,7 +1038,7 @@ define(
                             var curr_obj = objects[guid];
                             if (!curr_obj) {
                                 objects[guid] = curr_obj = { collections: {}, currPath: curr_path };
-                                data_obj = {
+                                var data_obj = {
                                     "$sys": {
                                         "guid": guid,
                                         "typeGuid": request.model.dataObjectGuid()

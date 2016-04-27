@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../resman/dataTypes/resource', './dbTreeModelRoot', './dbTreeModel', './memTreeModelRoot', './memTreeModel', './metaModel'],
-    function (Resource, DbTreeModelRoot, DbTreeModel, MemTreeModelRoot, MemTreeModel, MetaModel) {
+    ['../resman/dataTypes/resource', './dbTreeModelRoot', './dbTreeModel', './memTreeModel', './metaModel', './memTreeModelRoot'],
+    function (Resource, DbTreeModelRoot, DbTreeModel, MemTreeModel, MetaModel, MemTreeModelRoot) {
         var DataModel = Resource.extend({
 
             className: "DataModel",
@@ -83,23 +83,52 @@ define(
                     throw new Error("Alias is of wrong type or undefined.");
             },
 
-            addMemTreeModel: function (alias, class_guid) {
+            addMemTreeModel: function (alias, class_guid, mem_tree_class_guid) {
                 if (typeof (alias) === "string") {
 
                     if (typeof (class_guid) !== "string")
                         throw new Error("DataModel::addMemTreeModel: Class Guid argument is empty!");
 
                     var resElemName = alias;
-
-                    return new MemTreeModelRoot(this.getDB(), {
-                        ini: { fields: { ResElemName: resElemName, Alias: alias, RootClassGuid: class_guid } },
-                        parent: this,
-                        colName: "TreeRoot"
-                    });
+                    var elem_class_guid = mem_tree_class_guid ? mem_tree_class_guid : UCCELLO_CONFIG.classGuids.MemTreeModelRoot;
+                    var sobj = {
+                        $sys: {
+                            typeGuid: elem_class_guid
+                        },
+                        fields: {
+                            ResElemName: resElemName,
+                            Alias: alias,
+                            RootClassGuid: class_guid
+                        }
+                    };
+                    var result = this.getDB().deserialize(sobj, { obj: this, colName: "TreeRoot" }, this.getDB().getDefaultCompCallback());
+                    if (!(result instanceof MemTreeModelRoot)) {
+                        this._rootCol._del(result);
+                        throw new Error("Wrong \"mem_tree_class_guid\": \"" + mem_tree_class_guid + "\"");
+                    };
+                    return result;
                 }
                 else
                     throw new Error("Alias is of wrong type or undefined.");
             },
+
+            //addMemTreeModel: function (alias, class_guid) {
+            //    if (typeof (alias) === "string") {
+
+            //        if (typeof (class_guid) !== "string")
+            //            throw new Error("DataModel::addMemTreeModel: Class Guid argument is empty!");
+
+            //        var resElemName = alias;
+
+            //        return new MemTreeModelRoot(this.getDB(), {
+            //            ini: { fields: { ResElemName: resElemName, Alias: alias, RootClassGuid: class_guid } },
+            //            parent: this,
+            //            colName: "TreeRoot"
+            //        });
+            //    }
+            //    else
+            //        throw new Error("Alias is of wrong type or undefined.");
+            //},
 
             _onAddElem: function (args) {
                 var treeElem = args.obj;

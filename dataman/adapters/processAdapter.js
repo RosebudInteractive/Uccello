@@ -7,7 +7,7 @@ define(
     [/*'bluebird',*/ 'lodash', './testData'],
     function (/*Promise,*/ _, TestData) {
 
-        var ADAPTERS = ["processData", "requestData"];
+        var ADAPTERS = ["$testData", "processData", "requestData", , "processParams"];
 
         var iProcessAdapter = {
 
@@ -60,6 +60,10 @@ define(
                 var result = { result: "OK" };
 
                 try {
+                    console.log("###PROCESSADAPTER::SAVEDATA");
+                    console.log("DATA OBJECT: " + JSON.stringify(data_object));
+                    console.log("OPTIONS: " + JSON.stringify(options));
+                    console.log("###");
                 }
                 catch (err) {
                     result = { result: "ERROR", message: err.message };

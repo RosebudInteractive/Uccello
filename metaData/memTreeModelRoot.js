@@ -146,14 +146,7 @@ define(
                             Meta.Meta.stateToString(this._currState()) + "\".");
 
                     if (this._editSet().length !== 0) {
-
-                        this.getDB()._iterateChilds(this, true, function (tree_elem, lvl) {
-                            tree_elem._currState(Meta.State.Browse);
-                            tree_elem._editSet("");
-                        });
-                        this._childLeaveEdit();
-                        // Удалить лог изменений
-                        this._destroyLog(false, cb);
+                        this._save(is_cached_upd, options, cb);
                     }
                     else
                         if (cb)
@@ -168,6 +161,51 @@ define(
                             cb(result);
                         }, 0);
                 };
+            },
+
+            _save: function (is_cached_upd, options, cb) {
+                if (this.isMaster()) {
+                    var result = { result: "OK" };
+                    try {
+                        var self = this;
+                        this._adapterSaveOnMaster(options, function (res) {
+                            try {
+                                if (res.result === "OK") {
+                                    self.getDB()._iterateChilds(self, true, function (tree_elem, lvl) {
+                                        tree_elem._currState(Meta.State.Browse);
+                                        tree_elem._editSet("");
+                                    });
+                                    self._childLeaveEdit();
+                                    // Удалить лог изменений
+                                    self._destroyLog(false, cb);
+                                }
+                                else
+                                    throw new Error(res.message);
+                            } catch (err) {
+                                if (cb)
+                                    setTimeout(function () {
+                                        cb({ result: "ERROR", message: err.message });
+                                    }, 0);
+                            };
+                        });
+                    }
+                    catch (err) {
+                        if (cb)
+                            setTimeout(function () {
+                                cb({ result: "ERROR", message: err.message });
+                            }, 0);
+                    };
+                }
+                else {
+                    this.remoteCall('_save', [is_cached_upd, options], cb);
+                };
+            },
+
+            _adapterSaveOnMaster: function (options, cb) {
+                if (cb)
+                    setTimeout(function () {
+                        cb({ result: "OK" });
+                    }, 0);
             },
 
             cancel: function (is_cached_upd, cb) {
@@ -479,6 +517,14 @@ define(
                     this._dataset.onDataChanged();
             },
 
+            getAdapter: function () {
+                return "$testData";
+            },
+
+            getExpression: function () {
+                return { adapter: this.getAdapter() };
+            },
+
             loadData: function (isMasterOnly, withSubTree, source) {
 
                 if (this._isWaitingForData) {
@@ -507,7 +553,7 @@ define(
                     var rgp = dataRoot ? dataRoot.getGuid() : (dataRootGuid ? dataRootGuid : this.getDB().getController().guid());
 
                     var needToQuery = true;
-                    var params = { expr: { adapter: "requestData" }, rtype: "data" };
+                    var params = { expr: this.getExpression(), rtype: "data" };
 
                     // Если (dataRootGuid && isMasterOnly) === true, то это означает, что у нас есть ссылка на инстанс рута данных на сервере
                     //   и происходит начальная ициализация данных - в этом случае необходимо просто запросить рут данных,

@@ -46,6 +46,8 @@ define(
 
             init: function (cm, params) {
 
+                this._predicate = null;
+
                 UccelloClass.super.apply(this, [cm, params]);
                 this._isWaitingForData = false;
                 this._isRootSwitched = false;
