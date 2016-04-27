@@ -33,14 +33,14 @@ define([
                     var that = this;
 
                     this.db.getRoots([this.queryBuildResGuid], { rtype: "data", expr: {model : { name: "SysVersion" }} }, function (guids) {
-                        var _objectGuid = guids.guids[0];
-                        that.queryBuildResGuid = _objectGuid;
+                        var _root = that.db.getObj(guids.guids[0]);
 
-                        var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
+                        var _elements = _root.getCol('DataElements');
                         for (var i = 0; i < _elements.count(); i++) {
                             that.versions.push(new Version(that.db, _elements.get(i)))
                         }
 
+                        that.db._deleteRoot(_root);
                         that.state = ResUtils.state.loaded;
                         done();
                     });

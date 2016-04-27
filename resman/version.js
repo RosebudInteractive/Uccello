@@ -42,27 +42,27 @@ define([
                 function promiseBody(resolve, reject) {
                     var _predicate = new Predicate(that.db, {});
                     _predicate.addCondition({field: "Id", op: "=", value: that.id});
-                    var _expression = { model: {name: "SysVersion"}, predicate: that.db.serialize(_predicate) };
+                    var _expression = { model: {name: "SysVersion"}, predicate: that.db.serialize(_predicate, true) };
 
                     that.db.getRoots([that.editQueryGuid], {rtype: "data", expr: _expression}, function (guids) {
-                        var _objectGuid = guids.guids[0];
-                        that.editQueryGuid = _objectGuid;
+                        var _root = that.db.getObj(guids.guids[0]);
 
                         var _options = {};
                         if (transactionId) {
                             _options.transactionId = transactionId;
                         }
 
-                        var _obj = that.db.getObj(_objectGuid);
-                        _obj.edit(function() {
-                            var _version = _obj.getCol('DataElements').get(0);
+                        _root.edit(function() {
+                            var _version = _root.getCol('DataElements').get(0);
                             _version.lastConfirmedBuildId(that.currBuildId);
                             that.state = ResUtils.state.changed;
-                            _obj.save(_options, function(result) {
+                            _root.save(_options, function(result) {
                                 if (result.result == "OK") {
                                     that.parseDbObject(_version);
+                                    that.db._deleteRoot(_root);
                                     resolve()
                                 } else {
+                                    that.db._deleteRoot(_root);
                                     reject(ResUtils.newDbError(result.message))
                                 }
                             });
@@ -87,27 +87,27 @@ define([
                 function promiseBody(resolve, reject) {
                     var _predicate = new Predicate(that.db, {});
                     _predicate.addCondition({field: "Id", op: "=", value: that.id});
-                    var _expression = {model: {name: "SysVersion"}, predicate: that.db.serialize(_predicate)};
+                    var _expression = {model: {name: "SysVersion"}, predicate: that.db.serialize(_predicate, true)};
 
                     that.db.getRoots([that.editQueryGuid], {rtype: "data", expr: _expression}, function (guids) {
-                        var _objectGuid = guids.guids[0];
-                        that.editQueryGuid = _objectGuid;
+                        var _root = that.db.getObj(guids.guids[0]);
 
                         var _options = {};
                         if (transactionId) {
                             _options.transactionId = transactionId;
                         }
 
-                        var _obj = that.db.getObj(_objectGuid);
-                        _obj.edit(function () {
-                            var _version = _obj.getCol('DataElements').get(0);
+                        _root.edit(function () {
+                            var _version = _root.getCol('DataElements').get(0);
                             _version.currBuildId(buildId);
                             that.state = ResUtils.state.changed;
-                            _obj.save(_options, function (result) {
+                            _root.save(_options, function (result) {
                                 if (result.result == "OK") {
                                     that.parseDbObject(_version);
+                                    that.db._deleteRoot(_root);
                                     resolve()
                                 } else {
+                                    that.db._deleteRoot(_root);
                                     reject(ResUtils.newDbError(result.message));
                                 }
                             });

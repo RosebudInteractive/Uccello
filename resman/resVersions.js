@@ -47,17 +47,17 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                 } else {
                     _predicate.addCondition({field: "Id", op: "in", value: IdArray});
                 }
-                var _expression = {model: {name: "SysResVer"}, predicate: _instance.db.serialize(_predicate)};
+                var _expression = {model: {name: "SysResVer"}, predicate: _instance.db.serialize(_predicate, true)};
 
                 _instance.db.getRoots([_instance.queryGuid], {rtype: "data", expr: _expression}, function (guids) {
-                    var _objectGuid = guids.guids[0];
-                    _instance.queryGuid = _objectGuid;
+                    var _root = _instance.db.getObj(guids.guids[0]);
 
-                    var _elements = _instance.db.getObj(_objectGuid).getCol('DataElements');
+                    var _elements = _root.getCol('DataElements');
                     for (var i = 0; i < _elements.count(); i++) {
                         resultArray.push(new ResVersion(_elements.get(i)));
                     }
 
+                    _instance.db._deleteRoot(_root);
                     done();
                 })
             }
@@ -82,19 +82,17 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
 
                 var _expression = {
                     model: _model,
-                    predicate: that.db.serialize(_predicate)
+                    predicate: that.db.serialize(_predicate, true)
                 };
 
                 that.db.getRoots([that.queryGuid], {rtype: "data", expr: _expression}, function (guids) {
-                    var _objectGuid = guids.guids[0];
-                    that.queryGuid = _objectGuid;
+                    var _root = that.db.getObj(guids.guids[0]);
 
                     var _options = {};
                     if (transactionId) {
                         _options.transactionId = transactionId;
                     }
 
-                    var _root = that.db.getObj(_objectGuid);
                     _root.edit(function(result){
                         if (result.result === 'OK') {
                             _root.newObject({fields: fields}, _options, function (result) {
@@ -105,18 +103,25 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                                        _root.save(_options, function(result){
                                            if (result.result == 'OK') {
                                                var _resVersion = new ResVersion(that.db.getObj(result.newObject));
+                                               that.db._deleteRoot(_root);
                                                resolve(_resVersion);
                                            } else {
+                                               that.db._deleteRoot(_root);
                                                reject(ResUtils.newDbError(result.message))
                                            }
                                        });
                                     }).
-                                    catch(reject);
+                                    catch(function(err){
+                                        that.db._deleteRoot(_root);
+                                        reject(err)
+                                    });
                                 } else {
+                                    that.db._deleteRoot(_root);
                                     reject(ResUtils.newDbError(result.message))
                                 }
                             });
                         } else {
+                            that.db._deleteRoot(_root);
                             reject(ResUtils.newDbError(result.message))
                         }
                     });
@@ -137,19 +142,17 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                 _predicate.addCondition({field: "Id", op: "=", value: sysResVerObject.resVerId});
                 var _expression = {
                     model: resourceInstance.getModelDescription(),
-                    predicate: that.db.serialize(_predicate)
+                    predicate: that.db.serialize(_predicate, true)
                 };
 
                 that.db.getRoots([that.saveGuid], {rtype: "data", expr: _expression}, function (guids) {
-                    var _objectGuid = guids.guids[0];
-                    that.saveGuid = _objectGuid;
+                    var _root = that.db.getObj(guids.guids[0]);
 
                     var _options = {};
                     if (transactionId) {
                         _options.transactionId = transactionId;
                     }
 
-                    var _root = that.db.getObj(_objectGuid);
                     var _resourceObj = _root.getCol("DataElements").get(0);
 
                     if (!_resourceObj) {
@@ -165,13 +168,31 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                         };
 
                         _deleteInstance(sysResVerObject).
-                        then(function () {_addResourceObject(_root, resourceInstance, _fields).then(resolve, reject)}
-                        ).
+                        then(function () {
+                            _addResourceObject(_root, resourceInstance, _fields).
+                            then(function (resVersion) {
+                                that.db._deleteRoot(_root);
+                                resolve(resVersion)
+                            }).
+                            catch(function (err) {
+                                that.db._deleteRoot(_root);
+                                reject(err);
+                            })
+                        }).
                         catch(function(err) {
+                            that.db._deleteRoot(_root);
                             reject(err)
                         });
                     } else {
-                        _editResourceObject(_resourceObj, resourceInstance).then(resolve, reject);
+                        _editResourceObject(_resourceObj, resourceInstance).
+                        then(function (resVersion) {
+                            that.db._deleteRoot(_root);
+                            resolve(resVersion)
+                        }).
+                        catch(function (err) {
+                            that.db._deleteRoot(_root);
+                            reject(err);
+                        })
                     }
                 })
 
@@ -186,16 +207,15 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
 
                 var _predicate = new Predicate(that.db, {});
                 _predicate.addCondition({field: "Guid", op: "=", value: sysResVerObject.verGuid});
-                var _expression = {model: {name: "SysResVer"}, predicate: that.db.serialize(_predicate)};
+                var _expression = {model: {name: "SysResVer"}, predicate: that.db.serialize(_predicate, true)};
 
                 that.db.getRoots([that.queryGuid], {rtype: "data", expr: _expression}, function(guids) {
-                    var _objectGuid = guids.guids[0];
-                    that.queryGuid = _objectGuid;
+                    var _root = that.db.getObj(guids.guids[0]);
 
-                    var _root = that.db.getObj(_objectGuid);
                     if (_root.getCol('DataElements').count() > 0) {
                         var _instance = _root.getCol('DataElements').get(0).pvt.guid;
                         _root.deleteObject(_instance, {}, function (result) {
+                            that.db._deleteRoot(_root);
                             if (result.result == 'OK') {
                                 resolve()
                             } else {
@@ -203,6 +223,7 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                             }
                         })
                     } else {
+                        that.db._deleteRoot(_root);
                         resolve()
                     }
                 })

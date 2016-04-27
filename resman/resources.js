@@ -100,13 +100,13 @@ define([
                             _predicate.addCondition({field: "Id", op: "in", value: _ids}, true);
                         }
                     }
-                    var _expression = {model: {name: "SysResource"}, predicate: that.db.serialize(_predicate)};
+                    var _expression = {model: {name: "SysResource"}, predicate: that.db.serialize(_predicate, true)};
 
                     that.db.getRoots([that.queryResGuid], {rtype: "data", expr: _expression}, function (guids) {
                         var _objectGuid = guids.guids[0];
-                        that.queryResGuid = _objectGuid;
 
-                        var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
+                        var _root = that.db.getObj(_objectGuid);
+                        var _elements = _root.getCol('DataElements');
 
                         if (_elements.count() == 0) {
                             callback([])
@@ -118,6 +118,7 @@ define([
                                     _count++;
                                     _resultArray.push(res);
                                     if (_count == _elements.count()) {
+                                        that.db._deleteRoot(_root);
                                         callback(_resultArray)
                                     }
                                 });
@@ -167,15 +168,15 @@ define([
                 _predicate.addCondition({field: "ResGuid", op: "=", value: resourceGuid});
                 var _expression = {
                     model: {name: "SysResource"},
-                    predicate: this.db.serialize(_predicate)
+                    predicate: this.db.serialize(_predicate, true)
                 };
 
                 var that = this;
                 this.db.getRoots([this.queryResGuid], {rtype: "data", expr: _expression}, function (guids) {
                     var _objectGuid = guids.guids[0];
-                    that.queryResGuid = _objectGuid;
 
-                    var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
+                    var _root = that.db.getObj(_objectGuid);
+                    var _elements = _root.getCol('DataElements');
 
                     if (_elements.count() == 0) {
                         callback(null)
@@ -184,7 +185,10 @@ define([
                             throw new Error('duplicate resource')
                         }
 
-                        that.loadResourceBody(_elements.get(0), callback);
+                        that.loadResourceBody(_elements.get(0), function(resource){
+                            that.db._deleteRoot(_root);
+                            callback(resource);
+                        });
                     }
                 });
             },
@@ -237,19 +241,19 @@ define([
                         _predicate.addCondition({field: "Id", op: "=", value: 0});
                         var _expression = {
                             model: {name: "SysResource"},
-                            predicate: that.db.serialize(_predicate)
+                            predicate: that.db.serialize(_predicate, true)
                         };
 
                         that.db.getRoots([that.queryResGuid], {rtype: "data", expr: _expression}, function (guids) {
                             var _objectGuid = guids.guids[0];
-                            that.queryResGuid = _objectGuid;
+                            var _root = that.db.getObj(_objectGuid);
 
                             var _options = {};
                             if (transactionId) {
                                 _options.transactionId = transactionId;
                             }
 
-                            that.db.getObj(_objectGuid).newObject({
+                            _root.newObject({
                                 fields: {
                                     Name: resource.name,
                                     Code: resource.code,
@@ -259,6 +263,7 @@ define([
                                     ResTypeId: resource.resTypeId
                                 }
                             }, _options, function (result) {
+                                that.db._deleteRoot(_root);
                                 if (result.result == 'OK') {
                                     resolve(result.newObject)
                                 } else {

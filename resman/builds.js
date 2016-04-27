@@ -45,15 +45,14 @@ define([
                     _predicate.addCondition({field: "Id", op: "=", value: buildId});
                     var _expression = {
                         model: {name: "SysBuild"},
-                        predicate: this.db.serialize(_predicate)
+                        predicate: this.db.serialize(_predicate, true)
                     };
 
                     var that = this;
                     this.db.getRoots([this.queryBuildResGuid], { rtype: "data", expr: _expression }, function(guids) {
-                        var _objectGuid = guids.guids[0];
-                        that.queryBuildResGuid = _objectGuid;
+                        var _root = that.db.getObj(guids.guids[0]);
 
-                        var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
+                        var _elements = _root.getCol('DataElements');
                         if (_elements.count() == 0) {
                             callback(null)
                         } else {
@@ -63,6 +62,7 @@ define([
                                 _build.parseDbObject(_elements.get(0))
                             }
 
+                            that.db._deleteRoot(_root);
                             _build.loadResVersions(function() {
                                 if (_needCreate) {
                                     that.builds.push(_build);
@@ -111,19 +111,18 @@ define([
                             _predicate.addCondition({field: "Id", op: "=", value: 0});
                             var _expression = {
                                 model: {name: "SysBuild"},
-                                predicate: that.db.serialize(_predicate)
+                                predicate: that.db.serialize(_predicate, true)
                             };
 
                             that.db.getRoots([that.queryBuildResGuid], {rtype: "data", expr: _expression}, function (guids) {
-                                var _objectGuid = guids.guids[0];
-                                that.queryBuildResGuid = _objectGuid;
+                                var _root = that.db.getObj(guids.guids[0]);
 
                                 var _options = {};
                                 if (transactionId) {
                                     _options.transactionId = transactionId;
                                 }
 
-                                that.db.getObj(_objectGuid).newObject({
+                                _root.newObject({
                                     fields: {
                                         BuildNum: _newBuildNum,
                                         IsConfirmed: false,
@@ -134,18 +133,18 @@ define([
                                     if (result.result == 'OK') {
                                         var _newBuild = new Build(that.db, that.db.getObj(result.newObject));
                                         that.builds.push(_newBuild);
+                                        that.db._deleteRoot(_root);
                                         resolve(_newBuild.id);
                                     } else {
+                                        that.db._deleteRoot(_root);
                                         reject(ResUtils.newDbError(result.message));
                                     }
                                 });
                             })
                         }
                     });
-
                 }
             }
-
         });
 
         Builds.init = function(db, directories){
