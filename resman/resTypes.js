@@ -36,10 +36,9 @@ define(['./resUtils'],
             load : function(done) {
                 var that = this;
                 this.db.getRoots([this.queryBuildResGuid], {rtype: "data", expr: {model: {name: "SysResType"}}}, function(guids) {
-                    var _objectGuid = guids.guids[0];
-                    that.queryBuildResGuid = _objectGuid;
+                    var _root = that.db.getObj(guids.guids[0]);
 
-                    var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
+                    var _elements = _root.getCol('DataElements');
 
                     for (var i = 0; i < _elements.count(); i++) {
                         var _resType = new ResType(_elements.get(i));
@@ -47,6 +46,7 @@ define(['./resUtils'],
                     }
 
                     that.state = ResUtils.state.loaded;
+                    that.db._deleteRoot(_root);
                     done();
                 })
             },

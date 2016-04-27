@@ -50,13 +50,13 @@ define([
                     var _predicate = new Predicate(that.db, {});
                     _predicate.addCondition({field: "ResVerId", op: "=", value: resVersionId});
                     _predicate.addCondition({field: "BuildId", op: "=", value: that.id});
-                    var _expression = { model: {name: "SysBuildRes"}, predicate: that.db.serialize(_predicate) };
+                    var _expression = { model: {name: "SysBuildRes"}, predicate: that.db.serialize(_predicate, true) };
 
                     that.db.getRoots([that.queryBuildResGuid], {rtype: "data", expr: _expression}, function (guids) {
-                        var _objectGuid = guids.guids[0];
-                        that.queryBuildResGuid = _objectGuid;
+                        var _root = that.db.getObj(guids.guids[0]);
 
-                        if (that.db.getObj(_objectGuid).getCol('DataElements').count() > 0) {
+                        if (_root.getCol('DataElements').count() > 0) {
+                            that.db._deleteRoot(_root);
                             resolve();
                             return
                         }
@@ -66,7 +66,6 @@ define([
                             _options.transactionId = transactionId;
                         }
 
-                        var _root = that.db.getObj(_objectGuid);
                         _root.edit(function(result){
                             if (result.result === 'OK') {
                                 _root.newObject({
@@ -77,6 +76,7 @@ define([
                                 }, _options, function (result) {
                                     if (result.result == 'OK') {
                                         _root.save(_options, function (result) {
+                                            that.db._deleteRoot(_root);
                                             if (result.result == 'OK') {
                                                 resolve()
                                             } else {
@@ -84,10 +84,12 @@ define([
                                             }
                                         })
                                     } else {
+                                        that.db._deleteRoot(_root);
                                         reject(ResUtils.newDbError(result.message));
                                     }
                                 })
                             } else {
+                                that.db._deleteRoot(_root);
                                 reject(ResUtils.newDbError(result.message));
                             }
                         });
@@ -104,14 +106,15 @@ define([
 
                 var that = this;
                 this.db.getRoots([this.queryBuildResGuid], { rtype: "data", expr: _expression }, function(guids) {
-                    var _objectGuid = guids.guids[0];
-                    that.queryBuildResGuid = _objectGuid;
+                    var _root = that.db.getObj(guids.guids[0]);
 
                     var _resVersionsId = [];
-                    var _elements = that.db.getObj(_objectGuid).getCol('DataElements');
+                    var _elements = _root.getCol('DataElements');
                     for (var i = 0; i < _elements.count(); i++) {
                         _resVersionsId.push(_elements.get(i).resVerId())
                     }
+
+                    that.db._deleteRoot(_root);
 
                     ResVersions.load(_resVersionsId, that.resVersions, function(){
                         that.state = ResUtils.state.loaded;
@@ -134,27 +137,27 @@ define([
                         _predicate.addCondition({field: "Id", op: "=", value: that.id});
                         var _expression = {
                             model: {name: "SysBuild"},
-                            predicate: that.db.serialize(_predicate)
+                            predicate: that.db.serialize(_predicate, true)
                         };
 
                         that.db.getRoots([that.commitGuid], {rtype: "data", expr: _expression}, function (guids) {
-                            var _objectGuid = guids.guids[0];
-                            that.commitGuid = _objectGuid;
+                            var _root = that.db.getObj(guids.guids[0]);
 
                             var _options = {};
                             if (transactionId) {
                                 _options.transactionId = transactionId;
                             }
 
-                            var _obj = that.db.getObj(_objectGuid);
-                            _obj.edit(function() {
-                                var _build = _obj.getCol('DataElements').get(0);
+                            _root.edit(function() {
+                                var _build = _root.getCol('DataElements').get(0);
                                 _build.isConfirmed(true);
-                                _obj.save(_options, function(result) {
+                                _root.save(_options, function(result) {
+                                    that.db._deleteRoot(_root);
+
                                     if (result.result == "OK") {
-                                        resolve();
                                         that.isConfirmed = true;
                                         that.state = ResUtils.state.changed;
+                                        resolve();
                                     } else {
                                         reject(ResUtils.newDbError(result.message))
                                     }
@@ -162,6 +165,7 @@ define([
                             });
                         })
                     } else {
+                        that.db._deleteRoot(_root);
                         reject(ResUtils.newObjectError('No resources'))
                     }
                 }

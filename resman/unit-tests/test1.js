@@ -64,7 +64,7 @@ describe('#rebuildResources', function(){
     })
 });
 
-xdescribe('#get functions', function() {
+describe('#get functions', function() {
     before(function () {
         var _cmd = [
             "update SysVersion set CurrBuildId = 2 where Id = 2",
@@ -100,7 +100,7 @@ xdescribe('#get functions', function() {
         );
 
         it('Запросить несуществующий ресурс', function () {
-            return Main.Config.ResManager.getResource('ERROR').should.be.rejectedWith(Error);
+            return Main.Config.ResManager.getResource('1f38daff-83e5-404f-822a-b0df4c99a833').should.be.rejectedWith(Error);
         });
     });
 
@@ -118,14 +118,19 @@ xdescribe('#get functions', function() {
         });
 
         it('Загрузка несуществующих ресурсов', function (done) {
+            var errorGuid = {
+                first: '0e533f9b-6bfd-4722-8b5e-dcfc3196651b',
+                second: 'e8dd22b8-6306-455b-82a7-8897737bb72a'
+            };
+
             var _resManger = Main.Config.ResManager;
 
-            var _promise = _resManger.getResources(['ERROR1', 'ERROR2']);
+            var _promise = _resManger.getResources([errorGuid.first, errorGuid.second]);
 
             _promise.then(function (bodys) {
                 Object.keys(bodys).should.have.lengthOf(2);
-                expect(bodys['ERROR1']).to.be.null;
-                expect(bodys['ERROR2']).to.be.null;
+                expect(bodys[errorGuid.first]).to.be.null;
+                expect(bodys[errorGuid.second]).to.be.null;
                 done();
             }, function (error) {
                 done(error);
@@ -183,7 +188,7 @@ xdescribe('#get functions', function() {
     });
 });
 
-xdescribe('#modify functions', function(){
+describe('#modify functions', function(){
 
     describe('#createNewResource', function() {
 
