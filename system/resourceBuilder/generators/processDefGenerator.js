@@ -4,11 +4,36 @@
 'use strict';
 var fs = require('fs');
 
+var Definitions = {
+    names: {
+        forSimpleTaskDef: 'Simple Task Definition'
+    },
+
+    forSimpleTaskDef : function(engine) {
+        var _definition = engine.newTaskDefinition();
+        _definition.definitionID('cbf35df0-8317-4f2f-8728-88736251ff0b');
+        _definition.name(this.names.forSimpleTaskDef);
+        var _start = _definition.addStartEvent('start');
+        var _task1 = _definition.addTaskStage('task1');
+        var _task2 = _definition.addTaskStage('task2');
+        var _task3 = _definition.addTaskStage('task3');
+        var _end = _definition.addEndEvent('end');
+
+        _definition.connect(_start, _task1);
+        _definition.connect(_task1, _task2);
+        _definition.connect(_task2, _task3);
+        _definition.connect(_task3, _end);
+
+        return _definition;
+    }
+};
+
 class Builder{
     constructor(engine){
         this.wfe = engine;
-        this.defintions = [];
+        this.definitions = [];
         this.addFirstDefinition();
+        this.definitions.push(Definitions.forSimpleTaskDef(engine));
         this.savePath = './';
     }
 
@@ -58,8 +83,9 @@ class Builder{
             methodName: 'checkIfDone'
         });
 
-        this.defintions.push(def);
+        this.definitions.push(def);
     }
+
 
     serialize(definition) {
         var _obj = definition.pvt.db.serialize(definition, true);
@@ -85,11 +111,11 @@ class Builder{
             var _instance = new Builder(EngineSingleton.getInstance());
             _instance.savePath = savePath;
             var _count = 0;
-            _instance.defintions.forEach(function(definition){
+            _instance.definitions.forEach(function(definition){
                 _instance.serialize(definition);
                 _count++;
 
-                if (_count == _instance.defintions.length) {
+                if (_count == _instance.definitions.length) {
                     resolve()
                 }
             })
