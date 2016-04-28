@@ -48,6 +48,10 @@ xdescribe('#loadRes', function(){
             result.datas.should.be.lengthOf(2);
             done();
         })
+    });
+
+    it('Загрузить несуществующий ресурс - ERROR', function(done){
+
     })
 });
 

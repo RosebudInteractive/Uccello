@@ -159,10 +159,16 @@ define(
                             var _array = [];
                             for (var element in resultObj) {
                                 if (resultObj.hasOwnProperty(element) && (element != 'count')) {
-                                    _array.push({
-                                        id: resultObj[element].id,
-                                        resource: JSON.parse(resultObj[element].body)
-                                    })
+                                    if ((!resultObj[element]) || (!resultObj[element].body)) {
+                                        done({datas: [], result: 'ERROR', message: 'Can not found resource [' + element + ']'});
+                                        return;
+                                    } else {
+                                        _array.push({
+                                            id: resultObj[element].id,
+                                            resVerId : resultObj[element].resVerId,
+                                            resource: JSON.parse(resultObj[element].body)
+                                        })
+                                    }
                                 }
                             }
                             done({datas: _array, result: 'OK'})
