@@ -21,6 +21,10 @@ define(
                 return "processData";
             },
 
+            canEdit: function () {
+                return false;
+            },
+
             _getParamsTemplate: function () {
                 return {
                     "ProcessId": { type: "int" }

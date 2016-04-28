@@ -103,9 +103,10 @@ define(
 
                     this.importDir(opts.importData.dir, { force: true })
                     .then(function (result) {
-                        console.log("### Import finished !!!");
+                        console.log("###\n### Import finished !!!\n###");
                     })
                     .catch(function (err) {
+                        console.log("###\n### IMPORT ERROR: " + err.message + "\n###");
                         throw err;
                     });
                 };
@@ -724,6 +725,12 @@ define(
                 var predicate;
                 if (expression.predicate)
                     predicate = this.deserializePredicate(expression.predicate);
+
+                if (expression.model.filter)
+                    if (!predicate)
+                        predicate = this.deserializePredicate(expression.model.filter)
+                    else
+                        predicate.addPredicate(expression.model.filter);
 
                 var query = { dataObject: expression.model, dataGuid: guidRoot, predicate: predicate };
                 if (expression.is_single)

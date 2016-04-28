@@ -23,6 +23,10 @@ define(
                 UccelloClass.super.apply(this, [cm, params]);
             },
 
+            _adapterSaveOnMaster: function (options, cb) {
+                this.getRootTreeElem()._adapterSaveOnMaster(options, cb);
+            },
+
         });
         return MemTreeModel;
     }
