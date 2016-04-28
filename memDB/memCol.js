@@ -194,9 +194,13 @@ define(
 
 			indexOfGuid: function(guid) {
 				return this._guidIndex[guid];
+			},
+
+			clear: function(){
+				for (var i = this._elems.length - 1; i <= 0; i--){
+					thos._del(this._elems[i])
+				}
 			}
-
-
 	    });
 	    return MemCol;
 	}
