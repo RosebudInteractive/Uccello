@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['./baseTreeModel', './metaModel', './metaModelField', './metaDefs', '../predicate/predicate'],
-    function (BaseTreeModel, MetaModel, MetaModelField, Meta, Predicate) {
+    ['../system/utils', './baseTreeModel', './metaModel', './metaModelField', './metaDefs', '../predicate/predicate'],
+    function (Utils, BaseTreeModel, MetaModel, MetaModelField, Meta, Predicate) {
         var DbTreeModelRoot = BaseTreeModel.extend({
 
             className: "DbTreeModelRoot",
@@ -29,7 +29,8 @@ define(
             ],
 
             metaCols: [
-                { "cname": "Childs", "ctype": "DbTreeModel" }
+                { "cname": "Childs", "ctype": "DbTreeModel" },
+                { "cname": "Filter", "ctype": "Predicate" }
             ],
 
             name: function (value) {
@@ -46,11 +47,29 @@ define(
 
             init: function (cm, params) {
 
-                this._predicate = null;
+                this._filter = null;
 
                 UccelloClass.super.apply(this, [cm, params]);
                 this._isWaitingForData = false;
                 this._isRootSwitched = false;
+
+                if (params) {
+                    Utils.makeSingleItemCollection.apply(this, ["Filter", "_filter"]);
+                }
+            },
+
+            getParameter: function (name) {
+                var result = null;
+                if (this._filter)
+                    result = this._filter.getParameter(name);
+                return result;
+            },
+
+            getParams: function () {
+                var result = {};
+                if (this._filter)
+                    result = this._filter.getParams();
+                return result;
             },
 
             edit: function (is_cached_upd, cb) {
@@ -468,7 +487,7 @@ define(
                     function make_all(curr_res, elem, is_childs_empty) {
                         for (var i = 0; i < elem._childsCol.count() ; i++) {
                             var cur_elem = elem._childsCol.get(i);
-                            var req_elem = cur_elem._getReqElem();
+                            var req_elem = cur_elem._getReqElem(is_childs_empty);
                             if (is_childs_empty)
                                 req_elem.isStub = true;
                             make_all(req_elem, cur_elem, is_childs_empty);
@@ -481,7 +500,7 @@ define(
                     if (type !== Meta.ReqLevel.CurrentOnly) {
                         var isStub = type === Meta.ReqLevel.CurrentAndEmptyChilds;
                         for (var i = 0; i < this._childsCol.count() ; i++) {
-                            var req_elem = this._childsCol.get(i)._getReqElem();
+                            var req_elem = this._childsCol.get(i)._getReqElem(isStub);
                             if (isStub)
                                 req_elem.isStub = isStub;
                             delete req_elem.childs;
@@ -492,6 +511,19 @@ define(
                         delete result.childs;
                 };
                 return result;
+            },
+
+            getFilter: function () {
+                var result = this._filter;
+                if (!result)
+                    result = new Predicate(this.getDB(), { parent: this, colName: "Filter" });
+                return result;
+            },
+
+            clearFilter: function () {
+                if (this._filter) {
+                    this.getCol("Filter")._del(this._filter);
+                };
             },
 
             deleteDataSource: function (ds) {
@@ -528,7 +560,7 @@ define(
                 else
                     if (ds_def.model) {
                         fields.ModelRef = ds_def.model;
-                        if(ds_def.model.resName)
+                        if (ds_def.model.resName)
                             fields.Alias = ds_def.model.resName;
                         else
                             throw new Error("DbTreeModelRoot::addDataSource: Model name is empty!");
@@ -569,8 +601,10 @@ define(
                 return this;
             },
 
-            _getReqElem: function () {
+            _getReqElem: function (is_stub) {
                 var result = {};
+                if (this._filter && (!is_stub))
+                    result.filter = this.getDB().serialize(this._filter, true);
                 if (this._childsCol.count() > 0)
                     result.childs = [];
                 var name, guid;

@@ -80,14 +80,6 @@ define(
                 return result;
             },
 
-            setParameter: function (name, value) {
-                this._createParmeters();
-                var param = this.getParameter(name);
-                if(!param)
-                    throw new Error("Parameter \"" + name + "\" doesn't exist.");
-                param.valValue(value);
-            },
-
             getParamValues: function () {
                 var result = null;
                 var params = this.getParams();

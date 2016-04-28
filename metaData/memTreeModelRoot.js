@@ -27,7 +27,7 @@ define(
             ],
 
             metaCols: [
-                { "cname": "Childs", "ctype": "BaseTreeModel" }
+                { "cname": "Childs", "ctype": "MemTreeModel" }
             ],
 
             _editSet: function (value) {

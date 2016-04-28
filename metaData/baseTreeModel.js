@@ -189,6 +189,10 @@ define(
             },
 
             setParameter: function (name, value) {
+                var param = this.getParameter(name);
+                if (!param)
+                    throw new Error("Parameter \"" + name + "\" doesn't exist.");
+                param.valValue(value);
             },
 
             _unSubscribeAll: function () {
