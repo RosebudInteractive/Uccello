@@ -175,7 +175,7 @@ define(
 		        this._deleteResFromNameMap(obj);
 
 		        for (var i = 0; i < this.pvt.robjs.length; i++) {
-		            if (this.pvt.robjs === obj) {
+		            if (this.pvt.robjs[i].obj === obj) {
 		                this.pvt.robjs.splice(i, 1);
 		                break;
 		            }
@@ -939,10 +939,13 @@ define(
 		                    };
 
 		                    if (typeObj) {
-		                        if (cb != undefined) o = cb(typeObj, parent, sobj);
-		                        if (!o)
-		                            console.log("BAD GUID === " + sobj.$sys.typeGuid);
-		                    }
+		                        if (cb != undefined)
+		                            o = cb(typeObj, parent, sobj)
+		                        else
+		                            throw new Error("MemDataBase::deserialize: Callback function is not defined!");
+		                    };
+		                    if (!o)
+		                        throw new Error("MemDataBase::deserialize: Can't deserialize object of type: \"" + sobj.$sys.typeGuid + "\"!");
 		                    break;
 		            }
 		            for (var cn in sobj.collections) {
