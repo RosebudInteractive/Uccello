@@ -155,7 +155,7 @@ define([
                 } else {
                     this.queryResourceObj(guid, function (resource) {
                         if (resource) {
-                            callback({id : resource.id, resVerId : _resource.resVerId, body : resource.resBody})
+                            callback({id : resource.id, resVerId : resource.resVerId, body : resource.resBody})
                         } else {
                             callback(null)
                         }
