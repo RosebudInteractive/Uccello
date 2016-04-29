@@ -10,8 +10,11 @@ define(
 
             className: "Form",
             classGuid: UCCELLO_CONFIG.classGuids.Form,
-            metaFields: [{fname:"Title", ftype:"string"},{fname:"dbgName",ftype:"string"}, {
-                fname: "CurrentControl", ftype: {
+            metaFields: [
+                {fname:"Title", ftype:"string"},
+                {fname:"dbgName",ftype:"string"},
+                {fname:"SelfRender", ftype:"boolean"},
+                {fname: "CurrentControl", ftype: {
                     type: "ref",
                     res_elem_type: UCCELLO_CONFIG.classGuids.AControl
                 }
@@ -25,6 +28,16 @@ define(
             title: function (value) {
                 return this._genericSetter("Title", value);
             },
+            selfRender: function (value) {
+                return this._genericSetter("SelfRender", value);
+            },
+
+            renderTo: function(element) {
+                if (element !== undefined)
+                    this._renderTo = element;
+                return this._renderTo;
+            },
+
             currentControl: function (value) {
                 if (value !== undefined) {
                     console.log('TEST currentControl: '+value.name());
@@ -48,6 +61,7 @@ define(
                 }
                 this._isProcessed(true);
             }
+
 
 			/*
 			load: function(rootGuids,params, cb) {

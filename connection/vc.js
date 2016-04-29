@@ -288,15 +288,19 @@ define(
 				this.renderForms(ga);
 			},
 
-			renderForms: function(roots) {
+			renderForms: function(roots, renderItems) {
 			    //if (DEBUG) console.log("%c RENDER FORMS " + pd, 'color: green');
 				for (var i=0; i<roots.length; i++) {
 					var root = this.pvt.cm.get(roots[i]);
+					var renderItem = null;
+					if (renderItems) renderItem = {rootContainer: renderItems[roots[i]]};
 					if (root && root.isInstanceOf(UCCELLO_CONFIG.classGuids.ResForm)) {
-					    if (this.pvt.renderRoot)
-					        var renderItem = this.pvt.renderRoot(roots[i]);
-					    else renderItem = null;
-					    this.pvt.cm.render(root.getForm(), renderItem);
+						var form = root.getForm();
+						if (!renderItem && form.selfRender() === false)
+							renderItem = {rootContainer: form.renderTo()};
+					    if (this.pvt.renderRoot && !renderItem)
+					        renderItem = this.pvt.renderRoot(roots[i]);
+					    this.pvt.cm.render(form, renderItem);
 					};
 				}
 				this.getContextCM().resetModifLog();

@@ -26,7 +26,8 @@ define(
                 {fname:"CurrentLayout", ftype: {
                     type: "ref",
                     res_elem_type: UCCELLO_CONFIG.classGuids.Layout
-                }}
+                }},
+                {fname:"HasChanges", ftype: "boolean"}
             ],
 
             init: function(cm, params) {
@@ -35,6 +36,10 @@ define(
 
             cursor: function(value) {
                 return this._genericSetter("Cursor", value);
+            },
+
+            hasChanges: function(value) {
+                return this._genericSetter("HasChanges", value);
             },
 
             currentLayout: function(value) {
@@ -160,6 +165,7 @@ define(
                 this.getLog().add(o);
                 this.logColModif("add", colName, resObj);
                 this.getControlMgr().allDataInit(resObj);
+                this.hasChanges(false);
             },
 
             _genLayouts: function(arr, guidMap, layout, id) {
