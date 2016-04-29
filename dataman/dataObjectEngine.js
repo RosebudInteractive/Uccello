@@ -140,7 +140,8 @@ define(
                         dbparams: {
                             name: name,
                             kind: "master",
-                            guid: this._controller.guid()
+                            guid: this._controller.guid(),
+                            constructHolder: this._constructHolder
                         }
                     });
                     new MetaModelRef(db);

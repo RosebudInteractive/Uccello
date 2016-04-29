@@ -273,6 +273,25 @@ metaDataMgr.addVirtualModel("VirtualAddress", "4e447618-1da8-42cc-b38e-792aedc40
     .addField("city", { type: "string", length: 255 })
     .addField("address", { type: "string", length: 255 });
 
+metaDataMgr.addVirtualModel("VirtualTaskList", "175caa6f-cbd6-4aed-bac1-a2e255c8e7e9", "RootVTaskList", "3fef38a9-08c4-4e38-81d1-ceb814eae9c2")
+    .setDefaultSQL(
+    "SELECT p.Id AS TaskId, t.Number, p.Name, COALESCE(s.StageCode,'Under Construction') AS Stage,\n" +
+        "  r.Id AS RequestId, t.ObjId, u.ResGuid\n" +
+        "FROM Process p\n" +
+        "  JOIN Task t ON t.ParentId = p.Id\n" +
+        "  JOIN SysResVer v ON v.Id = p.DefinitionId\n" +
+        "  JOIN SysResource u ON u.Id = v.ResId\n" +
+        "  JOIN Request r ON r.ProcessId = p.Id AND r.State = 0\n" +
+        "  LEFT JOIN TaskStageLog l ON l.Id = t.TaskStageLogId\n" +
+        "  LEFT JOIN TaskStage s ON s.Id = l.TaskStageId")
+    .addField("TaskId", { type: "int" })
+    .addField("Number", { type: "string", length: 20 })
+    .addField("Name", { type: "string", length: 255 })
+    .addField("Stage", { type: "string", length: 20 })
+    .addField("RequestId", { type: "int" })
+    .addField("ObjId", { type: "int" })
+    .addField("ResGuid", { type: "guid" });
+
 metaDataMgr.addDataModel("DataModelTest").addDbTreeModel("DataCompanyTree", { resName: "DataTstCompany" })
     .addDataSource({
         model: { resName: "DataTstContact" },
@@ -299,6 +318,11 @@ metaDataMgr.addDataModel("MemModelTest").addMemTreeModel("MemCompanyTree", "1821
     .addDataSource("Contacts")
     .addDataSource("Contracts")
     .getDataSource("Contacts").addDataSource("Addresses");
+
+metaDataMgr.addDataModel("DMTaskList").addDbTreeModel("TaskListTree", { resName: "VirtualTaskList" })
+
+metaDataMgr.addDataModel("TaskParams").addMemTreeModel("TaskParamsTree", "b3746562-946f-46f6-b74f-a50eaff7a771", UCCELLO_CONFIG.classGuids.ProcParamTreeRoot)
+    .addDataSource("TaskStages");
 
 metaDataMgr.addModel("DataLeadLog", "c4fa07b5-03f7-4041-6305-fbd301e7408a", "RootLeadLog", "bedf1851-cd51-657e-48a0-10ac45e31e20")
     .addField("LeadId", { type: "dataRef", model: "DataLead", refAction: "parentCascade", allowNull: true })
