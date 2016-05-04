@@ -33,10 +33,10 @@ define(
             },
 
             getParameterHolder: function () {
-                var result = this.isParameterHolder() ? this : null;
+                var result = ((typeof (this.isParameterHolder) === "function") && this.isParameterHolder()) ? this : null;
                 var parent = this;
                 while (parent = parent.getParent())
-                    result = parent.isParameterHolder() ? parent : result;
+                    result = ((typeof (parent.isParameterHolder) === "function") && parent.isParameterHolder()) ? parent : result;
                 return result;
             },
 

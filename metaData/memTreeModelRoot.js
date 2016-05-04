@@ -596,7 +596,7 @@ define(
                         this._currState(Meta.State.Browse);
                     if (!this._prevState())
                         this._prevState(Meta.State.Browse);
-                    this._is_root = this.isInstanceOf(UCCELLO_CONFIG.classGuids.MemTreeModelRoot, true);
+                    this._is_root = this.getRootTreeElem() === this;
                 };
             },
 

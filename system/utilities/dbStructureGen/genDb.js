@@ -321,8 +321,26 @@ metaDataMgr.addDataModel("MemModelTest").addMemTreeModel("MemCompanyTree", "1821
 
 metaDataMgr.addDataModel("DMTaskList").addDbTreeModel("TaskListTree", { resName: "VirtualTaskList" })
 
-metaDataMgr.addDataModel("TaskParams").addMemTreeModel("TaskParamsTree", "b3746562-946f-46f6-b74f-a50eaff7a771", UCCELLO_CONFIG.classGuids.ProcParamTreeRoot)
+// Стартовые параметры Task
+var dm = metaDataMgr.addDataModel("TaskParams");
+dm.addMemTreeModel("TaskParamsTree", "b3746562-946f-46f6-b74f-a50eaff7a771", UCCELLO_CONFIG.classGuids.ProcParamTreeRoot)
     .addDataSource("TaskStages");
+dm.getTreeRoot("TaskParamsTree").setParameter("ProcessDef", "eba3f2d2-030f-ad40-f257-1b0be366a144");
+
+// DataTstCompany + DataContract + (DataTstCompany.Id = -1)
+dm = metaDataMgr.addDataModel("CreateCompany");
+dm.addDbTreeModel("DataCompanyTree", { resName: "DataTstCompany" })
+    .addDataSource({
+    model: { resName: "DataContract" },
+    field: {
+        resName: "DataContract",
+        elemName: "parent",
+    }
+});
+var filter = dm.getTreeRoot("DataCompanyTree").getFilter();
+filter.addParameter({ name: "ObjId", ptype: "int" });
+filter.addCondition({ leftExp: { field: "Id"}, op: "=", rightExp: { param: "ObjId" } });
+dm.getTreeRoot("DataCompanyTree").setParameter("ObjId", -1);
 
 metaDataMgr.addModel("DataLeadLog", "c4fa07b5-03f7-4041-6305-fbd301e7408a", "RootLeadLog", "bedf1851-cd51-657e-48a0-10ac45e31e20")
     .addField("LeadId", { type: "dataRef", model: "DataLead", refAction: "parentCascade", allowNull: true })
