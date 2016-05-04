@@ -4,8 +4,8 @@ if (typeof define !== 'function') {
 }
 
 define(
-    ['./memTreeModelRoot', '../predicate/parameter'],
-    function (MemTreeModelRoot, Parameter) {
+    ['./memTreeModelRoot', '../predicate/predicateParam'],
+    function (MemTreeModelRoot, PredicateParam) {
         var ParamTreeRoot = MemTreeModelRoot.extend({
 
             className: "ParamTreeRoot",
@@ -13,7 +13,7 @@ define(
             metaFields: [],
 
             metaCols: [
-                { "cname": "Parameters", "ctype": "Parameter" }
+                { "cname": "Parameters", "ctype": "PredicateParam" }
             ],
 
             init: function (cm, params) {
@@ -59,7 +59,7 @@ define(
                             parent: this,
                             colName: "Parameters"
                         };
-                        new Parameter(this.getDB(), ini_params);
+                        new PredicateParam(this.getDB(), ini_params);
                     };
                 };
             },

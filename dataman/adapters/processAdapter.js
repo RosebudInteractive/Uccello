@@ -8,6 +8,7 @@ define(
     function (/*Promise,*/ _, TestData) {
 
         var ADAPTERS = ["$testData", "processData", "requestData", , "processParams"];
+        var PROCESS_DEF_TYPE = "08b97860-179a-4292-a48d-bfb9535115d3";
 
         var iProcessAdapter = {
 
@@ -60,16 +61,26 @@ define(
                 };
 
                 try {
-                    //this._proxyWfe.getProcessDefParameters({ resName: "Simple Task Definition", resType: "08b97860-179a-4292-a48d-bfb9535115d3" }, localCallBack);
-                    this._proxyWfe.getProcessDefParameters("16c5c8fe-d767-ef8d-b7d8-50b7eb36eb68", localCallBack);
-                    
-                    //var result = _.cloneDeep(TestData);
-                    //if (guidRoot)
-                    //    result.$sys.guid = guidRoot;
-                    //if (done)
-                    //    setTimeout(function () {
-                    //        done(result);
-                    //    }, 0);
+
+                    switch (expression.adapter) {
+
+                        case "processParams":
+                            this._proxyWfe.getProcessDefParameters({ resName: "Simple Task Definition", resType: PROCESS_DEF_TYPE }, localCallBack);
+                            break;
+
+                        case "$testData":
+                            var result = _.cloneDeep(TestData);
+                            if (guidRoot)
+                                result.$sys.guid = guidRoot;
+                            if (done)
+                                setTimeout(function () {
+                                    done(result);
+                                }, 0);
+                            break;
+
+                        default:
+                            throw new Error("Unknow adapter type: \"" + expression.adapter + "\" !");
+                    };
                 }
                 catch (err) {
                     console.error("###ERROR: " + err.message);

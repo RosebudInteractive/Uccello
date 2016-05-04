@@ -325,7 +325,7 @@ metaDataMgr.addDataModel("DMTaskList").addDbTreeModel("TaskListTree", { resName:
 var dm = metaDataMgr.addDataModel("TaskParams");
 dm.addMemTreeModel("TaskParamsTree", "b3746562-946f-46f6-b74f-a50eaff7a771", UCCELLO_CONFIG.classGuids.ProcParamTreeRoot)
     .addDataSource("TaskStages");
-dm.getTreeRoot("TaskParamsTree").setParameter("ProcessDef", "eba3f2d2-030f-ad40-f257-1b0be366a144");
+dm.getTreeRoot("TaskParamsTree").setParameter("ProcessDefName", "Simple Task Definition");
 
 // DataTstCompany + DataContract + (DataTstCompany.Id = -1)
 dm = metaDataMgr.addDataModel("CreateCompany");

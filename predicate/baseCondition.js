@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../system/uobject', './parameter'],
-    function (UObject, Parameter) {
+    ['../system/uobject', './predicateParam'],
+    function (UObject, PredicateParam) {
 
         var BaseCondition = UObject.extend({
 

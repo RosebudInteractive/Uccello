@@ -16,7 +16,7 @@ define(
                     fname: "Ref",
                     ftype: {
                         type: "ref",
-                        res_elem_type: UCCELLO_CONFIG.classGuids.Parameter
+                        res_elem_type: UCCELLO_CONFIG.classGuids.PredicateParam
                     }
                 }
             ],

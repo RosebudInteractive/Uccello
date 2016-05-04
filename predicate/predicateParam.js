@@ -6,10 +6,10 @@ define(
     ['./baseParameter', './valueProp'],
     function (BaseParameter, ValueProp) {
 
-        var Parameter = BaseParameter.extend([new ValueProp(false)], {
+        var PredicateParam = BaseParameter.extend([new ValueProp(false)], {
 
-            className: "Parameter",
-            classGuid: UCCELLO_CONFIG.classGuids.Parameter,
+            className: "PredicateParam",
+            classGuid: UCCELLO_CONFIG.classGuids.PredicateParam,
             metaCols: [],
             metaFields: [
                 { fname: "Name", ftype: "string" },
@@ -21,6 +21,6 @@ define(
             }
         });
 
-        return Parameter;
+        return PredicateParam;
     }
 );
