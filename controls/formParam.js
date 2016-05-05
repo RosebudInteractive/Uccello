@@ -33,9 +33,9 @@ define(
 
             processDelta: function() {
                 //var obj = this.getObj();
-                if (this.isFldModified("Value","pd") && ( "onModify" in this)) {
+                /*if (this.isFldModified("Value","pd") && ( "onModify" in this)) {
                     this.onModify(this.value());
-                }
+                }*/
 				this._isProcessed(true);
             },
 
@@ -48,7 +48,11 @@ define(
             },
 
             value: function (value) {
-                return this._genericSetter("Value", value);
+                var val = this._genericSetter("Value", value);
+                if (value !== undefined && ( "onModify" in this)) {
+                    this.onModify(val);
+                }
+                return val;
             }
 
         });

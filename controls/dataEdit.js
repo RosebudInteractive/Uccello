@@ -10,7 +10,9 @@ define(
 
             className: "DataEdit",
             classGuid: UCCELLO_CONFIG.classGuids.DataEdit,
-            metaFields: [],
+            metaFields: [
+                {fname:"Multiline", ftype:"boolean"}
+            ],
 
             /**
              * Инициализация объекта
@@ -20,6 +22,10 @@ define(
             init: function(cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
                 this.params = params;
+            },
+
+            multiline: function(value) {
+                return this._genericSetter("Multiline", value);
             }
         });
         return DataEdit;
