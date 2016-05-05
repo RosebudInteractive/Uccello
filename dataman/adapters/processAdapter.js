@@ -65,7 +65,9 @@ define(
                     switch (expression.adapter) {
 
                         case "processParams":
-                            this._proxyWfe.getProcessDefParameters({ resName: "Simple Task Definition", resType: PROCESS_DEF_TYPE }, localCallBack);
+                            if (!(expression.params && expression.params.ProcessDefName))
+                                throw new Error("ProcessAdapter::requestData : Prameter \"ProcessDefName\" is undefined!");
+                            this._proxyWfe.getProcessDefParameters({ resName: expression.params.ProcessDefName, resType: PROCESS_DEF_TYPE }, localCallBack);
                             break;
 
                         case "$testData":
