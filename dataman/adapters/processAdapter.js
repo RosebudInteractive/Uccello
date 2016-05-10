@@ -8,6 +8,7 @@ define(
     function (/*Promise,*/ _, TestData) {
 
         var ADAPTERS = ["$testData", "processData", "requestData", , "processParams"];
+        var PROCESS_DEF_TYPE = "08b97860-179a-4292-a48d-bfb9535115d3";
 
         var iProcessAdapter = {
 
@@ -43,17 +44,54 @@ define(
             },
 
             requestData: function (guidRoot, expression, done) {
+
+                function localCallBack(result) {
+                    var res = {};
+                    if (result.result === "OK") {
+                        res = result.params;
+                        if (guidRoot)
+                            res.$sys.guid = guidRoot;
+                    }
+                    else
+                        console.error("###ERROR: " + result.message);
+                    if (done)
+                        setTimeout(function () {
+                            done(res);
+                        }, 0);
+                };
+
                 try {
-                    var result = _.cloneDeep(TestData);
-                    if (guidRoot)
-                        result.$sys.guid = guidRoot;
+
+                    switch (expression.adapter) {
+
+                        case "processParams":
+                            if (!(expression.params && expression.params.ProcessDefName))
+                                throw new Error("ProcessAdapter::requestData : Prameter \"ProcessDefName\" is undefined!");
+                            this._proxyWfe.getProcessDefParameters({ resName: expression.params.ProcessDefName, resType: PROCESS_DEF_TYPE }, localCallBack);
+                            break;
+
+                        case "$testData":
+                            var result = _.cloneDeep(TestData);
+                            if (guidRoot)
+                                result.$sys.guid = guidRoot;
+                            if (done)
+                                setTimeout(function () {
+                                    done(result);
+                                }, 0);
+                            break;
+
+                        default:
+                            throw new Error("Unknow adapter type: \"" + expression.adapter + "\" !");
+                    };
                 }
                 catch (err) {
                     console.error("###ERROR: " + err.message);
                     result = {};
+                    if (done)
+                        setTimeout(function () {
+                            done(result);
+                        }, 0);
                 };
-                if (done)
-                    done(result);
             },
 
             saveData: function (data_object, options, cb) {
@@ -69,7 +107,9 @@ define(
                     result = { result: "ERROR", message: err.message };
                 };
                 if (cb)
-                    cb(result);
+                    setTimeout(function () {
+                        cb(result);
+                    }, 0);
             }
 
         });

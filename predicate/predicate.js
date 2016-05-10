@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['./baseCondition', './condition', './parameter', './refParameter', './dsField', './dsAlias'],
-    function (BaseCondition, Condition, Parameter, RefParameter, DsField, DsAlias) {
+    ['./baseCondition', './condition', './predicateParam', './refParameter', './dsField', './dsAlias'],
+    function (BaseCondition, Condition, PredicateParam, RefParameter, DsField, DsAlias) {
 
         var Predicate = BaseCondition.extend({
 
@@ -242,7 +242,7 @@ define(
                         parent: param_holder,
                         colName: "Parameters"
                     };
-                    parameter = new Parameter(this.getDB(), ini_params);
+                    parameter = new PredicateParam(this.getDB(), ini_params);
                 };
 
                 var pvalue = { type: param.ptype };

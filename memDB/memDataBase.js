@@ -845,6 +845,7 @@ define(
 		    },
 
 		    getListOfTypes: function (obj, types, notCheck) {
+		        var self = this;
 		        var objTypeGuid = null;
 		        if (!types.list)
 		            types.list = {};
@@ -878,7 +879,22 @@ define(
                         && ((!constructHolder.getComponent(type_guid)) || notCheck)) {
 		                types.list[type_guid] = true;
 		                types.arrTypes.push(type_guid);
-		            };
+		            }
+		            //else
+		            //    if (!types.list[type_guid]) {
+		            //        var typeObj = self.getObj(type_guid);
+		            //        if (!typeObj) {
+		            //            if (constructHolder) {
+		            //                var constr = constructHolder.getComponent(type_guid);
+		            //                if (constr)
+		            //                    constr = constr.constr;
+		            //                if (constr) {
+		            //                    new constr(self);
+		            //                    typeObj = self.getObj(type_guid);
+		            //                }
+		            //            };
+		            //        };
+		            //    };
 		        };
 
 		        if (obj.$sys.requiredTypes && (obj.$sys.requiredTypes.length > 0))

@@ -48,19 +48,36 @@ define(
                 }
             },
 
-            loadForm: function(formGuid, callback) {
+            loadForm: function(formGuid, options, callback) {
+                if (typeof options == "function") {
+                    callback = options;
+                    options = null;
+                }
+
                 var that = this;
                 var cm = this.getControlMgr();
                 cm.tranStart();
                 cm.getRoots([formGuid], { rtype: "res", depth: 1  }, function(guids) {
+
                     var obj = cm.getContext().getContextCM().get(guids.guids[0]);
-                    if (obj)
+                    if (obj) {
+                        if (options) {
+                            var form = obj.getForm();
+                            var fParams = form.getCol("Params");
+                            for (var i = 0; i < fParams.count(); i++) {
+                                var param = fParams.get(i);
+                                if (param.kind() == "in" && options[param.name()] !== undefined)
+                                    param.value(options[param.name()]);
+                            }
+                        }
                         cm.allDataInit(obj.getForm());
+                    }
                     cm.tranCommit();
                     if (obj) {
                         obj.getForm().selfRender(false);
                         that.resource(guids.guids[0]);
                     }
+                    if (callback) callback(obj);
                 });
 
             }

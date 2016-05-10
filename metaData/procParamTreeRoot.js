@@ -23,7 +23,7 @@ define(
 
             _getParamsTemplate: function () {
                 return {
-                    "ProcessDef": { type: "guid" }
+                    "ProcessDefName": { type: "string" }
                 };
             }
         });
