@@ -384,7 +384,7 @@ define(
                     if (DEBUG)
                         console.warn("### WARNING: \"" + self.name() + "\" has received data.");
 
-                    var dataRoot = self.getDB().getObj(res.guids[0]);
+                    var dataRoot = (res && res.guids && (res.guids.length === 1)) ? self.getDB().getObj(res.guids[0]) : self.root();
                     self.root(dataRoot ? dataRoot : null);
                     if (dataRoot && self._dataset)
                         self._dataset.onDataChanged();

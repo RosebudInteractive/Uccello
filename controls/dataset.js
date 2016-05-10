@@ -64,6 +64,11 @@ define(
                     this._dataInit(true, "Dataset::dataInit");
             },
 
+            refreshData: function () {
+                if (this.active() && (this.getState() === Meta.State.Browse))
+                    this._dataInit(false, "Dataset::refreshData");
+            },
+
             _unSubscribeAll: function () {
                 this._handlers.forEach(function (elem) {
                     elem.obj.off(elem.handler);
