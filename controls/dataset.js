@@ -372,12 +372,12 @@ define(
                     var action = "edit";
                     var obj = this.getCurrentDataObject();
                     var err_msg = "Current object is undefined.";
-                    if (this.cachedUpdates() === true) {
-                        // Временно не поддерживаем !!!
-                        throw new Error("Cached Updates mode isn't supported currently !!!");
-                    };
-                    if (!obj)
-                        throw new Error(err_msg);
+                    ////if (this.cachedUpdates() === true) {
+                    ////    // Временно не поддерживаем !!!
+                    ////    throw new Error("Cached Updates mode isn't supported currently !!!");
+                    ////};
+                    ////if (!obj)
+                    ////    throw new Error(err_msg);
                     this.event.fire({
                         type: 'beforeStateChange',
                         target: this,

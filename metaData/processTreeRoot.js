@@ -30,12 +30,11 @@ define(
                     $processData.saveData(this.getDB().serialize(obj, true), opts, cb);
                 }
                 catch (err) {
-                    result = { result: "ERROR", message: err.message };
+                    if (cb)
+                        setTimeout(function () {
+                            cb({ result: "ERROR", message: err.message });
+                        }, 0);
                 };
-                if (cb)
-                    setTimeout(function () {
-                        cb(result);
-                    }, 0);
             }
         });
 

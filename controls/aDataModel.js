@@ -19,6 +19,7 @@ define(
 
             init: function(cm,params){
                 UccelloClass.super.apply(this, [cm, params]);
+                this._isDataInit = false;
 
                 if (params) {
                     if (this.get("OnDataInit"))
@@ -45,9 +46,14 @@ define(
                                             empty = false;
                                             break;
                                         }
-                                        if (empty) {
+                                        if (empty && (!this._isDataInit)) {
                                             this.event.fire({ type: 'dataInit', target: this });
-                                            if ("onDataInit" in this) this.onDataInit()
+                                            if ("onDataInit" in this)
+                                                setTimeout(function () {
+                                                    that._isDataInit = true;
+                                                    that.onDataInit();
+                                                }, 0);
+
                                         }
                                     }
                                 });

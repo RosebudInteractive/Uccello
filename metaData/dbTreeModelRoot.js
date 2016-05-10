@@ -334,29 +334,36 @@ define(
                         throw new Error("DbTreeModelRoot::loadObject: Data Set is waiting for data!");
 
                     params.expr = { model: this.makeRequest(withSubTree ? Meta.ReqLevel.All : Meta.ReqLevel.AllAndEmptyChilds), is_single: true };
-                    var dataRoot = singleObject.getParent();
-                    if (dataRoot) {
-                        params.path = {
-                            globalRoot: singleObject.getRoot().getGuid(),
-                            dataRoot: singleObject.getGuid(),
-                            parent: dataRoot.getGuid(),
-                            parentColName: singleObject.getColName()
-                        };
-
-                        var keyVal = singleObject.get(singleObject._keyField);
-
-                        if (!this._predicate)
-                            this._predicate = new Predicate(this.getDB(), {});
-                        this._predicate
-                            .addConditionWithClear({ field: singleObject._keyField, op: "=", value: keyVal });
-
-                        params.expr.predicate = this.getDB().serialize(this._predicate, true);
-
-                        this._isWaitingForData = true;
-                        this._requestData([singleObject.getGuid()], params, icb);
+                    if (singleObject.isInstanceOf(UCCELLO_CONFIG.classGuids.DataRoot)) {
+                        // ѕри попытке перечитать DataRoot пока ничего не делаем !!!!
+                        if (cb)
+                            cb(result);
                     }
-                    else
-                        throw new Error("DbTreeModelRoot::loadData: Undefined \"DataRoot\"!");
+                    else {
+                        var dataRoot = singleObject.getParent();
+                        if (dataRoot) {
+                            params.path = {
+                                globalRoot: singleObject.getRoot().getGuid(),
+                                dataRoot: singleObject.getGuid(),
+                                parent: dataRoot.getGuid(),
+                                parentColName: singleObject.getColName()
+                            };
+
+                            var keyVal = singleObject.get(singleObject._keyField);
+
+                            if (!this._predicate)
+                                this._predicate = new Predicate(this.getDB(), {});
+                            this._predicate
+                                .addConditionWithClear({ field: singleObject._keyField, op: "=", value: keyVal });
+
+                            params.expr.predicate = this.getDB().serialize(this._predicate, true);
+
+                            this._isWaitingForData = true;
+                            this._requestData([singleObject.getGuid()], params, icb);
+                        }
+                        else
+                            throw new Error("DbTreeModelRoot::loadData: Undefined \"DataRoot\"!");
+                    }
                 }
                 catch (err) {
                     if (cb)

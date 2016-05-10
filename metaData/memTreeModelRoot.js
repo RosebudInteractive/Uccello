@@ -90,8 +90,10 @@ define(
                         throw new Error("Can't set \"Edit\" state, because some of childs are in  \"Edit\" state.");
 
                     this.getDB()._iterateChilds(this, true, function (tree_elem, lvl) {
-                        tree_elem._currState(Meta.State.Edit);
-                        tree_elem._editSet("");
+                        if (tree_elem.isInstanceOf(UCCELLO_CONFIG.classGuids.MemTreeModelRoot)) {
+                            tree_elem._currState(Meta.State.Edit);
+                            tree_elem._editSet("");
+                        };
                     });
                     this._editSet("current");
                     this._childEnterEdit();
@@ -172,8 +174,10 @@ define(
                             try {
                                 if (res.result === "OK") {
                                     self.getDB()._iterateChilds(self, true, function (tree_elem, lvl) {
-                                        tree_elem._currState(Meta.State.Browse);
-                                        tree_elem._editSet("");
+                                        if (tree_elem.isInstanceOf(UCCELLO_CONFIG.classGuids.MemTreeModelRoot)) {
+                                            tree_elem._currState(Meta.State.Browse);
+                                            tree_elem._editSet("");
+                                        };
                                     });
                                     self._childLeaveEdit();
                                     // Удалить лог изменений
@@ -226,8 +230,10 @@ define(
                     if (this._editSet().length !== 0) {
 
                         this.getDB()._iterateChilds(this, true, function (tree_elem, lvl) {
-                            tree_elem._currState(Meta.State.Browse);
-                            tree_elem._editSet("");
+                            if (tree_elem.isInstanceOf(UCCELLO_CONFIG.classGuids.MemTreeModelRoot)) {
+                                tree_elem._currState(Meta.State.Browse);
+                                tree_elem._editSet("");
+                            };
                         });
 
                         this._childLeaveEdit();
