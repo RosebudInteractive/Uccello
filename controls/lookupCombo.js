@@ -19,7 +19,8 @@ define(
                     type: "ref",
                     res_elem_type: UCCELLO_CONFIG.classGuids.DatasetBase
                 }},
-                {fname: "DisplayField", ftype: "string"}
+                {fname: "DisplayField", ftype: "string"},
+                {fname: "ValueField", ftype: "string"}
             ],
 
             /**
@@ -35,6 +36,9 @@ define(
                 return this._genericSetter("LookupDataset", value);
             },
             displayField: function(value) {
+                return this._genericSetter("DisplayField", value);
+            },
+            valueField: function(value) {
                 return this._genericSetter("DisplayField", value);
             }
         });
