@@ -257,6 +257,13 @@ define(
                                     });
                                 break;
 
+                            case "requestData":
+                                console.log("###PROCESSADAPTER::SAVEDATA");
+                                console.log("DATA OBJECT: " + JSON.stringify(data_object));
+                                console.log("OPTIONS: " + JSON.stringify(options));
+                                console.log("###");
+                                break;
+
                             case "$testData":
                                 console.log("###PROCESSADAPTER::SAVEDATA");
                                 console.log("DATA OBJECT: " + JSON.stringify(data_object));
