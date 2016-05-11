@@ -141,7 +141,7 @@ metaDataMgr.addModel("Process", "3ab1e52a-fa66-4fa5-bda3-6ed6e3be1366", "RootPro
     .addField("DefinitionId", { type: "dataRef", model: "ProcessDef", refAction: "parentRestrict", allowNull: false })
     .addField("ParentId", { type: "dataRef", model: "Process", refAction: "parentRestrict", allowNull: true })
     .inherit("Task", "4b97801a-f97e-45d2-8568-c5bc62291009", "RootTask", "1c76c4c9-5916-493d-a349-a9ca6f0d8e12")
-    .addField("TaskStageLogId", { type: "dataRef", model: "TaskStageLog", refAction: "parentRestrict", allowNull: false })
+    .addField("TaskStageLogId", { type: "dataRef", model: "TaskStageLog", refAction: "parentRestrict", allowNull: true })
     .addField("TaskState", { type: "enum", values: ["Draft", "InProgress", "Paused", "Finished", "Canceled"], allowNull: false })
     .addField("Number", { type: "string", length: 50, allowNull: false })
     .addField("Specification", { type: "string", allowNull: false })

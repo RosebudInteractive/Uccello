@@ -62,7 +62,7 @@ define(
                         {
                             type: 'del',
                             subscriber: this,
-                            callback: function (ds) { delete this._refreshedDataSets[ds.getLid()]; }
+                            callback: function (ds) { delete this._refreshedDataSets[ds.obj.getLid()]; }
                         }
                     ]);
                 }

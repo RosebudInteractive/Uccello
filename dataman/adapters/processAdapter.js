@@ -96,17 +96,49 @@ define(
 
             saveData: function (data_object, options, cb) {
                 var result = { result: "OK" };
-
+                var is_done = false;
                 try {
-                    console.log("###PROCESSADAPTER::SAVEDATA");
-                    console.log("DATA OBJECT: " + JSON.stringify(data_object));
-                    console.log("OPTIONS: " + JSON.stringify(options));
-                    console.log("###");
+                    if (options && options.expr && options.expr.adapter) {
+
+                        switch (options.expr.adapter) {
+
+                            case "processParams":
+                                if (!(options.expr.params && options.expr.params.ProcessDefName))
+                                    throw new Error("ProcessAdapter::saveData : Prameter \"ProcessDefName\" is undefined!");
+                                is_done = true;
+                                this._proxyWfe.startProcessInstanceAndWait(
+                                    options.expr.params.ProcessDefName,
+                                    {
+                                        taskParams: data_object,
+                                        requestName: 'TaskRequest',
+                                        timeout: 0
+                                    },
+                                    function (result) {
+                                        if (cb)
+                                            setTimeout(function () {
+                                                cb(result);
+                                            }, 0);
+                                    });
+                                break;
+
+                            case "$testData":
+                                console.log("###PROCESSADAPTER::SAVEDATA");
+                                console.log("DATA OBJECT: " + JSON.stringify(data_object));
+                                console.log("OPTIONS: " + JSON.stringify(options));
+                                console.log("###");
+                                break;
+
+                            default:
+                                throw new Error("Unknow adapter type: \"" + options.expr.adapter + "\" !");
+                        };
+                    }
+                    else
+                        throw new Error("Unknown expression or adapter!");
                 }
                 catch (err) {
                     result = { result: "ERROR", message: err.message };
                 };
-                if (cb)
+                if (cb && (!is_done))
                     setTimeout(function () {
                         cb(result);
                     }, 0);
