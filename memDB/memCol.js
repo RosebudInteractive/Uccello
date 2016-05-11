@@ -197,7 +197,7 @@ define(
 			},
 
 			clear: function(){
-				for (var i = this._elems.length - 1; i <= 0; i--){
+				for (var i = this._elems.length - 1; i >= 0; i--){
 					this._del(this._elems[i])
 				}
 			}
