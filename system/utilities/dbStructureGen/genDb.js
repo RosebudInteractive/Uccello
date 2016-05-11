@@ -276,7 +276,7 @@ metaDataMgr.addVirtualModel("VirtualAddress", "4e447618-1da8-42cc-b38e-792aedc40
 metaDataMgr.addVirtualModel("VirtualTaskList", "175caa6f-cbd6-4aed-bac1-a2e255c8e7e9", "RootVTaskList", "3fef38a9-08c4-4e38-81d1-ceb814eae9c2")
     .setDefaultSQL(
     "SELECT p.Id AS TaskId, t.Number, p.Name, COALESCE(s.StageCode,'Under Construction') AS Stage,\n" +
-        "  r.Id AS RequestId, t.ObjId, u.ResGuid\n" +
+        "  r.Id AS RequestId, t.ObjId, u.ResGuid, u.Name TaskDefName\n" +
         "FROM Process p\n" +
         "  JOIN Task t ON t.ParentId = p.Id\n" +
         "  JOIN SysResVer v ON v.Id = p.DefinitionId\n" +
@@ -290,7 +290,8 @@ metaDataMgr.addVirtualModel("VirtualTaskList", "175caa6f-cbd6-4aed-bac1-a2e255c8
     .addField("Stage", { type: "string", length: 20 })
     .addField("RequestId", { type: "int" })
     .addField("ObjId", { type: "int" })
-    .addField("ResGuid", { type: "guid" });
+    .addField("ResGuid", { type: "guid" })
+    .addField("TaskDefName", { type: "string", length: 255 });
 
 metaDataMgr.addDataModel("DataModelTest").addDbTreeModel("DataCompanyTree", { resName: "DataTstCompany" })
     .addDataSource({
@@ -326,6 +327,18 @@ var dm = metaDataMgr.addDataModel("TaskParams");
 dm.addMemTreeModel("TaskParamsTree", "b3746562-946f-46f6-b74f-a50eaff7a771", UCCELLO_CONFIG.classGuids.ProcParamTreeRoot)
     .addDataSource("TaskStages");
 dm.getTreeRoot("TaskParamsTree").setParameter("ProcessDefName", "Simple Task Definition");
+
+// Переменные процесса
+var dm = metaDataMgr.addDataModel("ProcessVars");
+dm.addMemTreeModel("ProcessVarsTree", "b8fd05dc-08de-479e-8557-dba372e2b4b6", UCCELLO_CONFIG.classGuids.ProcDataTreeRoot)
+    .addDataSource("TaskStages");
+dm.getTreeRoot("ProcessVarsTree").setParameter("ProcessId", -1);
+
+// Task Request
+var dm = metaDataMgr.addDataModel("RequestData");
+dm.addMemTreeModel("RequestDataTree", "31809e1f-a2c2-4dbb-b653-51e8bdf950a2", UCCELLO_CONFIG.classGuids.RequestTreeRoot)
+    .addDataSource("AvailableNodes");
+dm.getTreeRoot("RequestDataTree").setParameter("RequestId", -1);
 
 // DataTstCompany + DataContract + (DataTstCompany.Id = -1)
 dm = metaDataMgr.addDataModel("CreateCompany");
