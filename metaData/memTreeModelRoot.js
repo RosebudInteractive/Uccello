@@ -503,6 +503,8 @@ define(
                 var obj = null;
                 if (this._is_root) {
                     obj = this.rootObj();
+                    if ((!obj) || (obj.getGuid() !== cursor_value))
+                        obj = null;
                 }
                 else {
                     var col = this.getDataCollection();

@@ -60,6 +60,36 @@ define(
                         }, 0);
                 };
 
+                function reqCallBack(result) {
+                    var res = {};
+                    if (result.result === "OK") {
+                        res = result.params;
+                        if (guidRoot)
+                            res.$sys.guid = guidRoot;
+                    }
+                    else
+                        console.error("###ERROR: " + result.message);
+                    if (done)
+                        setTimeout(function () {
+                            done(res);
+                        }, 0);
+                };
+
+                function varsCallBack(result) {
+                    var res = {};
+                    if (result.result === "OK") {
+                        res = result.vars;
+                        if (guidRoot)
+                            res.$sys.guid = guidRoot;
+                    }
+                    else
+                        console.error("###ERROR: " + result.message);
+                    if (done)
+                        setTimeout(function () {
+                            done(res);
+                        }, 0);
+                };
+
                 try {
 
                     switch (expression.adapter) {
@@ -70,96 +100,108 @@ define(
                             this._proxyWfe.getProcessDefParameters({ resName: expression.params.ProcessDefName, resType: PROCESS_DEF_TYPE }, localCallBack);
                             break;
 
+                        //case "requestData":
+                        //    if (!(expression.params && expression.params.RequestId))
+                        //        throw new Error("ProcessAdapter::requestData : Prameter \"RequestId\" is undefined!");
+                        //    this._proxyWfe.waitForRequest({ requestId: expression.params.RequestId }, reqCallBack);
+                        //    break;
+
                         case "processData":
-
-                            var result = {
-                                "$sys": {
-                                    "guid": "f00b5412-4dc6-a635-fe2b-2633a1d75ee4",
-                                    "typeGuid": "b8fd05dc-08de-479e-8557-dba372e2b4b6"
-                                },
-                                "ver": 2,
-                                "fields": {
-                                    "Name": "Simple Task Definition",
-                                    "TaskNumber": "1185",
-                                    "Specification": "Simple Task Definition 1185",
-                                    "ObjId": 1185
-                                },
-                                "collections": {
-                                    "TaskStages": {
-                                        "0": {
-                                            "$sys": {
-                                                "guid": "4a7e903f-4990-238f-75af-74fabfcc51d6",
-                                                "typeGuid": "c2f02b7a-1204-4dca-9ece-3400b4550c8d"
-                                            },
-                                            "ver": 2,
-                                            "fields": {
-                                                "Guid": "e2b8d193-7d89-a086-c01d-a69f472ccabf",
-                                                "TaskDefStageId": 1,
-                                                "StageCode": "task1",
-                                                "StageState": 0
-                                            },
-                                            "collections": {
-                                                "Incoming": {},
-                                                "Outgoing": {},
-                                                "Connectors": {},
-                                                "Parameters": {},
-                                                "Requests": {},
-                                                "Responses": {}
-                                            }
-                                        },
-                                        "1": {
-                                            "$sys": {
-                                                "guid": "6ba6dd1b-8137-cc76-4240-2fc016baad0f",
-                                                "typeGuid": "c2f02b7a-1204-4dca-9ece-3400b4550c8d"
-                                            },
-                                            "ver": 2,
-                                            "fields": {
-                                                "Guid": "7cb27018-dc9e-1eba-4c9e-28587ae43111",
-                                                "TaskDefStageId": 3,
-                                                "StageCode": "task2",
-                                                "StageState": 0
-                                            },
-                                            "collections": {
-                                                "Incoming": {},
-                                                "Outgoing": {},
-                                                "Connectors": {},
-                                                "Parameters": {},
-                                                "Requests": {},
-                                                "Responses": {}
-                                            }
-                                        },
-                                        "2": {
-                                            "$sys": {
-                                                "guid": "dd1dfdf5-5a1a-190a-9716-f657ccf27fc1",
-                                                "typeGuid": "c2f02b7a-1204-4dca-9ece-3400b4550c8d"
-                                            },
-                                            "ver": 2,
-                                            "fields": {
-                                                "Guid": "e350af85-07af-577c-8165-4f77d2bbc436",
-                                                "TaskDefStageId": 2,
-                                                "StageCode": "task3",
-                                                "StageState": 0
-                                            },
-                                            "collections": {
-                                                "Incoming": {},
-                                                "Outgoing": {},
-                                                "Connectors": {},
-                                                "Parameters": {},
-                                                "Requests": {},
-                                                "Responses": {}
-                                            }
-                                        }
-                                    }
-                                }
-                            };
-
-                            if (guidRoot)
-                                result.$sys.guid = guidRoot;
-                            if (done)
-                                setTimeout(function () {
-                                    done(result);
-                                }, 0);
+                            if (!(expression.params && expression.params.ProcessId))
+                                throw new Error("ProcessAdapter::requestData : Prameter \"ProcessId\" is undefined!");
+                            this._proxyWfe.getProcessVars(expression.params.ProcessId, varsCallBack);
                             break;
+
+                        //case "processData":
+
+                        //    var result = {
+                        //        "$sys": {
+                        //            "guid": "f00b5412-4dc6-a635-fe2b-2633a1d75ee4",
+                        //            "typeGuid": "b8fd05dc-08de-479e-8557-dba372e2b4b6"
+                        //        },
+                        //        "ver": 2,
+                        //        "fields": {
+                        //            "Name": "Simple Task Definition",
+                        //            "TaskNumber": "1185",
+                        //            "Specification": "Simple Task Definition 1185",
+                        //            "ObjId": 1185
+                        //        },
+                        //        "collections": {
+                        //            "TaskStages": {
+                        //                "0": {
+                        //                    "$sys": {
+                        //                        "guid": "4a7e903f-4990-238f-75af-74fabfcc51d6",
+                        //                        "typeGuid": "c2f02b7a-1204-4dca-9ece-3400b4550c8d"
+                        //                    },
+                        //                    "ver": 2,
+                        //                    "fields": {
+                        //                        "Guid": "e2b8d193-7d89-a086-c01d-a69f472ccabf",
+                        //                        "TaskDefStageId": 1,
+                        //                        "StageCode": "task1",
+                        //                        "StageState": 0
+                        //                    },
+                        //                    "collections": {
+                        //                        "Incoming": {},
+                        //                        "Outgoing": {},
+                        //                        "Connectors": {},
+                        //                        "Parameters": {},
+                        //                        "Requests": {},
+                        //                        "Responses": {}
+                        //                    }
+                        //                },
+                        //                "1": {
+                        //                    "$sys": {
+                        //                        "guid": "6ba6dd1b-8137-cc76-4240-2fc016baad0f",
+                        //                        "typeGuid": "c2f02b7a-1204-4dca-9ece-3400b4550c8d"
+                        //                    },
+                        //                    "ver": 2,
+                        //                    "fields": {
+                        //                        "Guid": "7cb27018-dc9e-1eba-4c9e-28587ae43111",
+                        //                        "TaskDefStageId": 3,
+                        //                        "StageCode": "task2",
+                        //                        "StageState": 0
+                        //                    },
+                        //                    "collections": {
+                        //                        "Incoming": {},
+                        //                        "Outgoing": {},
+                        //                        "Connectors": {},
+                        //                        "Parameters": {},
+                        //                        "Requests": {},
+                        //                        "Responses": {}
+                        //                    }
+                        //                },
+                        //                "2": {
+                        //                    "$sys": {
+                        //                        "guid": "dd1dfdf5-5a1a-190a-9716-f657ccf27fc1",
+                        //                        "typeGuid": "c2f02b7a-1204-4dca-9ece-3400b4550c8d"
+                        //                    },
+                        //                    "ver": 2,
+                        //                    "fields": {
+                        //                        "Guid": "e350af85-07af-577c-8165-4f77d2bbc436",
+                        //                        "TaskDefStageId": 2,
+                        //                        "StageCode": "task3",
+                        //                        "StageState": 0
+                        //                    },
+                        //                    "collections": {
+                        //                        "Incoming": {},
+                        //                        "Outgoing": {},
+                        //                        "Connectors": {},
+                        //                        "Parameters": {},
+                        //                        "Requests": {},
+                        //                        "Responses": {}
+                        //                    }
+                        //                }
+                        //            }
+                        //        }
+                        //    };
+
+                        //    if (guidRoot)
+                        //        result.$sys.guid = guidRoot;
+                        //    if (done)
+                        //        setTimeout(function () {
+                        //            done(result);
+                        //        }, 0);
+                        //    break;
 
                         case "requestData":
                             var result = {

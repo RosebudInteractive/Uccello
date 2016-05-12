@@ -21,6 +21,20 @@ define(
                 return "requestData";
             },
 
+
+            save: function (is_cached_upd, options, cb) {
+                function localCallback(result) {
+                    var res = result;
+                    if (result.result === "OK") {
+                    };
+                    if(cb)
+                        setTimeout(function () {
+                            cb(res);
+                        }, 0);
+                };
+                UccelloClass.super.apply(this, [is_cached_upd, options, localCallback]);
+            },
+
             _getParamsTemplate: function () {
                 return {
                     "RequestId": { type: "int" }
