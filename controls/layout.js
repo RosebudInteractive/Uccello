@@ -22,7 +22,6 @@ define(
                 }},
                 {fname:"Width", ftype:"string"},
                 {fname:"Height", ftype:"string"},
-                {fname:"MinTargetWidth", ftype: "int"},
                 {fname:"MaxTargetWidth", ftype:"int"},
                 {fname:"TabNumber", ftype:"int"},
                 {fname:"SizeUnits", ftype:"int"}
@@ -71,10 +70,6 @@ define(
 
             control: function (value) {
                 return this._genericSetter("Control", value);
-            },
-
-            minTargetWidth: function(value) {
-                return this._genericSetter("MinTargetWidth", value);
             },
 
             maxTargetWidth: function(value) {

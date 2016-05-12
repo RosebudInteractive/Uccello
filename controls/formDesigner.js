@@ -182,7 +182,6 @@ define(
                         "ResElemName": "Gen_Layout_" + id.id,
                         "Direction": layout.direction(),
                         "Control": layout.control() ? guidMap[layout.control().getGuid()] : null,
-                        "MinTargetWidth": layout.minTargetWidth(),
                         "MaxTargetWidth": layout.maxTargetWidth()
                     },
                     "collections": {
