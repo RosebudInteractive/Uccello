@@ -63,7 +63,7 @@ define(
                 function reqCallBack(result) {
                     var res = {};
                     if (result.result === "OK") {
-                        res = result.params;
+                        res = result.requestInfo.taskParams;
                         if (guidRoot)
                             res.$sys.guid = guidRoot;
                     }
@@ -100,11 +100,11 @@ define(
                             this._proxyWfe.getProcessDefParameters({ resName: expression.params.ProcessDefName, resType: PROCESS_DEF_TYPE }, localCallBack);
                             break;
 
-                        //case "requestData":
-                        //    if (!(expression.params && expression.params.RequestId))
-                        //        throw new Error("ProcessAdapter::requestData : Prameter \"RequestId\" is undefined!");
-                        //    this._proxyWfe.waitForRequest({ requestId: expression.params.RequestId }, reqCallBack);
-                        //    break;
+                        case "requestData":
+                            if (!(expression.params && expression.params.RequestId))
+                                throw new Error("ProcessAdapter::requestData : Prameter \"RequestId\" is undefined!");
+                            this._proxyWfe.waitForRequest({ requestId: expression.params.RequestId }, 0, reqCallBack);
+                            break;
 
                         case "processData":
                             if (!(expression.params && expression.params.ProcessId))
@@ -203,50 +203,50 @@ define(
                         //        }, 0);
                         //    break;
 
-                        case "requestData":
-                            var result = {
-                                "$sys": {
-                                    "guid": "4552682f-b144-dfe1-e972-b893c1635d51",
-                                    "typeGuid": "31809e1f-a2c2-4dbb-b653-51e8bdf950a2"
-                                },
-                                "fields": {},
-                                "collections": {
-                                    "AvailableNodes": {
-                                        "0": {
-                                            "$sys": {
-                                                "guid": "6c58e405-75f4-a593-779d-8103623200fa",
-                                                "typeGuid": "9232bbd5-e2f8-466a-877f-5bc6576b5d02"
-                                            },
-                                            "ver": 1,
-                                            "fields": {
-                                                "Name": "Node",
-                                                "Value": "task1"
-                                            },
-                                            "collections": {}
-                                        },
-                                        "1": {
-                                            "$sys": {
-                                                "guid": "e270ec64-2943-4dd3-2e04-f3218ad66ed7",
-                                                "typeGuid": "9232bbd5-e2f8-466a-877f-5bc6576b5d02"
-                                            },
-                                            "ver": 1,
-                                            "fields": {
-                                                "Name": "Node",
-                                                "Value": "task2"
-                                            },
-                                            "collections": {}
-                                        }
-                                    }
-                                }
-                            };
+                        //case "requestData":
+                        //    var result = {
+                        //        "$sys": {
+                        //            "guid": "4552682f-b144-dfe1-e972-b893c1635d51",
+                        //            "typeGuid": "31809e1f-a2c2-4dbb-b653-51e8bdf950a2"
+                        //        },
+                        //        "fields": {},
+                        //        "collections": {
+                        //            "AvailableNodes": {
+                        //                "0": {
+                        //                    "$sys": {
+                        //                        "guid": "6c58e405-75f4-a593-779d-8103623200fa",
+                        //                        "typeGuid": "9232bbd5-e2f8-466a-877f-5bc6576b5d02"
+                        //                    },
+                        //                    "ver": 1,
+                        //                    "fields": {
+                        //                        "Name": "Node",
+                        //                        "Value": "task1"
+                        //                    },
+                        //                    "collections": {}
+                        //                },
+                        //                "1": {
+                        //                    "$sys": {
+                        //                        "guid": "e270ec64-2943-4dd3-2e04-f3218ad66ed7",
+                        //                        "typeGuid": "9232bbd5-e2f8-466a-877f-5bc6576b5d02"
+                        //                    },
+                        //                    "ver": 1,
+                        //                    "fields": {
+                        //                        "Name": "Node",
+                        //                        "Value": "task2"
+                        //                    },
+                        //                    "collections": {}
+                        //                }
+                        //            }
+                        //        }
+                        //    };
 
-                            if (guidRoot)
-                                result.$sys.guid = guidRoot;
-                            if (done)
-                                setTimeout(function () {
-                                    done(result);
-                                }, 0);
-                            break;
+                        //    if (guidRoot)
+                        //        result.$sys.guid = guidRoot;
+                        //    if (done)
+                        //        setTimeout(function () {
+                        //            done(result);
+                        //        }, 0);
+                        //    break;
 
                         case "$testData":
                             var result = _.cloneDeep(TestData);
@@ -300,7 +300,26 @@ define(
                                 break;
 
                             case "requestData":
-                                console.log("###PROCESSADAPTER::SAVEDATA");
+                                if (!(options.expr.params && options.expr.params.RequestId))
+                                    throw new Error("ProcessAdapter::saveData : Prameter \"RequestId\" is undefined!");
+                                is_done = true;
+                                var responseObj = {
+                                    requestID: options.expr.params.RequestId,
+                                    taskParams: data_object
+                                };
+                                console.log("###");
+                                console.log("###Before processResponse: " + JSON.stringify(responseObj));
+                                console.log("###");
+                                this._proxyWfe.processResponse(responseObj, 0, function (result) {
+                                    console.log("###");
+                                    console.log("###Callback processResponse: " + JSON.stringify(data_object));
+                                    console.log("###");
+                                    if (cb)
+                                        setTimeout(function () {
+                                            cb(result);
+                                        }, 0);
+                                });
+                                console.log("###PROCESSADAPTER::SAVEDATA: ADAPTER: "+ options.expr.adapter);
                                 console.log("DATA OBJECT: " + JSON.stringify(data_object));
                                 console.log("OPTIONS: " + JSON.stringify(options));
                                 console.log("###");
