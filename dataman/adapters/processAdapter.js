@@ -310,14 +310,30 @@ define(
                                 console.log("###");
                                 console.log("###Before processResponse: " + JSON.stringify(responseObj));
                                 console.log("###");
+                                var self = this;
                                 this._proxyWfe.processResponse(responseObj, 0, function (result) {
                                     console.log("###");
                                     console.log("###Callback processResponse: " + JSON.stringify(data_object));
                                     console.log("###");
-                                    if (cb)
-                                        setTimeout(function () {
-                                            cb(result);
-                                        }, 0);
+                                    if (result.result === "OK") {
+                                        console.log("###");
+                                        console.log("###WaitForRequest: " + JSON.stringify(result));
+                                        console.log("###");
+                                        self._proxyWfe.waitForRequest({ processId: result.processID, requestName: "TaskRequest" }, 0, function (result) {
+                                            console.log("###");
+                                            console.log("###Callback WaitForRequest: " + JSON.stringify(result));
+                                            console.log("###");
+                                            if (cb)
+                                                setTimeout(function () {
+                                                    cb(result);
+                                                }, 0);
+                                        });
+                                    }
+                                    else
+                                        if (cb)
+                                            setTimeout(function () {
+                                                cb(result);
+                                            }, 0);
                                 });
                                 console.log("###PROCESSADAPTER::SAVEDATA: ADAPTER: "+ options.expr.adapter);
                                 console.log("DATA OBJECT: " + JSON.stringify(data_object));

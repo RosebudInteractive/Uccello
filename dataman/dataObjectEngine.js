@@ -529,7 +529,8 @@ define(
             },
 
             execBatch: function (batch, options, callback) {
-                console.log("execBatch: " + JSON.stringify(batch));
+                if (this._options.trace.sqlCommands)
+                    console.log("execBatch: " + JSON.stringify(batch));
 
                 var result = {};
                 var res_promise;
