@@ -170,9 +170,9 @@ define(
                     var result = { result: "OK" };
                     try {
                         var self = this;
-                        this._adapterSaveOnMaster(options, function (res) {
+                        this._adapterSaveOnMaster(options, function (adapter_result) {
                             try {
-                                if (res.result === "OK") {
+                                if (adapter_result.result === "OK") {
                                     self.getDB()._iterateChilds(self, true, function (tree_elem, lvl) {
                                         if (tree_elem.isInstanceOf(UCCELLO_CONFIG.classGuids.MemTreeModelRoot)) {
                                             tree_elem._currState(Meta.State.Browse);
@@ -181,10 +181,18 @@ define(
                                     });
                                     self._childLeaveEdit();
                                     // Удалить лог изменений
-                                    self._destroyLog(false, cb);
+                                    self._destroyLog(false, function (destroy_res) {
+                                        var fin_result = destroy_res;
+                                        if (destroy_res.result === "OK")
+                                            fin_result = adapter_result;
+                                        if(cb)
+                                            setTimeout(function () {
+                                                cb(fin_result);
+                                            }, 0);
+                                    });
                                 }
                                 else
-                                    throw new Error(res.message);
+                                    throw new Error(adapter_result.message);
                             } catch (err) {
                                 if (cb)
                                     setTimeout(function () {
