@@ -355,6 +355,21 @@ filter.addParameter({ name: "ObjId", ptype: "int" });
 filter.addCondition({ leftExp: { field: "Id"}, op: "=", rightExp: { param: "ObjId" } });
 dm.getTreeRoot("DataCompanyTree").setParameter("ObjId", -1);
 
+// FOR EIDT FORM: DataTstCompany + DataContract + (DataTstCompany.Id = -1)
+dm = metaDataMgr.addDataModel("EditCompany");
+dm.addDbTreeModel("DataCompanyTree", { resName: "DataTstCompany" })
+    .addDataSource({
+    model: { resName: "DataContract" },
+    field: {
+        resName: "DataContract",
+        elemName: "parent",
+    }
+});
+var filter = dm.getTreeRoot("DataCompanyTree").getFilter();
+filter.addParameter({ name: "ObjId", ptype: "int" });
+filter.addCondition({ leftExp: { field: "Id" }, op: "=", rightExp: { param: "ObjId" } });
+dm.getTreeRoot("DataCompanyTree").setParameter("ObjId", -1);
+
 metaDataMgr.addModel("DataLeadLog", "c4fa07b5-03f7-4041-6305-fbd301e7408a", "RootLeadLog", "bedf1851-cd51-657e-48a0-10ac45e31e20")
     .addField("LeadId", { type: "dataRef", model: "DataLead", refAction: "parentCascade", allowNull: true })
     .addField("Date", "datetime")

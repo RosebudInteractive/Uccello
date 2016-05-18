@@ -173,7 +173,7 @@ define(
             },
 
             hasData: function () {
-                return this.root() ? true : false;
+                return this.root() && (!this.isNeedToRefresh()) ? true : false;
             },
 
             getDataCollection: function () {
@@ -402,7 +402,11 @@ define(
                 // ≈сли (dataRootGuid && isMasterOnly) === true, то это означает, что у нас есть ссылка на инстанс рута данных на сервере
                 //   и происходит начальна€ ициализаци€ данных - в этом случае необходимо просто запросить рут данных,
                 //   не дела€ запрос к Ѕƒ.
-                if (!(dataRootGuid && isMasterOnly)) {
+                if ((!(dataRootGuid && isMasterOnly)) || this.isNeedToRefresh()) {
+                    if (this.isNeedToRefresh()) {
+                        //rgp = null;
+                        this.setRefreshedFlag();
+                    };
                     params.expr = { model: this.makeRequest(withSubTree ? Meta.ReqLevel.All : Meta.ReqLevel.AllAndEmptyChilds) };
                     if (master) {
                         var currObj = master.getCurrentDataObject();

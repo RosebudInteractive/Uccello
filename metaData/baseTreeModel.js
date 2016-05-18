@@ -95,6 +95,7 @@ define(
                 this._dataset = null;
                 this._masterDataset = null;
                 this._handlers = [];
+                this._needToRefresh = false;
 
                 UccelloClass.super.apply(this, [cm, params]);
 
@@ -188,11 +189,20 @@ define(
                 return {};
             },
 
+            isNeedToRefresh: function () {
+                return this._needToRefresh;
+            },
+
+            setRefreshedFlag: function () {
+                this._needToRefresh = false;
+            },
+
             setParameter: function (name, value) {
                 var param = this.getParameter(name);
                 if (!param)
                     throw new Error("Parameter \"" + name + "\" doesn't exist.");
                 param.valValue(value);
+                this._needToRefresh = true;
             },
 
             _unSubscribeAll: function () {

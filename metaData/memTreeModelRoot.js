@@ -419,8 +419,7 @@ define(
             },
 
             hasData: function () {
-                var result = this.getRootTreeElem().rootObj();
-                return result;
+                return this.getRootTreeElem().rootObj() && (!this.isNeedToRefresh()) ? true : false;
             },
 
             getDataCollection: function () {
@@ -574,11 +573,15 @@ define(
                     // ≈сли (dataRootGuid && isMasterOnly) === true, то это означает, что у нас есть ссылка на инстанс рута данных на сервере
                     //   и происходит начальна€ ициализаци€ данных - в этом случае необходимо просто запросить рут данных,
                     //   не дела€ запрос к Ѕƒ.
-                    if (!(dataRootGuid && isMasterOnly)) {
-                    };
-
-                    self._isWaitingForData = false;
-                    this._requestData([rgp], params, local_cb);
+                    if ((!(dataRootGuid && isMasterOnly)) || this.isNeedToRefresh()) {
+                        if (this.isNeedToRefresh())
+                            this.setRefreshedFlag();
+                        this._isWaitingForData = true;
+                        this._requestData([rgp], params, local_cb);
+                    }
+                    else
+                        if (this._dataset)
+                            this._dataset.onDataChanged();
                 }
                 else {
                     this.getDataCollection();
