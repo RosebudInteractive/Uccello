@@ -48,7 +48,7 @@ define(
                 }
             },
 
-            loadForm: function(formGuid, options, callback) {
+            loadForm: function(formGuid, options, cb) {
                 if (typeof options == "function") {
                     callback = options;
                     options = null;
@@ -57,8 +57,17 @@ define(
                 var that = this;
                 var cm = this.getControlMgr();
                 cm.tranStart();
-                cm.getRoots([formGuid], { rtype: "res", depth: 1  }, function(guids) {
 
+                var roots = cm.getRootGuids();
+                var guid = formGuid;
+                for (var i = 0; i < roots.length; i++) {
+                    if (roots[i] && roots[i].indexOf(formGuid) >= 0) {
+                        guid = roots[i];
+                        break;
+                    }
+                }
+
+                function callback(guids) {
                     var obj = cm.getContext().getContextCM().get(guids.guids[0]);
                     if (obj) {
                         if (options) {
@@ -70,15 +79,27 @@ define(
                                     param.value(options[param.name()]);
                             }
                         }
+                        cm.allDataReset(obj.getForm());
                         cm.allDataInit(obj.getForm());
                     }
-                    cm.tranCommit();
                     if (obj) {
                         obj.getForm().selfRender(false);
                         that.resource(guids.guids[0]);
                     }
-                    if (callback) callback(obj);
-                });
+                    cm.tranCommit();
+                    if (cb) cb(obj);
+                }
+
+                if (guid == formGuid) {
+                    cm.getRoots([guid], {rtype: "res", depth: 1}, callback);
+                } else {
+                    setTimeout(function() {
+                        var obj = cm.getContext().getContextCM().get(guid);
+                        cm.setToRendered(obj.getForm(), false);
+                        that._isRendered(false);
+                        callback({guids: [guid]});
+                    }, 0);
+                }
 
             }
         });

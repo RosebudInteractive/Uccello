@@ -54,6 +54,9 @@ define(
             dataInit: function() {
             },
 
+            dataReset: function() {
+            },
+
             // no op function - имплементируется по мере необходимости в наследниках
             processDelta: function() {
             },

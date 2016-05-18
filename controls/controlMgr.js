@@ -183,6 +183,20 @@ define(
 						this.dataInit(col.get(i));
 				}
 			},
+
+			dataReset: function(component) {
+				if (component.isDataInit()) {
+					component.dataReset();
+					component.isDataInit(false);
+				}
+
+				//component.dataInit();
+				for (var j = 0, countCol=component.countCol() ; j < countCol ; j++) {
+					var col = component.getCol(j);
+					for (var i=0, cnt=col.count(); i<cnt; i++)
+						this.dataReset(col.get(i));
+				}
+			},
 	
 			allDataInit: function(component) {
 		
@@ -193,6 +207,14 @@ define(
 				this.dataInit(component);
 				//this.tranCommit();
 				this.pvt.dataInitFlag[cg] = true;
+			},
+
+			allDataReset: function(component) {
+				var cg = component.getGuid();
+				if (this.pvt.dataInitFlag[cg]) {
+					this.dataReset(component);
+					delete this.pvt.dataInitFlag[cg];
+				}
 			},
 
             /**
