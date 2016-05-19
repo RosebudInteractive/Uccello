@@ -49,6 +49,7 @@ define(
                     var res = {};
                     if (result.result === "OK") {
                         res = result.params;
+                        delete res.ver;
                         if (guidRoot)
                             res.$sys.guid = guidRoot;
                     }
@@ -64,6 +65,7 @@ define(
                     var res = {};
                     if (result.result === "OK") {
                         res = result.requestInfo.taskParams;
+                        delete res.ver;
                         if (guidRoot)
                             res.$sys.guid = guidRoot;
                     }
@@ -79,6 +81,7 @@ define(
                     var res = {};
                     if (result.result === "OK") {
                         res = result.vars;
+                        delete res.ver;
                         if (guidRoot)
                             res.$sys.guid = guidRoot;
                     }
