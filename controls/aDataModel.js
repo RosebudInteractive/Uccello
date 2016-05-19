@@ -19,13 +19,12 @@ define(
 
             init: function(cm,params){
                 UccelloClass.super.apply(this, [cm, params]);
-                this.dataReset();
 
                 if (params) {
+                    this.dataReset();
                     if (this.get("OnDataInit"))
                         this.onDataInit = new Function(this.get("OnDataInit"));
 
-                    this._refreshedDataSets = {};
                     var that = this;
 
                     var col = this.getCol("Datasets");
@@ -47,10 +46,10 @@ define(
                                             break;
                                         }
                                         if (empty && (!this._isDataInit)) {
+                                            that._isDataInit = true;
                                             this.event.fire({ type: 'dataInit', target: this });
                                             if ("onDataInit" in this)
                                                 setTimeout(function () {
-                                                    that._isDataInit = true;
                                                     that.onDataInit();
                                                 }, 0);
 
@@ -70,6 +69,12 @@ define(
 
             dataReset: function() {
                 this._isDataInit = false;
+                this._refreshedDataSets = {};
+                var col = this.getCol("Datasets");
+                for (var i = 0; i < col.count(); i++) {
+                    var ds = col.get(i);
+                    this._refreshedDataSets[ds.getLid()] = false;
+                }
             }
         });
         return ADataModel;
