@@ -46,7 +46,7 @@ define(
             requestData: function (guidRoot, expression, done) {
 
                 function localCallBack(result) {
-                    var res = {};
+                    var res = result;
                     if (result.result === "OK") {
                         res = result.params;
                         delete res.ver;
@@ -57,12 +57,13 @@ define(
                         console.error("###ERROR: " + result.message);
                     if (done)
                         setTimeout(function () {
+                            console.log("\n### Process Params: " + JSON.stringify(res) + "\n");
                             done(res);
                         }, 0);
                 };
 
                 function reqCallBack(result) {
-                    var res = {};
+                    var res = result;
                     if (result.result === "OK") {
                         res = result.requestInfo.taskParams;
                         delete res.ver;
@@ -73,12 +74,13 @@ define(
                         console.error("###ERROR: " + result.message);
                     if (done)
                         setTimeout(function () {
+                            console.log("\n### Request: " + JSON.stringify(res) + "\n");
                             done(res);
                         }, 0);
                 };
 
                 function varsCallBack(result) {
-                    var res = {};
+                    var res = result;
                     if (result.result === "OK") {
                         res = result.vars;
                         delete res.ver;
@@ -89,6 +91,7 @@ define(
                         console.error("###ERROR: " + result.message);
                     if (done)
                         setTimeout(function () {
+                            console.log("\n### Process Vars: " + JSON.stringify(res) + "\n");
                             done(res);
                         }, 0);
                 };
