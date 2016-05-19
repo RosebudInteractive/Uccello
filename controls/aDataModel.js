@@ -19,7 +19,7 @@ define(
 
             init: function(cm,params){
                 UccelloClass.super.apply(this, [cm, params]);
-                this._isDataInit = false;
+                this.dataReset();
 
                 if (params) {
                     if (this.get("OnDataInit"))
@@ -66,6 +66,10 @@ define(
                         }
                     ]);
                 }
+            },
+
+            dataReset: function() {
+                this._isDataInit = false;
             }
         });
         return ADataModel;
