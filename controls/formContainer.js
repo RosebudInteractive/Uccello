@@ -20,11 +20,18 @@ define(
                     external: true,
                     res_type: UCCELLO_CONFIG.classGuids.ResForm,
                     res_elem_type: UCCELLO_CONFIG.classGuids.ResForm
-                }}
+                }},
+                {fname:"OnFormClose",ftype:"event"}
             ],
 
             init: function(cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
+
+                if (params) {
+                    if (this.get("OnFormClose"))
+                    /*jshint evil: true */
+                        this.onFormClose = new Function("e", this.get("OnFormClose"));
+                }
             },
 
             resource: function(value) {
@@ -38,7 +45,7 @@ define(
              */
             irender: function(viewset, options) {
                 viewset.render.apply(this, [options]);
-
+                console.log("formContainer.irender");
                 if (this.resource()) {
                     var renderItem = {};
                     renderItem[this.resource().getGuid()] = viewset.getFormDivId.apply(this);
@@ -46,6 +53,10 @@ define(
                     this.getControlMgr().getContext().renderForms(
                         [this.resource().getGuid()], renderItem);
                 }
+            },
+
+            _onFormClose: function (event) {
+                if ("onFormClose" in this) this.onFormClose(event);
             },
 
             loadForm: function(formGuid, options, cb) {
@@ -68,6 +79,7 @@ define(
                 }
 
                 function callback(guids) {
+                    console.log("Load form", options);
                     var obj = cm.getContext().getContextCM().get(guids.guids[0]);
                     if (obj) {
                         if (options) {
@@ -80,11 +92,34 @@ define(
                             }
                         }
                         cm.allDataReset(obj.getForm());
-                        cm.allDataInit(obj.getForm());
+                        cm.allDataInit(obj  .getForm());
                     }
                     if (obj) {
                         obj.getForm().selfRender(false);
+                        var oldRes = that.resource();
                         that.resource(guids.guids[0]);
+                        if (oldRes != that.resource()) {
+                            if (oldRes) {
+                                var form = oldRes.getForm();
+                                form.event.off({
+                                    type: "OnClose",
+                                    subscriber: that,
+                                    callback: that._onFormClose
+                                });
+                            }
+
+                            if (that.resource()) {
+                                var form = that.resource().getForm();
+                                form.event.on({
+                                    type: "OnClose",
+                                    subscriber: that,
+                                    callback: that._onFormClose
+                                });
+                            }
+                        }
+
+                        cm.setToRendered(obj.getForm(), false);
+                        that._isRendered(false);
                     }
                     cm.tranCommit();
                     if (cb) cb(obj);

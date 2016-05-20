@@ -17,12 +17,19 @@ define(
                 {fname: "CurrentControl", ftype: {
                     type: "ref",
                     res_elem_type: UCCELLO_CONFIG.classGuids.AControl
-                }
-            }],
+                }},
+                {fname:"OnClose",ftype:"event"}
+            ],
             metaCols: [{ "cname": "Params", "ctype": "UObject" }, { "cname": "SubForms", "ctype": "UObject" }],
 
             init: function(cm,params){
                 UccelloClass.super.apply(this, [cm, params]);
+
+                if (params) {
+                    if (this.get("OnClose"))
+                    /*jshint evil: true */
+                        this.onClose = new Function("e", this.get("OnClose"));
+                }
             },
 
             title: function (value) {
@@ -60,6 +67,15 @@ define(
                         newControl._isRendered(false);
                 }
                 this._isProcessed(true);
+            },
+
+            close: function(args) {
+                if ("onClose" in this) this.onClose(args);
+                this.event.fire({
+                    type: 'OnClose',
+                    target: this,
+                    data: args
+                });
             }
 
 
