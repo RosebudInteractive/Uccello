@@ -300,6 +300,9 @@ define(
                                     function (result) {
                                         if (cb)
                                             setTimeout(function () {
+                                                console.log("###");
+                                                console.log("###Callback StartProcessInstanceAndWait: " + JSON.stringify(result));
+                                                console.log("###");
                                                 cb(result);
                                             }, 0);
                                     });
