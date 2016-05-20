@@ -121,6 +121,7 @@ define(
                         cm.setToRendered(obj.getForm(), false);
                         that._isRendered(false);
                     }
+                    cm.syncInTran();
                     cm.tranCommit();
                     if (cb) cb(obj);
                 }
