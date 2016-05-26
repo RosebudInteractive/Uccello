@@ -30,6 +30,49 @@ define(
                 {fname:"HasChanges", ftype: "boolean"}
             ],
 
+            /**
+             * Рендер контрола
+             * @param viewset
+             * @param options
+             */
+            irender: function(viewset, options) {
+                var layouts = this.getCol('Layouts');
+                var modified = false;
+                for (var i = 0, len = layouts.count(); i < len; i++) {
+                    var layout = layouts.get(i);
+                    if (this._isLayoutModified(layout)) {
+                        modified = true;
+                        break;
+                    }
+                }
+
+                if (!modified) {
+                    var controls = this.getCol('Layouts');
+                    for (var i = 0; i < controls.count(); i++) {
+                        if (!controls.get(i)._isRendered()) {
+                            modified = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (modified) this._isRendered(false);
+
+                UccelloClass.super.apply(this, [viewset, options]);
+            },
+
+            _isLayoutModified: function(layout) {
+                if (!layout._isRendered()) return true;
+
+                var layouts = layout.getCol('Layouts');
+                for (var i = 0, len = layouts.count(); i < len; i++) {
+                    var layout = layouts.get(i);
+                    if (this._isLayoutModified(layout)) return true;
+                }
+
+                return false;
+            },
+
             init: function(cm, params) {
                 UccelloClass.super.apply(this, [cm, params]);
             },

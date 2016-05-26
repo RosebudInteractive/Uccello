@@ -23,6 +23,11 @@ define(
                 UccelloClass.super.apply(this, [cm, params]);
             },
 
+            _onDirtyRender: function(result) {
+                this.getParent()._isRendered(false);
+                this.pvt.isRendered = false;
+            },
+
             /**
              * Properties
              * @param value
