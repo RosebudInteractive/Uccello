@@ -11,7 +11,7 @@ var Definitions = {
 
     forSimpleTaskDef : function(engine) {
         var _definition = engine.newTaskDefinition();
-        _definition.definitionID('cbf35df0-8317-4f2f-8728-88736251ff0b');
+        _definition.definitionId('cbf35df0-8317-4f2f-8728-88736251ff0b');
         _definition.name(this.names.forSimpleTaskDef);
         var _start = _definition.addStartEvent('start');
         var _task1 = _definition.addTaskStage('task1');
@@ -41,7 +41,7 @@ class Builder{
         var wfe = this.wfe;
         var def = wfe.newProcessDefinition();
         def.name('First test process');
-        def.definitionID("8349600e-3d0e-4d4e-90c8-93d42c443ab3");
+        def.definitionId("8349600e-3d0e-4d4e-90c8-93d42c443ab3");
         def.addParameter("CurrentObj").value("");
         def.addParameter("IsDone").value(false);
 
@@ -95,7 +95,7 @@ class Builder{
         }
 
         if (_obj) {
-            fs.writeFileSync(this.savePath + definition.definitionID() + '.json', JSON.stringify(_obj));
+            fs.writeFileSync(this.savePath + definition.definitionId() + '.json', JSON.stringify(_obj));
             console.log('[%s] : {{ Процесс [%s] сохранен', (new Date()).toLocaleTimeString(), definition.name())
         }
     }

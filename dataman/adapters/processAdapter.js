@@ -313,7 +313,7 @@ define(
                                     throw new Error("ProcessAdapter::saveData : Prameter \"RequestId\" is undefined!");
                                 is_done = true;
                                 var responseObj = {
-                                    requestID: options.expr.params.RequestId,
+                                    requestId: options.expr.params.RequestId,
                                     taskParams: data_object
                                 };
                                 console.log("###");
@@ -328,7 +328,7 @@ define(
                                         console.log("###");
                                         console.log("###WaitForRequest: " + JSON.stringify(result));
                                         console.log("###");
-                                        self._proxyWfe.waitForRequest({ processId: result.processID, requestName: "TaskRequest" }, 0, function (result) {
+                                        self._proxyWfe.waitForRequest({ processId: result.processId, requestName: "TaskRequest" }, 0, function (result) {
                                             console.log("###");
                                             console.log("###Callback WaitForRequest: " + JSON.stringify(result));
                                             console.log("###");
