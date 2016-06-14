@@ -72,6 +72,25 @@ define(
                 return result;
             },
 
+            getFieldDefs: function (cb) {
+                try {
+                    var model_desc = this._getModelData();
+                    if (typeof ($data) !== "undefined") {
+                        $data.getFieldDefs(model_desc, cb);
+                    }
+                    else
+                        throw new Error("\"Dataman\" reference is not defined!");
+                }
+                catch (err) {
+                    if (cb)
+                        setTimeout(function () {
+                            cb({ result: "ERROR", message: err.message });
+                        }, 0)
+                    else
+                        throw err;
+                };
+            },
+
             edit: function (is_cached_upd, cb) {
                 var result = { result: "OK" };
 
@@ -612,12 +631,8 @@ define(
                 return this;
             },
 
-            _getReqElem: function (is_stub) {
-                var result = {};
-                if (this._filter && (!is_stub))
-                    result.filter = this.getDB().serialize(this._filter, true);
-                if (this._childsCol.count() > 0)
-                    result.childs = [];
+            _getModelData: function (res) {
+                var result = res || {};
                 var name, guid;
                 var model = this.modelRef();
                 if (model) {
@@ -637,6 +652,16 @@ define(
                 if (guid)
                     result.guid = guid;
 
+                return result;
+            },
+
+            _getReqElem: function (is_stub) {
+                var result = {};
+                if (this._filter && (!is_stub))
+                    result.filter = this.getDB().serialize(this._filter, true);
+                if (this._childsCol.count() > 0)
+                    result.childs = [];
+                this._getModelData(result);
                 return result;
             },
 

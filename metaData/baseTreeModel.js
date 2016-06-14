@@ -22,6 +22,10 @@ define(
                 return this._genericSetter("Alias", value);
             },
 
+            getFieldDefs: function (cb) {
+                throw new Error("BaseTreeModel: \"getFieldDefs\" wasn't implemented in descendant.");
+            },
+
             edit: function (is_cached_upd, cb) {
                 throw new Error("BaseTreeModel: \"edit\" wasn't implemented in descendant.");
             },

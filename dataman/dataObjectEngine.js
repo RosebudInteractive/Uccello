@@ -29,7 +29,8 @@ define(
             getNextRowId: "function",
             execBatch: "function",
             execSql: "function",
-            importDir: "function"
+            importDir: "function",
+            getFieldDefs: "function"
         };
 
         var DataObjectEngine = UccelloClass.extend({
@@ -454,7 +455,7 @@ define(
                 try {
                     var tran;
                     if (this.hasConnection()) {
-                        
+
                         var model = this._metaDataMgr.getModel(model_name);
                         if (model)
                             res_promise = this._query.getNextRowId(model, options)
@@ -526,6 +527,50 @@ define(
                     });
 
                 return UCCELLO_CONFIG.REMOTE_RESULT;
+            },
+
+            getFieldDefs: function (model_desc, cb) {
+                try {
+                    var result = { result: "OK" };
+                    var model = null;
+                    if (model_desc.name) {
+                        model = this._metaDataMgr.getModel(model_desc.name);
+                        if (!model)
+                            throw new Error("Can't find model (name = \"" + model_desc.name + "\".");
+                    };
+
+                    if ((!model) && model_desc.guid) {
+                        model = this._metaDataMgr.getModelByGuid(model_desc.guid);
+                        if (!model)
+                            throw new Error("Can't find model (guid = \"" + model_desc.guid + "\".");
+                    };
+
+                    if (!model)
+                        throw new Error("Undefined model (empty name or guid)!");
+
+                    var model_fields = model.getClassFields();
+                    var fields = [];
+
+                    _.forEach(model_fields, function (el) {
+                        fields.push({ name: el.field.name(), dataType: el.field.fieldType().serialize() });
+                    });
+
+                    if (cb) {
+                        setTimeout(function () {
+                            result.fields = fields;
+                            cb(result);
+                        }, 0);
+                    };
+                }
+                catch (err) {
+                    if (cb) {
+                        setTimeout(function () {
+                            cb({ result: "ERROR", message: err.message });
+                        }, 0);
+                    }
+                    else
+                        throw err;
+                };
             },
 
             execBatch: function (batch, options, callback) {
@@ -778,27 +823,27 @@ define(
                         promise = new Promise(function (resolve, reject) {
                             resolve(self._query.execDbInitialScript({}).then(function () {
                                 return self._query.showForeignKeys().then(function (result) {
-                                        var curr_promise = Promise.resolve();
-                                        if (result.length > 0) {
-                                            var models = self._metaDataMgr.models(true);
-                                            var fk_list = _.filter(result, function (fk) {
-                                                var tbl_name = fk.dst_table.toLowerCase();
-                                                var tbls = _.filter(models, function (model) {
-                                                    return model.name().toLowerCase() === tbl_name;
-                                                });
-                                                return tbls.length > 0;
+                                    var curr_promise = Promise.resolve();
+                                    if (result.length > 0) {
+                                        var models = self._metaDataMgr.models(true);
+                                        var fk_list = _.filter(result, function (fk) {
+                                            var tbl_name = fk.dst_table.toLowerCase();
+                                            var tbls = _.filter(models, function (model) {
+                                                return model.name().toLowerCase() === tbl_name;
                                             });
-                                            if (fk_list.length > 0) {
-                                                curr_promise = self._seqExec(fk_list, function (fk) {
-                                                    return self._query.dropForeignKey(fk.src_table, fk.fk_name);
-                                                });
-                                            };
-                                        };
-                                        return curr_promise.then(function (result) {
-                                            return self.syncSchema({ force: true });
+                                            return tbls.length > 0;
                                         });
+                                        if (fk_list.length > 0) {
+                                            curr_promise = self._seqExec(fk_list, function (fk) {
+                                                return self._query.dropForeignKey(fk.src_table, fk.fk_name);
+                                            });
+                                        };
+                                    };
+                                    return curr_promise.then(function (result) {
+                                        return self.syncSchema({ force: true });
                                     });
-                                })
+                                });
+                            })
                             );
                         });
                     }
@@ -876,7 +921,7 @@ define(
                                             });
                                         }).then(function (result) {
                                             return createRefs(result);
-                                         }));
+                                        }));
                                     }
                                     else
                                         return resolve(createRefs([]));
