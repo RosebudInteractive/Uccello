@@ -174,6 +174,14 @@ define(
                 return this.getRootTreeElem();
             },
 
+            getDataSources: function () {
+                var result = {};
+                for (var alias in this._childs) {
+                    result[alias] = this._childs[alias].treeElem;
+                };
+                return result;
+            },
+
             getDataSource: function (ds_name) {
                 return this._childs[ds_name] ? this._childs[ds_name].treeElem : null;
             },

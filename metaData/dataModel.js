@@ -42,6 +42,14 @@ define(
                 };
             },
 
+            getTreeRoots: function () {
+                var result = {};
+                for (var alias in this._trees) {
+                    result[alias] = this._trees[alias].treeElem;
+                };
+                return result;
+            },
+
             getTreeRoot: function (alias) {
                 return this._trees[alias] ? this._trees[alias].treeElem : null;
             },
