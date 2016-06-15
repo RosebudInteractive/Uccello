@@ -57,7 +57,11 @@ define([
 
                         if (_root.getCol('DataElements').count() > 0) {
                             that.db._deleteRoot(_root);
-                            resolve();
+                            ResVersions.load(resVersionId, that.resVersions, function(){
+                                that.state = ResUtils.state.loaded;
+                                resolve();
+                            });
+                            // resolve();
                             return
                         }
 
@@ -78,7 +82,11 @@ define([
                                         _root.save(_options, function (result) {
                                             that.db._deleteRoot(_root);
                                             if (result.result == 'OK') {
-                                                resolve()
+                                                ResVersions.load(resVersionId, that.resVersions, function(){
+                                                    that.state = ResUtils.state.loaded;
+                                                    resolve();
+                                                });
+                                                // resolve()
                                             } else {
                                                 reject(ResUtils.newDbError(result.message));
                                             }
@@ -96,6 +104,16 @@ define([
                     })
                 }
 
+            }
+
+            removeResVersion(resVersionId) {
+                var _index = this.resVersions.findIndex(function(elem) {
+                    return elem.id == resVersionId
+                })
+
+                if (_index != -1) {
+                    this.resVersions.splice(_index, 1)
+                }
             }
 
             loadResVersions(done) {

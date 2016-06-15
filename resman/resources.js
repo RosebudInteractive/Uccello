@@ -39,13 +39,13 @@ define([
             },
 
             getObject: function (guid, callback) {
-                //if ((this.resources.has(guid)) && (this.resources.get(guid).state == ResUtils.state.loaded)) {
-                //    callback(this.resources.get(guid))
-                //} else {
+                if ((this.resources.has(guid)) && (this.resources.get(guid).state == ResUtils.state.loaded)) {
+                   callback(this.resources.get(guid))
+                } else {
                     this.queryResourceObj(guid, function (obj) {
                         callback(obj)
-                    })
-                //}
+                    });
+                }
             },
 
             findByType: function(resType, resName) {
@@ -114,14 +114,18 @@ define([
                             var _count = 0;
                             var _resultArray = [];
                             for (var i = 0; i < _elements.count(); i++) {
-                                that.loadResourceBody(_elements.get(i), function (res) {
-                                    _count++;
-                                    _resultArray.push(res);
-                                    if (_count == _elements.count()) {
-                                        that.db._deleteRoot(_root);
-                                        callback(_resultArray)
-                                    }
-                                });
+                                that.loadResourceBody(_elements.get(i)).then(
+                                    function (res) {
+                                        _count++;
+                                        _resultArray.push(res);
+                                        if (_count == _elements.count()) {
+                                            that.db._deleteRoot(_root);
+                                            callback(_resultArray)
+                                        }
+                                    }).catch(
+                                    function (err) {
+                                        console.error(err.message)
+                                    });
                             }
                         }
                     });
@@ -185,37 +189,74 @@ define([
                             throw new Error('duplicate resource')
                         }
 
-                        that.loadResourceBody(_elements.get(0), function(resource){
+                        that.loadResourceBody(_elements.get(0)).then(function (resource) {
                             that.db._deleteRoot(_root);
                             callback(resource);
-                        });
+                        }).catch(
+                            function (err) {
+                                console.error(err.message)
+                            });
                     }
                 });
             },
 
-            loadResourceBody: function (resourceObj, callback) {
-                var _resource = new Resource(resourceObj);
-
+            loadResourceBody: function (resourceObj) {
                 var that = this;
-                this.builds.loadCurrentBuild(function (build) {
-                    var _resVer = build.resVersions.find(function (resVer) {
-                        return resVer.resId == _resource.id
+                return new Promise(function(resolve){
+                    var _resource = new Resource(resourceObj);
+
+                    that.builds.loadCurrentBuild(function (build) {
+                        var _resVer = build.resVersions.find(function (resVer) {
+                            return resVer.resId == _resource.id
+                        });
+
+                        if (_resVer) {
+                            _resource.resBody = _resVer.resBody;
+                            _resource.hash = _resVer.hash;
+                            _resource.resVerNum = _resVer.resVer;
+                            _resource.verDescription = _resVer.description;
+                            _resource.resVerNum = _resVer.resVer;
+                            _resource.verGuid = _resVer.guid;
+                            _resource.resVerId = _resVer.id;
+                            _resource.resVerInstance = _resVer.instanceGuid;
+                        }
+
+                        _resource.state = ResUtils.state.loaded;
+                        that.resources.set(_resource.resGuid, _resource);
+                        resolve(_resource);
+                        // } else {
+                        //     reject(new Error('Can not find resource version in current build'))
+                        // }
                     });
+                });
+            },
 
-                    if (_resVer) {
-                        _resource.resBody = _resVer.resBody;
-                        _resource.hash = _resVer.hash;
-                        _resource.resVerNum = _resVer.resVer;
-                        _resource.verDescription = _resVer.description;
-                        _resource.resVerNum = _resVer.resVer;
-                        _resource.verGuid = _resVer.guid;
-                        _resource.resVerId = _resVer.id;
-                        _resource.resVerInstance = _resVer.instanceGuid;
-                    }
+            reloadResourceBody: function (resource) {
+                var that = this;
+                return new Promise(function(resolve){
+                    that.builds.loadCurrentBuild(function (build) {
+                        var _resVer = build.resVersions.find(function (resVer) {
+                            return resVer.resId == resource.id
+                        });
 
-                    _resource.state = ResUtils.state.loaded;
-                    that.resources.set(_resource.resGuid, _resource);
-                    callback(_resource);
+                        if (_resVer) {
+                            resource.resBody = _resVer.resBody;
+                            resource.hash = _resVer.hash;
+                            resource.resVerNum = _resVer.resVer;
+                            resource.verDescription = _resVer.description;
+                            resource.resVerNum = _resVer.resVer;
+                            resource.verGuid = _resVer.guid;
+                            resource.resVerId = _resVer.id;
+                            resource.resVerInstance = _resVer.instanceGuid;
+                        }
+
+                        resource.state = ResUtils.state.loaded;
+                        that.resources.set(resource.resGuid, resource);
+                        resolve(resource);
+                        // } else {
+                        //     reject(new Error('Can not find resource version in current build'))
+                        // }
+                    });
                 });
             },
 
