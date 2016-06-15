@@ -84,7 +84,7 @@ define(
 
                     if (this._currState() !== Meta.State.Browse)
                         throw new Error("Can't set \"Edit\" state, because current state is \"" +
-                            Meta.Meta.stateToString(this._currState()) + "\".");
+                            Meta.stateToString(this._currState()) + "\".");
 
                     if (this._childEdCnt() > 0)
                         throw new Error("Can't set \"Edit\" state, because some of childs are in  \"Edit\" state.");
@@ -145,7 +145,7 @@ define(
 
                     if (this._currState() !== Meta.State.Edit)
                         throw new Error("Can't save object, because current state is \"" +
-                            Meta.Meta.stateToString(this._currState()) + "\".");
+                            Meta.stateToString(this._currState()) + "\".");
 
                     if (this._editSet().length !== 0) {
                         this._save(is_cached_upd, options, cb);
@@ -233,7 +233,7 @@ define(
 
                     if (this._currState() !== Meta.State.Edit)
                         throw new Error("Can't cancel edit, because current state is \"" +
-                            Meta.Meta.stateToString(this._currState()) + "\".");
+                            Meta.stateToString(this._currState()) + "\".");
 
                     if (this._editSet().length !== 0) {
 

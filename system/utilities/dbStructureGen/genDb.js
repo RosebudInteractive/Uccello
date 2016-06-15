@@ -281,7 +281,7 @@ metaDataMgr.addVirtualModel("VirtualTaskList", "175caa6f-cbd6-4aed-bac1-a2e255c8
         "  JOIN Task t ON t.ParentId = p.Id\n" +
         "  JOIN SysResVer v ON v.Id = p.DefinitionId\n" +
         "  JOIN SysResource u ON u.Id = v.ResId\n" +
-        "  JOIN Request r ON r.ProcessId = p.Id AND r.State = 0\n" +
+        "  JOIN Request r ON r.ProcessId = p.Id AND r.State = 1\n" +
         "  LEFT JOIN TaskStageLog l ON l.Id = t.TaskStageLogId\n" +
         "  LEFT JOIN TaskStage s ON s.Id = l.TaskStageId")
     .addField("TaskId", { type: "int" })
