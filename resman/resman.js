@@ -271,7 +271,12 @@ define(
                                 check();
                             } else {
                                 var _body = JSON.parse(list[element].resBody);
-                                var _resource = that.db.deserialize(_body, {}, that.createComponentFunction);
+                                try {
+                                    var _resource = that.db.deserialize(_body, {}, that.createComponentFunction);
+                                } catch (e) {
+                                    console.error('Error resGuid [' + list[element].resGuid + '] : ' + e.message)
+                                }
+
                                 if (!_resource) {
                                     reject(ResUtils.newObjectError('Can not deserialize object'))
                                 } else {
@@ -280,7 +285,7 @@ define(
                                     then(function(result) {
                                         var _resVersion = result.resVersion;
                                         var _resource = result.resource;
-                                        var _needReloadResourceBody = (_resource.resVerId != _resVersion.id)
+                                        var _needReloadResourceBody = (_resource.resVerId != _resVersion.id);
                                         that.builds.loadCurrentBuild(function (build) {
                                             if (_needReloadResourceBody) {
                                                 build.removeResVersion(_resource.resVerId);
