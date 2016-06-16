@@ -136,6 +136,7 @@ define(
 					done(result);
 				}
 				context.on(this.cmsys, params, icb,null, true );
+                connect.context(context.getGuid());
 				/*
                 var result = {roots: controller.getDB(context.dataBase()).getRootGuids(), vc: context.getGuid()};
 				controller.genDeltas(this.cmsys.getGuid());
@@ -159,8 +160,8 @@ define(
                     var connects = session.getConnects();
                     for(var i in connects) {
                         if(connects[i].isConnected()) {
-                            //connects[i].send({action:"newTab", contextGuid:data.contextGuid, resGuids:data.resGuids});
-                            result = {args:{action:"newTab", contextGuid:data.contextGuid, resGuids:data.resGuids}};
+                            connects[i].send({action:"newTab", contextGuid:data.contextGuid, resGuids:data.resGuids});
+                            result = {};//{args:{action:"newTab", contextGuid:data.contextGuid, resGuids:data.resGuids}};
                             break;
                         }
                     }

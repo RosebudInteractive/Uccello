@@ -8,9 +8,8 @@ define(function () {
     var Channel = UccelloClass.extend({
         /**
          * Инициализация объекта
-         * @constructs
          * @param url {string} url=для клиента, ws=для сервера
-         * @param options {object} {}
+         * @param options {object} 
          */
         init: function (connectId, options, communicationObj) {
 
