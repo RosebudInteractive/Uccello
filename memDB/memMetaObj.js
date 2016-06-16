@@ -313,7 +313,7 @@ define(
 			    if (idx < this.pvt.colsTypes.length) {
 			        res = this.pvt.colsTypes[idx];
 			        if (res.typeObj === null) {
-			            var typeObj = this.getRoot().getTypeByName(res.typeDef.type);
+			            var typeObj = this.getDB().getTypeObj({ className: res.typeDef.type });
 			            res.typeObj = typeObj ? typeObj : null;
 			        };
 			    }

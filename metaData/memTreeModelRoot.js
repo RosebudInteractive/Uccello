@@ -66,23 +66,8 @@ define(
                 function getMetaObj(guid, cb) {
                     var res = { result: "OK" };
                     try {
+                        var metaObj = self.getDB().getTypeObj(guid);
                         var is_by_name = (typeof (guid) !== "string") && (typeof (guid.className) === "string");
-                        var metaObj = is_by_name ?
-                            self.getDB().getObj(UCCELLO_CONFIG.guids.metaRootGuid).getTypeByName(guid.className) :
-                            self.getDB().getObj(guid);
-
-                        if (!metaObj) {
-                            var constructHolder = self.getDB().getConstructHolder();
-                            if (constructHolder) {
-                                var constr = is_by_name ? constructHolder.getComponentByName(guid.className) : constructHolder.getComponent(guid);
-                                if (constr)
-                                    constr = constr.constr;
-                                if (constr) {
-                                    new constr(self.getDB());
-                                    metaObj = self.getDB().getObj(constr.prototype.classGuid);
-                                }
-                            };
-                        };
 
                         if (metaObj) {
                             self._metaObj = metaObj;
