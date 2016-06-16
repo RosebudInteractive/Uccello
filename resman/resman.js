@@ -88,7 +88,9 @@ define(
 
                 this.directories.load(function () {
                     that.directories.setCurrentProduct(that.currentProductCode);
-                    done();
+                    that.builds.loadCurrentBuild(function() {
+                        done();
+                    });
                 });
             },
 
@@ -275,12 +277,26 @@ define(
                                 } else {
                                     // TODO : необходимо вызвать сохраниение ресурса
                                     ResVersions.saveResBody(_resource, list[element]).
-                                    then(function(resVersion) {
+                                    then(function(result) {
+                                        var _resVersion = result.resVersion;
+                                        var _resource = result.resource;
+                                        var _needReloadResourceBody = (_resource.resVerId != _resVersion.id)
                                         that.builds.loadCurrentBuild(function (build) {
-                                            build.addResVersion(resVersion.id).
+                                            if (_needReloadResourceBody) {
+                                                build.removeResVersion(_resource.resVerId);
+                                            }
+                                            build.addResVersion(_resVersion.id).
                                             then(function () {
-                                                _resCount++;
-                                                check();
+                                                if (_needReloadResourceBody) {
+                                                    that.resources.reloadResourceBody(_resource).then(function () {
+                                                            _resCount++;
+                                                            check();
+                                                        }
+                                                    )
+                                                } else {
+                                                    _resCount++;
+                                                    check();
+                                                }
                                             }).
                                             catch(function(err) {
                                                 reject(err)

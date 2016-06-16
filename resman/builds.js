@@ -31,16 +31,16 @@ define([
             loadBuild : function(buildId, callback) {
                 var _build = this.getById(buildId);
                 var _needCreate = (!_build);
-                //if (_build) {
-                //    if (_build.isLoaded()) {
-                //        callback(_build)
-                //    } else {
-                //        _build.loadResVersions(function() {
-                //            callback(_build);
-                //        });
-                //    }
-                //
-                //} else {
+                if (_build) {
+                   if (_build.isLoaded()) {
+                       callback(_build)
+                   } else {
+                       _build.loadResVersions(function() {
+                           callback(_build);
+                       });
+                   }
+
+                } else {
                     var _predicate = new Predicate(this.db, {});
                     _predicate.addCondition({field: "Id", op: "=", value: buildId});
                     var _expression = {
@@ -71,13 +71,13 @@ define([
                             });
                         }
                     })
-                //}
+                }
             },
 
             loadCurrentBuild : function(callback) {
-                //if ((this.current) && (this.current.id == this.directories.getCurrentVersion().currBuildId)) {
-                //    callback(this.current)
-                //} else {
+                if ((this.current) && (this.current.id == this.directories.getCurrentVersion().currBuildId)) {
+                   callback(this.current)
+                } else {
                     var _currentVersion = this.directories.getCurrentVersion();
                     var that = this;
 
@@ -85,7 +85,7 @@ define([
                         that.current = build;
                         callback(build);
                     })
-                //}
+                }
             },
 
             getById : function(id) {

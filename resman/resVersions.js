@@ -172,7 +172,7 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                             _addResourceObject(_root, resourceInstance, _fields).
                             then(function (resVersion) {
                                 that.db._deleteRoot(_root);
-                                resolve(resVersion)
+                                resolve({resVersion : resVersion, resource : sysResVerObject})
                             }).
                             catch(function (err) {
                                 that.db._deleteRoot(_root);
@@ -187,7 +187,7 @@ define([UCCELLO_CONFIG.uccelloPath + '/predicate/predicate', './resUtils', 'cryp
                         _editResourceObject(_resourceObj, resourceInstance).
                         then(function (resVersion) {
                             that.db._deleteRoot(_root);
-                            resolve(resVersion)
+                            resolve({resVersion : resVersion, resource : sysResVerObject})
                         }).
                         catch(function (err) {
                             that.db._deleteRoot(_root);

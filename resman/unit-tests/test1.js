@@ -10,6 +10,7 @@ var should  = require('chai').should();
 var expect = require('chai').expect;
 
 var Main = require("./main");
+var Initiator = require("./initiator");
 
 function execSql(sql) {
     return new Promise(function(resolve, reject) {
@@ -23,9 +24,14 @@ function execSql(sql) {
     })
 }
 
-before(function() {
-    Main.Config.init();
+before(function(done) {
+    Initiator.importData().
+    then(function(){done()}).
+    catch(function(err){
+        done(err)
+    });
 });
+
 
 xdescribe('#loadRes', function(){
     xdescribe('Работа с файлами', function(){
@@ -37,14 +43,13 @@ xdescribe('#loadRes', function(){
     });
 
     it('Загрузить смешанный массив - OK', function(done){
-        var _resManger = Main.Config.ResManager;
         var _guids = [
             '4a4abdb4-3e3b-85a7-09b9-5f15b4b187f9',
             {resType : '10217b8e-b1f8-4221-a419-f20735219dd2', resName : 'crm-edit'},
             {resType : '10217b8e-b1f8-4221-a419-f20735219dd2', resName : 'crm-list'}
         ];
 
-        _resManger.loadRes(_guids, function(result) {
+        ResManager.loadRes(_guids, function(result) {
             result.datas.should.be.lengthOf(2);
             done();
         })
@@ -55,9 +60,9 @@ xdescribe('#loadRes', function(){
     })
 });
 
-describe('#rebuildResources', function(){
+xdescribe('#rebuildResources', function(){
     it('Пересохранить ресурсы - OK', function(done){
-        Main.Config.ResManager.rebuildResources().
+        ResManager.rebuildResources().
         then(function(){
             // check
             done()
@@ -72,7 +77,7 @@ describe('#get functions', function() {
     before(function () {
         var _cmd = [
             "update SysVersion set CurrBuildId = 2 where Id = 2",
-            "delete from SysBuild where Id > 2",
+            "delete from SysBuild where Id > 3",
             "insert into SysResType (Id, Guid, GuidVer, TypeId, Code, Name, ClassName, ResTypeGuid, Description)\n" +
             "select (select max(Id) + 1 from SysResType),\n" +
             "       'ebc35758-ff26-44f4-83d5-5c11f54e297c',\n" +
@@ -91,7 +96,7 @@ describe('#get functions', function() {
 
     describe('#getResource', function () {
         it('Загрузить существующий ресурс', function () {
-                return Main.Config.ResManager.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6').then(
+                return ResManager.getResource('0c5e3ff0-1c87-3d99-5597-21d498a477c6').then(
                     function (object) {
                         object.should.be.exist;
                         object.body.should.be.exist;
@@ -104,15 +109,13 @@ describe('#get functions', function() {
         );
 
         it('Запросить несуществующий ресурс', function () {
-            return Main.Config.ResManager.getResource('1f38daff-83e5-404f-822a-b0df4c99a833').should.be.rejectedWith(Error);
+            return ResManager.getResource('1f38daff-83e5-404f-822a-b0df4c99a833').should.be.rejectedWith(Error);
         });
     });
 
     describe('#getResources', function () {
         it('Загрузка 2 ресурсов', function () {
-            var _resManger = Main.Config.ResManager;
-
-            var _promise = _resManger.getResources(['0c5e3ff0-1c87-3d99-5597-21d498a477c6', '0d6f3891-f800-9f8f-edac-53cd51792f0c']);
+            var _promise = ResManager.getResources(['0c5e3ff0-1c87-3d99-5597-21d498a477c6', '0d6f3891-f800-9f8f-edac-53cd51792f0c']);
 
             return _promise.then(function (bodys) {
                 Object.keys(bodys).should.have.lengthOf(2);
@@ -127,9 +130,7 @@ describe('#get functions', function() {
                 second: 'e8dd22b8-6306-455b-82a7-8897737bb72a'
             };
 
-            var _resManger = Main.Config.ResManager;
-
-            var _promise = _resManger.getResources([errorGuid.first, errorGuid.second]);
+            var _promise = ResManager.getResources([errorGuid.first, errorGuid.second]);
 
             _promise.then(function (bodys) {
                 Object.keys(bodys).should.have.lengthOf(2);
@@ -144,24 +145,38 @@ describe('#get functions', function() {
 
     describe('#getResByType', function () {
         it('Существующий тип', function () {
-            return Main.Config.ResManager.getResByType('10217b8e-b1f8-4221-a419-f20735219dd2').then(
+            return ResManager.getResByType('10217b8e-b1f8-4221-a419-f20735219dd2').then(
                 function (resources) {
-                    Object.keys(resources).should.have.lengthOf(24);
+                    Object.keys(resources).should.have.lengthOf(35);
                     for (var element in resources) {
                         if (!resources.hasOwnProperty(element)) continue;
                         resources[element].should.be.exists;
-                        resources[element].body.should.be.exists;
+                        resources[element].code.should.be.not.empty;
+                        resources[element].description.should.be.not.empty;
+                        resources[element].hash.should.be.not.empty;
+                        resources[element].id.should.be.not.empty;
+                        resources[element].name.should.be.not.empty;
+                        resources[element].prodId.should.be.not.empty;
+                        resources[element].resBody.should.be.exists;
+                        resources[element].resGuid.should.be.not.empty;
+                        resources[element].resTypeId.should.be.not.empty;
+                        resources[element].resVerId.should.be.not.empty;
+                        resources[element].resVerInstance.should.be.not.empty;
+                        resources[element].resVerNum.should.be.not.empty;
+                        resources[element].state.should.be.not.empty;
+                        resources[element].verDescription.should.be.not.empty;
+                        resources[element].verGuid.should.be.not.empty;
                     }
                 }
             );
         });
 
         it('Несуществующий тип', function () {
-            return Main.Config.ResManager.getResByType('ERRROR').should.be.rejectedWith('No such resource type');
+            return ResManager.getResByType('ERRROR').should.be.rejectedWith('No such resource type');
         });
 
         it('Пустой тип', function () {
-            return Main.Config.ResManager.getResByType('50612b0f-f828-41e4-b52c-8ffc5b319d0b').then(
+            return ResManager.getResByType('50612b0f-f828-41e4-b52c-8ffc5b319d0b').then(
                 function (resources) {
                     resources.should.be.empty;
                 }
@@ -171,19 +186,19 @@ describe('#get functions', function() {
 
     describe('#getResListByType', function () {
         it('Существующий тип', function () {
-            return Main.Config.ResManager.getResListByType('10217b8e-b1f8-4221-a419-f20735219dd2').then(
+            return ResManager.getResListByType('10217b8e-b1f8-4221-a419-f20735219dd2').then(
                 function (resources) {
-                    resources.should.have.lengthOf(24);
+                    resources.should.have.lengthOf(35);
                 }
             );
         });
 
         it('Несуществующий тип', function () {
-            return Main.Config.ResManager.getResListByType('ERRROR').should.be.rejectedWith(Error);
+            return ResManager.getResListByType('ERRROR').should.be.rejectedWith(Error);
         });
 
         it('Пустой тип', function () {
-            return Main.Config.ResManager.getResListByType('50612b0f-f828-41e4-b52c-8ffc5b319d0b').then(
+            return ResManager.getResListByType('50612b0f-f828-41e4-b52c-8ffc5b319d0b').then(
                 function (resources) {
                     resources.should.be.empty;
                 }
@@ -204,13 +219,13 @@ describe('#modify functions', function(){
             var _newResource = {
                 name : 'Test',
                 code : 'TEST',
-                description : 'Текущая сборка подверждена - Ошибка',
+                description : 'Тестовый ресурс',
                 resGuid : 'e8f21877-f3ba-4508-89bf-270a35f0361c',
                 resTypeId : 1
             };
 
             return execSql([_sql]).then(function(){
-                return Main.Config.ResManager.createNewResource(_newResource).should.be.rejected;
+                return ResManager.createNewResource(_newResource).should.be.rejected;
             });
         });
 
@@ -219,7 +234,7 @@ describe('#modify functions', function(){
             var _newResource = {
                 name : 'Test',
                 code : 'TEST',
-                description : 'Текущая сборка не подверждена - ОК',
+                description : 'Тестовый ресурс',
                 resGuid : 'e8f21877-f3ba-4508-89bf-270a35f0361c',
                 resTypeId : 1
             };
@@ -248,7 +263,7 @@ describe('#modify functions', function(){
             });
 
             it('Создание нового ресурса - ОК', function() {
-                return Main.Config.ResManager.createNewResource(_newResource).then(function (result) {
+                return ResManager.createNewResource(_newResource).then(function (result) {
                     result.should.be.exists;
                     result.result.should.be.equal('OK');
                     result.resourceGuid.should.not.be.empty;
@@ -256,7 +271,7 @@ describe('#modify functions', function(){
             });
 
             it('Создание существующего ресурса - Ошибка', function() {
-                return Main.Config.ResManager.createNewResource(_newResource).should.be.rejected;
+                return ResManager.createNewResource(_newResource).should.be.rejected;
             });
 
             after(function(){
@@ -280,7 +295,7 @@ describe('#modify functions', function(){
             });
 
             it('#Создание новой версии - Ошибка', function(){
-                return Main.Config.ResManager.newResourceVersion('e8f21877-f3ba-4508-89bf-270a35f0361c', 'TEST').should.be.rejected;
+                return ResManager.newResourceVersion('e8f21877-f3ba-4508-89bf-270a35f0361c', 'TEST').should.be.rejected;
             })
         });
 
@@ -289,7 +304,7 @@ describe('#modify functions', function(){
             var _newResource = {
                 name : 'Test',
                 code : 'TEST',
-                description : 'Текущая версия не подтвержена - ОК',
+                description : 'Тестовый ресурс',
                 resGuid : 'e8f21877-f3ba-4508-89bf-270a35f0361c',
                 resTypeId : 1
             };
@@ -304,12 +319,12 @@ describe('#modify functions', function(){
                 ];
 
                 return execSql(_sql).then(function(){
-                    return Main.Config.ResManager.createNewResource(_newResource);
+                    return ResManager.createNewResource(_newResource);
                 });
             });
 
             it('создание 1-ой новой версии ', function() {
-                return Main.Config.ResManager.newResourceVersion('e8f21877-f3ba-4508-89bf-270a35f0361c', 'TEST').then(
+                return ResManager.newResourceVersion('e8f21877-f3ba-4508-89bf-270a35f0361c', 'TEST').then(
                     function (result) {
                         result.should.be.exists;
                         result.result.should.be.equal('OK');
@@ -329,9 +344,7 @@ describe('#modify functions', function(){
 
     xdescribe('#commitBuild', function() {
         it('создание Build-а', function(done) {
-            var _resManger = Main.Config.ResManager;
-
-            _resManger.commitBuild(function(result) {
+            ResManager.commitBuild(function(result) {
                 console.log(result.result);
                 console.log(result.message);
                 done();
@@ -341,9 +354,7 @@ describe('#modify functions', function(){
 
     xdescribe('#createNewBuild', function() {
         it('создание Build-а', function(done) {
-            var _resManger = Main.Config.ResManager;
-
-            _resManger.createNewBuild('Новый тестовый build', function(result) {
+            ResManager.createNewBuild('Новый тестовый build', function(result) {
                 console.log(result.result);
                 console.log(result.message);
                 done();
