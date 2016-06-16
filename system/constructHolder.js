@@ -24,6 +24,8 @@ define(
                 var scripts = [];
                 var ctrls = UCCELLO_CONFIG.controls;
                 that.pvt.components = {};
+                that.pvt.compByName = {};
+                var comp = null;
 
                 //if (side == 'server') {
                 if (this._isNode) {
@@ -31,7 +33,9 @@ define(
                         var path = ctrls[i].isUccello ? UCCELLO_CONFIG.uccelloPath :UCCELLO_CONFIG.controlsPath;
                         var constr = require(path+ctrls[i].component);
                         var className = ctrls[i].className;
-                        that.pvt.components[UCCELLO_CONFIG.classGuids[className]] = {constr:constr, viewsets:{}};
+                        comp = { constr: constr, viewsets: {} };
+                        that.pvt.components[UCCELLO_CONFIG.classGuids[className]] = comp;
+                        that.pvt.compByName[className] = comp;
                     }
                     if (callback) callback();
                 } else {
@@ -50,7 +54,9 @@ define(
                         var argIndex = 0;
                         for(var i=0; i<ctrls.length; i++) {
                             var className = ctrls[i].className;
-                            that.pvt.components[UCCELLO_CONFIG.classGuids[className]] = {constr:arguments[argIndex], viewsets:{}};
+                            comp = { constr: arguments[argIndex], viewsets: {} };
+                            that.pvt.components[UCCELLO_CONFIG.classGuids[className]] = comp;
+                            that.pvt.compByName[className] = comp;
                             argIndex++;
                             if (UCCELLO_CONFIG.viewSet && ctrls[i].viewset) {
                                 that.pvt.components[UCCELLO_CONFIG.classGuids[className]].viewsets[UCCELLO_CONFIG.viewSet.name] = arguments[argIndex];
@@ -71,11 +77,21 @@ define(
             },
 
             /**
+             * Получить компонент по имени класса
+             * @param name
+             */
+            getComponentByName: function (name) {
+                return this.pvt.compByName[name];
+            },
+
+            /**
              * Добавить компонент
              * @param obj
              */
-            addComponent: function(obj, viewsets) {
-                this.pvt.components[obj.prototype.classGuid] = { constr: obj, viewsets: viewsets ? viewsets : {}, code: null };
+            addComponent: function (obj, viewsets) {
+                var comp = { constr: obj, viewsets: viewsets ? viewsets : {}, code: null };
+                this.pvt.components[obj.prototype.classGuid] = comp;
+                this.pvt.compByName[obj.prototype.className] = comp;
             },
 
             /**
@@ -223,7 +239,9 @@ define(
                 if (parent && (!this.pvt.components[classGuid])) {
                     var constrFunc = new Function("Parent", code.constrBody);
                     Constructor = constrFunc(parent);
-                    this.pvt.components[classGuid] = { constr: Constructor, viewsets: {}, code: code };
+                    var comp = { constr: Constructor, viewsets: {}, code: code };
+                    this.pvt.components[classGuid] = comp;
+                    this.pvt.compByName[Constructor.prototype.className] = comp;
                 };
                 return Constructor;
             }

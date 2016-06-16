@@ -235,7 +235,23 @@ define(
 			    return result;
 			},
 
-			// КОЛЛЕКЦИИ
+		    /**
+             * Возвращает массив описаний полей
+             * 
+             * @return {Array}
+             */
+			getFieldDefs: function () {
+			    var result = [];
+			    if (this.pvt.fieldsArr === undefined)
+			        this._bldElemTable();
+			    var self = this;
+			    this.pvt.fieldsArr.forEach(function (fname) {
+			        result.push({ name: fname, dataType: self.pvt.fieldsTable[fname].ftype.serialize() });
+			    });
+			    return result;
+			},
+
+		    // КОЛЛЕКЦИИ
 					
 		    /**
              * Returns the collection list (if it doesn't exist then we'll build it).
