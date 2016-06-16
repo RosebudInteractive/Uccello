@@ -3,13 +3,20 @@
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 
+/**
+ * A module representing a GenDataGrid.
+ * @module controls/controlMgr
+ */
 define(
 	['../memDB/memDataBase', './viewset', '../system/utils'],
 	function(MemDataBase, ViewSet, Utils) {
+		/**
+		 * @constructor
+		 * @alias module:ProtoControls/genDataGrid
+		 */
 		var ControlMgr = MemDataBase.extend({
 
             /**
-             * @constructs
              * @param dbinit {MemDataBase} - база данных
 			 * @param dbinit.controller
 			 * @param dbinit.dbparams

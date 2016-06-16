@@ -59,7 +59,7 @@ var _config = {
     uccelloPath: _path.Uccello,
     webSocketServer: {port: 8082},
 
-    needRecreateDB: false,
+    needRecreateDB: true,
 
     dataman: {
         connection: _connection.get(),
