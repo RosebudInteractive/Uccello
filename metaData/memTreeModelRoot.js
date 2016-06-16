@@ -54,6 +54,113 @@ define(
                 return this._genericSetter("RootClassGuid", value);
             },
 
+            _getMetaObj: function () {
+                return this._metaObj;
+            },
+
+            getFieldDefs: function (cb) {
+
+                var result = { result: "OK" };
+                var self = this;
+
+                function getMetaObj(guid, cb) {
+                    var res = { result: "OK" };
+                    try {
+                        var is_by_name = (typeof (guid) !== "string") && (typeof (guid.className) === "string");
+                        var metaObj = is_by_name ?
+                            self.getDB().getObj(UCCELLO_CONFIG.guids.metaRootGuid).getTypeByName(guid.className) :
+                            self.getDB().getObj(guid);
+
+                        if (!metaObj) {
+                            var constructHolder = self.getDB().getConstructHolder();
+                            if (constructHolder) {
+                                var constr = is_by_name ? constructHolder.getComponentByName(guid.className) : constructHolder.getComponent(guid);
+                                if (constr)
+                                    constr = constr.constr;
+                                if (constr) {
+                                    new constr(self.getDB());
+                                    metaObj = self.getDB().getObj(constr.prototype.classGuid);
+                                }
+                            };
+                        };
+
+                        if (metaObj) {
+                            self._metaObj = metaObj;
+                            res.fields = metaObj.getFieldDefs();
+                        }
+                        else
+                            if (is_by_name)
+                                throw new Error("Undefined ClassName: \"" + guid.className + "\".")
+                            else
+                                throw new Error("Undefined ClassGuid: \"" + guid + "\".");
+                    }
+                    catch (err) {
+                        res = { result: "ERROR", message: err.message };
+                    };
+                    if (cb)
+                        setTimeout(function () {
+                            cb(res);
+                        }, 0);
+                };
+
+                var is_done = false;
+                try {
+                    if (this._metaObj) {
+                        result.fields = this._metaObj.getFieldDefs();
+                    }
+                    else
+                        if (this._is_root) {
+                            var classGuid = this.rootClassGuid();
+                            getMetaObj(classGuid, cb);
+                            is_done = true;
+                        }
+                        else {
+                            var parent = this.getParentTreeElem();
+                            parent.getFieldDefs(function (result) {
+                                var res = { result: "OK" };
+                                var is_done = false;
+                                try {
+                                    if (result && (result.result === "OK")) {
+                                        var col_list = parent._getMetaObj().getColList();
+                                        var col_name = self.parentCollection();
+                                        var col_class = null;
+                                        col_list.forEach(function (el) {
+                                            if (col_class)
+                                                return;
+                                            if (el.name === col_name)
+                                                col_class = el.typeDef.type;
+                                        });
+                                        if (!col_class)
+                                            throw new Error("Undefined collection: \"" + col_name + "\".");
+                                        getMetaObj({ className: col_class }, cb);
+                                        is_done = true;
+                                    }
+                                    else
+                                        res = result;
+                                }
+                                catch (err) {
+                                    res = { result: "ERROR", message: err.message };
+                                };
+                                if (cb && (!is_done))
+                                    setTimeout(function () {
+                                        cb(res);
+                                    }, 0);
+                            });
+                            is_done = true;
+                        };
+                }
+                catch (err) {
+                    if (cb)
+                        result = { result: "ERROR", message: err.message }
+                    else
+                        throw err;
+                };
+                if (cb && (!is_done))
+                    setTimeout(function () {
+                        cb(result);
+                    }, 0);
+            },
+
             _childIncEditCounter: function (n) {
                 for (var parent = this.getParent() ; parent; parent = parent.getParent()) {
                     if (typeof (parent._childEdCnt) === "function")
@@ -603,6 +710,7 @@ define(
                 this._is_root = false;
                 this._editVLog = null;
                 this._isWaitingForData = false;
+                this._metaObj = null;
 
                 UccelloClass.super.apply(this, [cm, params]);
 

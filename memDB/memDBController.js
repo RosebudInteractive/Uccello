@@ -19,7 +19,7 @@ define(
                     router.add('unsubscribe', function(){ return that.routerUnsubscribe.apply(that, arguments); });
                     router.add('subscribeRoot', function(){ return that.routerSubscribeRoot.apply(that, arguments); });
 					router.add('subscribeManyRoots', function(){ return that.routerSubscribeManyRoots.apply(that, arguments); });
-                    //router.add('sendDelta', function(){ return that.routerSendDelta.apply(that, arguments); });
+                    router.add('sendDelta', function(){ return that.routerSendDelta.apply(that, arguments); });
                 }
 			},
 			
@@ -74,9 +74,9 @@ define(
             },
 
 
-			/*
+
             routerSendDelta: function(data, done) {
-				if (DEBUG) console.time('applyDeltas');
+				/*if (DEBUG) console.time('applyDeltas');
                 this.applyDeltas(data.dbGuid, data.srcDbGuid, data.delta);
 				
 				//var args = { func: "applyDeltas", aparams :[data.dbGuid, data.srcDbGuid, data.delta] };
@@ -84,7 +84,7 @@ define(
 				
 				if (DEBUG) console.timeEnd('applyDeltas');
 
-                done({data: {dbVersion: this.getDB(data.dbGuid).XgetVersion() }});
+                done({data: {dbVersion: this.getDB(data.dbGuid).XgetVersion() }});*/
 				
 				this.event.fire({
                     type: 'end2ApplyDeltas',
@@ -92,7 +92,7 @@ define(
 					db: this.getDB(data.dbGuid)
                 });
 				
-            },*/
+            },
 			
 			// сгенерировать guid
 			guid: function () {
@@ -326,6 +326,11 @@ define(
 				        };
 
 				        rootObj.getLog().applyDelta(delta);
+						this.event.fire({
+							type: 'end2ApplyDeltas',
+							target: this,
+							db: this.getDB(dbGuid)
+						});
 
 				        // Если это мета-информация, то необходимо ее перестроить,
                         //   поскольку могли добавиться новые типы
@@ -338,6 +343,12 @@ define(
 				};
 
 				this.propagateDeltas(dbGuid,srcDbGuid,[delta]);
+				this.event.fire({
+					type: 'endApplyDeltas',
+					target: this,
+					commit: false,
+					db: db
+				});
 		
 				if (done) done();
 						

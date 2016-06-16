@@ -31,7 +31,7 @@ define(
             ],
 
             /**
-             * Рендер контрола
+             * пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
              * @param viewset
              * @param options
              */
@@ -94,6 +94,7 @@ define(
                 var id = 1;
                 var layouts = [];
                 var children = [];
+                this._autoSizeControls = {};
                 var sObj = {
                     "$sys": {
                         "guid": Utils.guid(),
@@ -202,13 +203,29 @@ define(
 
                 var resObj = db.deserialize(sObj, p, db.pvt.defaultCompCallback);
 
-                // Логгируем добавление поддерева
+                // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                 var mg = this.getGuid();
                 var o = {adObj: sObj, obj: resObj, colName: colName, guid: mg, type: "add"};
                 this.getLog().add(o);
                 this.logColModif("add", colName, resObj);
+
+
+                var children = resObj.getCol("Children");
+                for (var item in this._autoSizeControls) {
+
+                    var ch = null;
+                    for (var i = 0; i < children.count(); i++) {
+                        if (children.get(i).getGuid().indexOf(item) >= 0) {
+                            ch = children.get(i);
+                            break;
+                        }
+                    }
+                    if (ch) ch.height("auto");
+                }
+
                 this.getControlMgr().allDataInit(resObj);
                 this.hasChanges(false);
+
             },
 
             _genLayouts: function(arr, guidMap, layout, id) {
@@ -237,6 +254,8 @@ define(
                     for (var i = 0; i < lCol.count(); i++) {
                         this._genLayouts(lObj.collections.Layouts, guidMap, lCol.get(i), id );
                     }
+                } else if(layout.height() == "auto") {
+                    this._autoSizeControls[guidMap[layout.control().getGuid()]] = true;
                 }
                 arr.push(lObj);
             },
