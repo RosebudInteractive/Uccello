@@ -84,14 +84,14 @@ define(
 				
 				if (DEBUG) console.timeEnd('applyDeltas');
 
-                done({data: {dbVersion: this.getDB(data.dbGuid).XgetVersion() }});*/
+                done({data: {dbVersion: this.getDB(data.dbGuid).XgetVersion() }});
 				
 				this.event.fire({
                     type: 'end2ApplyDeltas',
                     target: this,
 					db: this.getDB(data.dbGuid)
                 });
-				
+				 */
             },
 			
 			// сгенерировать guid
@@ -326,11 +326,11 @@ define(
 				        };
 
 				        rootObj.getLog().applyDelta(delta);
-						this.event.fire({
+						/*this.event.fire({
 							type: 'end2ApplyDeltas',
 							target: this,
 							db: this.getDB(dbGuid)
-						});
+						});*/
 
 				        // Если это мета-информация, то необходимо ее перестроить,
                         //   поскольку могли добавиться новые типы
@@ -343,12 +343,12 @@ define(
 				};
 
 				this.propagateDeltas(dbGuid,srcDbGuid,[delta]);
-				this.event.fire({
+				/*this.event.fire({
 					type: 'endApplyDeltas',
 					target: this,
 					commit: false,
 					db: db
-				});
+				});*/
 		
 				if (done) done();
 						
