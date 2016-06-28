@@ -56,7 +56,8 @@ define(
 				        constructHolder: this.pvt.constructHolder,
 				        router: this.pvt.router,
                         resman: this.pvt.resman,
-                        proxy : this.pvt.proxyServer
+                        proxy : this.pvt.proxyServer,
+                        rpc : rpc
 				    });
 				    this.pvt.wfe = options.engineSingleton.getInstance();
 				    this.pvt.proxyWfe = rpc._publ(this.pvt.wfe, this.pvt.wfe.getInterface());
