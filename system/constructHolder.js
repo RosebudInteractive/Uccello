@@ -147,7 +147,7 @@ define(
                     if (constrArr.length > 0) {
                         reqRest = this._processConstrList(reqRest, constrArr, false, cm);
                     };
-                    if (reqRest.length > 0)
+                    if (reqRest.length == 0)
                         break;
                 };
 
@@ -177,7 +177,7 @@ define(
                         reqRest = this._processConstrList(reqRest, arr, true);
                         Array.prototype.push.apply(constrArr, arr);
                     };
-                    if (reqRest.length > 0)
+                    if (reqRest.length == 0)
                         break;
                 };
                 return { missing: reqRest, constr: constrArr };
