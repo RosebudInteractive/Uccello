@@ -26,6 +26,7 @@ define([], function () {
         // расширяемый список контролов
         controls: [
             { className: 'UModule', isUccello: true, component: 'system/umodule', metaType: ['sys', 'client'] },
+            { className: 'UObject', isUccello: true, component: 'system/uobject', metaType: ['sys', 'client'] },
             { className: 'AComponent', isUccello: true, component: 'controls/aComponent', metaType: ['sys', 'content', 'client'] },
             { className: 'Session', isUccello: true, component: 'connection/session', metaType: ['sys'] },
             { className: 'VisualContext', isUccello: true, component: 'connection/vc', metaType: ['sys', 'client'] },
