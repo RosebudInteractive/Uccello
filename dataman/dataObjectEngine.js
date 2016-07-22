@@ -571,6 +571,8 @@ define(
                     else
                         throw err;
                 };
+
+                return UCCELLO_CONFIG.REMOTE_RESULT;
             },
 
             execBatch: function (batch, options, callback) {

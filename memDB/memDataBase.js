@@ -880,21 +880,10 @@ define(
 		                types.list[type_guid] = true;
 		                types.arrTypes.push(type_guid);
 		            }
-		            //else
-		            //    if (!types.list[type_guid]) {
-		            //        var typeObj = self.getObj(type_guid);
-		            //        if (!typeObj) {
-		            //            if (constructHolder) {
-		            //                var constr = constructHolder.getComponent(type_guid);
-		            //                if (constr)
-		            //                    constr = constr.constr;
-		            //                if (constr) {
-		            //                    new constr(self);
-		            //                    typeObj = self.getObj(type_guid);
-		            //                }
-		            //            };
-		            //        };
-		            //    };
+		            else
+		                if (type_guid && (!types.list[type_guid])) {
+		                    self.getTypeObj(type_guid);
+		                };
 		        };
 
 		        if (obj.$sys.requiredTypes && (obj.$sys.requiredTypes.length > 0))
@@ -910,7 +899,7 @@ define(
                     this.getObj(UCCELLO_CONFIG.guids.metaRootGuid).getTypeByName(guid.className) :
                     this.getObj(guid);
 
-		        if (!metaObj) {
+		        if ((!metaObj) && this.getMeta()) {
 		            var constructHolder = this.getConstructHolder();
 		            if (constructHolder) {
 		                var constr = is_by_name ? constructHolder.getComponentByName(guid.className) : constructHolder.getComponent(guid);
