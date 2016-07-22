@@ -1,6 +1,8 @@
 /**
  * Created by staloverov on 19.11.2015.
  */
+'use strict';
+
 var fs = require('fs');
 
 function ListenerConfig() {
@@ -14,20 +16,60 @@ function SourceConfig() {
     this.switchName = '';
 }
 
+// var Config = class Config{
+//     constructor(configFileName){
+//         if (configFileName != '') {
+//             if (fs.existsSync(configFileName)) {
+//                 var _text = fs.readFileSync(configFileName);
+//             } else {
+//                 console.error('Can not find file [' + configFileName + ']')
+//                 //throw new Error('Can not find file [' + configFileName + ']');
+//                 this.isLoaded = false;
+//                 return
+//             }
+//
+//             var _prototype = JSON.parse(_text);
+//             // Object.setPrototypeOf(this, _prototype);
+//             this.isLoaded = true;
+//         }
+//
+//         if (!this.listeners) {this.listeners = []}
+//         if (!this.switches) {this.switches = []}
+//         if (!this.sources) {this.sources = []}
+//     }
+//
+//     getListener(name, type) {
+//         return this.listeners.find(function(element) {
+//             return ((element.name == name) && (element.type == type))
+//         });
+//     }
+//
+//     getSource(name) {
+//         return this.sources.find(function(element) {
+//             return element.name == name
+//         });
+//     }
+//
+//     getSwitch(name) {
+//         return this.switches.find(function(element) {
+//             return element.name == name
+//         })
+//     }
+// };
+
+
 function Config(configFileName) {
     if (configFileName != '') {
         if (fs.existsSync(configFileName)) {
             var _text = fs.readFileSync(configFileName);
+
+            var _prototype = JSON.parse(_text);
+            Object.setPrototypeOf(this, _prototype);
+            this.isLoaded = true;
         } else {
             console.error('Can not find file [' + configFileName + ']')
-            //throw new Error('Can not find file [' + configFileName + ']');
             this.isLoaded = false;
-            return
         }
-
-        var _prototype = JSON.parse(_text);
-        Object.setPrototypeOf(this, _prototype);
-        this.isLoaded = true;
     }
 
     if (!this.listeners) {this.listeners = []}
@@ -44,6 +86,10 @@ function Config(configFileName) {
         return this.sources.find(function(element) {
             return element.name == name
         });
+    };
+
+    this.hasSource = function(name){
+        return this.getSource(name) ? true : false;
     };
 
     this.getSwitch = function(name) {

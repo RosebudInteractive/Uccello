@@ -1,15 +1,17 @@
 /**
  * Created by staloverov on 03.12.2015.
  */
-var TextListener = require('./listener');
+// var TextListener = require('./listener');
 var DelimitedTextListener = require('./listeners/delimitedTextListener');
 var Manager = require('./manager');
 var AsyncTextListener = require('./listeners/asyncTextListener');
+var ConsoleListener = require('./listeners/ConsoleListener');
 
 var ListenerTypes = {
-    'SimpleTextListener': TextListener,
+    // 'SimpleTextListener': TextListener,
     'DelimitedTextListener' : DelimitedTextListener,
-    'AsyncTextListener' : AsyncTextListener
+    'AsyncTextListener' : AsyncTextListener,
+    'ConsoleListener' : ConsoleListener
 };
 
 function getListenerConstructor(listenerType) {

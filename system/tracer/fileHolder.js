@@ -35,7 +35,7 @@ FileHolder.prototype.init = function(config) {
     }
 
     if (!fs.existsSync(this.folder)) {
-        fs.mkdir(this.folder)
+        mkdir(this.folder)
     }
 
     if (!config.encoding) { this.encoding = 'utf8' } else { this.encoding = config.encoding }
@@ -189,6 +189,21 @@ function getActualFileSize(name, mode){
         var _stat = fs.statSync(name);
         return _stat.size;
     }
+}
+
+function mkdir(path, root) {
+
+    var dirs = path.split('/'),
+        dir = dirs.shift(),
+        root = (root || '') + dir + '/';
+
+    try { fs.mkdirSync(root); }
+    catch (e) {
+        //dir wasn't made, something went wrong
+        if(!fs.statSync(root).isDirectory()) throw new Error(e);
+    }
+
+    return !dirs.length || mkdir(dirs.join('/'), root);
 }
 
 if (module) {module.exports = FileHolder}
