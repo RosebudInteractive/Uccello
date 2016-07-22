@@ -370,6 +370,11 @@ filter.addParameter({ name: "ObjId", ptype: "int" });
 filter.addCondition({ leftExp: { field: "Id" }, op: "=", rightExp: { param: "ObjId" } });
 dm.getTreeRoot("DataCompanyTree").setParameter("ObjId", -1);
 
+// For "DataGrid" property editor
+//
+metaDataMgr.addDataModel("DataGridDsgnDM").addMemTreeModel("DataGridDsgnTree", UCCELLO_CONFIG.classGuids.DesignerDataGrid, UCCELLO_CONFIG.classGuids.MemBsTreeModelRoot)
+    .addDataSource("Columns");
+
 metaDataMgr.addModel("DataLeadLog", "c4fa07b5-03f7-4041-6305-fbd301e7408a", "RootLeadLog", "bedf1851-cd51-657e-48a0-10ac45e31e20")
     .addField("LeadId", { type: "dataRef", model: "DataLead", refAction: "parentCascade", allowNull: true })
     .addField("Date", "datetime")
