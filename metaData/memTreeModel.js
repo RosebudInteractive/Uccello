@@ -3,9 +3,9 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['./memTreeModelRoot', './metaDefs'],
-    function (MemTreeModelRoot, Meta) {
-        var MemTreeModel = MemTreeModelRoot.extend({
+    ['./memBsTreeModelRoot', './metaDefs'],
+    function (MemBsTreeModelRoot, Meta) {
+        var MemTreeModel = MemBsTreeModelRoot.extend({
 
             className: "MemTreeModel",
             classGuid: UCCELLO_CONFIG.classGuids.MemTreeModel,
