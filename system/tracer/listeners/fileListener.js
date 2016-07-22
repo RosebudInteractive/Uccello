@@ -3,7 +3,7 @@
  */
 var Listener = require('./../listener');
 var fs = require('fs');
-var Types = require('./../common/types');
+// var Types = require('./../common/types');
 var FileHolder = require('./../fileHolder');
 
 function FileListener(name) {
@@ -44,16 +44,20 @@ FileListener.prototype.writeData = function (data) {
     var _field;
 
     var that = this;
+    var _needWriteRecord = false;
 
     this.fields.forEach(function (field, fieldName) {
         _field = data.get(fieldName);
         if (_field) {
+            _needWriteRecord = true;
             _traceString += quoteValue(_field);
         }
         _traceString += that.delimiter;
     });
 
-    this._buffer = this._buffer + _traceString + '\n';
+    if (_needWriteRecord) {
+        this._buffer = this._buffer + _traceString + '\n';
+    }
 };
 
 FileListener.prototype.getHeader = function () {

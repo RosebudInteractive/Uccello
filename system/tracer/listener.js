@@ -41,12 +41,14 @@ Listener.prototype.applySettings = function (config) {
 };
 
 Listener.prototype.getDelimiter = function() {
-    var _localDelimiter = ';';
+    if (!this.options.delimiter) {
+        return this._getDefaultDelimiter()
+    }
 
     switch (this.options.delimiter.type) {
         case Types.DelimiterType.csv :
         {
-            return _localDelimiter
+            return ';'
         }
         case Types.DelimiterType.tab :
         {
@@ -58,26 +60,31 @@ Listener.prototype.getDelimiter = function() {
         }
         default :
         {
-            return _localDelimiter;
+            return this._getDefaultDelimiter();
         }
     }
 };
 
+Listener.prototype._getDefaultDelimiter = function() {
+    return ';'
+};
+
 Listener.prototype.writeData = function (data) {
-    var _traceString = '';
-    var _field;
-
-    var that = this;
-
-    this.fields.forEach(function (field, fieldName) {
-        _field = data.get(fieldName);
-        if (_field) {
-            _traceString += _field;
-        }
-        _traceString += that.delimiter;
-    });
-
-    console.log(_traceString);
+    // var _traceString = '';
+    // var _field;
+    //
+    // var that = this;
+    //
+    // this.fields.forEach(function (field, fieldName) {
+    //     _field = data.get(fieldName);
+    //     if (_field) {
+    //         _traceString += _field;
+    //     }
+    //     _traceString += that.delimiter;
+    // });
+    //
+    // console.log(_traceString);
+    throw new Error('Trace data can be written by concrete listener')
 };
 
 Listener.prototype.flush = function () {};

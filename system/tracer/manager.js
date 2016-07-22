@@ -107,11 +107,19 @@ Manager.prototype = {
     },
 
     createSource: function (sourceName) {
-        if (this.sources.has(sourceName)) {
-            return this.sources.get(sourceName)
-        } else {
-            return new Source(sourceName)
-        }
+        var that = this;
+        return new Promise(function(resolve, reject){
+            if (that.sources.has(sourceName)) {
+                resolve(that.sources.get(sourceName))
+            } else {
+                if (that.config.hasSource(sourceName)) {
+                    resolve(new Source(sourceName))    
+                } else {
+                    reject(new Error('Can not find config for source ' + sourceName))    
+                }
+            }    
+        });
+        
     }
 };
 

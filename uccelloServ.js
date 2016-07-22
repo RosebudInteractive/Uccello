@@ -29,7 +29,7 @@ define(
 
                 if (options.traceConfigFile) {
                     TraceManager.getInstance().loadFromFile(options.traceConfigFile);
-                    GLOBAL.tracer = TraceManager.getInstance();
+                    GLOBAL.$tracer = TraceManager.getInstance();
                 }
                 this.pvt.router = new Router();
 

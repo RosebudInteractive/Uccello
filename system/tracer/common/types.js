@@ -14,7 +14,7 @@ var Types = {
     FileOpenMode : { createNew : 'createNew', append : 'append' , overwrite : 'overwrite' },
     FileLimitType : { unlimited : 'unlimited', bySize : 'bySize', byTime : 'byTime' },
     PeriodType : { minute : 'minute', hour : 'hour', day : 'day', month : 'month' },
-    SizeType : { kb : 'kb', mb : 'Mb', gb : 'Gb' },
+    SizeType : { kb : 'Kb', mb : 'Mb', gb : 'Gb' },
 
     TraceLevel : {
         ActivityTracing: 'ActivityTracing',

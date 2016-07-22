@@ -64,6 +64,7 @@ function Source(name) {
             if (listener) {
                 var _listenerInfo = {
                     listener : listener,
+                    enable : element.enable ? true : false,
                     aliases : new Map()
                 };
 
@@ -116,9 +117,10 @@ function Source(name) {
         if (_needTrace) {
             for (var _listenerInfo of this.listeners.values()) {
                 var _traceData = this.buildTraceDataForListener(_listenerInfo, data);
-                _listenerInfo.listener.trace(_traceData, this.autoFlush || withFlush);
+                if (_listenerInfo.enable) {
+                    _listenerInfo.listener.trace(_traceData, this.autoFlush || withFlush);
+                }
             }
-
         }
     };
 
