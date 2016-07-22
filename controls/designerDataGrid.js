@@ -10,7 +10,7 @@ if (typeof define !== 'function') {
 define(
     [UCCELLO_CONFIG.uccelloPath+'controls/dataGrid'],
     function(DataGrid) {
-        var DataGrid = ADataControl.extend({
+        var DataGrid = DataGrid.extend({
 
             className: "DesignerDataGrid",
             classGuid: UCCELLO_CONFIG.classGuids.DesignerDataGrid,
