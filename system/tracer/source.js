@@ -1,60 +1,42 @@
 /**
  * Created by staloverov on 25.11.2015.
  */
+'use strict';
+
 var Manager = require('./manager');
 var Utils = require('./common/utils');
 var Types = require('./common/types');
 
-function Source(name) {
-    if (!name) {
-        throw new Error('Source name is undefined');
+var Source = class Source {
+    constructor(name){
+        if (!name) {
+            throw new Error('Source name is undefined');
+        }
+
+        this.name = name;
+        this.switch = null;
+        this.autoFlush = false;
+        this.aliases = new Map();
+        this.listeners = new Map();
+
+        Manager.getInstance().addSource(this);
+        var _config = Manager.getInstance().config.getSource(this.name);
+        this.applySettings(_config);
     }
 
-    this.name = name;
-    this.switch = null;
-    this.autoFlush = false;
-    this.aliases = new Map();
-    this.listeners = new Map();
-
-    this.applySettings = function(config) {
+    applySettings(config) {
         if (!config) {return}
         this.autoFlush = config.autoFlush;
         this.switch = Manager.getInstance().getSwitch(config.switchName);
 
         var _aliasesConfig = Utils.deepCopy(config.aliases);
-        this.buildAliases(_aliasesConfig, this.aliases);
+        _buildAliases(_aliasesConfig, this.aliases);
 
         var _listenersConfig = Utils.deepCopy(config.listeners);
         this.loadListener(_listenersConfig);
-    };
+    }
 
-    // Todo : можно без this сделать
-    this.buildAliases = function (aliasesConfig, aliasesMap) {
-        if (!aliasesConfig) { return }
-
-        aliasesConfig.forEach(function(alias) {
-            switch (alias.operation) {
-                case Types.AliasOperation.add :
-                {
-                    aliasesMap.set(alias.dataFieldName, alias.listenerFieldName);
-                    break;
-                }
-                case Types.AliasOperation.delete :
-                {
-                    aliasesMap.delete(alias.dataFieldName);
-                    break;
-                }
-                case Types.AliasOperation.clear :
-                {
-                    aliasesMap.clear();
-                    break;
-                }
-                default : { break }
-            }
-        });
-    };
-
-    this.loadListener = function (listenersConfig) {
+    loadListener(listenersConfig) {
         var that = this;
         var listener = null;
 
@@ -68,18 +50,18 @@ function Source(name) {
                     aliases : new Map()
                 };
 
-                that.buildAliases(element.aliases, _listenerInfo.aliases);
+                _buildAliases(element.aliases, _listenerInfo.aliases);
 
                 that.listeners.set(listener.name, _listenerInfo);
             }
         })
-    };
+    }
 
-    this.hasSwitch = function () {
+    hasSwitch() {
         return this.switch ? true : false
-    };
+    }
 
-    this.buildTraceDataForListener = function (listenerInfo, data) {
+    buildTraceDataForListener(listenerInfo, data) {
         var _result = new Map();
 
         var _listenerFields = listenerInfo.listener.getFields();
@@ -103,9 +85,9 @@ function Source(name) {
         }
 
         return _result;
-    };
+    }
 
-    this.trace = function(data, withFlush) {
+    trace(data, withFlush) {
         if (!data) { return }
 
         if (!data.sourceName) {
@@ -115,19 +97,46 @@ function Source(name) {
         var _needTrace = this.hasSwitch() && this.switch.shouldBeTrace(data.eventType) && (this.listeners.size > 0);
 
         if (_needTrace) {
-            for (var _listenerInfo of this.listeners.values()) {
-                var _traceData = this.buildTraceDataForListener(_listenerInfo, data);
+            var that = this;
+            for (var _listenerInfo of that.listeners.values()) {
+                var _traceData = that.buildTraceDataForListener(_listenerInfo, data);
                 if (_listenerInfo.enable) {
-                    _listenerInfo.listener.trace(_traceData, this.autoFlush || withFlush);
+                    _listenerInfo.listener.trace(_traceData, that.autoFlush || withFlush);
                 }
             }
         }
-    };
-
-    Manager.getInstance().addSource(this);
-    var _config = Manager.getInstance().config.getSource(this.name);
-    this.applySettings(_config);
+    }
 }
+
+function _buildAliases (aliasesConfig, aliasesMap) {
+    if (!aliasesConfig) {
+        return
+    }
+
+    aliasesConfig.forEach(function (alias) {
+        switch (alias.operation) {
+            case Types.AliasOperation.add :
+            {
+                aliasesMap.set(alias.dataFieldName, alias.listenerFieldName);
+                break;
+            }
+            case Types.AliasOperation.delete :
+            {
+                aliasesMap.delete(alias.dataFieldName);
+                break;
+            }
+            case Types.AliasOperation.clear :
+            {
+                aliasesMap.clear();
+                break;
+            }
+            default :
+            {
+                break
+            }
+        }
+    });
+};
 
 if (module) {
     module.exports = Source;

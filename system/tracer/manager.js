@@ -67,8 +67,8 @@ Manager.prototype = {
 
     clear: function(){
         this.listeners.clear();
-        this.sources.clear();
-        this.switches.clear();
+        // this.sources.clear();
+        // this.switches.clear();
     },
 
     addListener: function (listener) {
@@ -97,7 +97,7 @@ Manager.prototype = {
 
         this.config.switches.forEach(function (_switch) {
             if (that.switches.has(_switch.name)) {
-                that.switches.get(_switch.name).applyConfig(_switch)
+                that.switches.get(_switch.name).applySettings(_switch)
             } else {
                 new Switch(_switch.name)
             }
@@ -105,7 +105,7 @@ Manager.prototype = {
 
         this.config.sources.forEach(function (source) {
             if (that.sources.has(source.name)) {
-                that.sources.get(source.name).applyConfig(source)
+                that.sources.get(source.name).applySettings(source)
             } else {
                 new Source(source.name)
             }
