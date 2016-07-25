@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    ['../resman/dataTypes/resource', './dbTreeModelRoot', './dbTreeModel', './memTreeModel', './metaModel', './memTreeModelRoot'],
-    function (Resource, DbTreeModelRoot, DbTreeModel, MemTreeModel, MetaModel, MemTreeModelRoot) {
+    ['../resman/dataTypes/resource', './dbTreeModelRoot', './dbTreeModel', './memTreeModel', './metaModel', './memBsTreeModelRoot'],
+    function (Resource, DbTreeModelRoot, DbTreeModel, MemTreeModel, MetaModel, MemBsTreeModelRoot) {
         var DataModel = Resource.extend({
 
             className: "DataModel",
@@ -110,7 +110,7 @@ define(
                         }
                     };
                     var result = this.getDB().deserialize(sobj, { obj: this, colName: "TreeRoot" }, this.getDB().getDefaultCompCallback());
-                    if (!(result instanceof MemTreeModelRoot)) {
+                    if (!(result instanceof MemBsTreeModelRoot)) {
                         this._rootCol._del(result);
                         throw new Error("Wrong \"mem_tree_class_guid\": \"" + mem_tree_class_guid + "\"");
                     };
