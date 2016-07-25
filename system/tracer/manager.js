@@ -3,6 +3,7 @@ var Config = require('./config');
 var Switch = require('./switch');
 var Source = require('./source');
 var ListenerFactory = require('./listenerFactory');
+var Util = require('util')
 
 var _manager = null;
 getInstance = function() {
@@ -23,6 +24,7 @@ function Manager() {
     this.switches = new Map();
     this.config = null;
     this.configFileName = '';
+    this.watchTimeout = ((UCCELLO_CONFIG.trace) && (UCCELLO_CONFIG.trace.watchTimeout)) ? UCCELLO_CONFIG.trace.watchTimeout : 2000;
 }
 
 Manager.prototype = {
@@ -49,19 +51,31 @@ Manager.prototype = {
         }
 
         var that = this;
+        var _watchTimer;
 
-        fs.watch(this.configFileName, function (event) {
-            if (event == 'change') {
-                that.loadConfig()
+        fs.watch(this.configFileName, {persistent : true}, function (event) {
+            if ((event == 'change') && (!_watchTimer)) {
+                _watchTimer = setTimeout(function () {
+                    that.clear();
+                    that.loadConfig();
+                    clearTimeout(_watchTimer);
+                    _watchTimer = null;
+                }, that.watchTimeout)
             }
         });
+    },
+
+    clear: function(){
+        this.listeners.clear();
+        this.sources.clear();
+        this.switches.clear();
     },
 
     addListener: function (listener) {
         if (!this.listeners.has(listener.name)) {
             this.listeners.set(listener.name, listener);
         } else {
-            throw new Error(format('Listener \"{0}\" already exists.', listener.name))
+            throw new Error(Util.format('Listener \"{0}\" already exists.', listener.name))
         }
     },
 

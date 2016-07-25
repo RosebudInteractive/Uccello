@@ -3,7 +3,6 @@
  */
 var Listener = require('./../listener');
 var fs = require('fs');
-// var Types = require('./../common/types');
 var FileHolder = require('./../fileHolder');
 
 function FileListener(name) {
