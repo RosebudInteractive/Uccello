@@ -4,8 +4,8 @@
 }
 
 define(
-    ['./channel', 'ws', 'http', 'socket.io'],
-    function (Channel, WebSocket, Http, SocketIO) {
+    ['./channel', 'ws', 'http', 'socket.io', '../system/tracer/common/types'],
+    function (Channel, WebSocket, Http, SocketIO, TraceTypes) {
         
         var CommunicationServer = {};        
         
@@ -58,9 +58,32 @@ define(
                 this._isClosing = false;
                 this._isClosed = false;
 
+                this._traceSource = null;
+                var self = this;
+                if ((typeof ($tracer) !== "undefined") && $tracer)
+                    $tracer.createSource('ChannelLog').then(function (source) {
+                        self._traceSource = source;
+                    }).catch(function (reason) {
+                        console.log(reason.message)
+                    });
             },
             
-            setEventHandlers: function (handlers){
+            channelDataLog: function (client_id, tp_msg, msg) {
+                if (this._traceSource) {
+                    var dt = new Date();
+                    this._traceSource.trace({
+                        eventType: tp_msg === "err" ? TraceTypes.TraceEventType.Error : TraceTypes.TraceEventType.Information,
+                        dateTime: dt,
+                        ts: Number(dt),
+                        src: "srv",
+                        clientId: client_id,
+                        type: tp_msg,
+                        message: JSON.stringify(msg)
+                    });
+                };
+            },
+
+            setEventHandlers: function (handlers) {
                 this._channellProps = handlers;
             },
                         
@@ -179,12 +202,14 @@ define(
                             if (chStateData.chType == CommunicationServer.WEB_SOCKET) {
                                 if (self._io_log_flag)
                                     console.log("###io\t" + chStateData.clientId + "\tts:" + Number(new Date()) + "\tsrv\tout\t" + JSON.stringify(msg_to_send));
+                                self.channelDataLog(chStateData.clientId, "out", msg_to_send);
                                 chStateData.stream.send(JSON.stringify(msg_to_send), function ack(error) {
                                     if (typeof (error) !== "undefined") {
                                         // Error !!! Restore message queue
                                         self._restoreMsgQueue(chStateData);
                                         if (self._io_log_flag) console.log("###io\t" + chStateData.clientId + "\tts:" + Number(new Date()) +
                                             "\tsrv\terr\t" + "Error while sending WS- message: " + JSON.stringify(msg_to_send));
+                                        self.channelDataLog(chStateData.clientId, "err", msg_to_send);
                                     };
                                     chStateData.lastMsg = null;
                                 });
@@ -348,13 +373,14 @@ define(
             
             _processMsg: function (msg, chStateData){
 
-                if (this._io_log_flag)
-                    console.log("###io\t" + chStateData.clientId + "\tts:" + Number(new Date()) + "\tsrv\tinp\t" + JSON.stringify(msg));
-
                 var inp = [];
                 var i;
                 if (msg !== null) {
                     
+                    if (this._io_log_flag)
+                        console.log("###io\t" + chStateData.clientId + "\tts:" + Number(new Date()) + "\tsrv\tinp\t" + JSON.stringify(msg));
+                    this.channelDataLog(chStateData.clientId, "inp", msg);
+
                     if (msg instanceof Array)
                         inp = msg;
                     else
@@ -429,6 +455,7 @@ define(
                     
                     if (self._io_log_flag)
                         console.log("###io\t" + chStateData.clientId + "\tts:" + Number(new Date()) + "\tsrv\tclose\t" + "WS closed: " + JSON.stringify(event));
+                    self.channelDataLog(chStateData.clientId, "close", event);
 
                     if (chStateData.stream !== null) {
                         chStateData.stream.removeListener('message', chStateData.wsMsgProcessor);

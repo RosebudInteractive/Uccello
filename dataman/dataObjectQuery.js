@@ -3,8 +3,8 @@ if (typeof define !== 'function') {
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
 }
 define(
-    [/*'bluebird',*/ 'lodash', './transaction'],
-    function (/*Promise,*/ _, Transaction) {
+    [/*'bluebird',*/ 'lodash', './transaction', '../system/tracer/common/types'],
+    function (/*Promise,*/ _, Transaction, TraceTypes) {
 
         var Query = UccelloClass.extend({
 
@@ -16,6 +16,14 @@ define(
                 this._query_options = { Promise: Promise, _: _ };
                 this._options = options || {};
                 this._trace = this._options.trace || {};
+                this._traceSource = null;
+                var self = this;
+                if ((typeof ($tracer) !== "undefined") && $tracer)
+                    $tracer.createSource('SQL_Log').then(function (source) {
+                        self._traceSource = source;
+                    }).catch(function (reason) {
+                        console.log(reason.message)
+                    });
             },
 
             dropTable: function (model, options) {
@@ -242,16 +250,21 @@ define(
 
                 function exec_query(cmd, connection) {
                     var query = new self._query(self._engine, connection, self._query_options);
-                    var time;
+                    var time = process.hrtime();
+                    var record = { tStart: new Date(), sqlCmd: cmd.sqlCmd, eventType: TraceTypes.TraceEventType.Information };
                     if (self._trace.sqlCommands) {
                         console.log("Started: " + cmd.sqlCmd);
-                        time = process.hrtime();
                     };
                     return query.run(cmd).then(function (result) {
+                        var diff = process.hrtime(time);
+                        record.tFinish = new Date();
                         if (self._trace.sqlCommands) {
-                            var diff = process.hrtime(time);
                             console.log("=== Elapsed time: " + ((diff[0] * 1e9 + diff[1]) / 1e9).toFixed(4) + " sec. ===");
                             console.log("Finished: " + cmd.sqlCmd);
+                        };
+                        if (self._traceSource) {
+                            record.duration = (diff[0] * 1e9 + diff[1]) / 1e9;
+                            self._traceSource.trace(record);
                         };
                         return result;
                     });

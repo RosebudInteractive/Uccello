@@ -27,10 +27,6 @@ define(
                 this._connectId = 0;
 				this.pvt = {};
 
-                if (options.traceConfigFile) {
-                    TraceManager.getInstance().loadFromFile(options.traceConfigFile);
-                    GLOBAL.$tracer = TraceManager.getInstance();
-                }
                 this.pvt.router = new Router();
 
 				var rpc = this.pvt.rpc = new Rpc( { router: this.pvt.router } );
