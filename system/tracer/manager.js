@@ -3,7 +3,7 @@ var Config = require('./config');
 var Switch = require('./switch');
 var Source = require('./source');
 var ListenerFactory = require('./listenerFactory');
-var Util = require('util')
+var Util = require('util');
 
 var _manager = null;
 getInstance = function() {
@@ -24,7 +24,7 @@ function Manager() {
     this.switches = new Map();
     this.config = null;
     this.configFileName = '';
-    this.watchTimeout = ((UCCELLO_CONFIG.trace) && (UCCELLO_CONFIG.trace.watchTimeout)) ? UCCELLO_CONFIG.trace.watchTimeout : 2000;
+    this.watchTimeout = ((typeof(UCCELLO_CONFIG) !== "undefined") && (UCCELLO_CONFIG.trace) && (UCCELLO_CONFIG.trace.watchTimeout)) ? UCCELLO_CONFIG.trace.watchTimeout : 2000;
 }
 
 Manager.prototype = {
