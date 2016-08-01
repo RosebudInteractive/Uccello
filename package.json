@@ -5,20 +5,22 @@
   "main": "testRestType.js",
   "dependencies": {
     "amdefine": "^0.1.0",
-    "chai": "^3.5.0",
     "bluebird": "^2.10.2",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.3.0",
+    "compression": "^1.6.0",
+    "dateformat": "^1.0.12",
     "ejs": "^2.1.4",
     "express": "^4.11.0",
     "generic-pool": "^2.2.1",
     "lodash": "^3.10.1",
-    "socket.io": "^1.3.5",
     "mysql": "^2.10.2",
+    "number-formatter": "^1.2.0",
+    "socket.io": "^1.3.5",
     "string-format": "^0.5.0",
-    "winston": "^1.0.0",
-    "ws": "^0.6.5",
     "tedious": "^1.13.1",
-    "compression": "^1.6.0",
-    "chai-as-promised": "^5.3.0"
+    "winston": "^1.0.0",
+    "ws": "^0.6.5"
   },
   "devDependencies": {},
   "scripts": {

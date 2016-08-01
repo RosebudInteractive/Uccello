@@ -6,6 +6,9 @@
 var Manager = require('./manager');
 var Utils = require('./common/utils');
 var Types = require('./common/types');
+var DateFormat = require('dateformat');
+var NumberFormat = require('number-formatter');
+var StringFormat = require('string-format');
 
 var Source = class Source {
     constructor(name){
@@ -80,7 +83,14 @@ var Source = class Source {
             }
 
             if (_listenerFields.has(_fieldName)) {
-                _result.set(_fieldName, Utils.deepCopy(data[_field]));
+                var _value = Utils.deepCopy(data[_field]);
+
+                var _fieldOptions = _listenerFields.get(_fieldName);
+                if (_fieldOptions.hasOwnProperty('format')) {
+                    _value = _tryFormat(_value, _fieldOptions.format)
+                }
+
+                _result.set(_fieldName, _value);
             }
         }
 
@@ -106,7 +116,7 @@ var Source = class Source {
             }
         }
     }
-}
+};
 
 function _buildAliases (aliasesConfig, aliasesMap) {
     if (!aliasesConfig) {
@@ -137,6 +147,16 @@ function _buildAliases (aliasesConfig, aliasesMap) {
         }
     });
 };
+
+function _tryFormat(data, format) {
+    if (data instanceof Date) {
+        return DateFormat(data, format)
+    } else if (typeof data === 'number') {
+        return NumberFormat(format, data)
+    } else if (data instanceof String) {
+        return StringFormat(format, data);
+    }
+}
 
 if (module) {
     module.exports = Source;

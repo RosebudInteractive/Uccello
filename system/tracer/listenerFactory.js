@@ -5,7 +5,7 @@
 var DelimitedTextListener = require('./listeners/delimitedTextListener');
 var Manager = require('./manager');
 var AsyncTextListener = require('./listeners/asyncTextListener');
-var ConsoleListener = require('./listeners/ConsoleListener');
+var ConsoleListener = require('./listeners/consoleListener');
 
 var ListenerTypes = {
     // 'SimpleTextListener': TextListener,

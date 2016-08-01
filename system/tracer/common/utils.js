@@ -26,7 +26,7 @@ var Utils = {
     if (typeof obj !== "object" || !obj)
         return obj;
     var cons = obj.constructor;
-    if (cons === RegExp)
+    if ((cons === RegExp) || (cons === Date))
         return obj;
 
     var copy = cons();
