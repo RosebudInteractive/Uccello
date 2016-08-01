@@ -9,8 +9,6 @@ chai.use(chaiAsPromised);
 var should  = require('chai').should();
 
 var TraceManager = require('./../manager');
-var  dateFormat = require('dateformat');
-
 var _parentDir = __dirname;
 var _configFileName = _parentDir + '/testConfig.cfg';
 
@@ -20,7 +18,6 @@ before(function(){
 
 describe('#main', function(){
     it('trace source', function(done){
-       // var _source =
        TraceManager.getInstance().createSource('mySource1').then(function(source) {
            for (var i = 0; i < 10000; i++) {
                var _date = new Date();
@@ -30,20 +27,10 @@ describe('#main', function(){
        }).catch(function(reason) {
            done(reason)
        });
-       // var _source = TraceManager.getInstance().createSource('Error');
-
 
        var _interval = setInterval(function () {
            clearInterval(_interval);
            done();
        }, 5000)
     });
-
-    it('dateFormat', function(){
-        var now = (new Date());
-        var _result = dateFormat(now, "dddd, mmmm dS, yyyy, h:MM:ss TT");
-        console.log(_result)
-    })
-
-
 });

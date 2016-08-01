@@ -39,9 +39,9 @@ Manager.prototype = {
     },
 
     loadConfig: function () {
-        this.config = new Config(this.configFileName);
-        if (this.config.isLoaded) {
-            this.applyConfig();
+        var _config  = new Config(this.configFileName);
+        if (_config.isLoaded) {
+            this.applyConfig(_config);
         }
     },
 
@@ -87,12 +87,18 @@ Manager.prototype = {
         this.switches.set(sourceSwitch.name, sourceSwitch);
     },
 
-    applyConfig: function () {
+    applyConfig: function (config) {
         var that = this;
 
-        this.config.listeners.forEach (function (listener) {
+        this.config.listeners.forEach (function (_listener) {
+            if (that.switches.has(_listener.name)) {
+                that.switches.get(_listener.name).applySettings(_listener)
+            } else {
+                ListenerFactory.createListener(_listener);
+            }
+            
             // TODO : Тут должна быть проверка на уже существующие прослушки
-            ListenerFactory.createListener(listener);
+            
         });
 
         this.config.switches.forEach(function (_switch) {

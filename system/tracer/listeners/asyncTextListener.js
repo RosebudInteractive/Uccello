@@ -93,26 +93,4 @@ StreamTextListener.prototype.saveToFile = function() {
     }
 };
 
-
-//function saveToFile(readStream, writeStream) {
-//    readStream.on('readable', writeChunk);
-//
-//    function writeChunk(){
-//        var _chunk = readStream.read();
-//
-//        if (_chunk && !writeStream.write(_chunk)) {
-//            readStream.removeListener('readable', writeChunk);
-//
-//            writeStream.once('drain', function () {
-//                readStream.on('readable', writeChunk);
-//                writeChunk();
-//            });
-//        }
-//    }
-//
-//    readStream.on('end', function() {
-//        writeStream.end();
-//    });
-//}
-
 if (module) {module.exports = StreamTextListener}

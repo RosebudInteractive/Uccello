@@ -49,7 +49,7 @@ var Source = class Source {
             if (listener) {
                 var _listenerInfo = {
                     listener : listener,
-                    enable : element.enable ? true : false,
+                    enable: element.enable !== undefined ? element.enable : true,
                     aliases : new Map()
                 };
 
@@ -146,15 +146,17 @@ function _buildAliases (aliasesConfig, aliasesMap) {
             }
         }
     });
-};
+}
 
 function _tryFormat(data, format) {
     if (data instanceof Date) {
         return DateFormat(data, format)
     } else if (typeof data === 'number') {
         return NumberFormat(format, data)
-    } else if (data instanceof String) {
+    } else if (typeof data === 'string') {
         return StringFormat(format, data);
+    } else {
+        return data
     }
 }
 
