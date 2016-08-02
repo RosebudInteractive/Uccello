@@ -58,7 +58,7 @@ var SwitchConfig = class SwitchConfig {
     isEqual(config) {
         return (this.name === config.name)
     }
-}
+};
 
 var Config = class Config{
     constructor(configFileName){
@@ -88,8 +88,12 @@ var Config = class Config{
 
     getListener(name, type) {
         return this.listeners.find(function(element) {
-            return ((element.name == name) && (element.type == type))
+            return ((element.name == name) && (type ? (element.type == type) : true))
         });
+    }
+
+    hasListener(name, type) {
+        return this.getListener(name, type) ? true : false;
     }
 
     getSource(name) {
@@ -98,10 +102,18 @@ var Config = class Config{
         });
     }
 
+    hasSource(name) {
+        return this.getSource(name) ? true : false;
+    }
+
     getSwitch(name) {
         return this.switches.find(function(element) {
             return element.name == name
         })
+    }
+
+    hasSwitch(name) {
+        return this.getSwitch(name) ? true : false;
     }
 
     _copyData(config){
@@ -122,11 +134,15 @@ var Config = class Config{
         });
 
         config.sources.forEach(function(source){
-            var _source = SwitchConfig.create(source);
+            var _source = SourceConfig.create(source);
             if (_source) {
                 that.sources.push(_source);
             }
         });
+    }
+
+    isEqual(config) {
+        return false
     }
 };
 

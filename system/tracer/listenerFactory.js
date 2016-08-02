@@ -31,8 +31,7 @@ Factory.createListener = function(listenerInfo) {
         throw new Error('Unknown listener type [%s]', listenerInfo.type)
     }
     var _listener = new  _constructor(listenerInfo.name);
-    var _config = Manager.getInstance().config.getListener(listenerInfo.name, listenerInfo.type);
-    _listener.applySettings(_config);
+    _listener.applySettings(listenerInfo);
     Manager.getInstance().addListener(_listener);
 
 

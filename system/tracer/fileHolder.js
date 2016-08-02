@@ -162,6 +162,25 @@ FileHolder.prototype.checkWriteData = function(data) {
     }
 };
 
+FileHolder.prototype.createNewFile = function() {
+    var _newFileName = this.getNewName();
+
+    // Todo возможно стоит сделать проверку на одинаковые имена для всех openMode, иначе будет постоянно перезаписывать
+    if (_newFileName == this.actualFileName) {
+        throw new Error('Wrong filename template [%s], need {num} or {date} in template', this.filename)
+    }
+
+    var _goodFileName = false;
+    do {
+        var _newFileSize = getActualFileSize(_newFileName, this.openMode);
+        _goodFileName = _newFileSize == 0;
+        // Todo : возможно зацикливание!!!! Нужен TryCount
+        _newFileName = this.getNewName();
+    } while (_goodFileName);
+
+    this.setName(_newFileName);
+};
+
 FileHolder.prototype.openNextFile = function(data) {
     var _newFileName = this.getNewName();
 

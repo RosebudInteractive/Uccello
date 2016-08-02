@@ -66,7 +66,7 @@ Manager.prototype = {
     },
 
     clear: function(){
-        this.listeners.clear();
+        // this.listeners.clear();
         // this.sources.clear();
         // this.switches.clear();
     },
@@ -87,35 +87,75 @@ Manager.prototype = {
         this.switches.set(sourceSwitch.name, sourceSwitch);
     },
 
-    applyConfig: function (config) {
+    _configListeners: function (config) {
         var that = this;
 
-        this.config.listeners.forEach (function (_listener) {
-            if (that.switches.has(_listener.name)) {
-                that.switches.get(_listener.name).applySettings(_listener)
+        for (var _listenerInfo of this.listeners.entries()) {
+            var _type = _listenerInfo[1].constructor.name;
+            var _name = _listenerInfo[0];
+            if (!config.hasListener(_name, _type)) {
+                that.listeners.set(_name, null);
+                that.listeners.delete(_name);
+            }
+        }
+        
+        config.listeners.forEach (function (_listener) {
+            if (that.listeners.has(_listener.name)) {
+                that.listeners.get(_listener.name).applySettings(_listener)
             } else {
                 ListenerFactory.createListener(_listener);
             }
-            
-            // TODO : Тут должна быть проверка на уже существующие прослушки
-            
         });
+    },
 
-        this.config.switches.forEach(function (_switch) {
+    _configSwitches: function (config) {
+        var that = this;
+
+        for (var _switchName of this.switches.keys()) {
+            if (!config.hasSwitch(_switchName)) {
+                that.switches.set(_switchName, null);
+                that.switches.delete(_switchName);
+            }
+        }
+        
+        config.switches.forEach(function (_switch) {
             if (that.switches.has(_switch.name)) {
                 that.switches.get(_switch.name).applySettings(_switch)
             } else {
                 new Switch(_switch.name)
             }
         });
+    },
 
-        this.config.sources.forEach(function (source) {
+    _configSources: function (config) {
+        var that = this;
+
+        for (var _sourceName of this.sources.keys()) {
+            if (!config.hasSource(_sourceName)) {
+                that.sources.set(_sourceName, null);
+                that.sources.delete(_sourceName);
+            }
+        }
+
+        config.sources.forEach(function (source) {
             if (that.sources.has(source.name)) {
                 that.sources.get(source.name).applySettings(source)
             } else {
                 new Source(source.name)
             }
         })
+    },
+    
+    applyConfig: function (config) {
+        if (config.isEqual(this.config)) {
+            return
+        }
+
+        this.config = config;
+
+        this._configListeners(config);
+        this._configSwitches(config);
+        this._configSources(config);        
     },
 
     getSwitch: function (switchName) {

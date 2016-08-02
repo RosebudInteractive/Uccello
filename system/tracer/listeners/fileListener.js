@@ -10,6 +10,7 @@ function FileListener(name) {
 
     this._buffer = '';
     this.fileHolder = null;
+    this.createNewFile = false;
 }
 
 FileListener.prototype = Object.create(Listener.prototype);
@@ -24,6 +25,16 @@ FileListener.prototype.applySettings = function () {
     var that = this;
     this.fileHolder.on('beforeChangeName', function() {that.doBeforeChangeFileName()});
     this.fileHolder.on('nameChanged', function() {that.doOnChangeFileName()});
+
+    if (this.createNewFile) {
+        this.fileHolder.createNewFile();
+        this.createNewFile = false;
+    }
+};
+
+FileListener.prototype.clear = function () {
+    Listener.prototype.applySettings.apply(this, arguments);
+    this.createNewFile = true;
 };
 
 FileListener.prototype.doBeforeChangeFileName = function () {};

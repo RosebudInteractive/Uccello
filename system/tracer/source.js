@@ -28,7 +28,9 @@ var Source = class Source {
     }
 
     applySettings(config) {
-        if (!config) {return}
+        if ((!config) || this.isEqual(config)) {return}
+
+        this.clear();
         this.autoFlush = config.autoFlush;
         this.switch = Manager.getInstance().getSwitch(config.switchName);
 
@@ -37,6 +39,22 @@ var Source = class Source {
 
         var _listenersConfig = Utils.deepCopy(config.listeners);
         this.loadListener(_listenersConfig);
+    }
+
+    clear() {
+        this.aliases.clear();
+        this.listeners.clear();
+    }
+
+    isEqual(config) {
+        return (config ? true : false)
+            && (config.constructor.name == 'SourceConfig')
+            && (this.name === config.name)
+            && (this.switch ? true : false)
+            && (this.switch.isEqual(config.switch))
+            && (this.autoFlush === config.autoFlush)
+            && (_isAliasesEqual(config.aliases, [...this.aliases.values()]))
+            && (_isListenersEqual(config.listeners, this.listeners))
     }
 
     loadListener(listenersConfig) {
@@ -159,6 +177,29 @@ function _tryFormat(data, format) {
         return data
     }
 }
+
+function _isAliasesEqual(source, dest) {
+    return (source.length === dest.length)
+        && (source.every(function(alias){
+            let _alias = dest.find(function (element) {
+                return element.name == alias.name
+            });
+
+            return (_alias ? true : false)
+                && alias.operation === _alias.operation
+                && alias.listenerFieldName === _alias.listenerFieldName
+                && alias.dataFieldName === _alias.dataFieldName
+        }))
+}
+
+function _isListenersEqual(source, dest) {
+    return (source.length === dest.size)
+        && (source.every(function(listener){
+            let _listener = dest.get(listener.name);
+            return (_listener ? true : false) && _isAliasesEqual(_listener.aliases, listener.aliases)
+        }))
+
+};
 
 if (module) {
     module.exports = Source;
