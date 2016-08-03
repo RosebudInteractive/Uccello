@@ -175,8 +175,10 @@ FileHolder.prototype.createNewFile = function() {
         var _newFileSize = getActualFileSize(_newFileName, this.openMode);
         _goodFileName = _newFileSize == 0;
         // Todo : возможно зацикливание!!!! Нужен TryCount
-        _newFileName = this.getNewName();
-    } while (_goodFileName);
+        if (!_goodFileName) {
+            _newFileName = this.getNewName();
+        }
+    } while (!_goodFileName);
 
     this.setName(_newFileName);
 };
