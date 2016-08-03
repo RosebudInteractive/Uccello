@@ -14,13 +14,15 @@ function Listener(name) {
     this.autoFlush = false;
     this.fields = new Map();
     this.options = {};
+    this.isLoaded = false;
 }
 
 Listener.prototype.applySettings = function (config) {
-    if (!config) {
-        return
-    }
+    if (!config || this.isEqual(config)) { return }
 
+    if (this.isLoaded) {
+        this.clear()
+    };
     var that = this;
 
     config.fields.forEach(function (field) {
@@ -38,7 +40,22 @@ Listener.prototype.applySettings = function (config) {
     }
 
     this.delimiter = this.getDelimiter();
+    this.isLoaded = true;
 };
+
+Listener.prototype.clear = function () {
+    this.fields.clear();
+    this.options = {};
+};
+
+Listener.prototype.isEqual = function(config) {
+    var _fields = [...this.fields.values()];
+    return (this.fields.size == config.fields.length)
+        && (_fields.every(function (field, index) {
+            return (field.name === config.fields[index].name)
+                && (field.title === config.fields[index].title)
+        }))
+}
 
 Listener.prototype.getDelimiter = function() {
     if (!this.options.delimiter) {

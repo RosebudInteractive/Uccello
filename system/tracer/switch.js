@@ -18,6 +18,12 @@ function Switch(name) {
         this.level = config.level
     };
 
+    this.isEqual = function(config) {
+        return (config ? true : false)
+            && (config.constructor.name == 'SwitchConfig')
+            && (this.level === config.level)
+    };
+
     this.shouldBeTrace = function(eventType) {
         switch (this.level) {
             case Types.TraceLevel.ActivityTracing :

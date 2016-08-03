@@ -17,21 +17,20 @@ before(function(){
 });
 
 describe('#main', function(){
-   it('trace source', function(done){
-       // var _source =
+    it('trace source', function(done){
        TraceManager.getInstance().createSource('mySource1').then(function(source) {
            for (var i = 0; i < 10000; i++) {
-               source.trace({field1 : 'value : ' + i, field2 : new Date()})
+               var _date = new Date();
+
+               source.trace({number : i, field1 : i.toString(), field2 : _date})
            }
        }).catch(function(reason) {
            done(reason)
        });
-       // var _source = TraceManager.getInstance().createSource('Error');
-
 
        var _interval = setInterval(function () {
            clearInterval(_interval);
            done();
        }, 5000)
-   })
+    });
 });

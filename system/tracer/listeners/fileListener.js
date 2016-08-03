@@ -4,12 +4,14 @@
 var Listener = require('./../listener');
 var fs = require('fs');
 var FileHolder = require('./../fileHolder');
+var Types = require('./../common/types');
 
 function FileListener(name) {
     Listener.apply(this, arguments);
 
     this._buffer = '';
     this.fileHolder = null;
+    this.createNewFile = false;
 }
 
 FileListener.prototype = Object.create(Listener.prototype);
@@ -24,6 +26,16 @@ FileListener.prototype.applySettings = function () {
     var that = this;
     this.fileHolder.on('beforeChangeName', function() {that.doBeforeChangeFileName()});
     this.fileHolder.on('nameChanged', function() {that.doOnChangeFileName()});
+
+    if (this.createNewFile) {
+        this.fileHolder.createNewFile();
+        this.createNewFile = false;
+    }
+};
+
+FileListener.prototype.clear = function () {
+    Listener.prototype.clear.apply(this, arguments);
+    this.createNewFile = true;
 };
 
 FileListener.prototype.doBeforeChangeFileName = function () {};
@@ -49,7 +61,7 @@ FileListener.prototype.writeData = function (data) {
         _field = data.get(fieldName);
         if (_field) {
             _needWriteRecord = true;
-            _traceString += quoteValue(_field);
+            _traceString += that.quoteValue(_field);
         }
         _traceString += that.delimiter;
     });
@@ -65,9 +77,9 @@ FileListener.prototype.getHeader = function () {
 
     this.fields.forEach(function (field) {
         if (!field.title) {
-            _result += quoteValue(field.name)
+            _result += that.quoteValue(field.name)
         } else {
-            _result += quoteValue(field.title)
+            _result += that.quoteValue(field.title)
         }
         _result += that.delimiter
     });
@@ -76,8 +88,12 @@ FileListener.prototype.getHeader = function () {
     return _result;
 };
 
-function quoteValue(value) {
-    return '"' + value.toString().replace(/"/g, '""') + '"';
+FileListener.prototype.quoteValue = function(value) {
+    if (this.options.delimiter.type === Types.DelimiterType.tab) {
+        return value
+    } else {
+        return '"' + value.toString().replace(/"/g, '""') + '"';
+    }
 }
 
 if (module) {module.exports = FileListener}

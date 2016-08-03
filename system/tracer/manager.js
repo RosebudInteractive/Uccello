@@ -3,7 +3,7 @@ var Config = require('./config');
 var Switch = require('./switch');
 var Source = require('./source');
 var ListenerFactory = require('./listenerFactory');
-var Util = require('util')
+var Util = require('util');
 
 var _manager = null;
 getInstance = function() {
@@ -24,7 +24,7 @@ function Manager() {
     this.switches = new Map();
     this.config = null;
     this.configFileName = '';
-    this.watchTimeout = ((UCCELLO_CONFIG.trace) && (UCCELLO_CONFIG.trace.watchTimeout)) ? UCCELLO_CONFIG.trace.watchTimeout : 2000;
+    this.watchTimeout = ((typeof(UCCELLO_CONFIG) !== "undefined") && (UCCELLO_CONFIG.trace) && (UCCELLO_CONFIG.trace.watchTimeout)) ? UCCELLO_CONFIG.trace.watchTimeout : 2000;
 }
 
 Manager.prototype = {
@@ -39,9 +39,9 @@ Manager.prototype = {
     },
 
     loadConfig: function () {
-        this.config = new Config(this.configFileName);
-        if (this.config.isLoaded) {
-            this.applyConfig();
+        var _config  = new Config(this.configFileName);
+        if (_config.isLoaded) {
+            this.applyConfig(_config);
         }
     },
 
@@ -66,7 +66,7 @@ Manager.prototype = {
     },
 
     clear: function(){
-        this.listeners.clear();
+        // this.listeners.clear();
         // this.sources.clear();
         // this.switches.clear();
     },
@@ -87,29 +87,75 @@ Manager.prototype = {
         this.switches.set(sourceSwitch.name, sourceSwitch);
     },
 
-    applyConfig: function () {
+    _configListeners: function (config) {
         var that = this;
 
-        this.config.listeners.forEach (function (listener) {
-            // TODO : Тут должна быть проверка на уже существующие прослушки
-            ListenerFactory.createListener(listener);
+        for (var _listenerInfo of this.listeners.entries()) {
+            var _type = _listenerInfo[1].constructor.name;
+            var _name = _listenerInfo[0];
+            if (!config.hasListener(_name, _type)) {
+                that.listeners.set(_name, null);
+                that.listeners.delete(_name);
+            }
+        }
+        
+        config.listeners.forEach (function (_listener) {
+            if (that.listeners.has(_listener.name)) {
+                that.listeners.get(_listener.name).applySettings(_listener)
+            } else {
+                ListenerFactory.createListener(_listener);
+            }
         });
+    },
 
-        this.config.switches.forEach(function (_switch) {
+    _configSwitches: function (config) {
+        var that = this;
+
+        for (var _switchName of this.switches.keys()) {
+            if (!config.hasSwitch(_switchName)) {
+                that.switches.set(_switchName, null);
+                that.switches.delete(_switchName);
+            }
+        }
+        
+        config.switches.forEach(function (_switch) {
             if (that.switches.has(_switch.name)) {
                 that.switches.get(_switch.name).applySettings(_switch)
             } else {
                 new Switch(_switch.name)
             }
         });
+    },
 
-        this.config.sources.forEach(function (source) {
+    _configSources: function (config) {
+        var that = this;
+
+        for (var _sourceName of this.sources.keys()) {
+            if (!config.hasSource(_sourceName)) {
+                that.sources.set(_sourceName, null);
+                that.sources.delete(_sourceName);
+            }
+        }
+
+        config.sources.forEach(function (source) {
             if (that.sources.has(source.name)) {
                 that.sources.get(source.name).applySettings(source)
             } else {
                 new Source(source.name)
             }
         })
+    },
+    
+    applyConfig: function (config) {
+        if (config.isEqual(this.config)) {
+            return
+        }
+
+        this.config = config;
+
+        this._configListeners(config);
+        this._configSwitches(config);
+        this._configSources(config);        
     },
 
     getSwitch: function (switchName) {

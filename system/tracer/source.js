@@ -6,6 +6,9 @@
 var Manager = require('./manager');
 var Utils = require('./common/utils');
 var Types = require('./common/types');
+var DateFormat = require('dateformat');
+var NumberFormat = require('number-formatter');
+var StringFormat = require('string-format');
 
 var Source = class Source {
     constructor(name){
@@ -25,7 +28,9 @@ var Source = class Source {
     }
 
     applySettings(config) {
-        if (!config) {return}
+        if ((!config) || this.isEqual(config)) {return}
+
+        this.clear();
         this.autoFlush = config.autoFlush;
         this.switch = Manager.getInstance().getSwitch(config.switchName);
 
@@ -34,6 +39,22 @@ var Source = class Source {
 
         var _listenersConfig = Utils.deepCopy(config.listeners);
         this.loadListener(_listenersConfig);
+    }
+
+    clear() {
+        this.aliases.clear();
+        this.listeners.clear();
+    }
+
+    isEqual(config) {
+        return (config ? true : false)
+            && (config.constructor.name == 'SourceConfig')
+            && (this.name === config.name)
+            && (this.switch ? true : false)
+            && (this.switch.isEqual(config.switch))
+            && (this.autoFlush === config.autoFlush)
+            && (_isAliasesEqual(config.aliases, [...this.aliases.values()]))
+            && (_isListenersEqual(config.listeners, this.listeners))
     }
 
     loadListener(listenersConfig) {
@@ -46,7 +67,7 @@ var Source = class Source {
             if (listener) {
                 var _listenerInfo = {
                     listener : listener,
-                    enable : element.enable ? true : false,
+                    enable: element.enable !== undefined ? element.enable : true,
                     aliases : new Map()
                 };
 
@@ -80,7 +101,14 @@ var Source = class Source {
             }
 
             if (_listenerFields.has(_fieldName)) {
-                _result.set(_fieldName, Utils.deepCopy(data[_field]));
+                var _value = Utils.deepCopy(data[_field]);
+
+                var _fieldOptions = _listenerFields.get(_fieldName);
+                if (_fieldOptions.hasOwnProperty('format')) {
+                    _value = _tryFormat(_value, _fieldOptions.format)
+                }
+
+                _result.set(_fieldName, _value);
             }
         }
 
@@ -106,7 +134,7 @@ var Source = class Source {
             }
         }
     }
-}
+};
 
 function _buildAliases (aliasesConfig, aliasesMap) {
     if (!aliasesConfig) {
@@ -136,6 +164,41 @@ function _buildAliases (aliasesConfig, aliasesMap) {
             }
         }
     });
+}
+
+function _tryFormat(data, format) {
+    if (data instanceof Date) {
+        return DateFormat(data, format)
+    } else if (typeof data === 'number') {
+        return NumberFormat(format, data)
+    } else if (typeof data === 'string') {
+        return StringFormat(format, data);
+    } else {
+        return data
+    }
+}
+
+function _isAliasesEqual(source, dest) {
+    return (source.length === dest.length)
+        && (source.every(function(alias){
+            let _alias = dest.find(function (element) {
+                return element.name == alias.name
+            });
+
+            return (_alias ? true : false)
+                && alias.operation === _alias.operation
+                && alias.listenerFieldName === _alias.listenerFieldName
+                && alias.dataFieldName === _alias.dataFieldName
+        }))
+}
+
+function _isListenersEqual(source, dest) {
+    return (source.length === dest.size)
+        && (source.every(function(listener){
+            let _listener = dest.get(listener.name);
+            return (_listener ? true : false) && _isAliasesEqual(_listener.aliases, listener.aliases)
+        }))
+
 };
 
 if (module) {
