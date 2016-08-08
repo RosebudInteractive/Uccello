@@ -55,7 +55,12 @@ Listener.prototype.isEqual = function(config) {
             return (field.name === config.fields[index].name)
                 && (field.title === config.fields[index].title)
         }))
-}
+        && (config.options !== undefined)
+        && (Utils.equal(config.options.encoding, this.options.encoding))
+        && (Utils.equal(config.options.delimiter, this.options.delimiter))
+        && (Utils.equal(config.options.folder, this.options.folder))
+        && (Utils.equal(config.options.filename, this.options.filename))
+};
 
 Listener.prototype.getDelimiter = function() {
     if (!this.options.delimiter) {
@@ -87,20 +92,6 @@ Listener.prototype._getDefaultDelimiter = function() {
 };
 
 Listener.prototype.writeData = function (data) {
-    // var _traceString = '';
-    // var _field;
-    //
-    // var that = this;
-    //
-    // this.fields.forEach(function (field, fieldName) {
-    //     _field = data.get(fieldName);
-    //     if (_field) {
-    //         _traceString += _field;
-    //     }
-    //     _traceString += that.delimiter;
-    // });
-    //
-    // console.log(_traceString);
     throw new Error('Trace data can be written by concrete listener')
 };
 
