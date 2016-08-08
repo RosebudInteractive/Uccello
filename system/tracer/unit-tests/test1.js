@@ -7,6 +7,7 @@ var chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 
 var should  = require('chai').should();
+var Types = require('./../common/types');
 
 var TraceManager = require('./../manager');
 var _parentDir = __dirname;
@@ -18,11 +19,20 @@ before(function(){
 
 describe('#main', function(){
     it('trace source', function(done){
-       TraceManager.getInstance().createSource('mySource1').then(function(source) {
+       TraceManager.getInstance().createSource('mySource').then(function(source) {
            for (var i = 0; i < 10000; i++) {
                var _date = new Date();
+               var _promise = new Promise(function(resolve, reject){
+                   if (i%100 == 0) {
+                       reject(new Error('test error'))
+                   } else {
+                       resolve({number : i, field1 : i.toString(), field2 : _date})
+                   }
+               });
 
-               source.trace({number : i, field1 : i.toString(), field2 : _date})
+
+               // source.trace({number : i, field1 : i.toString(), field2 : _date}, true)
+               source.trace({eventType : Types.TraceEventType.Information}, _promise, true)
            }
        }).catch(function(reason) {
            done(reason)

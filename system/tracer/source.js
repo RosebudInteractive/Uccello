@@ -115,22 +115,53 @@ var Source = class Source {
         return _result;
     }
 
-    trace(data, withFlush) {
-        if (!data) { return }
-
-        if (!data.sourceName) {
-            data.sourceName = this.name
+    trace(data) {
+        if (!data) {
+            return
         }
 
         var _needTrace = this.hasSwitch() && this.switch.shouldBeTrace(data.eventType) && (this.listeners.size > 0);
+        if (!_needTrace) {
+            return
+        }
 
-        if (_needTrace) {
-            var that = this;
-            for (var _listenerInfo of that.listeners.values()) {
-                var _traceData = that.buildTraceDataForListener(_listenerInfo, data);
-                if (_listenerInfo.enable) {
-                    _listenerInfo.listener.trace(_traceData, that.autoFlush || withFlush);
+        var _withFlush = this.autoFlush;
+
+        if (arguments.length > 1) {
+            if (arguments[1] && typeof arguments[1].then == 'function') {
+                if (arguments.length > 2) {
+                    if (typeof arguments[2] == 'boolean') {
+                        _withFlush = _withFlush || arguments[2]
+                    }
                 }
+
+                let _promise = arguments[1];
+                var that = this;
+                _promise.then(function(data){
+                    that._internalTrace(data, _withFlush)
+                }).catch(function(reason){
+                    console.error(StringFormat('Exception on get trace data "{0.message}"', reason))
+                });
+
+                return;
+            } else if (typeof arguments[1] == 'boolean') {
+                _withFlush = _withFlush || arguments[1]
+            }
+        }
+
+        this._internalTrace(data, _withFlush);
+    }
+
+    _internalTrace(data, withFlush) {
+        if (!data.sourceName) {
+            data.sourceName = this.name;
+        }
+
+        var that = this;
+        for (var _listenerInfo of that.listeners.values()) {
+            var _traceData = that.buildTraceDataForListener(_listenerInfo, data);
+            if (_listenerInfo.enable) {
+                _listenerInfo.listener.trace(_traceData, withFlush);
             }
         }
     }

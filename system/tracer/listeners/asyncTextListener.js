@@ -51,7 +51,7 @@ AsyncTextListener.prototype.writeData = function (data) {
 };
 
 AsyncTextListener.prototype.flush = function () {
-    this._stream.end();
+    // this._stream.end();
 };
 
 
