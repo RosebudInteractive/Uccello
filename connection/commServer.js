@@ -71,14 +71,17 @@ define(
             channelDataLog: function (client_id, tp_msg, msg) {
                 if (this._traceSource) {
                     var dt = new Date();
-                    this._traceSource.trace({
-                        eventType: tp_msg === "err" ? TraceTypes.TraceEventType.Error : TraceTypes.TraceEventType.Information,
-                        dateTime: dt,
-                        ts: Number(dt),
-                        src: "srv",
-                        clientId: client_id,
-                        type: tp_msg,
-                        message: JSON.stringify(msg)
+                    var tp = tp_msg === "err" ? TraceTypes.TraceEventType.Error : TraceTypes.TraceEventType.Information;
+                    this._traceSource.trace(tp, function () {
+                        return Promise.resolve({
+                            eventType: tp,
+                            dateTime: dt,
+                            ts: Number(dt),
+                            src: "srv",
+                            clientId: client_id,
+                            type: tp_msg,
+                            message: JSON.stringify(msg)
+                        });
                     });
                 };
             },
