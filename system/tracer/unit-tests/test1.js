@@ -22,17 +22,25 @@ describe('#main', function(){
        TraceManager.getInstance().createSource('mySource').then(function(source) {
            for (var i = 0; i < 10000; i++) {
                var _date = new Date();
-               var _promise = new Promise(function(resolve, reject){
-                   if (i%100 == 0) {
-                       reject(new Error('test error'))
-                   } else {
-                       resolve({number : i, field1 : i.toString(), field2 : _date})
-                   }
-               });
+               // var _promise = new Promise(function (resolve, reject) {
+               //     if (i % 100 == 0) {
+               //         reject(new Error('test error'))
+               //     } else {
+               //         resolve({number: i, field1: i.toString(), field2: _date, timeStamp: _date})
+               //     }
+               // });
 
 
                // source.trace({number : i, field1 : i.toString(), field2 : _date}, true)
-               source.trace({eventType : Types.TraceEventType.Information}, _promise, true)
+               source.trace({eventType: Types.TraceEventType.Information}, function () {
+                   return new Promise(function (resolve, reject) {
+                       if (i % 100 == 0) {
+                           reject(new Error('test error'))
+                       } else {
+                           resolve({number: i, field1: i.toString(), field2: _date, timeStamp: _date})
+                       }
+                   })
+               }, true)
            }
        }).catch(function(reason) {
            done(reason)
