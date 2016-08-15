@@ -22,7 +22,13 @@
     "winston": "^1.0.0",
     "ws": "^0.6.5"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "docdash": "^0.4.0",
+    "gulp": "^3.9.1",
+    "gulp-git": "^1.11.0",
+    "gulp-jsdoc3": "^0.3.0",
+    "minami": "^1.1.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -6,8 +6,9 @@ if (typeof define !== 'function') {
 define(
     ['../resman/dataTypes/resElem'],
     function(ResElem) {
-        var AComponent = ResElem.extend({
-		
+        var AComponent = ResElem.extend(
+			/** @lends AComponent.prototype */
+			{
 			className: "AComponent",
 			classGuid: UCCELLO_CONFIG.classGuids.AComponent,
 			metaFields: [ {fname:"Id",ftype:"int"}, {fname:"Name",ftype:"string"} ], // TODO? гуиды для полей?

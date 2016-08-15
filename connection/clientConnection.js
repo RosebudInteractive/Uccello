@@ -91,9 +91,10 @@ define(['./socket', '../controls/aComponent'], function(Socket, AComponent) {
 
         /**
          * Аутентификация
-         * @param params {user, pass, session, subscribeUserInfo}
+         * @param params {user}
          * @param callback
          */
+        //, pass, session, subscribeUserInfo}
         authenticate: function(params, callback) {
             if (!this.connected)
                 return false;

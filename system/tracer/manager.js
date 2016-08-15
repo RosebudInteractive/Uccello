@@ -1,3 +1,8 @@
+/**
+ * @module Tracer
+ * Модуль трассировки кода
+ */
+
 var fs = require('fs');
 var Config = require('./config');
 var Switch = require('./switch');
@@ -6,6 +11,10 @@ var ListenerFactory = require('./listenerFactory');
 var Util = require('util');
 
 var _manager = null;
+/** @static
+ *  Метод доступа к экземпляру менеджера трейсера
+ * @returns {@link#Manager}
+ */
 getInstance = function() {
     if (!_manager) {
         _manager = new Manager()
@@ -14,6 +23,10 @@ getInstance = function() {
     return _manager;
 };
 
+/**
+ * @class Manager
+ * Позволяет управлять настройками трейсера
+ */
 function Manager() {
     if (!(this instanceof Manager)) {
         throw new TypeError("Person constructor cannot be called as a function.");
