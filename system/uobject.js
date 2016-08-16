@@ -6,7 +6,9 @@ if (typeof define !== 'function') {
 define(
     ['../memDB/memMetaObj', '../memDB/memObj', '../memDB/memMetaObjFields','../memDB/memMetaObjCols'],
     function(MemMetaObj, MemObj, MemMetaObjFields, MemMetaObjCols) {
-        var UObject = MemObj.extend({
+        var UObject = MemObj.extend(
+            /** @lends UObject.prototype */
+            {
 
             className: "UObject",
             classGuid: UCCELLO_CONFIG.classGuids.UObject,

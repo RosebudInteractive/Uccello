@@ -1,10 +1,7 @@
 ﻿/**
- * Implementation of functionality which ensures data type control for fields of Uccello objects.
- * All data types inherit from the BaseType object.
- *
- * @fileOverview The Data type Objects.
- * @class DataTypes
+ * @module MemMetaType
  */
+
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
@@ -18,8 +15,8 @@ define(
         var GUID_LENGTH = 36;
 
         var fldTypeCodes;
-        
-        var BaseType = UccelloClass.extend({
+
+        var BaseType = UccelloClass.extend(/** @lends BaseType.prototype */{
 
             prefix: "",
 
@@ -30,11 +27,9 @@ define(
             isRowVersionType: false,
 
             /**
-             * The Base Type all Type objects inherit from.
-             *
+             * @constructs
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
-             * @constructor
              */
             init: function (typeObj, refResolver) {
                 this._is_complex = false;
@@ -209,37 +204,33 @@ define(
                 return val;
             }
         });
-        
-        var IntegerType = BaseType.extend({
+
+        var IntegerType = BaseType.extend(/** @lends IntegerType */{
 
             key: "int",
 
             canAutoIncrement: true,
 
             /**
-             * The Integer Type.
-             *
+             * @constructs
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends BaseType
-             * @constructor
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
         
-        var StringType = BaseType.extend({
+        var StringType = BaseType.extend(/** @lends StringType */{
 
             key: "string",
 
             /**
-             * The String Type.
-             *
+             * @constructs
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends BaseType
-             * @constructor
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -300,7 +291,7 @@ define(
             }
         });
 
-        var GuidType = StringType.extend({
+        var GuidType = StringType.extend(/** @lends GuidType */{
 
             key: "guid",
 
@@ -308,7 +299,7 @@ define(
 
             /**
              * The Guid Type.
-             *
+             * @constructs
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends StringType
