@@ -52,8 +52,7 @@ Listener.prototype.isEqual = function(config) {
     var _fields = [...this.fields.values()];
     return (this.fields.size == config.fields.length)
         && (_fields.every(function (field, index) {
-            return (field.name === config.fields[index].name)
-                && (field.title === config.fields[index].title)
+            return Utils.equal(field, config.fields[index])
         }))
         && (config.options !== undefined)
         && (Utils.equal(config.options.encoding, this.options.encoding))

@@ -128,20 +128,24 @@ var Source = class Source {
         var _withFlush = this.autoFlush;
 
         if (arguments.length > 1) {
-            if (arguments[1] && typeof arguments[1].then == 'function') {
+            if (arguments[1] && typeof arguments[1] == 'function') {
                 if (arguments.length > 2) {
                     if (typeof arguments[2] == 'boolean') {
                         _withFlush = _withFlush || arguments[2]
                     }
                 }
 
-                let _promise = arguments[1];
-                var that = this;
-                _promise.then(function(data){
-                    that._internalTrace(data, _withFlush)
-                }).catch(function(reason){
-                    console.error(StringFormat('Exception on get trace data "{0.message}"', reason))
-                });
+                let _promise = arguments[1]();
+                if (_promise && typeof _promise.then == 'function'){
+                    var that = this;
+                    _promise.then(function(data){
+                        that._internalTrace(data, _withFlush)
+                    }).catch(function(reason){
+                        console.error(StringFormat('Exception on get trace data "{0.message}"', reason))
+                    });
+                } else {
+                    console.error('Promise for trace is not define')
+                }
 
                 return;
             } else if (typeof arguments[1] == 'boolean') {
