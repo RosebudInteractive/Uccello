@@ -2,7 +2,20 @@
   "name": "Uccello",
   "version": "1.0.0",
   "description": "Клиент-серверный js framework по имени флорентийского мастера кватроченто",
+  "keywords": [],
+  "homepage": "https://github.com/RosebudInteractive/Uccello#readme",
+  "bugs": {
+    "url": "https://github.com/RosebudInteractive/Uccello/issues"
+  },
+  "license": "ISC",
   "main": "testRestType.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RosebudInteractive/Uccello.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "dependencies": {
     "amdefine": "^0.1.0",
     "bluebird": "^2.10.2",
@@ -22,19 +35,8 @@
     "winston": "^1.0.0",
     "ws": "^0.6.5"
   },
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/RosebudInteractive/Uccello.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/RosebudInteractive/Uccello/issues"
-  },
-  "homepage": "https://github.com/RosebudInteractive/Uccello#readme"
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "jsdoc": "^3.4.0"
+  }
 }
