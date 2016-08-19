@@ -1,0 +1,26 @@
+{
+    "tags": {
+        "allowUnknownTags": true,
+        "dictionaries": ["jsdoc","closure"]
+    },
+    "source": {
+        "include": ["./"],
+        "exclude": ["./node_modules/", "./docs/", "./uses/", "./jsdoc"],
+        "includePattern": ".+\\.js(doc)?$",
+        "excludePattern": "(^|\\/|\\\\)_"
+    },
+    "opts": {
+        "template": "./node_modules/minami",
+        "encoding": "utf8",
+        "destination": "./docs/",
+        "recurse": true
+    },
+    "plugins": [],
+    "templates": {
+        "default": {
+            "layoutFile": "./node_modules/minami/tmpl/layout.tmpl"
+        },
+        "cleverLinks": false,
+        "monospaceLinks": false
+    }
+}
