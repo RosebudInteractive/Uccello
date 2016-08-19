@@ -1,3 +1,10 @@
+'use strict';
+
+/**
+ * ResourceManager
+ * @namespace resman
+ */
+
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
@@ -23,8 +30,15 @@ define(
             })
         }
 
-        var Resman = UccelloClass.extend({
+        var Resman = UccelloClass.extend(/** @lends Resman */{
 
+            /**
+             * @constructs
+             * @param controller
+             * @param constructHolder
+             * @param proxy
+             * @param options
+             */
             init: function (controller, constructHolder, proxy, options) {
                 this.pvt = {};
                 this.pvt.controller = controller;
@@ -70,6 +84,10 @@ define(
                 }
             },
 
+            /**
+             * Проверка настроек resman
+             * @private
+             */
             checkOptions: function () {
                 this.dbMode = {canUse: false, error: ''};
                 this.dbMode.canUse = ((UCCELLO_CONFIG.resman) && (UCCELLO_CONFIG.resman.useDb) || false);
@@ -83,6 +101,11 @@ define(
                 }
             },
 
+            /**
+             * Загрузка справочников
+             * @private
+             * @param done - callback
+             */
             loadDirectories: function (done) {
                 var that = this;
 
@@ -93,6 +116,7 @@ define(
                     });
                 });
             },
+
 
             convertArray: function (guids) {
                 var that = this;
@@ -146,11 +170,13 @@ define(
                 });
             },
 
-            /**
-             * Загрузить ресурс
-             * @returns {obj}
-             */
             // todo : совместить с Proto1
+            /**
+             * Загрузить ресурсы
+             * @param guids
+             * @param done
+             * @public
+             */
             loadRes: function (guids, done) {
                 var that = this;
 

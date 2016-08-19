@@ -33,7 +33,7 @@ before(function(done) {
 });
 
 
-xdescribe('#loadRes', function(){
+describe('#loadRes', function(){
     xdescribe('Работа с файлами', function(){
         it('Загрузить смешанный массив - EXCEPT', function(done){
 
@@ -60,7 +60,7 @@ xdescribe('#loadRes', function(){
     })
 });
 
-xdescribe('#rebuildResources', function(){
+describe('#rebuildResources', function(){
     it('Пересохранить ресурсы - OK', function(done){
         ResManager.rebuildResources().
         then(function(){
