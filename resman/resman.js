@@ -2,7 +2,7 @@
 
 /**
  * ResourceManager
- * @namespace resman
+ * @module Resman
  */
 
 if (typeof define !== 'function') {
@@ -30,7 +30,7 @@ define(
             })
         }
 
-        var Resman = UccelloClass.extend(/** @lends Resman */{
+        var Resman = UccelloClass.extend(/** @lends Resman.prototype */{
 
             /**
              * @constructs
@@ -85,6 +85,52 @@ define(
             },
 
             /**
+             * Пересборка ресурсов
+             * @public
+             */
+            rebuildResources: function () {
+                var that = this;
+                return new Promise(function (resolve, reject) {
+                    if (!that.dbMode.canUse) {
+                        reject(ResUtils.newSystemError(that.dbMode.error));
+                        return;
+                    }
+
+                    that.loadDirectories(promiseBody);
+
+                    function promiseBody() {
+                        var _typeCount = that.directories.resTypes.types.length;
+                        var _count = 0;
+
+                        if (_typeCount == 0) {
+                            resolve()
+                        } else {
+                            that.directories.resTypes.types.forEach(function(resType) {
+                                that.getResByType(resType.resTypeGuid).
+                                then(function (resources) {
+                                    that._rebuildResourceList(resources).
+                                    then(
+                                        function () {
+                                            _count++;
+                                            if (_count == _typeCount) {
+                                                resolve()
+                                            }
+                                        }
+                                    ).
+                                    catch(function (err) {
+                                        reject(err)
+                                    })
+                                }).
+                                catch(function (err) {
+                                    reject(err)
+                                })
+                            })
+                        }
+                    }
+                });
+            },
+
+            /**
              * Проверка настроек resman
              * @private
              */
@@ -103,6 +149,7 @@ define(
 
             /**
              * Загрузка справочников
+             * resman.loadDirectories
              * @private
              * @param done - callback
              */
@@ -240,47 +287,7 @@ define(
                 }
             },
 
-            rebuildResources: function () {
-                var that = this;
-                return new Promise(function (resolve, reject) {
-                    if (!that.dbMode.canUse) {
-                        reject(ResUtils.newSystemError(that.dbMode.error));
-                        return;
-                    }
 
-                    that.loadDirectories(promiseBody);
-
-                    function promiseBody() {
-                        var _typeCount = that.directories.resTypes.types.length;
-                        var _count = 0;
-
-                        if (_typeCount == 0) {
-                            resolve()
-                        } else {
-                            that.directories.resTypes.types.forEach(function(resType) {
-                                that.getResByType(resType.resTypeGuid).
-                                then(function (resources) {
-                                    that._rebuildResourceList(resources).
-                                    then(
-                                        function () {
-                                            _count++;
-                                            if (_count == _typeCount) {
-                                                resolve()
-                                            }
-                                        }
-                                    ).
-                                    catch(function (err) {
-                                        reject(err)
-                                    })
-                                }).
-                                catch(function (err) {
-                                    reject(err)
-                                })
-                            })
-                        }
-                    }
-                });
-            },
 
             _rebuildResourceList: function(list){
                 var that = this;

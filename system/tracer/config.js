@@ -1,4 +1,7 @@
 /**
+ * @module Config
+ * Настройки трейсера
+ * @author
  * Created by staloverov on 19.11.2015.
  */
 'use strict';
@@ -6,7 +9,15 @@
 var fs = require('fs');
 var Utils = require('./common/utils');
 
+/**
+ * Class настройка listener-а
+ */
 var ListenerConfig = class ListenerConfig{
+    /**
+     * Создание инстанса
+     * @param config
+     * @returns {*}
+     */
     static create(config){
         if ((!config.type) || (!config.name)) {
             console.error('Incorrect listener config')
@@ -18,12 +29,20 @@ var ListenerConfig = class ListenerConfig{
         }
     }
 
+    /**
+     * Проверка равенства экземпляров объекта
+     * @param config {ListenerConfig} Объект, с которым необходимо сравнить
+     */
     isEqual(config) {
         return (this.type === config.type)
             && (this.name === config.name)
     }
 };
 
+/**
+ * class
+ * @type {SourceConfig}
+ */
 var SourceConfig = class SourceConfig {
     static create(config){
         if (!config.name) {
@@ -42,6 +61,10 @@ var SourceConfig = class SourceConfig {
     }
 };
 
+/**
+ * class
+ * @type {SwitchConfig}
+ */
 var SwitchConfig = class SwitchConfig {
     static create(config){
         if (!config.name) {
@@ -60,7 +83,15 @@ var SwitchConfig = class SwitchConfig {
     }
 };
 
+
+/**
+ * Объект, представляющий собой настройки трейсера
+ */
 var Config = class Config{
+    /**
+     * Создает экземпляр настроек, загружая из файла
+     * @param configFileName {string} полное имя файла настроек
+     */
     constructor(configFileName){
         this.listeners = [];
         this.switches = [];
@@ -86,15 +117,37 @@ var Config = class Config{
         }
     }
 
+    /**
+     * Имя объекта
+     * @type {string}
+     * @readonly
+     */
+    get name() {
+        return this._name;
+    }
+
+    /**
+     * Возвращает настройки listener-а
+     * @param name имя listener-а
+     * @param type тип listener-а
+     * @returns {@link ListenerConfig} экземпляр насторек listener-а
+     */
     getListener(name, type) {
         return this.listeners.find(function(element) {
             return ((element.name == name) && (type ? (element.type == type) : true))
         });
     }
 
+    /**
+     * Проверяет наличие настроек для listener-а
+     * @param name
+     * @param type
+     * @returns {boolean}
+     */
     hasListener(name, type) {
         return this.getListener(name, type) ? true : false;
     }
+
 
     getSource(name) {
         return this.sources.find(function(element) {
@@ -116,6 +169,11 @@ var Config = class Config{
         return this.getSwitch(name) ? true : false;
     }
 
+    /**
+     * Копирование
+     * @param config
+     * @private
+     */
     _copyData(config){
         var that = this;
 
@@ -141,6 +199,11 @@ var Config = class Config{
         });
     }
 
+
+    /**
+     * Проверка равенства экземпляров объекта
+     * @param config {Config} Объект, с которым необходимо сравнить
+     */
     isEqual(config) {
         return false
     }

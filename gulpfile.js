@@ -4,6 +4,7 @@
 var gulp = require('gulp');
 var git = require('gulp-git');
 var jsdoc = require('gulp-jsdoc3');
+const mocha = require('gulp-mocha');
 
 gulp.task('default', function() {
     // place code for your default task here
@@ -22,3 +23,9 @@ gulp.task('doc', function (cb) {
     gulp.src(['README.md'], {read: false})
         .pipe(jsdoc(config, cb));
 });
+
+gulp.task('test', () => 
+    gulp.src('./resman/unit-tests/*.js', {read: false})
+        // gulp-mocha needs filepaths so you can't have any plugins before it
+        .pipe(mocha())
+);

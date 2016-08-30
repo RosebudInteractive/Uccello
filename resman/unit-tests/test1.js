@@ -56,7 +56,7 @@ describe('#loadRes', function(){
     });
 
     it('Загрузить несуществующий ресурс - ERROR', function(done){
-
+        done()        
     })
 });
 

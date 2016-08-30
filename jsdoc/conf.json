@@ -1,26 +1,39 @@
-{
+﻿{
     "tags": {
         "allowUnknownTags": true,
         "dictionaries": ["jsdoc","closure"]
     },
     "source": {
         "include": ["./"],
-        "exclude": ["./node_modules/", "./docs/", "./uses/", "./jsdoc"],
+        "exclude": ["./node_modules/", "./docs/", "./uses/", "./jsdoc", "./lib"],
         "includePattern": ".+\\.js(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
     "opts": {
-        "template": "./node_modules/minami",
+        "template": "./node_modules/ink-docstrap/template",
         "encoding": "utf8",
         "destination": "./docs/",
-        "recurse": true
+        "recurse": true,
+        "private" : true
     },
     "plugins": [],
     "templates": {
         "default": {
-            "layoutFile": "./node_modules/minami/tmpl/layout.tmpl"
+            "layoutFile": "./node_modules/ink-docstrap/template/tmpl/layout.tmpl"
         },
         "cleverLinks": false,
-        "monospaceLinks": false
-    }
+        "monospaceLinks": false,
+        "systemName"            : "Супер-мега-проект",
+        "footer"                : "Здесь могла быть ваша реклама",
+        "copyright"             : "PMT",
+        "theme"                 : "slate",
+        "includeDate"           : "false",
+        "navType"               : "inline",
+        "linenums"              : "true",
+        "collapseSymbols"       : "true",
+        "inverseNav"            : "false",
+        "outputSourceFiles"     : "true" ,
+        "outputSourcePath"      : "true",
+        "syntaxTheme"           : "dark"
+      }
 }

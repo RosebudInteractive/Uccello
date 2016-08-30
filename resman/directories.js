@@ -15,9 +15,15 @@ define([
     ],
 
     function(Products, Versions, ResTypes, EventEmitter) {
+        /**
+         * @module Directories
+         */
 
-        return UccelloClass.extend({
-
+        /**
+         * @constructor
+         * @param db - подлючение к БД
+         */
+        var Directories =  UccelloClass.extend({
             init : function(db) {
                 this.products = new Products(db);
                 this.versions = new Versions(db);
@@ -34,6 +40,11 @@ define([
                 });
             },
 
+            /**
+             * Загрузка справочников
+             * @param done - callback
+             * @public
+             */
             load : function(done) {
                 var that = this;
 
@@ -60,10 +71,18 @@ define([
                 }
             },
 
+            /**
+             *
+             * @param currentProductCode
+             */
             setCurrentProduct : function(currentProductCode) {
                 this.products.setCurrent(currentProductCode);
             },
 
+            /**
+             *
+             * @returns {null}
+             */
             getCurrentProduct : function() {
                 return this.products.current
             },
@@ -90,5 +109,7 @@ define([
 
 
         });
+
+        return Directories;
     }
 );

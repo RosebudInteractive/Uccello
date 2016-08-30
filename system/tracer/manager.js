@@ -13,7 +13,7 @@ var Util = require('util');
 var _manager = null;
 /** @static
  *  Метод доступа к экземпляру менеджера трейсера
- * @returns {@link#Manager}
+ * @returns {@link Manager}
  */
 getInstance = function() {
     if (!_manager) {
@@ -43,6 +43,10 @@ function Manager() {
 Manager.prototype = {
     constructor: Manager,
 
+    /**
+     * Метод загрузка из файла
+     * @private
+     */
     loadFromFile: function (fileName) {
         if ((fileName != '') && (fileName != this.configFileName)) {
             this.configFileName = fileName;

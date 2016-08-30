@@ -1,9 +1,15 @@
 /**
+ * @module Listener
+ * @author
  * Created by staloverov on 20.11.2015.
  */
 var Utils = require('./common/utils');
 var Types = require('./common/types');
 
+/**
+ * @param name
+ * @constructor
+ */
 function Listener(name) {
     if (!name) {
         throw new Error('Listener name is undefined');
@@ -17,6 +23,10 @@ function Listener(name) {
     this.isLoaded = false;
 }
 
+/**
+ * Применить настройки
+ * @param config
+ */
 Listener.prototype.applySettings = function (config) {
     if (!config || this.isEqual(config)) { return }
 
@@ -43,10 +53,14 @@ Listener.prototype.applySettings = function (config) {
     this.isLoaded = true;
 };
 
+/**
+ * Очистить
+ */
 Listener.prototype.clear = function () {
     this.fields.clear();
     this.options = {};
 };
+
 
 Listener.prototype.isEqual = function(config) {
     var _fields = [...this.fields.values()];
@@ -96,6 +110,11 @@ Listener.prototype.writeData = function (data) {
 
 Listener.prototype.flush = function () {};
 
+/**
+ * Записать данные трассировки
+ * @param data
+ * @param withFlush
+ */
 Listener.prototype.trace = function (data, withFlush) {
     this.writeData(data);
     if (this.autoFlush || withFlush) {

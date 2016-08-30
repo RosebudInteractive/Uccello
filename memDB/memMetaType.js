@@ -1,7 +1,9 @@
 ﻿/**
- * @module MemMetaType
+ * Implementation of functionality which ensures data type control for fields of Uccello objects.
+ * All data types inherit from the BaseType object.
+ *
+ * @module Data type Objects
  */
-
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
     var UccelloClass = require(UCCELLO_CONFIG.uccelloPath + '/system/uccello-class');
@@ -10,11 +12,13 @@ if (typeof define !== 'function') {
 define(
     [],
     function () {
-        
+        /** ROW_VERSION_LENGTH */
         var ROW_VERSION_LENGTH = 100;
+        /** GUID_LENGTH */
         var GUID_LENGTH = 36;
 
         var fldTypeCodes;
+
 
         var BaseType = UccelloClass.extend(/** @lends BaseType.prototype */{
 
@@ -27,9 +31,9 @@ define(
             isRowVersionType: false,
 
             /**
-             * @constructs
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
+             * @class BaseType
              */
             init: function (typeObj, refResolver) {
                 this._is_complex = false;
@@ -41,7 +45,7 @@ define(
              * Data Type name.
              * Ex.: "string", "int", etc.
              * 
-             * @return {Strng} Data type name
+             * @return {String} Data type name
              */
             typeName: function () {
                 return this._fldType;
@@ -60,7 +64,7 @@ define(
              * Data Type hash code.
              * Uniquely represents data type instance.
              * 
-             * @return {Strng} The hash code
+             * @return {String} The hash code
              */
             hash: function () {
                 return this.prefix + this._fldType +
@@ -205,32 +209,35 @@ define(
             }
         });
 
-        var IntegerType = BaseType.extend(/** @lends IntegerType */{
+
+        var IntegerType = BaseType.extend({
 
             key: "int",
 
             canAutoIncrement: true,
 
             /**
-             * @constructs
+             * The integer type
+             *
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends BaseType
+             * @class IntegerType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
             }
         });
         
-        var StringType = BaseType.extend(/** @lends StringType */{
+        var StringType = BaseType.extend({
 
             key: "string",
 
             /**
-             * @constructs
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends BaseType
+             * @class StringType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -240,7 +247,7 @@ define(
              * Data Type hash code.
              * Uniquely represents data type instance.
              * 
-             * @return {Strng} The hash code
+             * @return {String} The hash code
              */
             hash: function () {
                 var result = UccelloClass.super.apply(this, []);
@@ -291,19 +298,17 @@ define(
             }
         });
 
-        var GuidType = StringType.extend(/** @lends GuidType */{
+        var GuidType = StringType.extend({
 
             key: "guid",
 
             isRowVersionType: true,
 
             /**
-             * The Guid Type.
-             * @constructs
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends StringType
-             * @constructor
+             * @class GuidType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -313,7 +318,7 @@ define(
              * Data Type hash code.
              * Uniquely represents data type instance.
              * 
-             * @return {Strng} The hash code
+             * @return {String} The hash code
              */
             hash: function () {
                 var result = UccelloClass.super.apply(this, []);
@@ -371,7 +376,7 @@ define(
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends StringType
-             * @constructor
+             * @class RowVersionType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -381,7 +386,7 @@ define(
              * Data Type hash code.
              * Uniquely represents data type instance.
              * 
-             * @return {Strng} The hash code
+             * @return {String} The hash code
              */
             hash: function () {
                 var result = UccelloClass.super.apply(this, []);
@@ -436,7 +441,7 @@ define(
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends StringType
-             * @constructor
+             * @class EnumType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -446,7 +451,7 @@ define(
              * Data Type hash code.
              * Uniquely represents data type instance.
              * 
-             * @return {Strng} The hash code
+             * @return {String} The hash code
              */
             hash: function () {
                 var result = UccelloClass.super.apply(this, []);
@@ -540,7 +545,7 @@ define(
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends BaseType
-             * @constructor
+             * @class FloatType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -557,7 +562,7 @@ define(
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends BaseType
-             * @constructor
+             * @constructor DateTimeType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -648,7 +653,7 @@ define(
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends BaseType
-             * @constructor
+             * @constructor BooleanType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -669,7 +674,7 @@ define(
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends BaseType
-             * @constructor
+             * @constructor DecimalType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -679,7 +684,7 @@ define(
              * Data Type hash code.
              * Uniquely represents data type instance.
              * 
-             * @return {Strng} The hash code
+             * @return {String} The hash code
              */
             hash: function () {
                 var result = UccelloClass.super.apply(this, []);
@@ -762,7 +767,7 @@ define(
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends BaseType
-             * @constructor
+             * @constructor RefType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -773,7 +778,7 @@ define(
              * Data Type hash code.
              * Uniquely represents data type instance.
              * 
-             * @return {Strng} The hash code
+             * @return {String} The hash code
              */
             hash: function () {
                 var result = UccelloClass.super.apply(this, []);
@@ -1175,7 +1180,7 @@ define(
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends BaseType
-             * @constructor
+             * @constructor DataRefType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -1186,7 +1191,7 @@ define(
              * Data Type hash code.
              * Uniquely represents data type instance.
              * 
-             * @return {Strng} The hash code
+             * @return {String} The hash code
              */
             hash: function () {
                 var result = UccelloClass.super.apply(this, []);
@@ -1388,7 +1393,7 @@ define(
              *
              * @param {Object} type Type object
              * @param {Object} value Value
-             * @constructor
+             * @constructor TypedValueVal
              */
             init: function (type, value) {
                 this._type = type;
@@ -1415,7 +1420,7 @@ define(
              * @param {String|Object} typeObj Serialized data type representation
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @extends BaseType
-             * @constructor
+             * @constructor TypedValueType
              */
             init: function (typeObj, refResolver) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -1426,7 +1431,7 @@ define(
              * Data Type hash code.
              * Uniquely represents data type instance.
              * 
-             * @return {Strng} The hash code
+             * @return {String} The hash code
              */
             hash: function () {
                 var result = UccelloClass.super.apply(this, []);
@@ -1585,7 +1590,7 @@ define(
              * @param {Object}        refResolver An Object which implements link resolver interface
              * @param {Object}        [type_codes_table=datafieldTypeCodes] A table of allowed types
              * @extends BaseType
-             * @constructor
+             * @constructor DataFieldType
              */
             init: function (typeObj, refResolver, type_codes_table) {
                 UccelloClass.super.apply(this, [typeObj, refResolver]);
@@ -1599,7 +1604,7 @@ define(
              * Data Type hash code.
              * Uniquely represents data type instance.
              * 
-             * @return {Strng} The hash code
+             * @return {String} The hash code
              */
             hash: function () {
                 var result = UccelloClass.super.apply(this, []);

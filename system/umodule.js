@@ -6,7 +6,7 @@ if (typeof define !== 'function') {
 define(
     ['./uobject'],
     function(UObject) {
-        var UModule = UObject.extend({
+        var UModule = UObject.extend(/** @lends UModule.prototype*/{
 
             className: "UModule",
             classGuid: UCCELLO_CONFIG.classGuids.UModule,
