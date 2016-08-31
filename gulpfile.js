@@ -1,6 +1,3 @@
-/**
- * Created by user on 11.08.16.
- */
 var gulp = require('gulp');
 var git = require('gulp-git');
 var jsdoc = require('gulp-jsdoc3');

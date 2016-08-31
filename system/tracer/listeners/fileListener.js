@@ -1,6 +1,8 @@
 /**
- * Created by staloverov on 03.12.2015.
+ * @author Created by staloverov on 03.12.2015.
+ * @module FileListener
  */
+
 var Listener = require('./../listener');
 var fs = require('fs');
 var FileHolder = require('./../fileHolder');

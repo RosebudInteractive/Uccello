@@ -1,5 +1,7 @@
 /**
+ * @author
  * Created by staloverov on 03.12.2015.
+ * @module AsyncTextListener
  */
 var FileListener = require('./fileListener');
 var fs = require('fs');

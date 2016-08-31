@@ -1,8 +1,8 @@
 /**
- * @module Config
- * Настройки трейсера
  * @author
  * Created by staloverov on 19.11.2015.
+ * @module Config
+ * Настройки трейсера
  */
 'use strict';
 

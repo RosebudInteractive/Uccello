@@ -1,7 +1,3 @@
-/**
- * Created by staloverov on 30.11.2015.
- */
-
 var Types = {
     AliasOperation : {
         add : 'add',

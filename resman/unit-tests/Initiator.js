@@ -1,6 +1,3 @@
-/**
- * Created by staloverov on 06.04.2016.
- */
 'use strict';
 var Main = require('./main');
 var UccelloServ = require(PATH.Uccello + 'uccelloServ');

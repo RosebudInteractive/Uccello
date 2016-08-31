@@ -1,7 +1,3 @@
-/**
- * Created by kiknadze on 18.02.2016.
- */
-
 var fs = require('fs');
 var path = require('path');
 

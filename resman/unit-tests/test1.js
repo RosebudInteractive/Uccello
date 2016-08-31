@@ -1,6 +1,3 @@
-/**
- * Created by staloverov on 23.12.2015.
- */
 var chai = require("chai");
 var chaiAsPromised = require("chai-as-promised");
 

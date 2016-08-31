@@ -1,5 +1,7 @@
 /**
+ * @author
  * Created by staloverov on 20.07.2016.
+ * @module ConsoleListener
  */
 'use strict';
 

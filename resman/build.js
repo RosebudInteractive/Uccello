@@ -1,5 +1,7 @@
 /**
+ * @author
  * Created by staloverov on 26.01.2016.
+ * @module Build
  */
 "use strict";
 

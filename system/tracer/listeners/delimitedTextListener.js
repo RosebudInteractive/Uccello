@@ -1,5 +1,7 @@
 /**
+ * @author
  * Created by staloverov on 27.11.2015.
+ * @module DelimitedTextListener
  */
 var FileListener = require('./fileListener');
 var fs = require('fs');

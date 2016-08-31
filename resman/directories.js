@@ -1,4 +1,5 @@
 /**
+ * @author
  * Created by staloverov on 22.01.2016.
  */
 if (typeof define !== 'function') {

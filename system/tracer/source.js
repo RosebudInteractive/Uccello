@@ -1,4 +1,5 @@
 /**
+ * @author
  * Created by staloverov on 25.11.2015.
  */
 'use strict';

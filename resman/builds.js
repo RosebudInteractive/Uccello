@@ -1,5 +1,7 @@
 /**
+ * @author
  * Created by staloverov on 22.01.2016.
+ * @module Builds
  */
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);

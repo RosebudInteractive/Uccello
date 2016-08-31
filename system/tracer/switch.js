@@ -1,6 +1,3 @@
-/**
- * Created by staloverov on 26.11.2015.
- */
 var Types = require('./common/types');
 var Manager = require('./manager');
 

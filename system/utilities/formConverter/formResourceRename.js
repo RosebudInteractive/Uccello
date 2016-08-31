@@ -1,9 +1,3 @@
-/**
- * Created by kiknadze on 01.03.2016.
- * Переименование коллекции Form -> Children и переименование ResElemName
- */
-
-
 var fs = require('fs');
 var path = require('path');
 var Config = require('../../../config/config.js')

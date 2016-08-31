@@ -1,14 +1,14 @@
 /**
+ * @author
  * Created by staloverov on 03.12.2015.
+ * @module ListenerFactory
  */
-// var TextListener = require('./listener');
 var DelimitedTextListener = require('./listeners/delimitedTextListener');
 var Manager = require('./manager');
 var AsyncTextListener = require('./listeners/asyncTextListener');
 var ConsoleListener = require('./listeners/consoleListener');
 
 var ListenerTypes = {
-    // 'SimpleTextListener': TextListener,
     'DelimitedTextListener' : DelimitedTextListener,
     'AsyncTextListener' : AsyncTextListener,
     'ConsoleListener' : ConsoleListener

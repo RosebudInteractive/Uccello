@@ -1,6 +1,3 @@
-/**
- * Created by staloverov on 28.05.2015.
- */
 var _parentDir = __dirname;
 var _uccelloDir = _parentDir + '/../../';
 var _dbPath = _parentDir + '/../../../ProtoOne/data/';

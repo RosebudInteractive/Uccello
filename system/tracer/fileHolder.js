@@ -1,7 +1,3 @@
-/**
- * Created by staloverov on 07.12.2015.
- */
-
 var Types = require('./common/types');
 var fs = require('fs');
 const EventEmitter = require('events');

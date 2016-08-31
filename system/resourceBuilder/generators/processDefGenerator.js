@@ -1,5 +1,6 @@
 /**
  * Created by staloverov on 10.03.2016.
+ * @module ProcessDefGenerator
  */
 'use strict';
 var fs = require('fs');

@@ -1,6 +1,3 @@
-/**
- * Created by staloverov on 30.03.2015.
- */
 var Utils = {
 
     copyObject: function (obj) {

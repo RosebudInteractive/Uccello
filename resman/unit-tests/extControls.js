@@ -1,7 +1,3 @@
-/**
- * Created by staloverov on 10.06.2016.
- */
-
 var _proto1 = __dirname + '/../../../ProtoOne/public/ProtoControls/';
 
 var _protoOneCtrls =  [
