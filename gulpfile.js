@@ -24,5 +24,5 @@ gulp.task('doc', function (cb) {
 gulp.task('test', () => 
     gulp.src('./resman/unit-tests/*.js', {read: false})
         // gulp-mocha needs filepaths so you can't have any plugins before it
-        .pipe(mocha())
+        .pipe(mocha({reporter : 'mocha-teamcity-reporter'}))
 );
