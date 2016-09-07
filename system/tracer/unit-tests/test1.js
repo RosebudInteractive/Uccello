@@ -35,4 +35,8 @@ describe('#main', function(){
            done(reason)
        });
     });
+    
+    it('simple test', function(done){
+        done()
+    });
 });
