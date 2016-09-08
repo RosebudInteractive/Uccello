@@ -19,9 +19,7 @@
   "plugins": [],
   "templates": {
     "default": {
-      "layoutFile": "./node_modules/ink-docstrap/template/tmpl/layout.tmpl",
-      "outputSourceFiles"     : "true",
-      "outputSourcePath"      : "true"
+      "layoutFile": "./node_modules/ink-docstrap/template/tmpl/layout.tmpl"
     },
     "cleverLinks": false,
     "monospaceLinks": false,
@@ -29,13 +27,13 @@
     "footer"                : "Copyright (c)",
     "copyright"             : "PMT",
     "theme"                 : "cerulean",
-    "includeDate"           : "true",
+    "includeDate"           : true,
     "navType"               : "vertical",
-    "linenums"              : "true",
-    "collapseSymbols"       : "true",
-    "inverseNav"            : "false",
-    "outputSourceFiles"     : "true",
-    "outputSourcePath"      : "true",
+    "linenums"              : true,
+    "collapseSymbols"       : true,
+    "inverseNav"            : false,
+    "outputSourceFiles"     : true,
+    "outputSourcePath"      : true,
     "syntaxTheme"           : "dark"
   }
 }
