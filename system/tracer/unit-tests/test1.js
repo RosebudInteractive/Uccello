@@ -17,9 +17,14 @@ before(function(){
 describe('#main', function(){
 
     describe('config', function () {
-       it('#loadFromFile', function(done) {
+
+        it('#loadFromFile', function(done) {
            done();
-       })
+        });
+
+        it('#changeFile', function(done){
+            done()
+        });
     });
 
 
