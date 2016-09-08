@@ -34,6 +34,8 @@
     "inverseNav"            : false,
     "outputSourceFiles"     : true,
     "outputSourcePath"      : true,
-    "syntaxTheme"           : "dark"
+    "syntaxTheme"           : "default",
+    "sort"                  : true,
+    "search"                : true
   }
 }
