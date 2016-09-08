@@ -15,6 +15,14 @@ before(function(){
 });
 
 describe('#main', function(){
+
+    describe('config', function () {
+       it('#loadFromFile', function(done) {
+           done();
+       })
+    });
+
+
     it('trace source', function(done){
        TraceManager.getInstance().createSource('mySource').then(function(source) {
            for (var i = 0; i < 10000; i++) {
