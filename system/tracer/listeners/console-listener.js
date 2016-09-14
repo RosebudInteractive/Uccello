@@ -1,13 +1,13 @@
-/**
- * @author
- * Created by staloverov on 20.07.2016.
- * @module ConsoleListener
- */
 'use strict';
 
 var Listener = require('./../listener');
 var Types = require('./../common/types');
 
+/**
+ * Класс, отслеживающий события трассировки в источнике и сохраняющий результаты в файл
+ * @extends Tracer.Listener
+ * @memberof Tracer
+ */
 var ConsoleListener = class ConsoleListener extends Listener{
     writeData(data) {
         var _traceString = '';

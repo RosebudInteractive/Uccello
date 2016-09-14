@@ -7,7 +7,7 @@ define(
     ['./connection/clientConnection' ,
         './memDB/memDBController','./memDB/memDataBase','./controls/controlMgr', './system/uobject', './system/umodule', './controls/aComponent',
         './connection/userinfo', './connection/user', './connection/sessioninfo', './connection/session', './connection/connectinfo', './connection/connect', './connection/vc', './connection/vcresource',
-        './system/rpc', './system/constructHolder', './system/tracer/managerMock'
+        './system/rpc', './system/constructHolder', './system/tracer/manager-mock'
     ],
     function(ClientConnection, MemDBController, MemDataBase, ControlMgr, UObject, UModule, AComponent,
         UserInfo, User, SessionInfo, Session, ConnectInfo, Connect, VisualContext, Vcresource,

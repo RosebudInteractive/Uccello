@@ -3,6 +3,23 @@ var fs = require('fs');
 const EventEmitter = require('events');
 const util = require('util');
 
+/**
+ * Событие, сообщающее о том, что имя файла для Listener-а
+ * выгружающего данные в файл, будет изменено
+ * @event Tracer.FileHolder.beforeChangeName
+ */
+
+ /**
+ * Событие, сообщающее об изменении имени файла для Listener-а
+ * выгружающего данные в файл
+ * @event Tracer.FileHolder.nameChanged
+ */
+
+/**
+ * Обработчик файлов для Listener-а
+ * @constructor
+ * @memberof Tracer
+ */
 function FileHolder() {
     this.limitType = Types.FileLimitType.unlimited;
     this.actualFileName = '';
@@ -20,6 +37,16 @@ function FileHolder() {
 
 util.inherits(FileHolder, EventEmitter);
 
+/**
+ * Инициализация обработчика файла
+ * @param {object} config настройка обработчика
+ * @param {string} config.folder Путь для хранения файлов трассировки
+ * @param {string} config.filename Имя или шаблон имени файла
+ * @param {string} [config.encoding=utf8] Кодировка файла
+ * @param {Tracer.FileOpenMode} config.openMode режим открытия файла
+ * @param {object} config.cyclic Настройка цикличности записи файла
+ * @throws Undefined log filename
+ */
 FileHolder.prototype.init = function(config) {
     this.setFileLimit(config.cyclic);
 
@@ -52,6 +79,13 @@ FileHolder.prototype.init = function(config) {
     }
 };
 
+/**
+ * Установить лимит и цикличность записи файла
+ * @param {object} cyclic настройка цикличности
+ * @param {Tracer.FileLimitType} cyclic.limited Способо ограничения файла
+ * @param {Tracer.PeriodType|Tracer.SizeType} cyclic.unit Единица ограничения файла
+ * @param {int} cyclic.size Размер
+ */
 FileHolder.prototype.setFileLimit = function(cyclic) {
     if ((!cyclic) || (!cyclic.limited)) {
         this.limitType = Types.FileLimitType.unlimited
@@ -72,6 +106,11 @@ FileHolder.prototype.setFileLimit = function(cyclic) {
     }
 };
 
+/**
+ * Получить новое имя файла
+ * @return {string}
+ * @private
+ */
 FileHolder.prototype.getNewName = function() {
     var _fileName = this.filename;
 
@@ -90,6 +129,13 @@ FileHolder.prototype.getNewName = function() {
     return this.folder + _fileName;
 };
 
+/**
+ * Установить новое имя для файла
+ * @fires Tracer.FileHolder.beforeChangeName
+ * @fires Tracer.FileHolder.nameChanged
+ * @param {string} newName новое имя файла
+ * @private
+ */
 FileHolder.prototype.setName = function(newName) {
     if (newName != this.actualFileName) {
         this.emit('beforeChangeName');
@@ -101,14 +147,26 @@ FileHolder.prototype.setName = function(newName) {
     }
 };
 
+/**
+ * Проверка новый ли файл
+ * @return {boolean}
+ */
 FileHolder.prototype.fileIsNew = function() {
     return this._fileSize == 0;
 };
 
+/**
+ * Проверка пустой ли файл
+ * @return {boolean}
+ */
 FileHolder.prototype.isEmpty = function() {
     return this._fileSize == 0;
 };
 
+/**
+ * Увеличить размер отслеживаемого файла
+ * @param data трассируемые данные
+ */
 FileHolder.prototype.increaseFileSize = function(data) {
     this._fileSize += this.getByteSize(data);
 };
@@ -121,6 +179,11 @@ function getByteSize(data, encoding) {
     return Buffer.byteLength(data, encoding)
 }
 
+/**
+ * Проверить есть ли данные для сохранения
+ * @param data
+ * @return {boolean}
+ */
 FileHolder.prototype.hasDataToFlush = function(data) {
     return this._fileSize + this.getByteSize(data) != 0
 };
@@ -140,6 +203,11 @@ function checkFileTime(lastTime, periodTime, periodUnit){
     return (_maxTime > new Date)
 }
 
+/**
+ * Проверить можно ли записать данные в текущий файл
+ * @param data
+ * @return {boolean}
+ */
 FileHolder.prototype.checkWriteData = function(data) {
     if (this.actualFileName == '') {
         this.openNextFile(data)
@@ -158,6 +226,10 @@ FileHolder.prototype.checkWriteData = function(data) {
     }
 };
 
+/**
+ * Создать новый файл для записи данных
+ * @throws Wrong filename template
+ */
 FileHolder.prototype.createNewFile = function() {
     var _newFileName = this.getNewName();
 
@@ -179,6 +251,11 @@ FileHolder.prototype.createNewFile = function() {
     this.setName(_newFileName);
 };
 
+/**
+ * Открыть следующий файл согласно настроек для записи данных
+ * @param data
+ * @throws Wrong filename template
+ */
 FileHolder.prototype.openNextFile = function(data) {
     var _newFileName = this.getNewName();
 

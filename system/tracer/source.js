@@ -1,7 +1,3 @@
-/**
- * @author
- * Created by staloverov on 25.11.2015.
- */
 'use strict';
 
 var Manager = require('./manager');
@@ -11,6 +7,10 @@ var DateFormat = require('dateformat');
 var NumberFormat = require('number-formatter');
 var StringFormat = require('string-format');
 
+/**
+ * Источник событий трассировки
+ * @memberof Tracer
+ */
 var Source = class Source {
     constructor(name){
         if (!name) {
@@ -28,6 +28,10 @@ var Source = class Source {
         this.applySettings(_config);
     }
 
+    /**
+     * Применить настройки
+     * @param {Tracer.SourceConfig} config
+     */
     applySettings(config) {
         if ((!config) || this.isEqual(config)) {return}
 

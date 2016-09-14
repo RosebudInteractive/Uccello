@@ -1,13 +1,15 @@
-/**
- * @author Created by staloverov on 03.12.2015.
- * @module FileListener
- */
-
 var Listener = require('./../listener');
 var fs = require('fs');
-var FileHolder = require('./../fileHolder');
+var FileHolder = require('./../file-holder');
 var Types = require('./../common/types');
 
+/**
+ * Класс, отслеживающий события трассировки в источнике и сохраняющий результаты в файл
+ * @param name Имя listener-а
+ * @constructor
+ * @extends Tracer.Listener
+ * @memberof Tracer
+ */
 function FileListener(name) {
     Listener.apply(this, arguments);
 
@@ -40,8 +42,18 @@ FileListener.prototype.clear = function () {
     this.createNewFile = true;
 };
 
+/**
+ * Выполнение действий перед изменением имени файла
+ * @listens Tracer.FileHolder.beforeChangeName
+ * @protected
+ */
 FileListener.prototype.doBeforeChangeFileName = function () {};
 
+/**
+ * Выполнение действий после изменения имени файла
+ * @listens Tracer.FileHolder.nameChanged
+ * @protected
+ */
 FileListener.prototype.doOnChangeFileName = function () {
     if (this.fileHolder.fileIsNew()) {
         var _header = this.getHeader();
@@ -50,6 +62,10 @@ FileListener.prototype.doOnChangeFileName = function () {
     }
 };
 
+/**
+ * Записать заголовок трассировки
+ * @private
+ */
 FileListener.prototype.writeHeader = function(header){};
 
 FileListener.prototype.writeData = function (data) {
@@ -73,6 +89,11 @@ FileListener.prototype.writeData = function (data) {
     }
 };
 
+/**
+ * Сформировать заголовок трассировки
+ * @return {string} Заголовок
+ * @private
+ */
 FileListener.prototype.getHeader = function () {
     var _result = '';
     var that = this;
@@ -90,12 +111,18 @@ FileListener.prototype.getHeader = function () {
     return _result;
 };
 
+/**
+ * Обрамить данные двойными кавычками 
+ * @param {string} value данные
+ * @return {string}
+ * @private
+ */
 FileListener.prototype.quoteValue = function(value) {
     if (this.options.delimiter.type === Types.DelimiterType.tab) {
         return value
     } else {
         return '"' + value.toString().replace(/"/g, '""') + '"';
     }
-}
+};
 
 if (module) {module.exports = FileListener}

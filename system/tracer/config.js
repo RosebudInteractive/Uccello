@@ -1,22 +1,16 @@
-/**
- * @author
- * Created by staloverov on 19.11.2015.
- * @module Config
- * Настройки трейсера
- */
 'use strict';
-
 var fs = require('fs');
 var Utils = require('./common/utils');
 
 /**
- * Class настройка listener-а
+ * Настройки listener-а
+ * @memberof Tracer
  */
 var ListenerConfig = class ListenerConfig{
     /**
      * Создание инстанса
-     * @param config
-     * @returns {*}
+     * @param config JSON-представление объекта
+     * @returns {Tracer.ListenerConfig}
      */
     static create(config){
         if ((!config.type) || (!config.name)) {
@@ -31,19 +25,49 @@ var ListenerConfig = class ListenerConfig{
 
     /**
      * Проверка равенства экземпляров объекта
-     * @param config {ListenerConfig} Объект, с которым необходимо сравнить
+     * @param config {Tracer.ListenerConfig} Объект, с которым необходимо сравнить
      */
     isEqual(config) {
         return (this.type === config.type)
             && (this.name === config.name)
     }
+
+    /**
+     * Имя Listener-а, указанное в конфигурации
+     * @type {string}
+     */
+    get name() {
+        return this.name
+    }
+
+    set name(value) {
+        this.name = value
+    }
+
+    /**
+     * Тип Listener-а, указанный в конфигурации
+     * @type {string}
+     */
+    get type() {
+        return this.type
+    }
+
+    set type(value) {
+        this.type = value
+    }
 };
 
 /**
- * class
- * @type {SourceConfig}
+ * Настройки source-а
+ * @memberof Tracer
  */
 var SourceConfig = class SourceConfig {
+
+    /**
+     * Создание инстанса
+     * @param config JSON-представление объекта
+     * @returns {Tracer.SourceConfig}
+     */
     static create(config){
         if (!config.name) {
             console.error('Incorrect Source config')
@@ -55,17 +79,26 @@ var SourceConfig = class SourceConfig {
         }
     }
 
-
+    /**
+     * Проверка равенства экземпляров объекта
+     * @param config {Tracer.SourceConfig} Объект, с которым необходимо сравнить
+     */
     isEqual(config) {
         return (this.name === config.name)
     }
 };
 
+
 /**
- * class
- * @type {SwitchConfig}
+ * Настройа переключателя Tracer-а
+ * @memberof Tracer
  */
-var SwitchConfig = class SwitchConfig {
+var SwitchConfig = class SwitchConfig{
+    /**
+     * Создание инстанса
+     * @param config JSON-представление объекта
+     * @returns {Tracer.SwitchConfig}
+     */
     static create(config){
         if (!config.name) {
             console.error('Incorrect Switch config')
@@ -77,20 +110,23 @@ var SwitchConfig = class SwitchConfig {
         }
     }
 
-
+    /**
+     * Проверка равенства экземпляров объекта
+     * @param config {Tracer.SwitchConfig} Объект, с которым необходимо сравнить
+     */
     isEqual(config) {
         return (this.name === config.name)
     }
 };
 
-
 /**
- * Объект, представляющий собой настройки трейсера
+ * Класс настроек Tracer-а
+ * @memberof Tracer
  */
 var Config = class Config{
     /**
-     * Создает экземпляр настроек, загружая из файла
-     * @param configFileName {string} полное имя файла настроек
+     * Создание настроек происходит из файла
+     * @param {string} configFileName имя файла
      */
     constructor(configFileName){
         this.listeners = [];
@@ -118,19 +154,10 @@ var Config = class Config{
     }
 
     /**
-     * Имя объекта
-     * @type {string}
-     * @readonly
-     */
-    get name() {
-        return this._name;
-    }
-
-    /**
-     * Возвращает настройки listener-а
-     * @param name имя listener-а
-     * @param type тип listener-а
-     * @returns {@link ListenerConfig} экземпляр насторек listener-а
+     * Получить настройки для Listener-а
+     * @param {string} name Имя Listener-а
+     * @param {string} type Тип Listener-а
+     * @returns {Tracer.ListenerConfig}
      */
     getListener(name, type) {
         return this.listeners.find(function(element) {
@@ -139,40 +166,59 @@ var Config = class Config{
     }
 
     /**
-     * Проверяет наличие настроек для listener-а
-     * @param name
-     * @param type
+     * Проверка существования настроек для Listener-а
+     * @param {string} name Имя Listener-а
+     * @param {string} type Тип Listener-а
      * @returns {boolean}
      */
     hasListener(name, type) {
         return this.getListener(name, type) ? true : false;
     }
 
-
+    /**
+     * Получить настройки для Source-а
+     * @param {string} name Имя Source-а
+     * @returns {Tracer.SourceConfig}
+     */
     getSource(name) {
         return this.sources.find(function(element) {
             return element.name == name
         });
     }
 
+    /**
+     * Провеверка существования настроек для Source-а
+     * @param {string} name Имя Source-а
+     * @returns {boolean}
+     */
     hasSource(name) {
         return this.getSource(name) ? true : false;
     }
 
+    /**
+     * Получить настройки для Switch-а
+     * @param {string} name Имя Switch-а
+     * @returns {Tracer.SwitchConfig}
+     */
     getSwitch(name) {
         return this.switches.find(function(element) {
             return element.name == name
         })
     }
 
+    /**
+     * Провеверка существования настроек для переключателя
+     * @param {string} name Имя Switch-а
+     * @returns {boolean}
+     */
     hasSwitch(name) {
         return this.getSwitch(name) ? true : false;
     }
 
     /**
-     * Копирование
-     * @param config
+     * Копирование данных из настроек в соответсвующие объекты-настройки
      * @private
+     * @param {object} config JSON-представление настроек
      */
     _copyData(config){
         var that = this;
@@ -199,62 +245,11 @@ var Config = class Config{
         });
     }
 
-
-    /**
-     * Проверка равенства экземпляров объекта
-     * @param config {Config} Объект, с которым необходимо сравнить
-     */
     isEqual(config) {
         return false
     }
 };
 
-
-// function Config(configFileName) {
-//     if (configFileName != '') {
-//         if (fs.existsSync(configFileName)) {
-//             var _text = fs.readFileSync(configFileName);
-//
-//             var _prototype = tryParseJSON(_text);
-//             if (!_prototype) {
-//                 console.error('Can not parse file [' + configFileName + ']');
-//                 this.isLoaded = false;
-//             } else {
-//                 Object.setPrototypeOf(this, _prototype);
-//                 this.isLoaded = true;
-//             }
-//         } else {
-//             console.error('Can not find file [' + configFileName + ']');
-//             this.isLoaded = false;
-//         }
-//     }
-//
-//     if (!this.listeners) {this.listeners = []}
-//     if (!this.switches) {this.switches = []}
-//     if (!this.sources) {this.sources = []}
-//
-//     this.getListener = function(name, type) {
-//         return this.listeners.find(function(element) {
-//             return ((element.name == name) && (element.type == type))
-//         });
-//     };
-//
-//     this.getSource = function(name){
-//         return this.sources.find(function(element) {
-//             return element.name == name
-//         });
-//     };
-//
-//     this.hasSource = function(name){
-//         return this.getSource(name) ? true : false;
-//     };
-//
-//     this.getSwitch = function(name) {
-//         return this.switches.find(function(element) {
-//             return element.name == name
-//         })
-//     }
-// }
 
 function tryParseJSON(value) {
     // Todo : можно переделать на Promise
