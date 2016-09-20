@@ -1,6 +1,12 @@
 var Types = require('./common/types');
 var Manager = require('./manager');
 
+/**
+ * Настройка уровня трассировки
+ * @param name
+ * @constructor
+ * @memberof Tracer
+ */
 function Switch(name) {
     if (!name) {
         throw new Error('Switch name is undefined');
@@ -9,18 +15,31 @@ function Switch(name) {
     this.name = name;
     this.level = Types.TraceLevel.Off;
 
+    /**
+     * Применить настройки
+     * @param config
+     */
     this.applySettings = function(config) {
         if (!config) {return}
 
         this.level = config.level
     };
 
+    /**
+     * Проверка равенства экземпляров объекта
+     * @param config {Tracer.SwitchConfig} Объект, с которым необходимо сравнить
+     */
     this.isEqual = function(config) {
         return (config ? true : false)
             && (config.constructor.name == 'SwitchConfig')
             && (this.level === config.level)
     };
 
+    /**
+     * Проверка должено ли обрабатываться событие
+     * @param {Tracer.TraceEventType} eventType тип события
+     * @return {boolean}
+     */
     this.shouldBeTrace = function(eventType) {
         switch (this.level) {
             case Types.TraceLevel.ActivityTracing :

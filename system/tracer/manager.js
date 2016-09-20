@@ -1,19 +1,22 @@
 /**
- * @module Tracer
- * Модуль трассировки кода
+ * Трасировка выполнения программного кода
+ * @namespace Tracer
  */
 
 var fs = require('fs');
 var Config = require('./config');
 var Switch = require('./switch');
 var Source = require('./source');
-var ListenerFactory = require('./listenerFactory');
+var ListenerFactory = require('./listener-factory');
 var Util = require('util');
 
 var _manager = null;
-/** @static
- *  Метод доступа к экземпляру менеджера трейсера
- * @returns {@link Manager}
+
+/**
+ * Возвращает инстанс трейс-менеджера
+ * @returns {Tracer.Manager}
+ * @static
+ * @memberof Tracer.Manager
  */
 getInstance = function() {
     if (!_manager) {
@@ -23,9 +26,11 @@ getInstance = function() {
     return _manager;
 };
 
+
 /**
- * @class Manager
- * Позволяет управлять настройками трейсера
+ * Менеджер, управляющий трасировкой кода
+ * @constructor
+ * @memberof Tracer
  */
 function Manager() {
     if (!(this instanceof Manager)) {
@@ -44,8 +49,8 @@ Manager.prototype = {
     constructor: Manager,
 
     /**
-     * Метод загрузка из файла
-     * @private
+     * Загрузка настроек трейсера из файла в формате JSON
+     * @param {string} fileName имя файла
      */
     loadFromFile: function (fileName) {
         if ((fileName != '') && (fileName != this.configFileName)) {
@@ -55,6 +60,10 @@ Manager.prototype = {
         }
     },
 
+    /**
+     * Загрузка настроек из файла
+     * @private
+     */
     loadConfig: function () {
         var _config  = new Config(this.configFileName);
         if (_config.isLoaded) {
@@ -62,6 +71,11 @@ Manager.prototype = {
         }
     },
 
+    /**
+     * Включение отслеживания изменения файла настроек.
+     * Если файл будет изменен, настройки автоматически перегрузятся
+     * @private
+     */
     addFileWatcher: function () {
         if ((this.configFileName == '') || (!fs.existsSync(this.configFileName))) {
             return
@@ -88,6 +102,10 @@ Manager.prototype = {
         // this.switches.clear();
     },
 
+    /**
+     * Добавить экземпляр Listener-а
+     * @param {Tracer.Listener} listener экземпляр Listener-а
+     */
     addListener: function (listener) {
         if (!this.listeners.has(listener.name)) {
             this.listeners.set(listener.name, listener);
@@ -96,10 +114,18 @@ Manager.prototype = {
         }
     },
 
+    /**
+     * Добавить экземпляр источника
+     * @param {Tracer.Source} source экземпляр Source-а
+     */
     addSource: function (source) {
         this.sources.set(source.name, source);
     },
 
+    /**
+     * Добавить экземпляр переключателя
+     * @param {Tracer.Switch} sourceSwitch экземпляр переключателя
+     */
     addSwitch: function (sourceSwitch) {
         this.switches.set(sourceSwitch.name, sourceSwitch);
     },

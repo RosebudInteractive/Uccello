@@ -1,12 +1,7 @@
-/**
- * @author
- * Created by staloverov on 03.12.2015.
- * @module ListenerFactory
- */
-var DelimitedTextListener = require('./listeners/delimitedTextListener');
+var DelimitedTextListener = require('./listeners/delimited-text-listener');
 var Manager = require('./manager');
-var AsyncTextListener = require('./listeners/asyncTextListener');
-var ConsoleListener = require('./listeners/consoleListener');
+var AsyncTextListener = require('./listeners/async-text-listener');
+var ConsoleListener = require('./listeners/console-listener');
 
 var ListenerTypes = {
     'DelimitedTextListener' : DelimitedTextListener,
@@ -22,8 +17,20 @@ function getListenerConstructor(listenerType) {
     }
 }
 
+/**
+ * Фабрика Listener-ов
+ * @constructor
+ * @memberof Tracer
+ */
 function Factory() {}
 
+/**
+ * Создание Listener-а по конфигурационным данным
+ * @param {object} listenerInfo данные Listener-а
+ * @param {string} listenerInfo.name имя Listener-а
+ * @param {string} listenerInfo.type тип Listener-а
+ * @return {Tracer.Listener}
+ */
 Factory.createListener = function(listenerInfo) {
     if ((!listenerInfo) || (!listenerInfo.type) || (!listenerInfo.name)) { return }
     var _constructor = getListenerConstructor(listenerInfo.type);

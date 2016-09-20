@@ -1,12 +1,15 @@
-/**
- * @author
- * Created by staloverov on 03.12.2015.
- * @module AsyncTextListener
- */
-var FileListener = require('./fileListener');
+var FileListener = require('./file-listener');
 var fs = require('fs');
 var Types = require('./../common/types');
 
+
+/**
+ * Класс, записывающий данные трассировки в файл в асинхронном режиме
+ * @param name Имя listener-а
+ * @constructor
+ * @extends Tracer.FileListener
+ * @memberof Tracer
+ */
 function AsyncTextListener(name) {
     FileListener.apply(this, arguments);
 

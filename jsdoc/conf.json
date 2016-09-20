@@ -10,7 +10,6 @@
     "excludePattern": "(^|\\/|\\\\)_"
   },
   "opts": {
-    "template": "./node_modules/ink-docstrap/template",
     "encoding": "utf8",
     "destination": "./docs/",
     "recurse": true,
@@ -18,14 +17,11 @@
   },
   "plugins": [],
   "templates": {
-    "default": {
-      "layoutFile": "./node_modules/ink-docstrap/template/tmpl/layout.tmpl"
-    },
     "cleverLinks": false,
     "monospaceLinks": false,
     "systemName"            : "Uccello",
     "footer"                : "Copyright (c)",
-    "copyright"             : "PMT",
+    "copyright"             : "Rosebud",
     "theme"                 : "cerulean",
     "includeDate"           : true,
     "navType"               : "vertical",
@@ -35,7 +31,6 @@
     "outputSourceFiles"     : true,
     "outputSourcePath"      : true,
     "syntaxTheme"           : "default",
-    "sort"                  : true,
-    "search"                : true
+    "sort"                  : true
   }
 }

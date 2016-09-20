@@ -1,12 +1,13 @@
-/**
- * @author
- * Created by staloverov on 27.11.2015.
- * @module DelimitedTextListener
- */
-var FileListener = require('./fileListener');
+var FileListener = require('./file-listener');
 var fs = require('fs');
-//var Types = require('./../common/types');
 
+/**
+* Класс, записывающий данные трассировки в файл c разделителем в синхронном режиме
+* @param name Имя listener-а
+* @constructor
+* @extends Tracer.FileListener
+* @memberof Tracer
+*/
 function DelimitedTextListener(name) {
     FileListener.apply(this, arguments);
 }
