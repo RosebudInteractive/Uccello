@@ -29,11 +29,11 @@
     "lodash": "^3.10.1",
     "mysql": "^2.10.2",
     "number-formatter": "^1.2.0",
-    "socket.io": "^1.3.5",
+    "socket.io": "^1.4.8",
     "string-format": "^0.5.0",
     "tedious": "^1.13.1",
     "winston": "^1.0.0",
-    "ws": "^0.6.5"
+    "ws": "^1.1.1"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
