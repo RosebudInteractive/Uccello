@@ -419,6 +419,16 @@ metaDataMgr.addModel("DataContact", "73596fd8-6901-2f90-12d7-d1ba12bae8f4", "Roo
     .addField("Email", { type: "string", length: 255 })
     .addInternalField("CurrentProcess");
 
+// Object Tree: DataLead + DataLeadLog
+metaDataMgr.addDataModel("DataModelLeadLog").addDbTreeModel("DataCompanyLeadLog", { resName: "DataLead" })
+    .addDataSource({
+        model: { resName: "DataLeadLog" },
+        field: {
+            resName: "DataLeadLog",
+            elemName: "LeadId",
+        }
+    });
+
 function forceDir(dir) {
     var stats;
     try {
